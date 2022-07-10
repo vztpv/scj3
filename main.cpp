@@ -4,7 +4,6 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
-#include <vld.h>
 #include "mimalloc-new-delete.h"
 
 #include <iostream>
@@ -22,8 +21,9 @@ using namespace std::literals::string_view_literals;
 int main(int argc, char* argv[])
 {
 	
-	for (int i = 0; i < 64; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		claujson::Data j;
+		
 		try {
 			int a = clock();
 			
@@ -47,106 +47,47 @@ int counter = 0;
 			
 
 				double sum = 0;
-			/*if (ok) {
-				int chk = 0;
-				for (int i = 0; i < 1; ++i) {
-					auto _j = (*((claujson::Json*)j.ptr_val()))[0];
-					auto& A = (*((claujson::Json*)_j.ptr_val()))[1]; // j[1];
+				if (ok) {
+					int chk = 0;
+					for (int i = 0; i < 1; ++i) {
+						auto& A = j.as<claujson::Json>()[1]; // j[1];
+						for (auto& features : A.as<claujson::Array>()) {
+							auto& y = features.as<claujson::Object>().at("geometry"sv); // as_array()[t].as_object()["geometry"];
+							if (y.is_ptr()) { // is_obj or arr?
+								auto& yyy = y.as<claujson::Object>().at("coordinates"sv);
+								auto& yyyy = yyy.as<claujson::Array>()[0];
+								for (auto& temp : yyyy.as<claujson::Array>()) {
+									for (auto& x : temp.as<claujson::Array>()) {
+										if (x.is_float()) {
+											sum += x.float_val();
 
-					for (auto& features : (*((claujson::Array*)A.ptr_val()))) {
-
-						auto& y = ((claujson::Json*)features.ptr_val())->at("geometry"sv); // as_array()[t].as_object()["geometry"];
-						
-						
-						if (y.is_ptr()) {
-							auto& yyy = ((claujson::Json*)y.ptr_val())->at("coordinates"sv);
-							//if (yyy)
-							{
-								auto& yyyy = (*((claujson::Json*)yyy.ptr_val()))[0];
-								//	if (yyyy)
-								{
-									for (auto& temp : (*((claujson::Array*)yyyy.ptr_val()))) {
-										for (auto& x : (*((claujson::Array*)temp.ptr_val()))) {
-
-											if (x.is_float()) {
-												sum += x.float_val();
-
-												counter++;
-												chk++;
-											}
-
+											counter++;
+											chk++;
 										}
 									}
-
 								}
 							}
-							//	//std::cout << dur.count() << "ns\n";
-
 						}
-
-
 					}
 				}
-			}
 
 			std::cout << clock() - c << "ms\n";
 			std::cout << sum << " ";
-			std::cout << counter << " ";	int chk = 0;
-				for (int i = 0; i < 1; ++i) {
-					auto _j = (*((claujson::Json*)j.ptr_val()))[0];
-					auto& A = (*((claujson::Json*)_j.ptr_val()))[1]; // j[1];
-
-					for (auto& features : (*((claujson::Array*)A.ptr_val()))) {
-
-						auto& y = ((claujson::Json*)features.ptr_val())->at("geometry"sv); // as_array()[t].as_object()["geometry"];
-						
-						
-						if (y.is_ptr()) {
-							auto& yyy = ((claujson::Json*)y.ptr_val())->at("coordinates"sv);
-							//if (yyy)
-							{
-								auto& yyyy = (*((claujson::Json*)yyy.ptr_val()))[0];
-								//	if (yyyy)
-								{
-									for (auto& temp : (*((claujson::Array*)yyyy.ptr_val()))) {
-										for (auto& x : (*((claujson::Array*)temp.ptr_val()))) {
-
-											if (x.is_float()) {
-												sum += x.float_val();
-
-												counter++;
-												chk++;
-											}
-
-										}
-									}
-
-								}
-							}
-							//	//std::cout << dur.count() << "ns\n";
-
-						}
-
-
-					}
-				}
-			}
-
-			std::cout << clock() - c << "ms\n";
-			std::cout << sum << " ";
-			std::cout << counter << " ";
-			*/
-			claujson::Ptr<claujson::Json> clean(claujson::Ptr((claujson::Json*)j.ptr_val()));
-
+			std::cout << counter << "  ";
+			
+			claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
+			clean.clear();
 			return !ok;
 		}
 		catch (...) {
+			if (j.is_ptr() && j.ptr_val()) {
+				claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
+			}
+
 			std::cout << "internal error\n";
 			return 1;
 		}
 	}
-	
-	//getchar();
 
 	return 0;
 }

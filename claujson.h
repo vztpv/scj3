@@ -131,6 +131,16 @@ namespace claujson {
 			return _ptr_val;
 		}
 
+		template <class T>
+		T& as() {
+			return *static_cast<T*>(_ptr_val);
+		}
+
+		template <class T>
+		const T& as() const {
+			return *static_cast<T*>(_ptr_val);
+		}
+
 	private:
 	public:
 		void clear() {
@@ -746,7 +756,22 @@ namespace claujson {
 
 		}
 
-		const Data& at(std::string_view key) {
+		const Data& at(std::string_view key) const {
+			if (!is_object()) {
+				return data_null;
+			}
+
+			size_t len = get_data_size();
+			for (size_t i = 0; i < len; ++i) {
+				if (get_key_list(i).get_str_val().compare(key) == 0) {
+					return get_data_list(i);
+				}
+			}
+
+			return data_null;
+		}
+
+		Data& at(std::string_view key) {
 			if (!is_object()) {
 				return data_null;
 			}
@@ -781,6 +806,10 @@ namespace claujson {
 			return get_data_list(idx);
 		}
 
+		const Data& operator[](size_t idx) const {
+			return get_data_list(idx);
+		}
+
 		bool has_key() const {
 			return key.is_str();
 		}
@@ -796,8 +825,12 @@ namespace claujson {
 			return key;
 		}
 
-		virtual void set_key(Data key) {
-			this->key = std::move(key);
+		virtual bool set_key(Data key) {
+			if (key.is_str()) {
+				this->key = std::move(key);
+				return true;
+			}
+			return false; // no change..
 		}
 
 		virtual Data& get_value() {
@@ -818,6 +851,9 @@ namespace claujson {
 		virtual size_t get_data_size() const = 0;
 		virtual Data& get_data_list(size_t idx) = 0;
 		virtual Data& get_key_list(size_t idx) = 0;
+
+		virtual const Data& get_data_list(size_t idx) const = 0;
+		virtual const Data& get_key_list(size_t idx) const = 0;
 
 		virtual void clear(size_t idx) = 0;
 		virtual void clear() = 0;
@@ -888,6 +924,16 @@ namespace claujson {
 		virtual Data& get_key_list(size_t idx) {
 			return obj_vec[idx].first;
 		}
+
+
+		virtual const Data& get_data_list(size_t idx) const {
+			return obj_vec[idx].second;
+		}
+
+		virtual const Data& get_key_list(size_t idx) const {
+			return obj_vec[idx].first;
+		}
+
 
 		virtual void clear(size_t idx) {
 			obj_vec[idx].second.clear();
@@ -1062,6 +1108,14 @@ namespace claujson {
 		}
 		
 		virtual Data& get_key_list(size_t idx) {
+			return data_null;
+		}
+
+		virtual const Data& get_data_list(size_t idx) const{
+			return arr_vec[idx];
+		}
+
+		virtual const Data& get_key_list(size_t idx) const {
 			return data_null;
 		}
 
@@ -1264,6 +1318,40 @@ virtual void erase(size_t idx) {
 
 
 		virtual Data& get_key_list(size_t idx) {
+			if (virtualJson.is_ptr() && idx == 0) {
+				return data_null;
+			}
+			if (virtualJson.is_ptr()) {
+				--idx;
+			}
+
+			if (!arr_vec.empty()) {
+				return data_null;
+			}
+			else {
+				return obj_vec[idx].first;
+			}
+		}
+
+
+		virtual const Data& get_data_list(size_t idx) const  {
+			if (virtualJson.is_ptr() && idx == 0) {
+				return virtualJson;
+			}
+			if (virtualJson.is_ptr()) {
+				--idx;
+			}
+
+			if (!arr_vec.empty()) {
+				return arr_vec[idx];
+			}
+			else {
+				return obj_vec[idx].second;
+			}
+		}
+
+
+		virtual const Data& get_key_list(size_t idx) const {
 			if (virtualJson.is_ptr() && idx == 0) {
 				return data_null;
 			}
@@ -2468,9 +2556,9 @@ namespace claujson {
 					int a = clock();
 
 					
-					global = Data(std::move(_global).Get());
+					global = std::move(_global->get_data_list(0));
 					
-
+					
 					int b = clock();
 					std::cout << "chk " << b - a << "ms\n";
 
@@ -2496,7 +2584,7 @@ namespace claujson {
 			}
 
 		}
-		static bool parse(class Data& global, char* buf, size_t buf_len,
+		static bool parse(Data& global, char* buf, size_t buf_len,
 			uint8_t* string_buf,
 			simdjson::internal::dom_parser_implementation* imple,
 			int64_t length, std::vector<int64_t>& start, int thr_num) {
