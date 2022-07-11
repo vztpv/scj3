@@ -27,14 +27,18 @@ namespace claujson {
 			uint64_t _uint_val;
 			double _float_val;
 			std::string* _str_val;
-			void* _ptr_val;
+			void* _ptr_val; // Array or Object , ...
 			bool _bool_val;
 		};
 
-
+		bool valid = true;
 		simdjson::internal::tape_type _type = simdjson::internal::tape_type::NONE;
 
 	public:
+
+		explicit operator bool() const {
+			return valid;
+		}
 
 		explicit Data(void* x) {
 			set_ptr(x);
@@ -69,9 +73,17 @@ namespace claujson {
 			set_type(simdjson::internal::tape_type::NULL_VALUE);
 		}
 
+		explicit Data(nullptr_t, bool valid) : valid(valid) {
+			//
+		}
+
 	public:
 		simdjson::internal::tape_type type() const {
 			return _type;
+		}
+
+		bool is_valid() const {
+			return valid;
 		}
 
 		bool is_int() const {
@@ -152,7 +164,7 @@ namespace claujson {
 			else {
 				_int_val = 0;
 			}
-
+			valid = true;
 			_type = simdjson::internal::tape_type::NONE;
 		}
 
@@ -243,6 +255,7 @@ namespace claujson {
 			else {
 				_int_val = other._int_val;
 			}
+			valid = other.valid;
 		}
 
 		Data(Data&& other) noexcept
@@ -257,6 +270,8 @@ namespace claujson {
 			else {
 				std::swap(_int_val, other._int_val);
 			}
+
+			std::swap(valid, other.valid);
 		}
 
 		Data() : _int_val(0), _type(simdjson::internal::tape_type::NONE) { }
@@ -324,6 +339,8 @@ namespace claujson {
 				this->_int_val = other._int_val;
 			}
 
+			this->valid = other.valid;
+
 			return *this;
 		}
 
@@ -335,6 +352,8 @@ namespace claujson {
 
 			std::swap(this->_type, other._type);
 			std::swap(this->_int_val, other._int_val);
+
+			std::swap(valid, other.valid);
 
 			return *this;
 		}
@@ -743,8 +762,7 @@ namespace claujson {
 		PtrWeak<Json> parent;
 
 		// check...
-		static inline Ptr<Json> json_null;
-		static inline Data data_null;
+		static inline Data data_null{nullptr, false}; // valid is false..
 	public:
 
 		Json() { }
@@ -894,12 +912,13 @@ namespace claujson {
 
 	class Object : public Json {
 	protected:
-		std::vector<std::pair<Data, Data>> obj_vec;
+		std::vector<Data> obj_key_vec;
+		std::vector<Data> obj_val_vec;
 	public:
 		virtual ~Object() {
-			for (auto& x : obj_vec) {
-				if (x.second.is_ptr()) {
-					delete ((Json*)x.second.ptr_val());
+			for (auto& x : obj_val_vec) {
+				if (x.is_ptr()) {
+					delete ((Json*)x.ptr_val());
 				}
 			}
 		}
@@ -914,51 +933,44 @@ namespace claujson {
 			return false;
 		}
 		virtual size_t get_data_size() const {
-			return obj_vec.size();
+			return obj_val_vec.size();
 		}
 
 		virtual Data& get_data_list(size_t idx) {
-			return obj_vec[idx].second;
+			return obj_val_vec[idx];
 		}
 		
-		virtual Data& get_key_list(size_t idx) {
-			return obj_vec[idx].first;
+		virtual Data& get_key_list(size_t idx) { // if key change then also obj_vec[idex].second.key? change??
+			return obj_key_vec[idx];
 		}
 
 
 		virtual const Data& get_data_list(size_t idx) const {
-			return obj_vec[idx].second;
+			return obj_val_vec[idx];
 		}
 
 		virtual const Data& get_key_list(size_t idx) const {
-			return obj_vec[idx].first;
+			return obj_key_vec[idx];
 		}
 
 
 		virtual void clear(size_t idx) {
-			obj_vec[idx].second.clear();
+			obj_val_vec[idx].clear();
 		}
 
 		virtual bool is_virtual() const {
 			return false;
 		}
 
-		std::vector<std::pair<Data, Data>>::iterator begin() {
-			return obj_vec.begin();
-		}
-
-		std::vector<std::pair<Data, Data>>::iterator end() {
-			return obj_vec.end();
-		}
-
-
 		virtual void clear() {
-			obj_vec.clear();
+			obj_val_vec.clear();
+			obj_key_vec.clear();
 		}
 
 
 		virtual void reserve_data_list(size_t len) {
-			obj_vec.reserve(len);
+			obj_val_vec.reserve(len);
+			obj_key_vec.reserve(len);
 		}
 
 
@@ -967,12 +979,14 @@ namespace claujson {
 				auto* x = (Json*)val.ptr_val();
 				x->set_key(key); // no need?
 			}
-			obj_vec.push_back(std::make_pair(std::move(key), std::move(val)));
+			obj_key_vec.push_back(std::move(key));
+			obj_val_vec.push_back(std::move(val));
 		}
 		virtual void add_array_element(Data val) { std::cout << "err"; }
 		virtual void add_array(Ptr<Json> arr) { 
 			if (arr->has_key()) {
-				obj_vec.push_back(std::make_pair(arr->get_key(), Data(arr.Get())));
+				obj_key_vec.push_back(arr->get_key());
+				obj_val_vec.push_back(Data(arr.Get()));
 			}
 			else {
 				std::cout << "err";
@@ -980,7 +994,8 @@ namespace claujson {
 		}
 		virtual void add_object(Ptr<Json> obj) { 
 			if (obj->has_key()) {
-				obj_vec.push_back(std::make_pair(obj->get_key(), Data(obj.Get())));
+				obj_key_vec.push_back(obj->get_key());
+				obj_val_vec.push_back(Data(obj.Get()));
 			}
 			else {
 				std::cout << "err";
@@ -995,7 +1010,8 @@ namespace claujson {
 		}
 
 		virtual void erase(size_t idx) { 
-			obj_vec.erase(obj_vec.begin() + idx);
+			obj_key_vec.erase(obj_key_vec.begin() + idx);
+			obj_val_vec.erase(obj_val_vec.begin() + idx);
 		}
 
 
@@ -1012,9 +1028,11 @@ namespace claujson {
 			}
 
 			j->set_parent(this);
-			auto key = j->get_key();
-			obj_vec.push_back(std::make_pair(std::move(key), Data(j.Get())));
+
+			obj_key_vec.push_back(j->get_key());
+			obj_val_vec.push_back(Data(j.Get())); 
 		}
+
 		virtual void add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
 			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2) {
 
@@ -1038,7 +1056,8 @@ namespace claujson {
 						throw "Error in add_item_type, key is not string";
 					}
 
-					obj_vec.push_back(std::make_pair(std::move(temp), std::move(temp2)));
+					obj_key_vec.push_back(std::move(temp));
+					obj_val_vec.push_back(std::move(temp2));
 				}
 		}
 
@@ -1063,12 +1082,15 @@ namespace claujson {
 		virtual void add_user_type(Ptr<Json> j) {
 			if (j->is_virtual()) {
 				j->set_parent(this);
-				obj_vec.push_back(std::make_pair(Data(), Data(j.Get())));
+
+				obj_key_vec.push_back(Data());
+				obj_val_vec.push_back(Data(j.Get()));
 			}
 			else if (j->has_key()) {
 				j->set_parent(this);
-				auto key = (j->get_key());
-				obj_vec.push_back(std::make_pair(std::move(key), Data(j.Get())));
+
+				obj_key_vec.push_back(j->get_key());
+				obj_val_vec.push_back(Data(j.Get()));
 			}
 			else {
 				std::cout << "chk..";
@@ -1250,13 +1272,15 @@ virtual void erase(size_t idx) {
 	protected:
 		std::vector<Data> arr_vec; // 
 		// in parsing...
-		std::vector<std::pair<Data, Data>> obj_vec;
+		std::vector<Data> obj_key_vec;
+		std::vector<Data> obj_val_vec;
+
 		Data virtualJson;
 	public:
 		virtual ~Root() {
-			for (auto& x : obj_vec) {
-				if (x.second.is_ptr()) {
-					delete ((Json*)x.second.ptr_val());
+			for (auto& x : obj_val_vec) {
+				if (x.is_ptr()) {
+					delete ((Json*)x.ptr_val());
 				}
 			}
 
@@ -1297,7 +1321,7 @@ virtual void erase(size_t idx) {
 				count = 1;
 			}
 
-			return arr_vec.size() + obj_vec.size() + count;
+			return arr_vec.size() + obj_val_vec.size() + count;
 		}
 
 		virtual Data& get_data_list(size_t idx) {
@@ -1312,7 +1336,7 @@ virtual void erase(size_t idx) {
 				return arr_vec[idx];
 			}
 			else {
-				return obj_vec[idx].second;
+				return obj_val_vec[idx];
 			}
 		}
 
@@ -1329,7 +1353,7 @@ virtual void erase(size_t idx) {
 				return data_null;
 			}
 			else {
-				return obj_vec[idx].first;
+				return obj_key_vec[idx];
 			}
 		}
 
@@ -1346,7 +1370,7 @@ virtual void erase(size_t idx) {
 				return arr_vec[idx];
 			}
 			else {
-				return obj_vec[idx].second;
+				return obj_val_vec[idx];
 			}
 		}
 
@@ -1363,7 +1387,7 @@ virtual void erase(size_t idx) {
 				return data_null;
 			}
 			else {
-				return obj_vec[idx].first;
+				return obj_key_vec[idx];
 			}
 		}
 
@@ -1380,7 +1404,7 @@ virtual void erase(size_t idx) {
 				arr_vec[idx].clear();
 			}
 			else {
-				obj_vec[idx].second.clear();
+				obj_val_vec[idx].clear();
 			}
 		}
 
@@ -1389,7 +1413,8 @@ virtual void erase(size_t idx) {
 		}
 		virtual void clear() {
 			arr_vec.clear();
-			obj_vec.clear();
+			obj_key_vec.clear();
+			obj_val_vec.clear();
 			virtualJson.clear();
 		}
 
@@ -1397,8 +1422,9 @@ virtual void erase(size_t idx) {
 			if (!arr_vec.empty()) {
 				arr_vec.reserve(len);
 			}
-			if (!obj_vec.empty()) {
-				obj_vec.reserve(len);
+			if (!obj_val_vec.empty()) {
+				obj_val_vec.reserve(len);
+				obj_key_vec.reserve(len);
 			}
 		}
 
@@ -1435,8 +1461,8 @@ virtual void erase(size_t idx) {
 				arr_vec.push_back(Data(j.Get()));
 			}
 			else {
-				auto key = (j->get_key());
-				obj_vec.push_back(std::make_pair(std::move(key), Data(j.Get())));
+				obj_key_vec.push_back(j->get_key());
+				obj_val_vec.push_back(Data(j.Get())); 
 			}
 		}
 
@@ -1468,7 +1494,8 @@ virtual void erase(size_t idx) {
 						throw "Error in add_item_type, key is not string";
 					}
 
-					obj_vec.push_back(std::make_pair(std::move(temp), std::move(temp2)));
+					obj_key_vec.push_back(std::move(temp));
+					obj_val_vec.push_back(std::move(temp2));
 				}
 		}
 
@@ -1507,8 +1534,8 @@ virtual void erase(size_t idx) {
 			}
 			else {
 				if (j->has_key()) {
-					auto key = (j->get_key());
-					obj_vec.push_back(std::make_pair(std::move(key), Data(j.Get())));
+					obj_key_vec.push_back(j->get_key());
+					obj_val_vec.push_back(Data(j.Get()));
 				}
 				else {
 					std::cout << "ERRR";
@@ -1568,8 +1595,8 @@ virtual void erase(size_t idx) {
 					json = new Array();
 				}
 
-
-				obj_vec.push_back(std::make_pair(temp, Data(json)));
+				obj_key_vec.push_back(temp);
+				obj_val_vec.push_back(Data(json));
 
 				json->set_key(std::move(temp));
 				json->set_parent(this);
@@ -1628,13 +1655,10 @@ virtual void erase(size_t idx) {
 
 
 
-				if (type == 0) {
-					obj_vec.push_back(std::make_pair(temp, Data(json)));
+				if (type == 0 || type == 1) {
+					obj_key_vec.push_back(temp);
+					obj_val_vec.push_back(Data(json));
 				}
-				else if (type == 1) {
-					obj_vec.push_back(std::make_pair(temp, Data(json)));
-				}
-
 				else {
 					std::cout << "ERRRRRRRR";
 				}

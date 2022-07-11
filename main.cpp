@@ -30,6 +30,8 @@ int main(int argc, char* argv[])
 			auto x = claujson::Parse(argv[1], 64, j);
 			if (!x.first) {
 				std::cout << "fail\n";
+
+				claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
 				return 1;
 			}
 
@@ -42,7 +44,7 @@ int main(int argc, char* argv[])
 			int c = clock();
 			std::cout << c - b << "ms\n";
 
-int counter = 0;
+			int counter = 0;
 			bool ok = x.first;
 			
 
@@ -50,14 +52,14 @@ int counter = 0;
 				if (ok) {
 					int chk = 0;
 					for (int i = 0; i < 1; ++i) {
-						auto& A = j.as<claujson::Json>()[1]; // j[1];
-						for (auto& features : A.as<claujson::Array>()) {
-							auto& y = features.as<claujson::Object>().at("geometry"sv); // as_array()[t].as_object()["geometry"];
-							if (y.is_ptr()) { // is_obj or arr?
-								auto& yyy = y.as<claujson::Object>().at("coordinates"sv);
-								auto& yyyy = yyy.as<claujson::Array>()[0];
-								for (auto& temp : yyyy.as<claujson::Array>()) {
-									for (auto& x : temp.as<claujson::Array>()) {
+						auto& features = j.as<claujson::Json>()[1]; // j[1];
+						for (auto& feature : features.as<claujson::Array>()) {
+							auto& geometry = feature.as<claujson::Object>().at("geometry"sv); // as_array()[t].as_object()["geometry"];
+							if (geometry.is_ptr()) { // is_obj or arr?
+								auto& coordinates = geometry.as<claujson::Object>().at("coordinates"sv);
+								auto& coordinates_ = coordinates.as<claujson::Array>()[0];
+								for (auto& coordinates__ : coordinates_.as<claujson::Array>()) {
+									for (auto& x : coordinates__.as<claujson::Array>()) {
 										if (x.is_float()) {
 											sum += x.float_val();
 
