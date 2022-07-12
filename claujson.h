@@ -17,6 +17,8 @@
 
 #define INLINE inline
 
+#include <string_view>
+using namespace std::string_view_literals;
 
 namespace claujson {
 
@@ -1189,18 +1191,18 @@ namespace claujson {
 			}
 		}
 
-virtual void insert_array_element(size_t idx, Data val) {
-	arr_vec.insert(arr_vec.begin() + idx, std::move(val));
-}
+		virtual void insert_array_element(size_t idx, Data val) {
+			arr_vec.insert(arr_vec.begin() + idx, std::move(val));
+		}
 
-virtual void erase(std::string_view key) {
-	size_t idx = this->find(key);
-	erase(idx);
-}
+		virtual void erase(std::string_view key) {
+			size_t idx = this->find(key);
+			erase(idx);
+		}
 
-virtual void erase(size_t idx) {
-	arr_vec.erase(arr_vec.begin() + idx);
-}
+		virtual void erase(size_t idx) {
+			arr_vec.erase(arr_vec.begin() + idx);
+		}
 	private:
 		virtual void Link(Ptr<Json> j) {
 			if (!j->has_key()) {
@@ -2629,13 +2631,13 @@ namespace claujson {
 				return out.size();
 			}
 
-			StrStream& operator<<(std::string_view x) {
+			StrStream& operator<<(const char* x) {
 				fmt::format_to(std::back_inserter(out), "{}", x);
 				return *this;
 			}
 
 			StrStream& operator<<(double x) {
-				fmt::format_to(std::back_inserter(out), FMT_COMPILE("{:.10f}"), x);
+				fmt::format_to(std::back_inserter(out), "{}", x); // FMT_COMPILE("{:.10f}"), x);
 				return *this;
 			}
 
@@ -2655,7 +2657,7 @@ namespace claujson {
 			}
 		};
 
-		//
+		//                            todo - change Json* ut to Data& data ?
 		static void _save(StrStream& stream, Json* ut, const int depth = 0) {
 			if (!ut) { return; }
 
@@ -2666,7 +2668,9 @@ namespace claujson {
 
 						if (x.type() == simdjson::internal::tape_type::STRING) {
 							stream << "\"";
-							for (uint64_t j = 0; j < ((std::string&)(x.get_str_val())).size(); ++j) {
+							
+							size_t len = x.get_str_val().size();
+							for (uint64_t j = 0; j < len; ++j) {
 								switch ((x.get_str_val())[j]) {
 								case '\\':
 									stream << "\\\\";
@@ -2679,27 +2683,20 @@ namespace claujson {
 									break;
 
 								default:
-									if (isprint((x.get_str_val())[j]))
+
+									int code = (x.get_str_val())[j];
+									if (code > 0 && (code < 0x20 || code == 0x7F))
 									{
+										char buf[] = "\\uDDDD";
+										sprintf(buf + 2, "%04X", code);
+										stream << buf;
+									}
+									else {
 										stream << (x.get_str_val())[j];
 									}
-									else
-									{
-										int code = (x.get_str_val())[j];
-										if (code > 0 && (code < 0x20 || code == 0x7F))
-										{
-											char buf[] = "\\uDDDD";
-											sprintf(buf + 2, "%04X", code);
-											stream << buf;
-										}
-										else {
-											stream << (x.get_str_val())[j];
-										}
-									}
-								}
-							}
 
-							stream << "\"";
+								}
+							}stream << "\"";
 
 							{
 								stream << " : ";
@@ -2731,7 +2728,9 @@ namespace claujson {
 
 						if (x.type() == simdjson::internal::tape_type::STRING) {
 							stream << "\"";
-							for (uint64_t j = 0; j < (x.get_str_val()).size(); ++j) {
+							
+							size_t len = x.get_str_val().size();
+							for (uint64_t j = 0; j < len; ++j) {
 								switch ((x.get_str_val())[j]) {
 								case '\\':
 									stream << "\\\\";
@@ -2744,23 +2743,18 @@ namespace claujson {
 									break;
 
 								default:
-									if (isprint((x.get_str_val())[j]))
+
+									int code = (x.get_str_val())[j];
+									if (code > 0 && (code < 0x20 || code == 0x7F))
 									{
+										char buf[] = "\\uDDDD";
+										sprintf(buf + 2, "%04X", code);
+										stream << buf;
+									}
+									else {
 										stream << (x.get_str_val())[j];
 									}
-									else
-									{
-										int code = (x.get_str_val())[j];
-										if (code > 0 && (code < 0x20 || code == 0x7F))
-										{
-											char buf[] = "\\uDDDD";
-											sprintf(buf + 2, "%04X", code);
-											stream << buf;
-										}
-										else {
-											stream << (x.get_str_val())[j];
-										}
-									}
+										
 								}
 							}
 
@@ -2776,7 +2770,9 @@ namespace claujson {
 
 							if (x.type() == simdjson::internal::tape_type::STRING) {
 								stream << "\"";
-								for (uint64_t j = 0; j < ((std::string&)(x.get_str_val())).size(); ++j) {
+
+								size_t len = x.get_str_val().size();
+								for (uint64_t j = 0; j < len; ++j) {
 									switch ((x.get_str_val())[j]) {
 									case '\\':
 										stream << "\\\\";
@@ -2789,26 +2785,20 @@ namespace claujson {
 										break;
 
 									default:
-										if (isprint((x.get_str_val())[j]))
+
+										int code = (x.get_str_val())[j];
+										if (code > 0 && (code < 0x20 || code == 0x7F))
 										{
+											char buf[] = "\\uDDDD";
+											sprintf(buf + 2, "%04X", code);
+											stream << buf;
+										}
+										else {
 											stream << (x.get_str_val())[j];
 										}
-										else
-										{
-											int code = (x.get_str_val())[j];
-											if (code > 0 && (code < 0x20 || code == 0x7F))
-											{
-												char buf[] = "\\uDDDD";
-												sprintf(buf + 2, "%04X", code);
-												stream << buf;
-											}
-											else {
-												stream << (x.get_str_val())[j];
-											}
-										}
+
 									}
 								}
-
 								stream << "\"";
 
 							}
@@ -2828,7 +2818,7 @@ namespace claujson {
 								stream << x.uint_val();
 							}
 							else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
-								stream << "null ";
+								stream << "null";
 							}
 						}
 					}
@@ -2866,7 +2856,9 @@ namespace claujson {
 
 						if (x.type() == simdjson::internal::tape_type::STRING) {
 							stream << "\"";
-							for (uint64_t j = 0; j < (x.get_str_val()).size(); ++j) {
+
+							size_t len = x.get_str_val().size();
+							for (uint64_t j = 0; j < len; ++j) {
 								switch ((x.get_str_val())[j]) {
 								case '\\':
 									stream << "\\\\";
@@ -2879,27 +2871,20 @@ namespace claujson {
 									break;
 
 								default:
-									if (isprint((x.get_str_val())[j]))
+
+									int code = (x.get_str_val())[j];
+									if (code > 0 && (code < 0x20 || code == 0x7F))
 									{
+										char buf[] = "\\uDDDD";
+										sprintf(buf + 2, "%04X", code);
+										stream << buf;
+									}
+									else {
 										stream << (x.get_str_val())[j];
 									}
-									else
-									{
-										int code = (x.get_str_val())[j];
-										if (code > 0 && (code < 0x20 || code == 0x7F))
-										{
-											char buf[] = "\\uDDDD";
-											sprintf(buf + 2, "%04X", code);
-											stream << buf;
-										}
-										else {
-											stream << (x.get_str_val())[j];
-										}
-									}
-								}
-							}
 
-							stream << "\"";
+								}
+							}stream << "\"";
 						}
 						else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
 							stream << "true";
@@ -2917,7 +2902,7 @@ namespace claujson {
 							stream << x.uint_val();
 						}
 						else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
-							stream << "null ";
+							stream << "null";
 						}
 
 
@@ -2929,107 +2914,34 @@ namespace claujson {
 					}
 				}
 			}
-
-			else if (ut->is_root()) {
-			for (size_t i = 0; i < ut->get_data_size(); ++i) {
-				if (ut->get_data_list(i).is_ptr()) {
-
-
-					if (((Json*)ut->get_data_list(i).ptr_val())->is_object()) {
-						stream << " { \n";
-					}
-					else {
-						stream << " [ \n";
-					}
-
-
-					_save(stream, ((Json*)ut->get_data_list(i).ptr_val()), depth + 1);
-
-					if (((Json*)ut->get_data_list(i).ptr_val())->is_object()) {
-						stream << " } \n";
-					}
-					else {
-						stream << " ] \n";
-					}
-				}
-				else {
-
-					auto& x = ut->get_data_list(i);
-
-					if (x.type() == simdjson::internal::tape_type::STRING) {
-						stream << "\"";
-						for (uint64_t j = 0; j < (x.get_str_val()).size(); ++j) {
-							switch ((x.get_str_val())[j]) {
-							case '\\':
-								stream << "\\\\";
-								break;
-							case '\"':
-								stream << "\\\"";
-								break;
-							case '\n':
-								stream << "\\n";
-								break;
-
-							default:
-								if (isprint((x.get_str_val())[j]))
-								{
-									stream << (x.get_str_val())[j];
-								}
-								else
-								{
-									int code = (x.get_str_val())[j];
-									if (code > 0 && (code < 0x20 || code == 0x7F))
-									{
-										char buf[] = "\\uDDDD";
-										sprintf(buf + 2, "%04X", code);
-										stream << buf;
-									}
-									else {
-										stream << (x.get_str_val())[j];
-									}
-								}
-							}
-						}
-
-						stream << "\"";
-					}
-					else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
-						stream << "true";
-					}
-					else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
-						stream << "false";
-					}
-					else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
-						stream << (x.float_val());
-					}
-					else if (x.type() == simdjson::internal::tape_type::INT64) {
-						stream << x.int_val();
-					}
-					else if (x.type() == simdjson::internal::tape_type::UINT64) {
-						stream << x.uint_val();
-					}
-					else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
-						stream << "null ";
-					}
-
-
-					stream << " ";
-				}
-
-				if (i < ut->get_data_size() - 1) {
-					stream << ", ";
-				}
-			}
-
-			}
 		}
 
-		static void save(const std::string& fileName, class Json& global) {
+		// todo... just Data has one element 
+		static void save(const std::string& fileName, Data& global) {
 			StrStream stream;
 
-			_save(stream, &global);
-
-			std::cout << "Save to StrStream.\n";
+			if (global.is_ptr()) {
+				auto* x = &global.as<Json>();
+				bool is_arr = x->is_array();
+				if (is_arr) {
+					stream << " [ ";
+				}
+				else {
+					stream << " { ";
+				}
+				
+				_save(stream, x);
+			
+				if (is_arr) {
+					stream << " ] ";
+				}
+				else {
+					stream << " } ";
+				}
+			}
+			else {
+				// todo~~ from _save val.in array.
+			}
 
 			std::ofstream outFile;
 			outFile.open(fileName, std::ios::binary); // binary!

@@ -12,7 +12,6 @@
 
 
 #include "claujson.h" // using simdjson 2.0.0
-
 #include <cstring>
 
 using namespace std::literals::string_view_literals;
@@ -39,10 +38,10 @@ int main(int argc, char* argv[])
 			std::cout << "total " << b - a << "ms\n";
 
 			//claujson::LoadData::save(std::cout, ut);
-			//claujson::LoadData::save("output13.json", *((claujson::Json*)j.ptr_val()));
+			claujson::LoadData::save("output14.json", j);
 			
 			int c = clock();
-			std::cout << c - b << "ms\n";
+			std::cout << "write " << c - b << "ms\n";
 
 			int counter = 0;
 			bool ok = x.first;
