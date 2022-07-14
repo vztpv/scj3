@@ -1507,7 +1507,8 @@ namespace claujson {
 
 
 		virtual void add_object_element(Data key, Data val) {
-			std::cout << "not used..";
+			obj_key_vec.push_back(std::move(key));
+			obj_val_vec.push_back(std::move(val));
 		}
 		virtual void add_array_element(Data val) { 
 			arr_vec.push_back(std::move(val));
@@ -1990,7 +1991,7 @@ namespace claujson {
 						out->add_user_type(Ptr<Json>((Json*)parent->get_data_list(i).ptr_val()));
 					}
 					else {
-						if (out->is_array() && out->is_root()) {
+						if (parent->get_key_list(i).is_str() == false) {
 							out->add_array_element(parent->get_data_list(i));
 						}
 						else { // out->is_object
@@ -3771,6 +3772,10 @@ namespace claujson {
 				}
 			}
 
+			if (length == 0) {
+				std::cout << "empty json";
+				return { true, 0 };
+			}
 
 			int b = clock();
 
