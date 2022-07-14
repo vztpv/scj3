@@ -1509,7 +1509,11 @@ namespace claujson {
 		virtual void add_object_element(Data key, Data val) {
 			std::cout << "not used..";
 		}
-		virtual void add_array_element(Data val) { std::cout << "not used.."; }
+		virtual void add_array_element(Data val) { 
+			arr_vec.push_back(std::move(val));
+		}
+
+
 		virtual void add_array(Ptr<Json> arr) {
 			std::cout << "not used..";
 		}
@@ -2099,7 +2103,7 @@ namespace claujson {
 						}
 					}
 					else { // item type.
-						if (_next->is_array()) {
+						if (_next->is_array() || _next->is_root()) {
 							_next->add_array_element(std::move(_ut->get_data_list(i)));
 						}
 						else {
@@ -2883,7 +2887,11 @@ namespace claujson {
 					}
 					int a = clock();
 
-					_global->get_data_list(0).as<Json>().set_parent(nullptr);
+
+					if (_global->get_data_list(0).is_ptr()) {
+						_global->get_data_list(0).as<Json>().set_parent(nullptr);
+					}
+
 					global = std::move(_global->get_data_list(0));
 					
 					

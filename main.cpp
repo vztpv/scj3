@@ -37,7 +37,9 @@ int main(int argc, char* argv[])
 			if (!x.first) {
 				std::cout << "fail\n";
 
-				claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
+				if (j.is_ptr() && j.ptr_val()) {
+					claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
+				}
 				return 1;
 			}
 
@@ -55,7 +57,7 @@ int main(int argc, char* argv[])
 
 
 			double sum = 0;
-			if (ok) {
+			if (false && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
 					auto& features = j.as<claujson::Json>()[1]; // j[1];
@@ -85,14 +87,14 @@ int main(int argc, char* argv[])
 
 			int c1 = clock();
 
-			claujson::LoadData::save_parallel("total_end.json", j, 0);
+			//claujson::LoadData::save_parallel("total_end.json", j, 0);
 
 			int c2 = clock();
 			std::cout << "\nwrite " << c2 - c1 << "ms\n";
 
 
 			sum = 0; counter = 0; 
-			if (ok) {
+			if (false && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
 					auto& features = j.as<claujson::Json>()[1]; // j[1];
@@ -117,8 +119,10 @@ int main(int argc, char* argv[])
 			}
 			std::cout << clock() - c2 << "ms\n";
 			std::cout << "Re.. " << sum << " " << counter << "\n";
-			claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
-			
+			if (j.is_ptr() && j.ptr_val()) {
+				claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
+			}
+
 			return !ok;
 		}
 		catch (...) {
