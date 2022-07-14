@@ -3523,7 +3523,57 @@ namespace claujson {
 				}
 			}
 			else {
-				// todo~~ from _save val.in array.
+				auto& x = global;
+				if (x.type() == simdjson::internal::tape_type::STRING) {
+					stream << "\"";
+
+					size_t len = x.str_val().size();
+					for (uint64_t j = 0; j < len; ++j) {
+						switch ((x.str_val())[j]) {
+						case '\\':
+							stream << "\\\\";
+							break;
+						case '\"':
+							stream << "\\\"";
+							break;
+						case '\n':
+							stream << "\\n";
+							break;
+
+						default:
+
+							int code = (x.str_val())[j];
+							if (code > 0 && (code < 0x20 || code == 0x7F))
+							{
+								char buf[] = "\\uDDDD";
+								sprintf(buf + 2, "%04X", code);
+								stream << buf;
+							}
+							else {
+								stream << (x.str_val())[j];
+							}
+
+						}
+					}stream << "\"";
+				}
+				else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
+					stream << "true";
+				}
+				else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
+					stream << "false";
+				}
+				else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
+					stream << (x.float_val());
+				}
+				else if (x.type() == simdjson::internal::tape_type::INT64) {
+					stream << x.int_val();
+				}
+				else if (x.type() == simdjson::internal::tape_type::UINT64) {
+					stream << x.uint_val();
+				}
+				else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
+					stream << "null";
+				}
 			}
 
 			std::ofstream outFile;
@@ -3609,7 +3659,6 @@ namespace claujson {
 					arr.push_back(temp.size() - i + 1);
 				}
 
-				std::vector<claujson::Data> data(temp.size());
 
 				result[0] = &j.as<claujson::Json>();
 				hint[0] = false;
