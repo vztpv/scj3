@@ -1,6 +1,11 @@
 # scj3
 faster than scj2, scanning - simd(using simdjson), parsing - multi-thread(used in clauparser),
 save - multi-thread
+
+# 
+
+
+
 # Using simdjson/simdjson (https://github.com/simdjson/simdjson) Apache-2.0 License
                         Apache License
                            Version 2.0, January 2004
