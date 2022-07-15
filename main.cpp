@@ -30,7 +30,8 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < 3; ++i) {
 		claujson::Data j;
 
-		try {
+		//try
+		{
 			int a = clock();
 
 			auto x = claujson::Parse(argv[1], 64, j);
@@ -87,7 +88,7 @@ int main(int argc, char* argv[])
 
 			int c1 = clock();
 
-			//claujson::LoadData::save_parallel("total_end.json", j, 0);
+			claujson::LoadData::save_parallel("total_end.json", j, 0);
 
 			int c2 = clock();
 			std::cout << "\nwrite " << c2 - c1 << "ms\n";
@@ -125,14 +126,14 @@ int main(int argc, char* argv[])
 
 			return !ok;
 		}
-		catch (...) {
+		/*catch (...) {
 			if (j.is_ptr() && j.ptr_val()) {
 				claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
 			}
 
 			std::cout << "internal error\n";
 			return 1;
-		}
+		}*/
 	}
 
 	return 0;
