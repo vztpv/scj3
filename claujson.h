@@ -1222,10 +1222,6 @@ namespace claujson {
 		}
 
 		virtual Data& get_data_list(size_t idx) {
-			if (idx >= arr_vec.size()) {
-				return data_null;
-			}
-
 			return arr_vec[idx];
 		}
 
