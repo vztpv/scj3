@@ -171,14 +171,16 @@ namespace claujson {
 		// todo - rename, and add  as_ref, as_ptr ?
 
 		template <class T>
-		T& as() {
-			return *static_cast<T*>(_ptr_val);
-		}
+		T& as();
 
 		template <class T>
-		const T& as() const {
-			return *static_cast<T*>(_ptr_val);
-		}
+		const T& as() const;
+
+		template <class T>
+		T* as_ptr();
+
+		template <class T>
+		const T* as_ptr() const;
 
 	private:
 	public:
@@ -835,13 +837,17 @@ namespace claujson {
 	protected:
 		Data key;
 		PtrWeak<Json> parent;
-
+		bool valid;
 	protected:
 		// check...
 		static inline Data data_null{ nullptr, false }; // valid is false..
 	public:
 
-		Json() { }
+		bool is_valid() const {
+			return valid;
+		}
+
+		explicit Json(bool valid = true) : valid(valid) { }
 
 		Json(const Json&) = delete;
 		Json& operator=(const Json&) = delete;
@@ -849,6 +855,8 @@ namespace claujson {
 		virtual ~Json() {
 
 		}
+		
+
 
 		const Data& at(std::string_view key) const {
 			if (!is_object()) {
@@ -897,10 +905,16 @@ namespace claujson {
 
 
 		Data& operator[](size_t idx) {
+			if (idx >= get_data_size()) {
+				return data_null;
+			}
 			return get_data_list(idx);
 		}
 
 		const Data& operator[](size_t idx) const {
+			if (idx >= get_data_size()) {
+				return data_null;
+			}
 			return get_data_list(idx);
 		}
 
@@ -991,6 +1005,9 @@ namespace claujson {
 		std::vector<Data> obj_key_vec;
 		std::vector<Data> obj_val_vec;
 	public:
+
+		explicit Object(bool valid = true) : Json(valid) { }
+
 		virtual ~Object() {
 			for (auto& x : obj_val_vec) {
 				if (x.is_ptr()) {
@@ -1180,6 +1197,9 @@ namespace claujson {
 	protected:
 		std::vector<Data> arr_vec;
 	public:
+
+		explicit Array(bool valid = true) : Json(valid) { }
+
 		virtual ~Array() {
 			for (auto& x : arr_vec) {
 				if (x.is_ptr()) {
@@ -1202,6 +1222,10 @@ namespace claujson {
 		}
 
 		virtual Data& get_data_list(size_t idx) {
+			if (idx >= arr_vec.size()) {
+				return data_null;
+			}
+
 			return arr_vec[idx];
 		}
 
@@ -1401,6 +1425,7 @@ namespace claujson {
 		}
 
 		virtual Data& get_data_list(size_t idx) {
+
 			if (virtualJson.is_ptr() && idx == 0) {
 				return virtualJson;
 			}
@@ -1774,6 +1799,49 @@ namespace claujson {
 
 			json->set_parent(this);
 		}
+	}
+
+	// todo - as_array, as_object.
+	// as_array
+	// if (valid && ((Json*)_ptr_val)->is_array()) { return ~~ } return 
+
+	template <class T>
+	inline T& Data::as() {
+		return *static_cast<T*>(_ptr_val);
+	}
+
+	template<>
+	inline Array& Data::as() {
+		if (is_valid() && is_ptr() && as<Json>().is_array() && as<Json>().is_valid()) {
+			return *static_cast<Array*>(_ptr_val);
+		}
+		static Array empty_arr{false};
+		return empty_arr;
+	}
+
+	template<>
+	inline Object& Data::as() {
+		if (is_valid() && is_ptr() && as<Json>().is_object() && as<Json>().is_valid()) {
+			return *static_cast<Object*>(_ptr_val);
+		}
+		static Object empty_obj{false};
+		return empty_obj;
+	}
+
+	template <class T>
+	inline const T& Data::as() const {
+		return *static_cast<T*>(_ptr_val);
+	}
+
+
+	template <class T>
+	inline T* Data::as_ptr() {
+		return static_cast<T*>(_ptr_val);
+	}
+
+	template <class T>
+	inline const T* Data::as_ptr() const {
+		return static_cast<T*>(_ptr_val);
 	}
 
 }

@@ -58,18 +58,18 @@ int main(int argc, char* argv[])
 
 
 			double sum = 0;
-			if (false && ok) {
+			if (true && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
-					auto& features = j.as<claujson::Json>()[1]; // j[1];
-					for (auto& feature : features.as<claujson::Array>()) {
-						auto& geometry = feature.as<claujson::Object>().at("geometry"sv); // as_array()[t].as_object()["geometry"];
-						if (geometry.is_ptr()) { // is_obj or arr?
+					if (j && j.is_ptr()) {
+						auto& features = j.as<claujson::Object>()[1]; // j[1];
+						for (auto& feature : features.as<claujson::Array>()) {
+							auto& geometry = feature.as<claujson::Object>().at("geometry"sv); // as_array()[t].as_object()["geometry"];
 							auto& coordinates = geometry.as<claujson::Object>().at("coordinates"sv);
 							auto& coordinate = coordinates.as<claujson::Array>()[0];
 							for (auto& coordinate_ : coordinate.as<claujson::Array>()) {
 								for (auto& x : coordinate_.as<claujson::Array>()) {
-									if (x.is_float()) {
+									if (x && x.is_float()) {
 										sum += x.float_val();
 
 										counter++;
@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
 					}
 				}
 			}
+		
 
 			std::cout << clock() - c << "ms\n";
 			std::cout << sum << " ";
@@ -95,7 +96,7 @@ int main(int argc, char* argv[])
 
 
 			sum = 0; counter = 0; 
-			if (false && ok) {
+			if (true && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
 					auto& features = j.as<claujson::Json>()[1]; // j[1];
