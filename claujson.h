@@ -112,28 +112,28 @@ namespace claujson {
 		}
 
 		bool is_int() const {
-			return type() == simdjson::internal::tape_type::INT64;
+			return is_valid() && type() == simdjson::internal::tape_type::INT64;
 		}
 
 		bool is_uint() const {
-			return type() == simdjson::internal::tape_type::UINT64;
+			return is_valid() && type() == simdjson::internal::tape_type::UINT64;
 		}
 
 		bool is_float() const {
-			return type() == simdjson::internal::tape_type::DOUBLE;
+			return is_valid() && type() == simdjson::internal::tape_type::DOUBLE;
 		}
 
 		bool is_bool() const {
-			return type() == simdjson::internal::tape_type::TRUE_VALUE ||
-				type() == simdjson::internal::tape_type::FALSE_VALUE;
+			return is_valid() && (type() == simdjson::internal::tape_type::TRUE_VALUE ||
+				type() == simdjson::internal::tape_type::FALSE_VALUE);
 		}
 
 		bool is_str() const {
-			return type() == simdjson::internal::tape_type::STRING;
+			return is_valid() && type() == simdjson::internal::tape_type::STRING;
 		}
 
 		bool is_ptr() const {
-			return type() == simdjson::internal::tape_type::ROOT;
+			return is_valid() && type() == simdjson::internal::tape_type::ROOT;
 		}
 
 		int64_t int_val() const {
@@ -161,10 +161,16 @@ namespace claujson {
 		}
 
 		bool bool_val() const {
+			if (!is_bool()) {
+				return false;
+			}
 			return _bool_val;
 		}
 
 		void* ptr_val() const {
+			if (!is_ptr()) {
+				return nullptr;
+			}
 			return _ptr_val;
 		}
 
@@ -1829,14 +1835,37 @@ namespace claujson {
 		return *static_cast<T*>(_ptr_val);
 	}
 
+	template<>
+	inline const Array& Data::as() const {
+		if (is_valid() && is_ptr() && as<Json>().is_array() && as<Json>().is_valid()) {
+			return *static_cast<Array*>(_ptr_val);
+		}
+		static const Array empty_arr{ false };
+		return empty_arr;
+	}
+
+	template<>
+	inline const Object& Data::as() const {
+		if (is_valid() && is_ptr() && as<Json>().is_object() && as<Json>().is_valid()) {
+			return *static_cast<Object*>(_ptr_val);
+		}
+		static const Object empty_obj{ false };
+		return empty_obj;
+	}
 
 	template <class T>
 	inline T* Data::as_ptr() {
+		if (!is_ptr()) {
+			return nullptr;
+		}
 		return static_cast<T*>(_ptr_val);
 	}
 
 	template <class T>
 	inline const T* Data::as_ptr() const {
+		if (!is_ptr()) {
+			return nullptr;
+		}
 		return static_cast<T*>(_ptr_val);
 	}
 

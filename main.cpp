@@ -38,9 +38,8 @@ int main(int argc, char* argv[])
 			if (!x.first) {
 				std::cout << "fail\n";
 
-				if (j.is_ptr() && j.ptr_val()) {
-					claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
-				}
+				claujson::Ptr<claujson::Json> clean(j.as_ptr<claujson::Json>());
+				
 				return 1;
 			}
 
@@ -61,7 +60,7 @@ int main(int argc, char* argv[])
 			if (true && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
-					if (j && j.is_ptr()) {
+					if (j.is_ptr()) {
 						auto& features = j.as<claujson::Object>()[1]; // j[1];
 						for (auto& feature : features.as<claujson::Array>()) {
 							auto& geometry = feature.as<claujson::Object>().at("geometry"sv); // as_array()[t].as_object()["geometry"];
@@ -69,7 +68,7 @@ int main(int argc, char* argv[])
 							auto& coordinate = coordinates.as<claujson::Array>()[0];
 							for (auto& coordinate_ : coordinate.as<claujson::Array>()) {
 								for (auto& x : coordinate_.as<claujson::Array>()) {
-									if (x && x.is_float()) {
+									if (x.is_float()) {
 										sum += x.float_val();
 
 										counter++;
@@ -121,9 +120,9 @@ int main(int argc, char* argv[])
 			}
 			std::cout << clock() - c2 << "ms\n";
 			std::cout << "Re.. " << sum << " " << counter << "\n";
-			if (j.is_ptr() && j.ptr_val()) {
-				claujson::Ptr<claujson::Json> clean(&j.as<claujson::Json>());
-			}
+			
+			claujson::Ptr<claujson::Json> clean(j.as_ptr<claujson::Json>());
+			
 
 			return !ok;
 		}
