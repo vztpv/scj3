@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 
 
 			sum = 0; counter = 0; 
-			if (true && ok) {
+			if (false && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
 					auto& features = j.as<claujson::Json>()[1]; // j[1];

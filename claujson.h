@@ -2072,14 +2072,15 @@ namespace claujson {
 
 			while (parent && parent->is_root() == false) {
 				size_t idx = 0;
-				for (size_t i = 0; i < parent->get_data_size(); ++i) {
+				size_t len = parent->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
 					if (parent->get_data_list(i).is_ptr() && parent->get_data_list(i).ptr_val() == pos_) {
 						idx = i;
 						break;
 					}
 				}
 
-				for (size_t i = idx + 1; i < parent->get_data_size(); ++i) {
+				for (size_t i = idx + 1; i < len; ++i) {
 					if (parent->get_data_list(i).is_ptr()) {
 						out->add_user_type(Ptr<Json>((Json*)parent->get_data_list(i).ptr_val()));
 					}
@@ -3070,7 +3071,8 @@ namespace claujson {
 			}
 
 			if (ut && ut->is_object()) {
-				for (size_t i = 0; i < ut->get_data_size(); ++i) {
+				size_t len = ut->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
 					if (ut->get_data_list(i).is_ptr()) {
 						auto& x = ut->get_key_list(i);
 
@@ -3239,7 +3241,8 @@ namespace claujson {
 				}
 			}
 			else if (ut && ut->is_array()) {
-				for (size_t i = 0; i < ut->get_data_size(); ++i) {
+				size_t len = ut->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
 					if (ut->get_data_list(i).is_ptr()) {
 
 
@@ -3397,7 +3400,8 @@ namespace claujson {
 
 
 			if (ut && ut->is_object()) {
-				for (size_t i = 0; i < ut->get_data_size(); ++i) {
+				size_t len = ut->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
 					if (ut->get_data_list(i).is_ptr()) {
 						auto& x = ut->get_key_list(i);
 
@@ -3566,7 +3570,8 @@ namespace claujson {
 				}
 			}
 			else if (ut && ut->is_array()) {
-				for (size_t i = 0; i < ut->get_data_size(); ++i) {
+				size_t len = ut->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
 					if (ut->get_data_list(i).is_ptr()) {
 
 
