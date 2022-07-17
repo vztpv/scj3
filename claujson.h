@@ -43,6 +43,10 @@ namespace claujson {
 	claujson::Data& Convert(::claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
 		char* buf, uint8_t* string_buf, uint64_t id, bool& err);
 
+	enum class DataType {
+		NONE, ARRAY_OR_OBJECT, INT, UINT, FLOAT, BOOL, NULL_, STRING
+	};
+
 	class Data {
 		friend claujson::Data& Convert(::claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
 			char* buf, uint8_t* string_buf, uint64_t id, bool& err);
@@ -57,7 +61,7 @@ namespace claujson {
 		};
 
 		bool valid = true;
-		simdjson::internal::tape_type _type = simdjson::internal::tape_type::NONE;
+		DataType _type = DataType::NONE;
 
 	public:
 
@@ -95,7 +99,7 @@ namespace claujson {
 			set_bool(x);
 		}
 		explicit Data(nullptr_t x) {
-			set_type(simdjson::internal::tape_type::NULL_VALUE);
+			set_type(DataType::NULL_);
 		}
 
 		explicit Data(nullptr_t, bool valid) : valid(valid) {
@@ -103,7 +107,7 @@ namespace claujson {
 		}
 
 	public:
-		simdjson::internal::tape_type type() const {
+		DataType type() const {
 			return _type;
 		}
 
@@ -112,28 +116,27 @@ namespace claujson {
 		}
 
 		bool is_int() const {
-			return is_valid() && type() == simdjson::internal::tape_type::INT64;
+			return is_valid() && type() == DataType::INT;
 		}
 
 		bool is_uint() const {
-			return is_valid() && type() == simdjson::internal::tape_type::UINT64;
+			return is_valid() && type() == DataType::UINT;
 		}
 
 		bool is_float() const {
-			return is_valid() && type() == simdjson::internal::tape_type::DOUBLE;
+			return is_valid() && type() == DataType::FLOAT;
 		}
 
 		bool is_bool() const {
-			return is_valid() && (type() == simdjson::internal::tape_type::TRUE_VALUE ||
-				type() == simdjson::internal::tape_type::FALSE_VALUE);
+			return is_valid() && (type() == DataType::BOOL);
 		}
 
 		bool is_str() const {
-			return is_valid() && type() == simdjson::internal::tape_type::STRING;
+			return is_valid() && type() == DataType::STRING;
 		}
 
 		bool is_ptr() const {
-			return is_valid() && type() == simdjson::internal::tape_type::ROOT;
+			return is_valid() && (type() == DataType::ARRAY_OR_OBJECT);
 		}
 
 		int64_t int_val() const {
@@ -192,15 +195,14 @@ namespace claujson {
 	public:
 		void clear() {
 
-
-			if (_type == simdjson::internal::tape_type::STRING) {
+			if (_type == DataType::STRING) {
 				delete _str_val; _str_val = nullptr;
 			}
 			else {
 				_int_val = 0;
 			}
 			valid = true;
-			_type = simdjson::internal::tape_type::NONE;
+			_type = DataType::NONE;
 		}
 
 		std::string& str_val() {
@@ -214,36 +216,37 @@ namespace claujson {
 		}
 
 		void set_ptr(void* x) {
-			if (_type == simdjson::internal::tape_type::STRING) {
+			if (_type == DataType::STRING) {
 				delete _str_val;
 			}
 
 			_ptr_val = x;
-			_type = simdjson::internal::tape_type::ROOT; // chk change simdjson::internal::tape_type:: ~~ -> DataType:: ~~
+			
+			_type = DataType::ARRAY_OR_OBJECT; // chk change DataType:: ~~ -> DataType:: ~~
 		}
 		void set_int(long long x) {
-			if (_type == simdjson::internal::tape_type::STRING) {
+			if (_type == DataType::STRING) {
 				delete _str_val;
 			}
 			_int_val = x;
-			_type = simdjson::internal::tape_type::INT64;
+			_type = DataType::INT;
 		}
 
 		void set_uint(unsigned long long x) {
-			if (_type == simdjson::internal::tape_type::STRING) {
+			if (_type == DataType::STRING) {
 				delete _str_val;
 			}
 			_uint_val = x;
-			_type = simdjson::internal::tape_type::UINT64;
+			_type = DataType::UINT;
 		}
 
 		void set_float(double x) {
-			if (_type == simdjson::internal::tape_type::STRING) {
+			if (_type == DataType::STRING) {
 				delete _str_val;
 			}
 			_float_val = x;
 
-			_type = simdjson::internal::tape_type::DOUBLE;
+			_type = DataType::FLOAT;
 		}
 
 		bool set_str(const char* str, size_t len) {
@@ -272,7 +275,7 @@ namespace claujson {
 					*x = '\0';
 					size_t string_length = uint32_t(x - buf_dest);
 
-					if (_type != simdjson::internal::tape_type::STRING) {
+					if (_type != DataType::STRING) {
 						_str_val = new std::string((char*)buf_dest, string_length);
 					}
 					else {
@@ -297,7 +300,7 @@ namespace claujson {
 					*x = '\0';
 					size_t string_length = uint32_t(x - buf_dest);
 
-					if (_type != simdjson::internal::tape_type::STRING) {
+					if (_type != DataType::STRING) {
 						_str_val = new std::string((char*)buf_dest, string_length);
 					}
 					else {
@@ -306,39 +309,49 @@ namespace claujson {
 				}
 			}
 
-			_type = simdjson::internal::tape_type::STRING;
+			_type = DataType::STRING;
 
 			return true;
 		}
 	private:
 		void set_str_in_parse(const char* str, size_t len) {
-			if (_type != simdjson::internal::tape_type::STRING) {
+			if (_type != DataType::STRING) {
 				_str_val = new std::string(str, len);
 			}
 			else {
 				_str_val->assign(str, len);
 			}
-			_type = simdjson::internal::tape_type::STRING;
+			_type = DataType::STRING;
 		}
 	public:
 		void set_bool(bool x) {
+			if (_type == DataType::STRING) {
+				delete _str_val;
+			}
+
 			_bool_val = x;
 
-			if (x) {
-				set_type(simdjson::internal::tape_type::TRUE_VALUE);
-			}
-			else {
-				set_type(simdjson::internal::tape_type::FALSE_VALUE);
+			{
+				set_type(DataType::BOOL);
 			}
 		}
 
-		void set_type(simdjson::internal::tape_type type) {
+		void set_null() {
+			if (_type == DataType::STRING) {
+				delete _str_val;
+			}
+
+			set_type(DataType::NULL_);
+		}
+
+	private:
+		void set_type(DataType type) {
 			this->_type = type;
 		}
 
 	public:
 		virtual ~Data() {
-			if (_type == simdjson::internal::tape_type::STRING && _str_val) {
+			if (_type == DataType::STRING && _str_val) {
 				//std::cout << "chk";
 				delete _str_val;
 				_str_val = nullptr;
@@ -348,7 +361,7 @@ namespace claujson {
 		Data(const Data& other)
 			: _type(other._type) //, is_key(other.is_key) 
 		{
-			if (_type == simdjson::internal::tape_type::STRING) {
+			if (_type == DataType::STRING) {
 				_str_val = new std::string(other._str_val->c_str(), other._str_val->size());
 
 			}
@@ -362,10 +375,10 @@ namespace claujson {
 			: _type(other._type) //, is_key(other.is_key) 
 		{
 
-			if (_type == simdjson::internal::tape_type::STRING) {
+			if (_type == DataType::STRING) {
 				_str_val = other._str_val;
 				other._str_val = nullptr;
-				other._type = simdjson::internal::tape_type::NONE;
+				other._type = DataType::NONE;
 			}
 			else {
 				std::swap(_int_val, other._int_val);
@@ -374,21 +387,21 @@ namespace claujson {
 			std::swap(valid, other.valid);
 		}
 
-		Data() : _int_val(0), _type(simdjson::internal::tape_type::NONE) { }
+		Data() : _int_val(0), _type(DataType::NONE) { }
 
 		bool operator==(const Data& other) const {
 			if (this->_type == other._type) {
 				switch (this->_type) {
-				case simdjson::internal::tape_type::STRING:
+				case DataType::STRING:
 					return this->_str_val == other._str_val;
 					break;
-				case simdjson::internal::tape_type::INT64:
+				case DataType::INT:
 					return this->_int_val == other._int_val;
 					break;
-				case simdjson::internal::tape_type::UINT64:
+				case DataType::UINT:
 					return this->_uint_val == other._uint_val;
 					break;
-				case simdjson::internal::tape_type::DOUBLE:
+				case DataType::FLOAT:
 					return this->_float_val == other._float_val;
 					break;
 				}
@@ -400,16 +413,16 @@ namespace claujson {
 		bool operator<(const Data& other) const {
 			if (this->_type == other._type) {
 				switch (this->_type) {
-				case simdjson::internal::tape_type::STRING:
+				case DataType::STRING:
 					return this->_str_val < other._str_val;
 					break;
-				case simdjson::internal::tape_type::INT64:
+				case DataType::INT:
 					return this->_int_val < other._int_val;
 					break;
-				case simdjson::internal::tape_type::UINT64:
+				case DataType::UINT:
 					return this->_uint_val < other._uint_val;
 					break;
-				case simdjson::internal::tape_type::DOUBLE:
+				case DataType::FLOAT:
 					return this->_float_val < other._float_val;
 					break;
 				}
@@ -423,15 +436,15 @@ namespace claujson {
 				return *this;
 			}
 
-			if (this->_type != simdjson::internal::tape_type::STRING && other._type == simdjson::internal::tape_type::STRING) {
+			if (this->_type != DataType::STRING && other._type == DataType::STRING) {
 				this->_str_val = new std::string();
 			}
-			else if (this->_type == simdjson::internal::tape_type::STRING && other._type != simdjson::internal::tape_type::STRING) {
+			else if (this->_type == DataType::STRING && other._type != DataType::STRING) {
 				delete this->_str_val;
 			}
 
 
-			if (this->_type == simdjson::internal::tape_type::STRING) {
+			if (this->_type == DataType::STRING) {
 				set_str(other._str_val->c_str(), other._str_val->size());
 			}
 			else {
@@ -460,38 +473,26 @@ namespace claujson {
 		friend std::ostream& operator<<(std::ostream& stream, const Data& data) {
 
 			switch (data._type) {
-			case simdjson::internal::tape_type::INT64:
+			case DataType::INT:
 				stream << data._int_val;
 				break;
-			case simdjson::internal::tape_type::UINT64:
+			case DataType::UINT:
 				stream << data._uint_val;
 				break;
-			case simdjson::internal::tape_type::DOUBLE:
+			case DataType::FLOAT:
 				stream << data._float_val;
 				break;
-			case simdjson::internal::tape_type::STRING:
+			case DataType::STRING:
 				stream << (*data._str_val);
 				break;
-			case simdjson::internal::tape_type::TRUE_VALUE:
-				stream << "true";
+			case DataType::BOOL:
+				stream << data._bool_val;
 				break;
-			case simdjson::internal::tape_type::FALSE_VALUE:
-				stream << "false";
-				break;
-			case simdjson::internal::tape_type::NULL_VALUE:
+			case DataType::NULL_:
 				stream << "null";
 				break;
-			case simdjson::internal::tape_type::START_ARRAY:
-				stream << "[";
-				break;
-			case simdjson::internal::tape_type::START_OBJECT:
-				stream << "{";
-				break;
-			case simdjson::internal::tape_type::END_ARRAY:
-				stream << "]";
-				break;
-			case simdjson::internal::tape_type::END_OBJECT:
-				stream << "}";
+			case DataType::ARRAY_OR_OBJECT:
+				stream << "array_or_object";
 				break;
 			}
 
@@ -635,7 +636,7 @@ namespace claujson {
 					throw "Error in Convert for true";
 				}
 
-				data.set_type((simdjson::internal::tape_type)buf[idx]);
+				data.set_bool(true);
 			}
 			break;
 			case 'f':
@@ -643,14 +644,14 @@ namespace claujson {
 					throw "Error in Convert for false";
 				}
 
-				data.set_type((simdjson::internal::tape_type)buf[idx]);
+				data.set_bool(false);
 				break;
 			case 'n':
 				if (!simdjson::SIMDJSON_IMPLEMENTATION::atomparsing::is_valid_null_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
 					throw "Error in Convert for null";
 				}
 
-				data.set_type((simdjson::internal::tape_type)buf[idx]);
+				data.set_null();
 				break;
 			case '-':
 			case '0':
@@ -1151,7 +1152,7 @@ namespace claujson {
 						throw "Error in add_item_type";
 					}
 
-					if (temp.type() != simdjson::internal::tape_type::STRING) {
+					if (temp.type() != DataType::STRING) {
 						throw "Error in add_item_type, key is not string";
 					}
 
@@ -1598,7 +1599,7 @@ namespace claujson {
 						throw "Error in add_item_type";
 					}
 
-					if (temp.type() != simdjson::internal::tape_type::STRING) {
+					if (temp.type() != DataType::STRING) {
 						throw "Error in add_item_type, key is not string";
 					}
 
@@ -1690,7 +1691,7 @@ namespace claujson {
 					throw "Error in add_user_type";
 				}
 
-				if (temp.type() != simdjson::internal::tape_type::STRING) {
+				if (temp.type() != DataType::STRING) {
 					throw "Error in add_item_type, key is not string";
 				}
 
@@ -1747,7 +1748,7 @@ namespace claujson {
 					throw "Error in add_user_type";
 				}
 
-				if (temp.type() != simdjson::internal::tape_type::STRING) {
+				if (temp.type() != DataType::STRING) {
 					throw "Error in add_item_type, key is not string";
 				}
 
@@ -2434,8 +2435,8 @@ namespace claujson {
 					case simdjson::internal::tape_type::END_ARRAY:
 					case simdjson::internal::tape_type::END_OBJECT:
 					case simdjson::internal::tape_type::STRING:
-					case simdjson::internal::tape_type::INT64:
-					case simdjson::internal::tape_type::UINT64:
+					case simdjson::internal::tape_type::INT:
+					case simdjson::internal::tape_type::UINT:
 					case simdjson::internal::tape_type::DOUBLE:
 					case simdjson::internal::tape_type::TRUE_VALUE:
 					case simdjson::internal::tape_type::FALSE_VALUE:
@@ -3076,7 +3077,7 @@ namespace claujson {
 					if (ut->get_data_list(i).is_ptr()) {
 						auto& x = ut->get_key_list(i);
 
-						if (x.type() == simdjson::internal::tape_type::STRING) {
+						if (x.type() == DataType::STRING) {
 							stream << "\"";
 
 							size_t len = x.str_val().size();
@@ -3138,7 +3139,7 @@ namespace claujson {
 					else {
 						auto& x = ut->get_key_list(i);
 
-						if (x.type() == simdjson::internal::tape_type::STRING) {
+						if (x.type() == DataType::STRING) {
 							stream << "\"";
 
 							size_t len = x.str_val().size();
@@ -3180,7 +3181,7 @@ namespace claujson {
 						{
 							auto& x = ut->get_data_list(i);
 
-							if (x.type() == simdjson::internal::tape_type::STRING) {
+							if (x.type() == DataType::STRING) {
 								stream << "\"";
 
 								size_t len = x.str_val().size();
@@ -3214,22 +3215,19 @@ namespace claujson {
 								stream << "\"";
 
 							}
-							else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
-								stream << "true";
+							else if (x.type() == DataType::BOOL) {
+								stream << (x.bool_val() ? "true" : "false");
 							}
-							else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
-								stream << "false";
-							}
-							else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
+							else if (x.type() == DataType::FLOAT) {
 								stream << (x.float_val());
 							}
-							else if (x.type() == simdjson::internal::tape_type::INT64) {
+							else if (x.type() == DataType::INT) {
 								stream << x.int_val();
 							}
-							else if (x.type() == simdjson::internal::tape_type::UINT64) {
+							else if (x.type() == DataType::UINT) {
 								stream << x.uint_val();
 							}
-							else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
+							else if (x.type() == DataType::NULL_) {
 								stream << "null";
 							}
 						}
@@ -3274,7 +3272,7 @@ namespace claujson {
 
 						auto& x = ut->get_data_list(i);
 
-						if (x.type() == simdjson::internal::tape_type::STRING) {
+						if (x.type() == DataType::STRING) {
 							stream << "\"";
 
 							size_t len = x.str_val().size();
@@ -3306,22 +3304,19 @@ namespace claujson {
 								}
 							}stream << "\"";
 						}
-						else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
-							stream << "true";
+						else if (x.type() == DataType::BOOL) {
+							stream << (x.bool_val() ? "true" : "false");
 						}
-						else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
-							stream << "false";
-						}
-						else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
+						else if (x.type() == DataType::FLOAT) {
 							stream << (x.float_val());
 						}
-						else if (x.type() == simdjson::internal::tape_type::INT64) {
+						else if (x.type() == DataType::INT) {
 							stream << x.int_val();
 						}
-						else if (x.type() == simdjson::internal::tape_type::UINT64) {
+						else if (x.type() == DataType::UINT) {
 							stream << x.uint_val();
 						}
-						else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
+						else if (x.type() == DataType::NULL_) {
 							stream << "null";
 						}
 
@@ -3337,7 +3332,7 @@ namespace claujson {
 			else if (data) { // valid
 				auto& x = data;
 
-				if (x.type() == simdjson::internal::tape_type::STRING) {
+				if (x.type() == DataType::STRING) {
 					stream << "\"";
 
 					size_t len = x.str_val().size();
@@ -3371,22 +3366,19 @@ namespace claujson {
 					stream << "\"";
 
 				}
-				else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
-					stream << "true";
+				else if (x.type() == DataType::BOOL) {
+					stream << (x.bool_val() ? "true" : "false");
 				}
-				else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
-					stream << "false";
-				}
-				else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
+				else if (x.type() == DataType::FLOAT) {
 					stream << (x.float_val());
 				}
-				else if (x.type() == simdjson::internal::tape_type::INT64) {
+				else if (x.type() == DataType::INT) {
 					stream << x.int_val();
 				}
-				else if (x.type() == simdjson::internal::tape_type::UINT64) {
+				else if (x.type() == DataType::UINT) {
 					stream << x.uint_val();
 				}
-				else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
+				else if (x.type() == DataType::NULL_) {
 					stream << "null";
 				}
 			}
@@ -3405,7 +3397,7 @@ namespace claujson {
 					if (ut->get_data_list(i).is_ptr()) {
 						auto& x = ut->get_key_list(i);
 
-						if (x.type() == simdjson::internal::tape_type::STRING) {
+						if (x.type() == DataType::STRING) {
 							stream << "\"";
 
 							size_t len = x.str_val().size();
@@ -3467,7 +3459,7 @@ namespace claujson {
 					else {
 						auto& x = ut->get_key_list(i);
 
-						if (x.type() == simdjson::internal::tape_type::STRING) {
+						if (x.type() == DataType::STRING) {
 							stream << "\"";
 
 							size_t len = x.str_val().size();
@@ -3509,7 +3501,7 @@ namespace claujson {
 						{
 							auto& x = ut->get_data_list(i);
 
-							if (x.type() == simdjson::internal::tape_type::STRING) {
+							if (x.type() == DataType::STRING) {
 								stream << "\"";
 
 								size_t len = x.str_val().size();
@@ -3543,22 +3535,19 @@ namespace claujson {
 								stream << "\"";
 
 							}
-							else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
-								stream << "true";
+							else if (x.type() == DataType::BOOL) {
+								stream << (x.bool_val() ? "true" : "false");
 							}
-							else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
-								stream << "false";
-							}
-							else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
+							else if (x.type() == DataType::FLOAT) {
 								stream << (x.float_val());
 							}
-							else if (x.type() == simdjson::internal::tape_type::INT64) {
+							else if (x.type() == DataType::INT) {
 								stream << x.int_val();
 							}
-							else if (x.type() == simdjson::internal::tape_type::UINT64) {
+							else if (x.type() == DataType::UINT) {
 								stream << x.uint_val();
 							}
-							else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
+							else if (x.type() == DataType::NULL_) {
 								stream << "null";
 							}
 						}
@@ -3603,7 +3592,7 @@ namespace claujson {
 
 						auto& x = ut->get_data_list(i);
 
-						if (x.type() == simdjson::internal::tape_type::STRING) {
+						if (x.type() == DataType::STRING) {
 							stream << "\"";
 
 							size_t len = x.str_val().size();
@@ -3635,22 +3624,19 @@ namespace claujson {
 								}
 							}stream << "\"";
 						}
-						else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
-							stream << "true";
+						else if (x.type() == DataType::BOOL) {
+							stream << (x.bool_val() ? "true" : "false");
 						}
-						else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
-							stream << "false";
-						}
-						else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
+						else if (x.type() == DataType::FLOAT) {
 							stream << (x.float_val());
 						}
-						else if (x.type() == simdjson::internal::tape_type::INT64) {
+						else if (x.type() == DataType::INT) {
 							stream << x.int_val();
 						}
-						else if (x.type() == simdjson::internal::tape_type::UINT64) {
+						else if (x.type() == DataType::UINT) {
 							stream << x.uint_val();
 						}
-						else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
+						else if (x.type() == DataType::NULL_) {
 							stream << "null";
 						}
 
@@ -3666,7 +3652,7 @@ namespace claujson {
 			else if (data) { // valid
 				auto& x = data;
 
-				if (x.type() == simdjson::internal::tape_type::STRING) {
+				if (x.type() == DataType::STRING) {
 					stream << "\"";
 
 					size_t len = x.str_val().size();
@@ -3700,22 +3686,19 @@ namespace claujson {
 					stream << "\"";
 
 				}
-				else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
-					stream << "true";
+				else if (x.type() == DataType::BOOL) {
+					stream << (x.bool_val() ? "true" : "false");
 				}
-				else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
-					stream << "false";
-				}
-				else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
+				else if (x.type() == DataType::FLOAT) {
 					stream << (x.float_val());
 				}
-				else if (x.type() == simdjson::internal::tape_type::INT64) {
+				else if (x.type() == DataType::INT) {
 					stream << x.int_val();
 				}
-				else if (x.type() == simdjson::internal::tape_type::UINT64) {
+				else if (x.type() == DataType::UINT) {
 					stream << x.uint_val();
 				}
-				else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
+				else if (x.type() == DataType::NULL_) {
 					stream << "null";
 				}
 			}
@@ -3753,7 +3736,7 @@ namespace claujson {
 					stream << " , ";
 				}
 				auto& x = global;
-				if (x.type() == simdjson::internal::tape_type::STRING) {
+				if (x.type() == DataType::STRING) {
 					stream << "\"";
 
 					size_t len = x.str_val().size();
@@ -3785,22 +3768,19 @@ namespace claujson {
 						}
 					}stream << "\"";
 				}
-				else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
-					stream << "true";
+				else if (x.type() == DataType::BOOL) {
+					stream << (x.bool_val() ? "true" : "false");
 				}
-				else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
-					stream << "false";
-				}
-				else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
+				else if (x.type() == DataType::FLOAT) {
 					stream << (x.float_val());
 				}
-				else if (x.type() == simdjson::internal::tape_type::INT64) {
+				else if (x.type() == DataType::INT) {
 					stream << x.int_val();
 				}
-				else if (x.type() == simdjson::internal::tape_type::UINT64) {
+				else if (x.type() == DataType::UINT) {
 					stream << x.uint_val();
 				}
-				else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
+				else if (x.type() == DataType::NULL_) {
 					stream << "null";
 				}
 			}
@@ -3886,7 +3866,7 @@ namespace claujson {
 				}
 
 				auto& x = global;
-				if (x.type() == simdjson::internal::tape_type::STRING) {
+				if (x.type() == DataType::STRING) {
 					stream << "\"";
 
 					size_t len = x.str_val().size();
@@ -3918,22 +3898,19 @@ namespace claujson {
 						}
 					}stream << "\"";
 				}
-				else if (x.type() == simdjson::internal::tape_type::TRUE_VALUE) {
-					stream << "true";
+				else if (x.type() == DataType::BOOL) {
+					stream << (x.bool_val() ? "true" : "false");
 				}
-				else if (x.type() == simdjson::internal::tape_type::FALSE_VALUE) {
-					stream << "false";
-				}
-				else if (x.type() == simdjson::internal::tape_type::DOUBLE) {
+				else if (x.type() == DataType::FLOAT) {
 					stream << (x.float_val());
 				}
-				else if (x.type() == simdjson::internal::tape_type::INT64) {
+				else if (x.type() == DataType::INT) {
 					stream << x.int_val();
 				}
-				else if (x.type() == simdjson::internal::tape_type::UINT64) {
+				else if (x.type() == DataType::UINT) {
 					stream << x.uint_val();
 				}
-				else if (x.type() == simdjson::internal::tape_type::NULL_VALUE) {
+				else if (x.type() == DataType::NULL_) {
 					stream << "null";
 				}
 			}
