@@ -201,7 +201,9 @@ namespace claujson {
 			else {
 				_int_val = 0;
 			}
-			valid = true;
+			
+			//valid = true;
+			
 			_type = DataType::NONE;
 		}
 
@@ -216,6 +218,10 @@ namespace claujson {
 		}
 
 		void set_ptr(void* x) {
+			if (!is_valid()) {
+				return;
+			}
+
 			if (_type == DataType::STRING) {
 				delete _str_val;
 			}
@@ -841,10 +847,14 @@ namespace claujson {
 
 	class Json {
 		friend class LoadData;
+		friend class Data;
+		friend class Array;
+		friend class Object;
+		friend class Root;
 	protected:
 		Data key;
 		PtrWeak<Json> parent;
-		bool valid;
+		bool valid = true; //
 	protected:
 		// check...
 		static inline Data data_null{ nullptr, false }; // valid is false..
@@ -853,8 +863,10 @@ namespace claujson {
 		bool is_valid() const {
 			return valid;
 		}
-
-		explicit Json(bool valid = true) : valid(valid) { }
+	protected:
+		explicit Json(bool valid) : valid(valid) { }
+	public:
+		explicit Json() { }
 
 		Json(const Json&) = delete;
 		Json& operator=(const Json&) = delete;
@@ -866,7 +878,7 @@ namespace claujson {
 
 
 		const Data& at(std::string_view key) const {
-			if (!is_object()) {
+			if (!is_object() || !is_valid()) {
 				return data_null;
 			}
 
@@ -881,7 +893,7 @@ namespace claujson {
 		}
 
 		Data& at(std::string_view key) {
-			if (!is_object()) {
+			if (!is_object() || !is_valid()) {
 				return data_null;
 			}
 
@@ -896,7 +908,7 @@ namespace claujson {
 		}
 
 		size_t find(std::string_view key) { // chk (uint64_t)-1 == (maximum)....-> eof?
-			if (!is_object()) {
+			if (!is_object() || !is_valid()) {
 				return -1;
 			}
 
@@ -912,14 +924,14 @@ namespace claujson {
 
 
 		Data& operator[](size_t idx) {
-			if (idx >= get_data_size()) {
+			if (idx >= get_data_size() || !is_valid()) {
 				return data_null;
 			}
 			return get_data_list(idx);
 		}
 
 		const Data& operator[](size_t idx) const {
-			if (idx >= get_data_size()) {
+			if (idx >= get_data_size() || !is_valid()) {
 				return data_null;
 			}
 			return get_data_list(idx);
@@ -933,9 +945,7 @@ namespace claujson {
 			return parent;
 		}
 
-		void set_parent(PtrWeak<Json> j) {
-			parent = j;
-		}
+
 		virtual Data& get_key() {
 			return key;
 		}
@@ -986,6 +996,12 @@ namespace claujson {
 		virtual void erase(std::string_view key) = 0;
 		virtual void erase(size_t idx) = 0;
 
+	private:	
+		void set_parent(PtrWeak<Json> j) {
+			parent = j;
+		}
+
+
 	private:
 		virtual void Link(Ptr<Json> j) = 0;
 
@@ -1008,12 +1024,14 @@ namespace claujson {
 	};
 
 	class Object : public Json {
+		friend class Data;
 	protected:
 		std::vector<Data> obj_key_vec;
 		std::vector<Data> obj_val_vec;
+	protected:
+		explicit Object(bool valid) : Json(valid) { }
 	public:
-
-		explicit Object(bool valid = true) : Json(valid) { }
+		explicit Object() { }
 
 		virtual ~Object() {
 			for (auto& x : obj_val_vec) {
@@ -1075,6 +1093,10 @@ namespace claujson {
 
 
 		virtual void add_object_element(Data key, Data val) {
+			if (!is_valid()) {
+				return;
+			}
+
 			if (val.is_ptr()) {
 				auto* x = (Json*)val.ptr_val();
 				x->set_key(key); // no need?
@@ -1084,6 +1106,10 @@ namespace claujson {
 		}
 		virtual void add_array_element(Data val) { std::cout << "err"; }
 		virtual void add_array(Ptr<Json> arr) {
+			if (!is_valid()) {
+				return;
+			}
+
 			if (arr->has_key()) {
 				obj_key_vec.push_back(arr->get_key());
 				obj_val_vec.push_back(Data(arr.Get()));
@@ -1093,6 +1119,10 @@ namespace claujson {
 			}
 		}
 		virtual void add_object(Ptr<Json> obj) {
+			if (!is_valid()) {
+				return;
+			}
+
 			if (obj->has_key()) {
 				obj_key_vec.push_back(obj->get_key());
 				obj_val_vec.push_back(Data(obj.Get()));
@@ -1110,6 +1140,10 @@ namespace claujson {
 		}
 
 		virtual void erase(size_t idx) {
+			if (!is_valid()) {
+				return;
+			}
+
 			obj_key_vec.erase(obj_key_vec.begin() + idx);
 			obj_val_vec.erase(obj_val_vec.begin() + idx);
 		}
@@ -1118,6 +1152,10 @@ namespace claujson {
 
 	private:
 		virtual void Link(Ptr<Json> j) {
+			if (!is_valid()) {
+				return;
+			}
+
 			if (j->has_key()) {
 				//
 			}
@@ -1135,7 +1173,9 @@ namespace claujson {
 
 		virtual void add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
 			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2) {
-
+			if (!is_valid()) {
+				return;
+			}
 				{
 					Data temp;// key
 					Data temp2;
@@ -1180,6 +1220,10 @@ namespace claujson {
 		}
 
 		virtual void add_user_type(Ptr<Json> j) {
+			if (!is_valid()) {
+				return;
+			}
+
 			if (j->is_virtual()) {
 				j->set_parent(this);
 
@@ -1201,11 +1245,13 @@ namespace claujson {
 	};
 
 	class Array : public Json {
+		friend class Data;
 	protected:
 		std::vector<Data> arr_vec;
+	protected:
+		explicit Array(bool valid) : Json(valid) { }
 	public:
-
-		explicit Array(bool valid = true) : Json(valid) { }
+		explicit Array() { }
 
 		virtual ~Array() {
 			for (auto& x : arr_vec) {
@@ -1272,10 +1318,18 @@ namespace claujson {
 			std::cout << "err";
 		}
 		virtual void add_array_element(Data val) {
+			if (!is_valid()) {
+				return;
+			}
+
 			arr_vec.push_back(std::move(val));
 
 		}
 		virtual void add_array(Ptr<Json> arr) {
+			if (!is_valid()) {
+				return;
+			}
+
 			if (!arr->has_key()) {
 				arr_vec.push_back(Data(arr.Get()));
 			}
@@ -1284,6 +1338,10 @@ namespace claujson {
 			}
 		}
 		virtual void add_object(Ptr<Json> obj) {
+			if (!is_valid()) {
+				return;
+			}
+
 			if (!obj->has_key()) {
 				arr_vec.push_back(Data(obj.Get()));
 			}
@@ -1293,6 +1351,10 @@ namespace claujson {
 		}
 
 		virtual void insert_array_element(size_t idx, Data val) {
+			if (!is_valid()) {
+				return;
+			}
+
 			arr_vec.insert(arr_vec.begin() + idx, std::move(val));
 		}
 
@@ -1306,6 +1368,10 @@ namespace claujson {
 		}
 	private:
 		virtual void Link(Ptr<Json> j) {
+			if (!is_valid()) {
+				return;
+			}
+
 			if (!j->has_key()) {
 				//
 			}
@@ -1331,6 +1397,10 @@ namespace claujson {
 
 		virtual void add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
 			char* buf, uint8_t* string_buf, uint64_t id) {
+			if (!is_valid()) {
+				return;
+			}
+
 
 				{
 					Data temp2;
@@ -1352,6 +1422,10 @@ namespace claujson {
 		virtual void add_user_type(int type);
 
 		virtual void add_user_type(Ptr<Json> j) {
+			if (!is_valid()) {
+				return;
+			}
+
 
 			if (j->is_virtual()) {
 				j->set_parent(this);
@@ -1682,7 +1756,11 @@ namespace claujson {
 
 	inline void Object::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
 		uint8_t* string_buf, int type, uint64_t id) {
-			{
+		if (!is_valid()) {
+			return;
+		}
+
+		{
 				Data temp;
 				bool e = false;
 
@@ -1712,6 +1790,10 @@ namespace claujson {
 			}
 	}
 	inline void Array::add_user_type(int type) {
+		if (!is_valid()) {
+			return;
+		}
+
 		{
 			Json* json = nullptr;
 
