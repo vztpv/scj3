@@ -38,7 +38,14 @@ using namespace std::string_view_literals;
 
 namespace claujson {
 
+	template <class T>
+	using PtrWeak = T*;
+
+	template <class T>
+	using Ptr = std::unique_ptr<T>;
+
 	class Data;
+	class Json;
 
 	claujson::Data& Convert(::claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
 		char* buf, uint8_t* string_buf, uint64_t id, bool& err);
@@ -56,7 +63,7 @@ namespace claujson {
 			uint64_t _uint_val;
 			double _float_val;
 			std::string* _str_val;
-			void* _ptr_val; // Array or Object , ...
+			Json* _ptr_val; // Array or Object , ...
 			bool _bool_val;
 		};
 
@@ -69,7 +76,7 @@ namespace claujson {
 			return valid;
 		}
 
-		explicit Data(void* x) {
+		explicit Data(Json* x) {
 			set_ptr(x);
 		}
 		explicit Data(int x) {
@@ -92,9 +99,13 @@ namespace claujson {
 		explicit Data(std::string_view x) {
 			set_str(x.data(), x.size());
 		}
-		explicit Data(const char* x) {
-			set_str(x, strlen(x));
-		}
+		//explicit Data(const char* x) {
+		//	set_str(x, strlen(x));
+		//}
+		// C++20~
+		//explicit Data(const char8_t* x) {
+		//	set_str((const char*)x, strlen((const char*)x));
+		//}
 		explicit Data(bool x) {
 			set_bool(x);
 		}
@@ -217,7 +228,7 @@ namespace claujson {
 			return *_str_val;
 		}
 
-		void set_ptr(void* x) {
+		void set_ptr(Json* x) {
 			if (!is_valid()) {
 				return;
 			}
@@ -726,7 +737,7 @@ namespace claujson {
 namespace claujson {
 	class LoadData;
 
-
+	/*
 	template <class T>
 	class PtrWeak;
 
@@ -840,6 +851,7 @@ namespace claujson {
 		T& operator*() { return *ptr; }
 		const T& operator*() const { return *ptr; }
 	};
+	*/
 
 	class Array;
 	class Object;
@@ -946,18 +958,32 @@ namespace claujson {
 		}
 
 
-		virtual Data& get_key() {
+		const Data& get_key() const {
 			return key;
 		}
-
-		virtual bool set_key(Data key) {
+	protected:
+		bool set_key(Data key) {
 			if (key.is_str()) {
 				this->key = std::move(key);
 				return true;
 			}
 			return false; // no change..
 		}
-
+	public:
+		bool change_key(const Data& key, const Data& new_key) { // chk test...
+			if (this->is_object() && key.is_str() && new_key.is_str()) {
+				auto idx = find(key.str_val());
+				if (idx == -1) {
+					return false;
+				}
+				auto val = get_data_list(idx);
+				erase(idx);
+				add_object_element(key, std::move(val));
+				return true;
+			}
+			return false;
+		}
+		
 		virtual Data& get_value() {
 			return data_null;
 		}
@@ -1112,7 +1138,7 @@ namespace claujson {
 
 			if (arr->has_key()) {
 				obj_key_vec.push_back(arr->get_key());
-				obj_val_vec.push_back(Data(arr.Get()));
+				obj_val_vec.push_back(Data(arr.release()));
 			}
 			else {
 				std::cout << "err";
@@ -1125,7 +1151,7 @@ namespace claujson {
 
 			if (obj->has_key()) {
 				obj_key_vec.push_back(obj->get_key());
-				obj_val_vec.push_back(Data(obj.Get()));
+				obj_val_vec.push_back(Data(obj.release()));
 			}
 			else {
 				std::cout << "err";
@@ -1168,7 +1194,7 @@ namespace claujson {
 			j->set_parent(this);
 
 			obj_key_vec.push_back(j->get_key());
-			obj_val_vec.push_back(Data(j.Get()));
+			obj_val_vec.push_back(Data(j.release()));
 		}
 
 		virtual void add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
@@ -1228,13 +1254,13 @@ namespace claujson {
 				j->set_parent(this);
 
 				obj_key_vec.push_back(Data());
-				obj_val_vec.push_back(Data(j.Get()));
+				obj_val_vec.push_back(Data(j.release()));
 			}
 			else if (j->has_key()) {
 				j->set_parent(this);
 
 				obj_key_vec.push_back(j->get_key());
-				obj_val_vec.push_back(Data(j.Get()));
+				obj_val_vec.push_back(Data(j.release()));
 			}
 			else {
 				std::cout << "chk..";
@@ -1331,7 +1357,7 @@ namespace claujson {
 			}
 
 			if (!arr->has_key()) {
-				arr_vec.push_back(Data(arr.Get()));
+				arr_vec.push_back(Data(arr.release()));
 			}
 			else {
 				std::cout << "err";
@@ -1343,7 +1369,7 @@ namespace claujson {
 			}
 
 			if (!obj->has_key()) {
-				arr_vec.push_back(Data(obj.Get()));
+				arr_vec.push_back(Data(obj.release()));
 			}
 			else {
 				std::cout << "err";
@@ -1384,7 +1410,7 @@ namespace claujson {
 
 			j->set_parent(this);
 
-			arr_vec.push_back(Data(j.Get()));
+			arr_vec.push_back(Data(j.release()));
 		}
 
 
@@ -1429,11 +1455,11 @@ namespace claujson {
 
 			if (j->is_virtual()) {
 				j->set_parent(this);
-				arr_vec.push_back(Data(j.Get()));
+				arr_vec.push_back(Data(j.release()));
 			}
 			else if (j->has_key() == false) {
 				j->set_parent(this);
-				arr_vec.push_back(Data(j.Get()));
+				arr_vec.push_back(Data(j.release()));
 			}
 			else {
 				// error..
@@ -1641,11 +1667,11 @@ namespace claujson {
 			j->set_parent(this);
 
 			if (!j->has_key()) {
-				arr_vec.push_back(Data(j.Get()));
+				arr_vec.push_back(Data(j.release()));
 			}
 			else {
 				obj_key_vec.push_back(j->get_key());
-				obj_val_vec.push_back(Data(j.Get()));
+				obj_val_vec.push_back(Data(j.release()));
 			}
 		}
 
@@ -1710,15 +1736,15 @@ namespace claujson {
 			j->set_parent(this);
 
 			if (j->is_virtual()) {
-				virtualJson = Data(j.Get());
+				virtualJson = Data(j.release());
 			}
 			else if (j->has_key() == false) {
-				arr_vec.push_back(Data(j.Get()));
+				arr_vec.push_back(Data(j.release()));
 			}
 			else {
 				if (j->has_key()) {
 					obj_key_vec.push_back(j->get_key());
-					obj_val_vec.push_back(Data(j.Get()));
+					obj_val_vec.push_back(Data(j.release()));
 				}
 				else {
 					std::cout << "ERRR";
@@ -2149,7 +2175,7 @@ namespace claujson {
 
 
 			Json* pos_ = pos;
-			Json* parent = pos_->get_parent().get();
+			Json* parent = pos_->get_parent();
 
 			Json* out = new Root();
 
@@ -2215,7 +2241,7 @@ namespace claujson {
 				}
 
 				pos_ = parent;
-				parent = parent->get_parent().get();
+				parent = parent->get_parent();
 			}
 
 			result = out;
@@ -2296,8 +2322,8 @@ namespace claujson {
 
 				_ut->clear();
 
-				ut = ut->get_parent().get();
-				next = next->get_parent().get();
+				ut = ut->get_parent();
+				next = next->get_parent();
 
 
 				if (next && ut) {
@@ -2377,8 +2403,8 @@ namespace claujson {
 
 				_ut->clear();
 
-				ut = ut->get_parent().get();
-				next = next->get_parent().get();
+				ut = ut->get_parent();
+				next = next->get_parent();
 
 
 				if (next && ut) {
@@ -3008,7 +3034,7 @@ namespace claujson {
 								std::cout << "not valid file1\n";
 								throw 1;
 							}
-							if (next[last] && next[last]->get_parent().get() != nullptr) {
+							if (next[last] && next[last]->get_parent() != nullptr) {
 								std::cout << "not valid file2\n";
 								throw 2;
 							}
@@ -3885,7 +3911,7 @@ namespace claujson {
 
 			while (temp) {
 				chk_list.push_back(temp);
-				temp = temp->get_parent().get();
+				temp = temp->get_parent();
 			}
 
 			if (global.is_ptr() && global.as<Json>().is_root()) {
@@ -4032,7 +4058,7 @@ namespace claujson {
 
 				
 				temp[0] = Divide(arr[0], j, result[1], hint[0]);
-				temp_parent[0] = temp[0]? temp[0]->get_parent().get() : temp[0];
+				temp_parent[0] = temp[0]? temp[0]->get_parent() : temp[0];
 
 
 				for (size_t i = 1; i < temp.size() - 1; ++i) {
@@ -4040,7 +4066,7 @@ namespace claujson {
 					temp[i] = Divide(arr[i], data, result[i + 1], hint[i]);
 
 					
-					if (!temp_parent[0] || !temp[i] || temp[i]->get_parent().get() == nullptr) {
+					if (!temp_parent[0] || !temp[i] || temp[i]->get_parent() == nullptr) {
 						
 						for (size_t j = 0; j < i; ++j) {
 							int op = 0;
@@ -4054,7 +4080,7 @@ namespace claujson {
 						return save(fileName, j);
 					}	
 
-					temp_parent[i] = temp[i]->get_parent().get();
+					temp_parent[i] = temp[i]->get_parent();
 				}
 
 				std::vector<claujson::LoadData::StrStream> stream(temp.size());

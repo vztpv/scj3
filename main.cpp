@@ -3,7 +3,6 @@
 // need C++17, 64bit..
 
 #define _CRT_SECURE_NO_WARNINGS
-
 #include "mimalloc-new-delete.h"
 
 #include <iostream>
@@ -14,18 +13,18 @@
 #include "claujson.h" // using simdjson 2.0.0
 #include <cstring>
 
+
 using namespace std::literals::string_view_literals;
-
-
 
 int main(int argc, char* argv[])
 {
+
 	{
 		using claujson::Data;
-		Data x("wow \n hihi");
-		std::cout << x.str_val(); //
-	}
-
+		Data x(u8"こんにちは wow \n hihi"sv);
+		auto& y = x.str_val();
+		std::cout << y.size() << "\n";
+	}	
 
 	for (int i = 0; i < 3; ++i) {
 		claujson::Data j;
@@ -123,7 +122,6 @@ int main(int argc, char* argv[])
 			
 			claujson::Ptr<claujson::Json> clean(j.as_ptr<claujson::Json>());
 			
-
 			return !ok;
 		}
 		/*catch (...) {
