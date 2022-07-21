@@ -89,6 +89,10 @@ int main(int argc, char* argv[])
 
 			claujson::LoadData::save_parallel("total_end.json", j, 0);
 
+			std::cout << "\ncat \n";
+			system("cat total_end.json");
+			std::cout << "\n";
+
 			int c2 = clock();
 			std::cout << "\nwrite " << c2 - c1 << "ms\n";
 

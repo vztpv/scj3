@@ -2264,6 +2264,9 @@ namespace claujson {
 			hint = 0;
 			claujson::Json* temp = nullptr;
 			claujson::LoadData::Find(&j.as<claujson::Json>(), len_x, temp, hint);
+			if (!temp || temp->is_virtual()) {
+				return nullptr;
+			}
 			claujson::LoadData::Divide(temp, result);
 
 			return temp;
