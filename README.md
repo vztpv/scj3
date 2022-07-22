@@ -1,7 +1,7 @@
 # scj3
 experimental parallel json parser,
 
-  scanning - simd(using simdjson), parsing - multi-thread(used in clauparser),
+  scanning - simd(using modified! simdjson), parsing - multi-thread(used in clauparser),
   
   save - multi-thread
 
