@@ -1057,7 +1057,7 @@ namespace claujson {
 	protected:
 		explicit Object(bool valid) : Json(valid) { }
 	public:
-		static Data MakeObject() {
+		static Data Make() {
 			return Data(new Object());
 		}
 
@@ -1282,7 +1282,7 @@ namespace claujson {
 		explicit Array(bool valid) : Json(valid) { }
 	public:
 
-		static Data MakeArray() {
+		static Data Make() {
 			return Data(new Array());
 		}
 
