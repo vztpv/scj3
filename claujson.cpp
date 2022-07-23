@@ -1608,6 +1608,61 @@ namespace claujson {
 		}
 	}
 
+	Json& Data::as_json() {
+		return *(_ptr_val);
+	}
+
+	Array& Data::as_array() {
+		if (is_valid() && is_ptr() && as_json().is_array() && as_json().is_valid()) {
+			return *static_cast<Array*>(_ptr_val);
+		}
+		static Array empty_arr{ false };
+		return empty_arr;
+	}
+
+	Object& Data::as_object() {
+		if (is_valid() && is_ptr() && as_json().is_object() && as_json().is_valid()) {
+			return *static_cast<Object*>(_ptr_val);
+		}
+		static Object empty_obj{ false };
+		return empty_obj;
+	}
+
+	const Json& Data::as_json() const {
+		return *(_ptr_val);
+	}
+
+	const Array& Data::as_array() const {
+		if (is_valid() && is_ptr() && as_json().is_array() && as_json().is_valid()) {
+			return *static_cast<Array*>(_ptr_val);
+		}
+		static const Array empty_arr{ false };
+		return empty_arr;
+	}
+
+	const Object& Data::as_object() const {
+		if (is_valid() && is_ptr() && as_json().is_object() && as_json().is_valid()) {
+			return *static_cast<Object*>(_ptr_val);
+		}
+		static const Object empty_obj{ false };
+		return empty_obj;
+	}
+
+	Json* Data::as_json_ptr() {
+		if (!is_ptr()) {
+			return nullptr;
+		}
+		return (_ptr_val);
+	}
+
+	const Json* Data::as_json_ptr() const {
+		if (!is_ptr()) {
+			return nullptr;
+		}
+		return (_ptr_val);
+	}
+
+
 	// todo - as_array, as_object.
 // as_array
 // if (valid && ((Json*)_ptr_val)->is_array()) { return ~~ } return 
@@ -1744,7 +1799,7 @@ namespace claujson {
 
 			for (size_t i = 0; i < len; ++i) {
 				if (root->get_data_list(i).is_ptr()) {
-					x += Size(&root->get_data_list(i).as<Json>());
+					x += Size(&root->get_data_list(i).as_json());
 				}
 			}
 
@@ -1770,7 +1825,7 @@ namespace claujson {
 					if (offset == 0) {
 
 						if (!out) {
-							out = &root->get_data_list(i).as<Json>();
+							out = &root->get_data_list(i).as_json();
 
 							if (i < len - 1) {
 								hint = 1;
@@ -1780,12 +1835,12 @@ namespace claujson {
 						return;
 					}
 
-					Find(&root->get_data_list(i).as<Json>(), offset, out, hint);
+					Find(&root->get_data_list(i).as_json(), offset, out, hint);
 
 					if (offset == 0) {
 
 						if (!out) {
-							out = &root->get_data_list(i).as<Json>();
+							out = &root->get_data_list(i).as_json();
 
 							if (i < len - 1) {
 								hint = 1;
@@ -1881,12 +1936,12 @@ namespace claujson {
 
 
 		static claujson::Json* Divide(size_t n, claujson::Data& j, claujson::Json*& result, int& hint) {
-			size_t len = claujson::LoadData2::Size(&j.as<claujson::Json>());
+			size_t len = claujson::LoadData2::Size(&j.as_json());
 			size_t len_x = len / n + 1;
 
 			hint = 0;
 			claujson::Json* temp = nullptr;
-			claujson::LoadData2::Find(&j.as<claujson::Json>(), len_x, temp, hint);
+			claujson::LoadData2::Find(&j.as_json(), len_x, temp, hint);
 			if (!temp || temp->is_virtual()) {
 				return nullptr;
 			}
@@ -2725,7 +2780,7 @@ namespace claujson {
 
 
 					if (_global->get_data_list(0).is_ptr()) {
-						_global->get_data_list(0).as<Json>().set_parent(nullptr);
+						_global->get_data_list(0).as_json().set_parent(nullptr);
 					}
 
 					global = std::move(_global->get_data_list(0));
@@ -2808,7 +2863,7 @@ namespace claujson {
 		Json* ut = nullptr;
 
 		if (data.is_ptr()) {
-			ut = &data.as<Json>();
+			ut = &data.as_json();
 		}
 
 		if (ut && ut->is_object()) {
@@ -3128,7 +3183,7 @@ namespace claujson {
 		Json* ut = nullptr;
 
 		if (data.is_ptr()) {
-			ut = &data.as<Json>();
+			ut = &data.as_json();
 		}
 
 
@@ -3453,7 +3508,7 @@ namespace claujson {
 			if (hint) {
 				stream << " , ";
 			}
-			bool is_arr = global.as<Json>().is_array();
+			bool is_arr = global.as_json().is_array();
 
 			if (is_arr) {
 				stream << " [ ";
@@ -3547,13 +3602,13 @@ namespace claujson {
 			temp = temp->get_parent();
 		}
 
-		if (global.is_ptr() && global.as<Json>().is_root()) {
+		if (global.is_ptr() && global.as_json().is_root()) {
 			if (hint) {
 				stream << " , ";
 			}
 
-			if (global.as<Json>().get_data_list(0).is_ptr()) {
-				auto* j = &global.as<Json>().get_data_list(0).as<Json>();
+			if (global.as_json().get_data_list(0).is_ptr()) {
+				auto* j = &global.as_json().get_data_list(0).as_json();
 
 
 				if (j->is_array() && j->is_virtual() == false) {
@@ -3563,7 +3618,7 @@ namespace claujson {
 					stream << " { ";
 				}
 
-				_save(stream, global.as<Json>().get_data_list(0), chk_list, 1);
+				_save(stream, global.as_json().get_data_list(0), chk_list, 1);
 
 
 				if (j->is_array() && find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
@@ -3574,7 +3629,7 @@ namespace claujson {
 				}
 			}
 			else {
-				_save(stream, global.as<Json>().get_data_list(0), chk_list, 1);
+				_save(stream, global.as_json().get_data_list(0), chk_list, 1);
 			}
 		}
 		else  if (global.is_ptr()) {
@@ -3582,7 +3637,7 @@ namespace claujson {
 				stream << " , ";
 			}
 
-			auto* j = &global.as<Json>();
+			auto* j = &global.as_json();
 
 
 			if (j->is_array() && j->is_virtual() == false) {
@@ -3686,7 +3741,7 @@ namespace claujson {
 			}
 
 
-			result[0] = &j.as<claujson::Json>();
+			result[0] = &j.as_json();
 			hint[0] = false;
 
 

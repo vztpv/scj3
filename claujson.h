@@ -24,6 +24,8 @@ namespace claujson {
 
 	class Data;
 	class Json;
+	class Array;
+	class Object;
 
 	claujson::Data& Convert(::claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
 		char* buf, uint8_t* string_buf, uint64_t id, bool& err);
@@ -110,18 +112,15 @@ namespace claujson {
 
 		// todo - rename, and add  as_ref, as_ptr ?
 
-		template <class T>
-		T& as();
+		Json& as_json();
+		Array& as_array();
+		Object& as_object();
+		Json* as_json_ptr();
 
-		template <class T>
-		const T& as() const;
-
-		template <class T>
-		T* as_ptr();
-
-		template <class T>
-		const T* as_ptr() const;
-
+		const Json& as_json()const;
+		const Array& as_array()const;
+		const Object& as_object()const;
+		const Json* as_json_ptr()const;
 	public:
 		void clear();
 
@@ -534,72 +533,6 @@ namespace claujson {
 
 		virtual ~VirtualArray();
 	};
-
-	// todo - as_json, as_array, as_object...
-	//        as_json_ptr, ...
-
-	template <class T>
-	inline T& Data::as() {
-		return *static_cast<T*>(_ptr_val);
-	}
-
-	template<>
-	inline Array& Data::as() {
-		if (is_valid() && is_ptr() && as<Json>().is_array() && as<Json>().is_valid()) {
-			return *static_cast<Array*>(_ptr_val);
-		}
-		static Array empty_arr{ false };
-		return empty_arr;
-	}
-
-	template<>
-	inline Object& Data::as() {
-		if (is_valid() && is_ptr() && as<Json>().is_object() && as<Json>().is_valid()) {
-			return *static_cast<Object*>(_ptr_val);
-		}
-		static Object empty_obj{ false };
-		return empty_obj;
-	}
-
-	template <class T>
-	inline const T& Data::as() const {
-		return *static_cast<T*>(_ptr_val);
-	}
-
-	template<>
-	inline const Array& Data::as() const {
-		if (is_valid() && is_ptr() && as<Json>().is_array() && as<Json>().is_valid()) {
-			return *static_cast<Array*>(_ptr_val);
-		}
-		static const Array empty_arr{ false };
-		return empty_arr;
-	}
-
-	template<>
-	inline const Object& Data::as() const {
-		if (is_valid() && is_ptr() && as<Json>().is_object() && as<Json>().is_valid()) {
-			return *static_cast<Object*>(_ptr_val);
-		}
-		static const Object empty_obj{ false };
-		return empty_obj;
-	}
-
-	template <class T>
-	inline T* Data::as_ptr() {
-		if (!is_ptr()) {
-			return nullptr;
-		}
-		return static_cast<T*>(_ptr_val);
-	}
-
-	template <class T>
-	inline const T* Data::as_ptr() const {
-		if (!is_ptr()) {
-			return nullptr;
-		}
-		return static_cast<T*>(_ptr_val);
-	}
-
 
 }
 
