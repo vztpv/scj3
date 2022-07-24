@@ -112,12 +112,10 @@ namespace claujson {
 
 		// todo - rename, and add  as_ref, as_ptr ?
 
-		Json& as_json();
 		Array& as_array();
 		Object& as_object();
 		Json* as_json_ptr();
 
-		const Json& as_json()const;
 		const Array& as_array()const;
 		const Object& as_object()const;
 		const Json* as_json_ptr()const;
