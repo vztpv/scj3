@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 			if (false && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
-					auto& features = j.as_json()[1]; // j[1];
+					auto& features = j.as_object()[1]; // j[1];
 					for (auto& feature : features.as_array()) {
 						auto& geometry = feature.as_object().at("geometry"sv); // as_array()[t].as_object()["geometry"];
 						if (geometry.is_ptr()) { // is_obj or arr?

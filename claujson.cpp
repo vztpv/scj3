@@ -1120,6 +1120,11 @@ namespace claujson {
 		}
 
 		void Array::erase(size_t idx) {
+			if (!is_valid()) {
+				return;
+			}
+
+
 			arr_vec.erase(arr_vec.begin() + idx);
 		}
 		
