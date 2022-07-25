@@ -30,6 +30,99 @@ using namespace std::string_view_literals;
 
 namespace simdjson {
 
+	// fallback..
+	simdjson_really_inline bool is_continuation(uint8_t c) {
+		return (c & 0b11000000) == 0b10000000;
+	}
+
+	simdjson_really_inline void validate_utf8_character(uint8_t* buf, size_t& idx, size_t len, error_code& error) {
+		stage1_mode partial = stage1_mode::regular;
+
+		// Continuation
+		if (simdjson_unlikely((buf[idx] & 0b01000000) == 0)) {
+			// extra continuation
+			error = UTF8_ERROR;
+			idx++;
+			return;
+		}
+
+		// 2-byte
+		if ((buf[idx] & 0b00100000) == 0) {
+			// missing continuation
+			if (simdjson_unlikely(idx + 1 > len || !is_continuation(buf[idx + 1]))) {
+				if (idx + 1 > len && is_streaming(partial)) { idx = len; return; }
+				error = UTF8_ERROR;
+				idx++;
+				return;
+			}
+			// overlong: 1100000_ 10______
+			if (buf[idx] <= 0b11000001) { error = UTF8_ERROR; }
+			idx += 2;
+			return;
+		}
+
+		// 3-byte
+		if ((buf[idx] & 0b00010000) == 0) {
+			// missing continuation
+			if (simdjson_unlikely(idx + 2 > len || !is_continuation(buf[idx + 1]) || !is_continuation(buf[idx + 2]))) {
+				if (idx + 2 > len && is_streaming(partial)) { idx = len; return; }
+				error = UTF8_ERROR;
+				idx++;
+				return;
+			}
+			// overlong: 11100000 100_____ ________
+			if (buf[idx] == 0b11100000 && buf[idx + 1] <= 0b10011111) { error = UTF8_ERROR; }
+			// surrogates: U+D800-U+DFFF 11101101 101_____
+			if (buf[idx] == 0b11101101 && buf[idx + 1] >= 0b10100000) { error = UTF8_ERROR; }
+			idx += 3;
+			return;
+		}
+
+		// 4-byte
+		// missing continuation
+		if (simdjson_unlikely(idx + 3 > len || !is_continuation(buf[idx + 1]) || !is_continuation(buf[idx + 2]) || !is_continuation(buf[idx + 3]))) {
+			if (idx + 2 > len && is_streaming(partial)) { idx = len; return; }
+			error = UTF8_ERROR;
+			idx++;
+			return;
+		}
+		// overlong: 11110000 1000____ ________ ________
+		if (buf[idx] == 0b11110000 && buf[idx + 1] <= 0b10001111) { error = UTF8_ERROR; }
+		// too large: > U+10FFFF:
+		// 11110100 (1001|101_)____
+		// 1111(1___|011_|0101) 10______
+		// also includes 5, 6, 7 and 8 byte characters:
+		// 11111___
+		if (buf[idx] == 0b11110100 && buf[idx + 1] >= 0b10010000) { error = UTF8_ERROR; }
+		if (buf[idx] >= 0b11110101) { error = UTF8_ERROR; }
+		idx += 4;
+	}
+
+	// Returns true if the string is unclosed.
+	simdjson_really_inline bool validate_string(uint8_t* buf, size_t len, error_code& error) {
+		size_t idx = 0; //
+			
+		while (idx < len) {
+			if (buf[idx] == '\\') {
+				idx += 2;
+			}
+			else if (simdjson_unlikely(buf[idx] & 0b10000000)) {
+				validate_utf8_character(buf, idx, len, error);
+			}
+			else {
+				if (buf[idx] < (uint8_t)0x20) { error = UNESCAPED_CHARS; }
+				idx++;
+			}
+		}
+		if (idx >= len) { return true; }
+		return false;
+		
+}; // structural_scanner
+
+}
+
+namespace simdjson {
+
 	// fallback
 	struct writer {
 		/** The next place to write to tape */
@@ -345,11 +438,34 @@ namespace claujson {
 		if (len >= 1024) {
 			uint8_t* buf_src = (uint8_t*)calloc(len + simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
 			uint8_t* buf_dest = (uint8_t*)calloc(len + simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
+			if (!buf_src || !buf_dest) {
+				if (buf_src) { free(buf_src); }
+				if (buf_dest) { free(buf_dest); }
 
+				return false;
+			}
 			memset(buf_src, '\"', len + simdjson::SIMDJSON_PADDING);
 			memset(buf_dest, '\"', len + simdjson::SIMDJSON_PADDING);
 
 			memcpy(buf_src, str, len);
+
+
+			// chk... fallback..
+			{
+
+				simdjson::error_code e = simdjson::error_code::SUCCESS;
+
+				simdjson::validate_string(buf_src, len, e);
+
+				if (e != simdjson::error_code::SUCCESS) {
+					free(buf_src);
+					free(buf_dest);
+
+					std::cout << simdjson::error_message(e) << "\n";
+					std::cout << "Error in Convert for string, validate...";
+					return false;
+				}
+			}
 
 			if (auto* x = simdjson::SIMDJSON_IMPLEMENTATION::stringparsing::parse_string(buf_src, buf_dest); x == nullptr) {
 				free(buf_src);
@@ -378,6 +494,18 @@ namespace claujson {
 			memset(buf_dest, '\"', 1024 + simdjson::SIMDJSON_PADDING);
 
 			memcpy(buf_src, str, len);
+
+			{
+				simdjson::error_code e = simdjson::error_code::SUCCESS;
+
+				simdjson::validate_string(buf_src, len, e);
+
+				if (e != simdjson::error_code::SUCCESS) {
+					std::cout << simdjson::error_message(e) << "\n";
+					std::cout << "Error in Convert for string, validate...";
+					return false;
+				}
+			}
 
 			if (auto* x = simdjson::SIMDJSON_IMPLEMENTATION::stringparsing::parse_string(buf_src, buf_dest); x == nullptr) {
 				std::cout << "Error in Convert for string";
@@ -3210,7 +3338,7 @@ namespace claujson {
 							default:
 
 								int code = (x.str_val())[j];
-								if (code > 0 && (code < 0x20 || code == 0x7F))
+								if (code > 0 && (code < 0x20 || code == 0x7F)) // chk this... with validate_string function. from simdjson..
 								{
 									char buf[] = "\\uDDDD";
 									sprintf(buf + 2, "%04X", code);

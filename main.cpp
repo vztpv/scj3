@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 	{
 
 		using claujson::Data;
-		Data x(u8"こんにちは wow \n hihi"sv);
+		Data x(u8"こんにちは \\n wow hihi"sv);
 		auto& y = x.str_val();
 		std::cout << y << "\n";
 	}	
