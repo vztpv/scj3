@@ -2,7 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "claujson.h"
-#include "simdjson.h" // modified simdjson // using simdjson 2.0.0
+#include "simdjson.h" // modified simdjson // using simdjson 2.0.1
 
 #if SIMDJSON_IMPLEMENTATION_ICELAKE
 #define SIMDJSON_IMPLEMENTATION icelake
@@ -101,7 +101,7 @@ namespace simdjson {
 	// Returns true if the string is unclosed.
 	simdjson_really_inline bool validate_string(uint8_t* buf, size_t len, error_code& error) {
 		size_t idx = 0; //
-			
+
 		while (idx < len) {
 			if (buf[idx] == '\\') {
 				idx += 2;
@@ -116,8 +116,8 @@ namespace simdjson {
 		}
 		if (idx >= len) { return true; }
 		return false;
-		
-}; // structural_scanner
+
+	}
 
 }
 
@@ -222,6 +222,108 @@ namespace simdjson {
 }
 
 namespace claujson {
+
+	// class Root, only used in class LoadData.
+	class Root : public Json {
+	protected:
+		std::vector<Data> arr_vec; // 
+		// in parsing...
+		std::vector<Data> obj_key_vec;
+		std::vector<Data> obj_val_vec;
+
+		Data virtualJson;
+	public:
+		virtual ~Root();
+
+	private:
+		friend class LoadData;
+		friend class LoadData2;
+
+		Root();
+
+	public:
+		virtual bool is_root() const;
+
+		virtual bool is_object() const;
+
+		virtual bool is_array() const;
+
+		virtual bool is_element() const;
+
+		virtual size_t get_data_size() const;
+
+		virtual Data& get_data_list(size_t idx);
+
+
+		virtual Data& get_key_list(size_t idx);
+
+
+		virtual const Data& get_data_list(size_t idx) const;
+
+
+		virtual const Data& get_key_list(size_t idx) const;
+
+		virtual void clear(size_t idx);
+
+		virtual bool is_virtual() const;
+
+		virtual void clear();
+
+		virtual void reserve_data_list(size_t len);
+
+
+
+		virtual void add_object_element(Data key, Data val);
+		virtual void add_array_element(Data val);
+
+		virtual void add_array(Ptr<Json> arr);
+		virtual void add_object(Ptr<Json> obj);
+
+		virtual void insert_array_element(size_t idx, Data val);
+
+		virtual void erase(std::string_view key);
+
+		virtual void erase(size_t idx);
+
+
+	private:
+		virtual void Link(Ptr<Json> j);
+
+		virtual void add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
+			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2);
+
+		virtual void add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
+			char* buf, uint8_t* string_buf, uint64_t id);
+
+
+		virtual void add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
+			uint8_t* string_buf, int type, uint64_t id);
+
+		virtual void add_user_type(int type);
+
+		virtual void add_user_type(Ptr<Json> j);
+
+
+	};
+
+	class VirtualObject : public Object {
+	public:
+
+		virtual bool is_virtual() const;
+
+		virtual ~VirtualObject();
+	};
+
+	class VirtualArray : public Array {
+	public:
+
+		virtual bool is_virtual() const;
+
+		virtual ~VirtualArray();
+	};
+
+
+
 	std::ostream& operator<<(std::ostream& stream, const claujson::Data& data) {
 		switch (data._type) {
 		case claujson::DataType::INT:
@@ -1981,6 +2083,75 @@ namespace claujson {
 			return;
 		}
 		
+		 // find n node.. 
+		 static void Find2(Json* root, const size_t n, size_t& idx, std::vector<size_t>& offset, std::vector<Json*>& out, std::vector<int>& hint) {
+			 if (idx >= n) {
+				 return;
+			 }
+
+			 while (offset[idx] == 0) {
+				 if (!out[idx]) {
+					 out[idx] = root;
+					 ++idx;
+					 if (idx >= n) {
+						 return;
+					 }
+				 }
+				 else {
+					 ++idx;
+					 if (idx >= n) {
+						 return;
+					 }
+				 }
+			 }
+
+			 offset[idx]--;
+
+			 size_t len = root->get_data_size();
+			 for (size_t i = 0; i < len; ++i) {
+				 if (root->get_data_list(i).is_ptr()) {
+					 if (offset[idx] == 0) {
+
+						 if (!out[idx]) {
+							 out[idx] = root->get_data_list(i).as_json_ptr();
+
+							 if (i < len - 1) {
+								 hint[idx] = 1;
+							 }
+
+							 ++idx;
+							 if (idx >= n) {
+								 return;
+							 }
+						 }
+					 }
+
+					 Find2(root->get_data_list(i).as_json_ptr(), n, idx, offset, out, hint);
+					 
+					 if (idx >= n) {
+						 return;
+					 }
+
+					 if (offset[idx] == 0) {
+
+						 if (!out[idx]) {
+							 out[idx] = root->get_data_list(i).as_json_ptr();
+
+							 if (i < len - 1) {
+								 hint[idx] = 1;
+							 }
+							 ++idx;
+							 if (idx >= n) {
+								 return;
+							 }
+						 }
+
+					 }
+				 }
+			 }
+		 }
+
+
 		 static void Divide(Json* pos, Json*& result) { // after pos.. -> to result.
 			if (pos == nullptr) {
 				return;
@@ -1990,10 +2161,11 @@ namespace claujson {
 			Json* pos_ = pos;
 			Json* parent = pos_->get_parent();
 
-			Json* out = new Root();
+			Json* out = new Root(); //
+
 
 			while (parent && parent->is_root() == false) {
-				size_t idx = 0;
+				long long idx = 0;
 				size_t len = parent->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
 					if (parent->get_data_list(i).is_ptr() && parent->get_data_list(i).ptr_val() == pos_) {
@@ -2049,7 +2221,7 @@ namespace claujson {
 					out->add_user_type(Ptr<Json>(temp));
 				}
 
-				for (size_t i = parent->get_data_size() - 1; i > idx; --i) {
+				for (long long i = (long long)parent->get_data_size() - 1; i > idx; --i) {
 					parent->erase(i);
 				}
 
@@ -2062,6 +2234,10 @@ namespace claujson {
 
 
 		static claujson::Json* Divide(size_t n, claujson::Data& j, claujson::Json*& result, int& hint) {
+			if (j.is_ptr() == false) {
+				return nullptr;
+			}
+
 			size_t len = claujson::LoadData2::Size(j.as_json_ptr());
 			size_t len_x = len / n + 1;
 
@@ -2071,9 +2247,47 @@ namespace claujson {
 			if (!temp || temp->is_virtual()) {
 				return nullptr;
 			}
+
 			claujson::LoadData2::Divide(temp, result);
 
 			return temp;
+		}
+
+		static std::vector<claujson::Json*> Divide2(size_t n, claujson::Data& j, std::vector<claujson::Json*>& result, std::vector<int>& hint) {
+			if (j.is_ptr() == false) {
+				return { nullptr };
+			}
+
+			size_t len = claujson::LoadData2::Size(j.as_json_ptr());
+
+			std::vector<size_t> offset(n - 1, 0);
+
+			for (size_t i = 0; i < offset.size(); ++i) {
+				offset[i] = len / n;
+			}
+			offset.back() = len - len / n * (n - 1);
+
+			hint = std::vector<int>(n - 1, 0);
+
+			std::vector<claujson::Json*> out(n, nullptr);
+			
+			{
+				size_t idx = 0;
+
+				claujson::LoadData2::Find2(j.as_json_ptr(), n - 1, idx, offset, out, hint);
+			}
+
+			for (size_t i = 0; i < n - 1; ++i) {
+				if (!out[i]) {
+					return { nullptr };
+				}
+			}
+
+			for (size_t i = 0; i < n - 1; ++i) {
+				claujson::LoadData2:: Divide(out[i], result[i]);
+			}
+
+			return out;
 		}
 
 		static int Merge(Json* next, Json* ut, Json** ut_next)
@@ -3723,9 +3937,11 @@ namespace claujson {
 
 		std::vector<Json*> chk_list; // point for division?, virtual nodes? }}}?
 
-		while (temp) {
-			chk_list.push_back(temp);
-			temp = temp->get_parent();
+		{
+			while (temp) {
+				chk_list.push_back(temp);
+				temp = temp->get_parent();
+			}
 		}
 
 		if (global.is_ptr() && global.as_json_ptr()->is_root()) {
@@ -3733,29 +3949,23 @@ namespace claujson {
 				stream << " , ";
 			}
 
-			if (global.as_json_ptr()->get_data_list(0).is_ptr()) {
-				auto* j = global.as_json_ptr()->get_data_list(0).as_json_ptr();
 
+			auto* j = global.as_json_ptr();
 
-				if (j->is_array() && j->is_virtual() == false) {
-					stream << " [ ";
-				}
-				else if (j->is_object() && j->is_virtual() == false) {
-					stream << " { ";
-				}
-
-				_save(stream, global.as_json_ptr()->get_data_list(0), chk_list, 1);
-
-
-				if (j->is_array() && find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
-					stream << " ] ";
-				}
-				else if (j->is_object() && find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
-					stream << " } ";
-				}
+			if (j->is_array() && j->is_virtual() == false) {
+				stream << " [ ";
 			}
-			else {
-				_save(stream, global.as_json_ptr()->get_data_list(0), chk_list, 1);
+			else if (j->is_object() && j->is_virtual() == false) {
+				stream << " { ";
+			}
+
+			_save(stream, j->get_data_list(0), chk_list, 1);
+
+			if (j->is_array() && find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
+				stream << " ] ";
+			}
+			else if (j->is_object() && find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
+				stream << " } ";
 			}
 		}
 		else  if (global.is_ptr()) {
@@ -3856,35 +4066,39 @@ namespace claujson {
 		std::vector<claujson::Json*> temp(thr_num, nullptr); //
 		std::vector<claujson::Json*> temp_parent(thr_num, nullptr);
 		{
-			std::vector<claujson::Json*> result(temp.size(), nullptr);
+			std::vector<claujson::Json*> result(temp.size() - 1, nullptr);
 
-			std::vector<int> hint(temp.size(), false);
+			std::vector<int> hint(temp.size() - 1, false);
 
-			std::vector<size_t> arr; // { 9, 8, 7, 6, 5, 4, 3, 2 }; // chk!
+			//std::vector<size_t> arr; // { 9, 8, 7, 6, 5, 4, 3, 2 }; // chk!
+
+			//for (size_t i = 0; i < temp.size(); ++i) {
+			//	arr.push_back(temp.size() - i + 1);
+			//}
+
+
+			//result[0] = j.as_json_ptr();
+			//hint[0] = false;
+
+
+			temp = LoadData2::Divide2(thr_num, j, result, hint);
+
+			//temp[0] = LoadData2::Divide(arr[0], j, result[1], hint[0]);
+			//temp_parent[0] = temp[0] ? temp[0]->get_parent() : temp[0];
 
 			for (size_t i = 0; i < temp.size(); ++i) {
-				arr.push_back(temp.size() - i + 1);
+				temp_parent[i] = temp[i] ? temp[i]->get_parent() : nullptr;
 			}
 
-
-			result[0] = j.as_json_ptr();
-			hint[0] = false;
-
-
-			temp[0] = LoadData2::Divide(arr[0], j, result[1], hint[0]);
-			temp_parent[0] = temp[0] ? temp[0]->get_parent() : temp[0];
-
-
 			for (size_t i = 1; i < temp.size() - 1; ++i) {
-				claujson::Data data(result[i]);
-				temp[i] = LoadData2::Divide(arr[i], data, result[i + 1], hint[i]);
-
+				//claujson::Data data(result[i]);
+				//temp[i] = LoadData2::Divide(arr[i], data, result[i + 1], hint[i]);
 
 				if (!temp_parent[0] || !temp[i] || temp[i]->get_parent() == nullptr) {
 
 					for (size_t j = 0; j < i; ++j) {
 						int op = 0;
-						int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j + 1], &temp_parent[j + 1], op);
+						int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 					}
 
 					for (size_t i = 1; i < result.size(); ++i) {
@@ -3897,19 +4111,21 @@ namespace claujson {
 				temp_parent[i] = temp[i]->get_parent();
 			}
 
-			std::vector<claujson::StrStream> stream(temp.size());
+			std::vector<claujson::StrStream> stream(thr_num);
 
-			std::vector<std::thread> thr(temp.size());
+			std::vector<std::thread> thr(thr_num);
+
+			thr[0] = std::thread(save_, std::ref(stream[0]), j, temp_parent[0], (false));
 
 
-			thr[0] = std::thread(save_, std::ref(stream[0]), claujson::Data(result[0]), temp_parent[0], (false));
 			for (size_t i = 1; i < thr.size(); ++i) {
-				thr[i] = std::thread(save_, std::ref(stream[i]), claujson::Data(result[i]), temp_parent[i], (hint[i - 1]));
+				thr[i] = std::thread(save_, std::ref(stream[i]), claujson::Data(result[i - 1]), temp_parent[i], (hint[i - 1]));
 			}
 
 			for (size_t i = 0; i < thr.size(); ++i) {
 				thr[i].join();
 			}
+
 
 			std::ofstream outFile(fileName, std::ios::binary);
 
@@ -3925,9 +4141,9 @@ namespace claujson {
 
 
 			int op = 0;
-			int ret = claujson::LoadData2::Merge2(temp_parent[0], result[1], &temp_parent[1], op);
+			int ret = claujson::LoadData2::Merge2(temp_parent[0], result[0], &temp_parent[1], op);
 			for (size_t i = 1; i < temp.size() - 1; ++i) {
-				int ret = claujson::LoadData2::Merge2(temp_parent[i], result[i + 1], &temp_parent[i + 1], op);
+				int ret = claujson::LoadData2::Merge2(temp_parent[i], result[i], &temp_parent[i + 1], op);
 				op = 0;
 			}
 

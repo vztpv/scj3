@@ -433,105 +433,6 @@ namespace claujson {
 
 	};
 
-	// class Root, only used in class LoadData.
-	class Root : public Json {
-	protected:
-		std::vector<Data> arr_vec; // 
-		// in parsing...
-		std::vector<Data> obj_key_vec;
-		std::vector<Data> obj_val_vec;
-
-		Data virtualJson;
-	public:
-		virtual ~Root();
-
-	private:
-		friend class LoadData;
-		friend class LoadData2;
-
-		Root();
-
-	public:
-		virtual bool is_root() const;
-
-		virtual bool is_object() const;
-
-		virtual bool is_array() const;
-
-		virtual bool is_element() const;
-
-		virtual size_t get_data_size() const;
-
-		virtual Data& get_data_list(size_t idx);
-
-
-		virtual Data& get_key_list(size_t idx);
-
-
-		virtual const Data& get_data_list(size_t idx) const;
-
-
-		virtual const Data& get_key_list(size_t idx) const;
-
-		virtual void clear(size_t idx);
-
-		virtual bool is_virtual() const;
-
-		virtual void clear();
-
-		virtual void reserve_data_list(size_t len);
-
-
-
-		virtual void add_object_element(Data key, Data val);
-		virtual void add_array_element(Data val);
-
-		virtual void add_array(Ptr<Json> arr);
-		virtual void add_object(Ptr<Json> obj);
-
-		virtual void insert_array_element(size_t idx, Data val);
-
-		virtual void erase(std::string_view key);
-
-		virtual void erase(size_t idx);
-
-
-	private:
-		virtual void Link(Ptr<Json> j);
-
-		virtual void add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2);
-
-		virtual void add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id);
-		
-
-		virtual void add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
-			uint8_t* string_buf, int type, uint64_t id);
-
-		virtual void add_user_type(int type);
-
-		virtual void add_user_type(Ptr<Json> j);
-
-
-	};
-
-	class VirtualObject : public Object {
-	public:
-
-		virtual bool is_virtual() const;
-
-		virtual ~VirtualObject();
-	};
-
-	class VirtualArray : public Array {
-	public:
-
-		virtual bool is_virtual() const;
-
-		virtual ~VirtualArray();
-	};
-
 }
 
 
@@ -541,17 +442,19 @@ namespace claujson {
 
 	class LoadData //
 	{
-	public:
-		//                            todo - change Json* ut to Data& data ?
+	private:
+		//                         
 		static void _save(StrStream& stream, Data data, std::vector<Json*>& chk_list, const int depth);
 		static void _save(StrStream& stream, Data data, const int depth);
-
-		// todo... just Data has one element 
-		static void save(const std::string& fileName, Data& global, bool hint);
-
-		static void save(std::ostream& stream, Data& data);
+		
 		static void save_(StrStream& stream, Data global, Json* temp, bool hint);
 
+public:
+		// test?... just Data has one element 
+		static void save(const std::string& fileName, Data& global, bool hint );
+
+		static void save(std::ostream& stream, Data& data);
+	
 
 		static void save_parallel(const std::string& fileName, Data j, size_t thr_num);
 
