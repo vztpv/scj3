@@ -4225,6 +4225,77 @@ namespace claujson {
 
 		return  { true, length };
 	}
-	
+	std::pair<bool, size_t> ParseStr(std::string_view str, int thr_num, Data& ut)
+	{
+		if (thr_num <= 0) {
+			thr_num = std::thread::hardware_concurrency();
+		}
+		if (thr_num <= 0) {
+			thr_num = 1;
+		}
+
+		int64_t length;
+
+		int _ = clock();
+
+		{
+			static simdjson::dom::parser test;
+
+			auto x = test.parse(str.data(), str.length());
+
+			if (x.error() != simdjson::error_code::SUCCESS) {
+				std::cout << "stage1 error : ";
+				std::cout << x.error() << "\n";
+
+				return { false, 0 };
+			}
+
+			const auto& buf = test.raw_buf();
+			const auto& string_buf = test.raw_string_buf();
+			const auto& imple = test.raw_implementation();
+			const auto buf_len = test.raw_len();
+
+			std::vector<int64_t> start(thr_num + 1, 0);
+			//std::vector<int> key;
+
+			int a = clock();
+
+			std::cout << a - _ << "ms\n";
+
+
+			{
+				size_t how_many = imple->n_structural_indexes;
+				length = how_many;
+
+				start[0] = 0;
+				for (int i = 1; i < thr_num; ++i) {
+					start[i] = how_many / thr_num * i;
+				}
+			}
+
+			if (length == 0) {
+				std::cout << "empty json";
+				return { true, 0 };
+			}
+
+			int b = clock();
+
+			std::cout << b - a << "ms\n";
+
+			start[thr_num] = length;
+			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), imple.get(), length, start, thr_num)) // 0 : use all thread..
+			{
+				return { false, 0 };
+			}
+			int c = clock();
+			std::cout << c - b << "ms\n";
+		}
+		int c = clock();
+		std::cout << c - _ << "ms\n";
+
+
+		return  { true, length };
+	}
+
 }
 

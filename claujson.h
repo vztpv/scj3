@@ -461,7 +461,8 @@ public:
 	};
 
 
-
+	// parse json file.
 	std::pair<bool, size_t> Parse(const std::string& fileName, int thr_num, Data& ut);
-
+	// parse json str.
+	std::pair<bool, size_t> ParseStr(std::string_view str, int thr_num, Data& ut);
 }
