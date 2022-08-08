@@ -2258,7 +2258,15 @@ namespace claujson {
 				return { nullptr };
 			}
 
+			if (n == 0) {
+				return { nullptr };
+			}
+
 			size_t len = claujson::LoadData2::Size(j.as_json_ptr());
+
+			if (len / n == 0) {
+				return { nullptr };
+			}
 
 			std::vector<size_t> offset(n - 1, 0);
 
@@ -2283,9 +2291,45 @@ namespace claujson {
 				}
 			}
 
-			for (size_t i = 0; i < n - 1; ++i) {
-				claujson::LoadData2:: Divide(out[i], result[i]);
+
+			std::vector<Json*> temp_parent(n, nullptr);
+			{
+				size_t i = 0;
+				for (; i < n - 1; ++i) {
+
+					if (i > 0 && temp_parent[i - 1] == nullptr) {
+						for (size_t j = 0; j < i; ++j) {
+							int op = 0;
+							int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+
+							for (size_t i = 1; i < result.size(); ++i) {
+								claujson::Ptr<claujson::Json> clean2(result[i]);
+							}
+						}
+
+						return { nullptr };
+					}
+
+					claujson::LoadData2::Divide(out[i], result[i]);
+
+					temp_parent[i] = out[i]->get_parent();
+
+				}
+
+				if (i > 0 && temp_parent[i - 1] == nullptr) {
+					for (size_t j = 0; j < i; ++j) {
+						int op = 0;
+						int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+
+						for (size_t i = 1; i < result.size(); ++i) {
+							claujson::Ptr<claujson::Json> clean2(result[i]);
+						}
+					}
+
+					return { nullptr };
+				}
 			}
+
 
 			return out;
 		}
@@ -4063,6 +4107,11 @@ namespace claujson {
 			thr_num = 1;
 		}
 
+		if (thr_num == 1) {
+			save(fileName, j, false);
+			return;
+		}
+		
 		std::vector<claujson::Json*> temp(thr_num, nullptr); //
 		std::vector<claujson::Json*> temp_parent(thr_num, nullptr);
 		{
@@ -4070,44 +4119,14 @@ namespace claujson {
 
 			std::vector<int> hint(temp.size() - 1, false);
 
-			//std::vector<size_t> arr; // { 9, 8, 7, 6, 5, 4, 3, 2 }; // chk!
-
-			//for (size_t i = 0; i < temp.size(); ++i) {
-			//	arr.push_back(temp.size() - i + 1);
-			//}
-
-
-			//result[0] = j.as_json_ptr();
-			//hint[0] = false;
-
-
 			temp = LoadData2::Divide2(thr_num, j, result, hint);
 
-			//temp[0] = LoadData2::Divide(arr[0], j, result[1], hint[0]);
-			//temp_parent[0] = temp[0] ? temp[0]->get_parent() : temp[0];
-
-			for (size_t i = 0; i < temp.size(); ++i) {
-				temp_parent[i] = temp[i] ? temp[i]->get_parent() : nullptr;
+			if (temp.size() == 1 && temp[0] == nullptr) {
+				save(fileName, j, false);
+				return;
 			}
 
-			for (size_t i = 1; i < temp.size() - 1; ++i) {
-				//claujson::Data data(result[i]);
-				//temp[i] = LoadData2::Divide(arr[i], data, result[i + 1], hint[i]);
-
-				if (!temp_parent[0] || !temp[i] || temp[i]->get_parent() == nullptr) {
-
-					for (size_t j = 0; j < i; ++j) {
-						int op = 0;
-						int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
-					}
-
-					for (size_t i = 1; i < result.size(); ++i) {
-						claujson::Ptr<claujson::Json> clean2(result[i]);
-					}
-
-					return save(fileName, j, false);
-				}
-
+			for (size_t i = 0; i < temp.size() - 1; ++i) {
 				temp_parent[i] = temp[i]->get_parent();
 			}
 
@@ -4134,11 +4153,6 @@ namespace claujson {
 			}
 
 			outFile.close();
-
-
-			//claujson::LoadData::save("first.json", j);
-			//claujson::LoadData::save("second.json", k, hint);
-
 
 			int op = 0;
 			int ret = claujson::LoadData2::Merge2(temp_parent[0], result[0], &temp_parent[1], op);

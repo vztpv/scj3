@@ -10,7 +10,7 @@
 #include <ctime>
 
 
-#include "claujson.h" // using simdjson 2.0.0
+#include "claujson.h" // using simdjson 2.0.1
 
 #include <cstring>
 
