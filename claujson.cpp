@@ -2089,43 +2089,6 @@ namespace claujson {
 				 return;
 			 }
 
-			 while (offset[idx] == 0) {
-				 if (!out[idx]) {
-					 out[idx] = root;
-
-					 ++idx;
-					 if (idx >= n) {
-						 return;
-					 }
-
-
-					 size_t sz = Size(out[idx - 1]);
-					 
-					 if (_len < offset2[idx - 1] - sz) {
-						 std::cout << "chk1";
-						 return;
-					 }
-
-					 _len = _len - offset2[idx - 1] - sz; // chk...
-
-					 
-					 for (size_t k = idx; k < n; ++k) {
-						 offset[k] = _len / (n - idx + 1);
-					 }
-					 offset[n - 1] = _len - _len / (n - idx + 1) * (n - idx);
-
-					 for (size_t k = idx; k < n; ++k) {
-						 offset2[k] = offset[k];
-					 }
-				 }
-				 else {
-					 ++idx;
-					 if (idx >= n) {
-						 return;
-					 }
-				 }
-			 }
-
 			 offset[idx]--;
 
 			 size_t len = root->get_data_size();
