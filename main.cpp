@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 
 			int c1 = clock();
 
-			claujson::LoadData::save_parallel("total_end.json", j, 4);
+			claujson::LoadData::save_parallel("total_end.json", j, 64);
 
 			//claujson::LoadData::save("total_ends.json", j, false);
 

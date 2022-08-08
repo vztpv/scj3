@@ -2084,7 +2084,7 @@ namespace claujson {
 		}
 		
 		 // find n node.. 
-		 static void Find2(Json* root, const size_t n, size_t& idx, std::vector<size_t>& offset, std::vector<Json*>& out, std::vector<int>& hint) {
+		 static void Find2(Json* root, const size_t n, size_t& idx, size_t& _len, std::vector<size_t>& offset, std::vector<size_t>& offset2, std::vector<Json*>& out, std::vector<int>& hint) {
 			 if (idx >= n) {
 				 return;
 			 }
@@ -2092,9 +2092,30 @@ namespace claujson {
 			 while (offset[idx] == 0) {
 				 if (!out[idx]) {
 					 out[idx] = root;
+
 					 ++idx;
 					 if (idx >= n) {
 						 return;
+					 }
+
+
+					 size_t sz = Size(out[idx - 1]);
+					 
+					 if (_len < offset2[idx - 1] - sz) {
+						 std::cout << "chk1";
+						 return;
+					 }
+
+					 _len = _len - offset2[idx - 1] - sz; // chk...
+
+					 
+					 for (size_t k = idx; k < n; ++k) {
+						 offset[k] = _len / (n - idx + 1);
+					 }
+					 offset[n - 1] = _len - _len / (n - idx + 1) * (n - idx);
+
+					 for (size_t k = idx; k < n; ++k) {
+						 offset2[k] = offset[k];
 					 }
 				 }
 				 else {
@@ -2123,31 +2144,37 @@ namespace claujson {
 							 if (idx >= n) {
 								 return;
 							 }
+
+							 size_t sz = Size(out[idx - 1]);
+
+							 if (_len < offset2[idx - 1] + sz - 1) {
+								 std::cout << "chk2";
+								 return;
+							 }
+
+							 _len = _len - (offset2[idx - 1] + sz - 1); // chk...
+
+							 if (_len <= 0) {
+								 return;
+							 }
+
+							 for (size_t k = idx; k < n; ++k) {
+								 offset[k] = _len / (n - idx + 1);
+							 }
+							 offset[n - 1] = _len - _len / (n - idx + 1) * (n - idx);
+							 
+							 for (size_t k = idx; k < n; ++k) {
+								 offset2[k] = offset[k];
+							 }
 						 }
 
 						 continue;
 					 }
 
-					 Find2(root->get_data_list(i).as_json_ptr(), n, idx, offset, out, hint);
+					 Find2(root->get_data_list(i).as_json_ptr(), n, idx, _len, offset, offset2, out, hint);
 					 
 					 if (idx >= n) {
 						 return;
-					 }
-
-					 if (offset[idx] == 0) {
-
-						 if (!out[idx]) {
-							 out[idx] = root->get_data_list(i).as_json_ptr();
-
-							 if (i < len - 1) {
-								 hint[idx] = 1;
-							 }
-							 ++idx;
-							 if (idx >= n) {
-								 return;
-							 }
-						 }
-
 					 }
 				 }
 			 }
@@ -2283,8 +2310,9 @@ namespace claujson {
 			
 			{
 				size_t idx = 0;
+				auto offset2 = offset;
 
-				claujson::LoadData2::Find2(j.as_json_ptr(), n - 1, idx, offset, out, hint);
+				claujson::LoadData2::Find2(j.as_json_ptr(), n - 1, idx, len, offset, offset2, out, hint);
 			}
 
 			for (size_t i = 0; i < n - 1; ++i) {
@@ -4152,7 +4180,6 @@ namespace claujson {
 
 			for (size_t i = 0; i < stream.size(); ++i) {
 				outFile.write(stream[i].buf(), stream[i].buf_size());
-				outFile << "\n\n";
 			}
 
 			outFile.close();
