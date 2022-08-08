@@ -2124,6 +2124,8 @@ namespace claujson {
 								 return;
 							 }
 						 }
+
+						 continue;
 					 }
 
 					 Find2(root->get_data_list(i).as_json_ptr(), n, idx, offset, out, hint);
@@ -4138,7 +4140,7 @@ namespace claujson {
 
 
 			for (size_t i = 1; i < thr.size(); ++i) {
-				thr[i] = std::thread(save_, std::ref(stream[i]), claujson::Data(result[i - 1]), temp_parent[i], (hint[i - 1]));
+				thr[i] = std::thread(save_, std::ref(stream[i]), claujson::Data(result[i - 1]->get_data_list(0)), temp_parent[i], (hint[i - 1]));
 			}
 
 			for (size_t i = 0; i < thr.size(); ++i) {
@@ -4150,6 +4152,7 @@ namespace claujson {
 
 			for (size_t i = 0; i < stream.size(); ++i) {
 				outFile.write(stream[i].buf(), stream[i].buf_size());
+				outFile << "\n\n";
 			}
 
 			outFile.close();
