@@ -451,7 +451,7 @@ namespace claujson {
 
 public:
 		// test?... just Data has one element 
-		static void save(const std::string& fileName, Data& global, bool hint );
+		static void save(const std::string& fileName, Data& global, bool hint = false);
 
 		static void save(std::ostream& stream, Data& data);
 	
