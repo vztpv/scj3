@@ -2035,6 +2035,7 @@ namespace claujson {
 
 		}
 
+		 //deprecated... has bu8?
 		 static void Find(Json* root, size_t& offset, Json*& out, int& hint) {
 			if (offset == 0) {
 				out = root;
@@ -3981,31 +3982,7 @@ namespace claujson {
 			}
 		}
 
-		if (global.is_ptr() && global.as_json_ptr()->is_root()) {
-			if (hint) {
-				stream << " , ";
-			}
-
-
-			auto* j = global.as_json_ptr();
-
-			if (j->is_array() && j->is_virtual() == false) {
-				stream << " [ ";
-			}
-			else if (j->is_object() && j->is_virtual() == false) {
-				stream << " { ";
-			}
-
-			_save(stream, j->get_data_list(0), chk_list, 1);
-
-			if (j->is_array() && find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
-				stream << " ] ";
-			}
-			else if (j->is_object() && find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
-				stream << " } ";
-			}
-		}
-		else  if (global.is_ptr()) {
+		if (global.is_ptr()) {
 			if (hint) {
 				stream << " , ";
 			}
