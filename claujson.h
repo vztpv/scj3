@@ -243,10 +243,10 @@ namespace claujson {
 
 		// for valid with obejct or array or root.
 		virtual size_t get_data_size() const = 0;
-		virtual Data& get_data_list(size_t idx) = 0;
+		virtual Data& get_value_list(size_t idx) = 0;
 		virtual Data& get_key_list(size_t idx) = 0;
 
-		virtual const Data& get_data_list(size_t idx) const = 0;
+		virtual const Data& get_value_list(size_t idx) const = 0;
 		virtual const Data& get_key_list(size_t idx) const = 0;
 
 		virtual void clear(size_t idx) = 0;
@@ -309,12 +309,12 @@ namespace claujson {
 		virtual bool is_element() const;
 		virtual size_t get_data_size() const;
 
-		virtual Data& get_data_list(size_t idx);
+		virtual Data& get_value_list(size_t idx);
 
 		virtual Data& get_key_list(size_t idx);
 
 
-		virtual const Data& get_data_list(size_t idx) const;
+		virtual const Data& get_value_list(size_t idx) const;
 		
 		virtual const Data& get_key_list(size_t idx) const;
 
@@ -378,11 +378,11 @@ namespace claujson {
 		virtual bool is_element() const;
 		virtual size_t get_data_size() const;
 		
-		virtual Data& get_data_list(size_t idx);
+		virtual Data& get_value_list(size_t idx);
 
 		virtual Data& get_key_list(size_t idx);
 
-		virtual const Data& get_data_list(size_t idx) const;
+		virtual const Data& get_value_list(size_t idx) const;
 
 		virtual const Data& get_key_list(size_t idx) const;
 
