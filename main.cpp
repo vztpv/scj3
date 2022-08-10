@@ -23,10 +23,30 @@ int main(int argc, char* argv[])
 	{
 
 		using claujson::Data;
-		Data x(u8"こんにちは \\n wow hihi"sv);
+		Data x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
 		auto& y = x.str_val();
 		std::cout << y << "\n";
 	}	
+
+	{ // key dupp test.
+		using claujson::Object;
+		using claujson::Data;
+		using claujson::Ptr;
+
+		Ptr<Object> x = Ptr<Object>(new Object());
+		
+		x->add_object_element(Data("123"sv), Data(123));
+		x->add_object_element(Data("234"sv), Data(234));
+		x->add_object_element(Data("345"sv), Data(345));
+		x->add_object_element(Data("345"sv), Data(456));
+
+		size_t idx = 0;
+		bool found = false;
+
+		found = x->chk_key_dup(&idx);
+
+		std::cout << found << " " << idx << "\n";
+	}
 
 	for (int i = 0; i < 3; ++i) {
 		claujson::Data j;

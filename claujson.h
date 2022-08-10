@@ -82,6 +82,10 @@ namespace claujson {
 
 		bool is_valid() const;
 
+		bool is_primitive() const;
+
+		bool is_structured() const;
+
 		bool is_int() const;
 
 		bool is_uint() const;
@@ -155,6 +159,8 @@ namespace claujson {
 
 		bool operator==(const Data& other) const;
 
+		bool operator!=(const Data& other) const;
+
 		bool operator<(const Data& other) const;
 
 		Data& operator=(const Data& other);
@@ -207,8 +213,6 @@ namespace claujson {
 
 		virtual ~Json();
 		
-
-
 		const Data& at(std::string_view key) const;
 
 		Data& at(std::string_view key);
@@ -298,6 +302,9 @@ namespace claujson {
 	protected:
 		explicit Object(bool valid);
 	public:
+
+		bool chk_key_dup(size_t* idx) const;  // chk dupplication of key.
+
 		static Data Make();
 
 		explicit Object();

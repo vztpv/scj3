@@ -407,6 +407,15 @@ namespace claujson {
 		return valid;
 	}
 
+
+	bool Data::is_primitive() const {
+		return !is_ptr();
+	}
+
+	bool Data::is_structured() const {
+		return is_ptr();
+	}
+
 	bool Data::is_int() const {
 		return is_valid() && type() == DataType::INT;
 	}
@@ -704,11 +713,11 @@ namespace claujson {
 
 	Data::Data() : _int_val(0), _type(DataType::NONE) { }
 
-	bool Data::operator==(const Data& other) const {
+	bool Data::operator==(const Data& other) const { // chk array or object?
 		if (this->_type == other._type) {
 			switch (this->_type) {
 			case DataType::STRING:
-				return this->_str_val == other._str_val;
+				return (*this->_str_val) == (*other._str_val);
 				break;
 			case DataType::INT:
 				return this->_int_val == other._int_val;
@@ -719,17 +728,24 @@ namespace claujson {
 			case DataType::FLOAT:
 				return this->_float_val == other._float_val;
 				break;
+			case DataType::BOOL:
+				return this->_bool_val == other._bool_val;
+				break;
 			}
 			return true;
 		}
 		return false;
 	}
 
+	bool Data::operator!=(const Data& other) const {
+		return !((*this) == other);
+	}
+
 	bool Data::operator<(const Data& other) const {
 		if (this->_type == other._type) {
 			switch (this->_type) {
 			case DataType::STRING:
-				return this->_str_val < other._str_val;
+				return (*this->_str_val) < (*other._str_val);
 				break;
 			case DataType::INT:
 				return this->_int_val < other._int_val;
@@ -740,8 +756,11 @@ namespace claujson {
 			case DataType::FLOAT:
 				return this->_float_val < other._float_val;
 				break;
+			case DataType::BOOL:
+				return this->_bool_val < other._bool_val;
+				break;
 			}
-
+		
 		}
 		return false;
 	}
@@ -786,7 +805,7 @@ namespace claujson {
 	}
 
 
-	INLINE claujson::Data& Convert(claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
+	claujson::Data& Convert(claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
 		char* buf, uint8_t* string_buf, uint64_t id, bool& err) {
 
 		try {
@@ -1014,14 +1033,54 @@ namespace claujson {
 		bool Json::is_user_type() const {
 			return is_object() || is_array() || is_root();
 		}
-		
+
 		void Json::set_parent(PtrWeak<Json> j) {
 			parent = j;
 		}
 
 
 		Object::Object(bool valid) : Json(valid) { }
-	
+
+
+		class CompKey {
+		private:
+			const std::vector<Data>* vec;
+		public:
+
+			CompKey(const std::vector<Data>* vec) : vec(vec) {
+				//
+			}
+
+			bool operator()(size_t x, size_t y) const {
+				return (*vec)[x] < (*vec)[y];
+			}
+		};
+
+		bool Object::chk_key_dup(size_t* idx) const {
+			bool has_dup = false;
+			std::vector<size_t> copy_(obj_key_vec.size(), 0);
+
+			for (size_t i = 0; i < copy_.size(); ++i) {
+				copy_[i] = i;
+			}
+
+			CompKey comp(&obj_key_vec);
+
+			std::stable_sort(copy_.begin(), copy_.end(), comp);
+
+			for (size_t i = 1; i < copy_.size(); ++i) {
+				if (obj_key_vec[copy_[i]] == obj_key_vec[copy_[i - 1]]) {
+					has_dup = true;
+					if (idx) {
+						*idx = i - 1;
+					}
+					break;
+				}
+			}
+
+			return has_dup;
+		}
+
 		Data Object::Make() {
 			return Data(new Object());
 		}
