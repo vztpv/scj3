@@ -409,11 +409,11 @@ namespace claujson {
 
 
 	bool Data::is_primitive() const {
-		return !is_ptr();
+		return is_valid() && !is_ptr();
 	}
 
 	bool Data::is_structured() const {
-		return is_ptr();
+		return is_valid() && is_ptr();
 	}
 
 	bool Data::is_int() const {
