@@ -113,7 +113,6 @@ namespace claujson {
 
 		Data& json_pointer(std::string_view route);
 
-		const Data& json_pointer(std::string_view route) const;
 
 		// todo - rename, and add  as_ref, as_ptr ?
 

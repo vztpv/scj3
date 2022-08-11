@@ -21,7 +21,6 @@ int main(int argc, char* argv[])
 {
 
 	{
-
 		using claujson::Data;
 		// C++17 - stringview, C++20~ - u8string_view
 		Data x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
@@ -30,8 +29,9 @@ int main(int argc, char* argv[])
 			std::cout << y << "\n";
 		}
 	}
-
-	{ // key dup test.
+	
+	// key dup test.
+	{ 
 		using claujson::Object;
 		using claujson::Data;
 		using claujson::Ptr;
@@ -51,6 +51,8 @@ int main(int argc, char* argv[])
 		std::cout << found << " " << idx << "\n";
 	}
 
+
+	// JSON Pointer.
 	{
 	//	For example, given the JSON document
 
@@ -127,11 +129,11 @@ int main(int argc, char* argv[])
 			std::cout << y << " ";
 		}
 		{
-			Data& y = x.json_pointer("/i\\j"sv);
+			Data& y = x.json_pointer(R"(/i\\j)"sv); // chk R
 			std::cout << y << " ";
 		}
 		{
-			Data& y = x.json_pointer("/k\"l"sv);
+			Data& y = x.json_pointer(R"(/k\"l)"sv); // chk R
 			std::cout << y << " ";
 		}
 		{
@@ -144,7 +146,7 @@ int main(int argc, char* argv[])
 		}
 
 		claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
-
+		return 0;
 	}
 
 	for (int i = 0; i < 3; ++i) {
