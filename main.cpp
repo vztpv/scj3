@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
 	{
 
 		using claujson::Data;
+		// C++17 - stringview, C++20~ - u8string_view
 		Data x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
 		if (x) {
 			auto& y = x.str_val();
@@ -30,7 +31,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	{ // key dupp test.
+	{ // key dup test.
 		using claujson::Object;
 		using claujson::Data;
 		using claujson::Ptr;
@@ -48,6 +49,102 @@ int main(int argc, char* argv[])
 		found = x->chk_key_dup(&idx);
 
 		std::cout << found << " " << idx << "\n";
+	}
+
+	{
+	//	For example, given the JSON document
+
+		std::string test = u8R"({
+		   "foo": ["bar", "baz"] ,
+		   "" : 0,
+		   "a/b" : 1,
+		   "c%d" : 2,
+		   "e^f" : 3,
+		   "g|h" : 4,
+		   "i\\j" : 5,
+		   "k\"l" : 6,
+		   " " : 7,
+		   "m~n" : 8
+		})";
+
+		//	The following JSON strings evaluate to the accompanying values :
+
+	//	""           // the whole document
+	//		"/foo"    ["bar", "baz"]
+	//		"/foo/0"     "bar"
+	//		"/"          0
+	//		"/a~1b"      1
+	//		"/c%d"       2
+	//		"/e^f"       3
+	//		"/g|h"       4
+	//		"/i\\j"      5
+	//		"/k\"l"      6
+	//		"/ "         7
+	//		"/m~0n"      8
+		using claujson::Data;
+		
+		Data x;
+		if (!claujson::ParseStr(test, 1, x).first) {
+			std::cout << "fail\n";
+
+			claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
+
+			return 1;
+		}
+		
+		std::cout << x << "\n";
+
+		{
+			Data& y = x.json_pointer(""sv); // while coument...
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/foo"sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/foo/0"sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/"sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/a~1b"sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/c%d"sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/e^f"sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/g|h"sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/i\\j"sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/k\"l"sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/ "sv);
+			std::cout << y << " ";
+		}
+		{
+			Data& y = x.json_pointer("/m~0n"sv);
+			std::cout << y << " ";
+		}
+
+		claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
+
 	}
 
 	for (int i = 0; i < 3; ++i) {

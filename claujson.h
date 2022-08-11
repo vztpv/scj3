@@ -64,14 +64,11 @@ namespace claujson {
 		explicit Data(int64_t x);
 		explicit Data(uint64_t x);
 		explicit Data(double x);
+		
 		explicit Data(std::string_view x);
-		//explicit Data(const char* x) {
-		//	set_str(x, strlen(x));
-		//}
-		// C++20~
-		//explicit Data(const char8_t* x) {
-		//	set_str((const char*)x, strlen((const char*)x));
-		//}
+
+		
+		
 		explicit Data(bool x);
 		explicit Data(nullptr_t x);
 
@@ -113,6 +110,10 @@ namespace claujson {
 		bool bool_val() const;
 
 		void* ptr_val() const;
+
+		Data& json_pointer(std::string_view route);
+
+		const Data& json_pointer(std::string_view route) const;
 
 		// todo - rename, and add  as_ref, as_ptr ?
 

@@ -328,6 +328,12 @@ namespace claujson {
 
 
 	std::ostream& operator<<(std::ostream& stream, const claujson::Data& data) {
+
+		if (false == data.is_valid()) {
+			stream << "not valid\n";
+			return stream;
+		}
+
 		switch (data._type) {
 		case claujson::DataType::INT:
 			stream << data._int_val;
@@ -339,7 +345,7 @@ namespace claujson {
 			stream << data._float_val;
 			break;
 		case claujson::DataType::STRING:
-			stream << (*data._str_val);
+			stream << "\"" << (*data._str_val) << "\"";
 			break;
 		case claujson::DataType::BOOL:
 			stream << data._bool_val;
@@ -348,7 +354,33 @@ namespace claujson {
 			stream << "null";
 			break;
 		case claujson::DataType::ARRAY_OR_OBJECT:
-			stream << "array_or_object";
+		{
+		//	stream << "array_or_object";
+			auto* x = data.as_json_ptr();
+			if (x->is_array()) {
+				stream << "[ ";
+				size_t sz = x->get_data_size();
+				for (size_t i = 0; i < sz; ++i) {
+					stream << x->get_value_list(i) << " ";
+					if (i < sz - 1) {
+						stream << " , ";
+					}
+				}
+				stream << "]\n";
+			}
+			else if (x->is_object()) {
+				stream << "{ ";
+				size_t sz = x->get_data_size();
+				for (size_t i = 0; i < sz; ++i) {
+					stream << x->get_key_list(i) << " : ";
+					stream << x->get_value_list(i) << " ";
+					if (i < sz - 1) {
+						stream << " , ";
+					}
+				}
+				stream << "}\n";
+			}
+		}
 			break;
 		}
 
@@ -486,7 +518,19 @@ namespace claujson {
 		}
 		return _ptr_val;
 	}
-		
+
+	Data& Data::json_pointer(std::string_view route) {
+		static Data unvalid_data(nullptr, false);
+
+		return unvalid_data;
+	}
+
+	const Data& Data::json_pointer(std::string_view route) const {
+		static const Data unvalid_data(nullptr, false);
+
+		return unvalid_data;
+	}
+
 	void Data::clear() {
 
 		if (_type == DataType::STRING) {
