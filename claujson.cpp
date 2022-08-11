@@ -121,29 +121,6 @@ namespace simdjson {
 		return false;
 
 	}
-
-	simdjson_really_inline bool validate_string_for_json_pointer(uint8_t* buf, size_t len, error_code& error) {
-		size_t idx = 0; //
-
-		while (idx < len) {
-			if (buf[idx] == '\\') {
-				if (idx + 1 >= len) {
-					return false;
-				}
-				idx += 2;
-			}
-			else if (simdjson_unlikely(buf[idx] & 0b10000000)) {
-				validate_utf8_character(buf, idx, len, error);
-			}
-			else {
-				//if (buf[idx] < (uint8_t)0x20) { error = UNESCAPED_CHARS; }
-				idx++;
-			}
-		}
-		if (idx >= len) { return true; }
-		return false;
-
-	}
 }
 
 namespace simdjson {
@@ -588,10 +565,14 @@ namespace claujson {
 				case simdjson::internal::tape_type::INT64:
 					memcpy(&int_val, &temp[1], sizeof(uint64_t));
 					*val = int_val;
+
+					return true;
 					break;
 				case simdjson::internal::tape_type::UINT64:
 					memcpy(&uint_val, &temp[1], sizeof(uint64_t));
 					*val = uint_val;
+					
+					return true;
 					break;
 				case simdjson::internal::tape_type::DOUBLE:
 					// error.
@@ -602,7 +583,7 @@ namespace claujson {
 			break;
 		}
 
-		return true;
+		return false;
 	}
 
 

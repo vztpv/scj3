@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 		   "c%d" : 2,
 		   "e^f" : 3,
 		   "g|h" : 4,
-		   "i\\j" : 5,
+		   "i\\\\j" : 5,
 		   "k\"l" : 6,
 		   " " : 7,
 		   "m~n" : 8
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 		std::cout << x << "\n";
 
 		{
-			Data& y = x.json_pointer(""sv); // while coument...
+			Data& y = x.json_pointer(""sv); // whole document...
 			std::cout << y << " ";
 		}
 		{
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 			std::cout << y << " ";
 		}
 		{
-			Data& y = x.json_pointer(R"(/i\\j)"sv); // chk R
+			Data& y = x.json_pointer(R"(/i\\\\j)"sv); // chk R
 			std::cout << y << " ";
 		}
 		{
@@ -146,7 +146,6 @@ int main(int argc, char* argv[])
 		}
 
 		claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
-		return 0;
 	}
 
 	for (int i = 0; i < 3; ++i) {
@@ -188,6 +187,9 @@ int main(int argc, char* argv[])
 							auto& geometry = feature.as_object().at("geometry"sv); // as_array()[t].as_object()["geometry"];
 							auto& coordinates = geometry.as_object().at("coordinates"sv);
 							auto& coordinate = coordinates.as_array()[0];
+							
+							//auto& coordinate = feature.json_pointer("/geometry/coordinates"sv).as_array()[0];
+							
 							for (auto& coordinate_ : coordinate.as_array()) {
 								for (auto& x : coordinate_.as_array()) {
 									if (x.is_float()) {
@@ -207,6 +209,7 @@ int main(int argc, char* argv[])
 			std::cout << clock() - c << "ms\n";
 			std::cout << sum << " ";
 			std::cout << counter << "  ";
+			return 0;
 
 			int c1 = clock();
 
