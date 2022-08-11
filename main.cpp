@@ -24,9 +24,11 @@ int main(int argc, char* argv[])
 
 		using claujson::Data;
 		Data x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
-		auto& y = x.str_val();
-		std::cout << y << "\n";
-	}	
+		if (x) {
+			auto& y = x.str_val();
+			std::cout << y << "\n";
+		}
+	}
 
 	{ // key dupp test.
 		using claujson::Object;

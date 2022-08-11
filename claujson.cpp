@@ -104,6 +104,9 @@ namespace simdjson {
 
 		while (idx < len) {
 			if (buf[idx] == '\\') {
+				if (idx + 1 >= len) {
+					return false;
+				}
 				idx += 2;
 			}
 			else if (simdjson_unlikely(buf[idx] & 0b10000000)) {
@@ -379,7 +382,13 @@ namespace claujson {
 		set_float(x);
 	}
 	Data::Data(std::string_view x) {
-		set_str(x.data(), x.size());
+
+		try {
+			this->valid = set_str(x.data(), x.size());
+		}
+		catch (...) {
+			this->valid = false;
+		}
 	}
 	//explicit Data(const char* x) {
 	//	set_str(x, strlen(x));
@@ -542,11 +551,14 @@ namespace claujson {
 
 	bool Data::set_str(const char* str, size_t len) {
 
-		uint8_t buf_src[1024 + simdjson::SIMDJSON_PADDING];
-		uint8_t buf_dest[1024 + simdjson::SIMDJSON_PADDING];
+		const size_t block_size = 1024;
 
 
-		if (len >= 1024) {
+		uint8_t buf_src[block_size + simdjson::SIMDJSON_PADDING];
+		uint8_t buf_dest[block_size + simdjson::SIMDJSON_PADDING];
+
+
+		if (len >= block_size) {
 			uint8_t* buf_src = (uint8_t*)calloc(len + simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
 			uint8_t* buf_dest = (uint8_t*)calloc(len + simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
 			if (!buf_src || !buf_dest) {
@@ -555,20 +567,20 @@ namespace claujson {
 
 				return false;
 			}
-			memset(buf_src, '\"', len + simdjson::SIMDJSON_PADDING);
-			memset(buf_dest, '\"', len + simdjson::SIMDJSON_PADDING);
+			memset(buf_src, '"', len + simdjson::SIMDJSON_PADDING);
+			memset(buf_dest, '"', len + simdjson::SIMDJSON_PADDING);
 
 			memcpy(buf_src, str, len);
-
+			buf_src[len] = '"';
 
 			// chk... fallback..
 			{
 
 				simdjson::error_code e = simdjson::error_code::SUCCESS;
 
-				simdjson::validate_string(buf_src, len, e);
+				bool valid = simdjson::validate_string(buf_src, len, e);
 
-				if (e != simdjson::error_code::SUCCESS) {
+				if (!valid || e != simdjson::error_code::SUCCESS) {
 					free(buf_src);
 					free(buf_dest);
 
@@ -601,17 +613,18 @@ namespace claujson {
 			free(buf_dest);
 		}
 		else {
-			memset(buf_src, '\"', 1024 + simdjson::SIMDJSON_PADDING);
-			memset(buf_dest, '\"', 1024 + simdjson::SIMDJSON_PADDING);
+			memset(buf_src, '"', block_size + simdjson::SIMDJSON_PADDING);
+			memset(buf_dest, '"', block_size + simdjson::SIMDJSON_PADDING);
 
 			memcpy(buf_src, str, len);
+			buf_src[len] = '"';
 
 			{
 				simdjson::error_code e = simdjson::error_code::SUCCESS;
 
-				simdjson::validate_string(buf_src, len, e);
+				bool valid = simdjson::validate_string(buf_src, len, e);
 
-				if (e != simdjson::error_code::SUCCESS) {
+				if (!valid || e != simdjson::error_code::SUCCESS) {
 					std::cout << simdjson::error_message(e) << "\n";
 					std::cout << "Error in Convert for string, validate...";
 					return false;
