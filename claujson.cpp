@@ -545,7 +545,7 @@ namespace claujson {
 
 				{ // chk code...
 					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + simdjson::SIMDJSON_PADDING]); // x.size() + padding
-					if (copy.get() == nullptr) { throw "Error in Convert for new"; } // cf) new Json?
+					if (copy.get() == nullptr) { return false; } // cf) new Json?
 					std::memcpy(copy.get(), &buf[idx], idx2 - idx);
 					std::memset(copy.get() + idx2 - idx, ' ', simdjson::SIMDJSON_PADDING);
 					value = copy.get();
@@ -554,7 +554,7 @@ namespace claujson {
 				if (auto x = simdjson::SIMDJSON_IMPLEMENTATION::numberparsing::parse_number<simdjson::writer>(value, writer)
 					; x != simdjson::error_code::SUCCESS) {
 					std::cout << "parse number error. " << x << "\n";
-					throw "Error in Convert to parse number";
+					return false;
 				}
 
 				long long int_val = 0;

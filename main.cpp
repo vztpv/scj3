@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 			std::cout << y << " ";
 		}
 		{
-			Data& y = x.json_pointer("/foo/0"sv);
+			Data& y = x.json_pointer("/foo/1aa"sv);
 			std::cout << y << " ";
 		}
 		{
