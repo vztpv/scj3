@@ -586,20 +586,21 @@ namespace claujson {
 		return false;
 	}
 
-	int Data::json_pointerA(std::string_view route, std::vector<Data>& vec) {
+	bool Data::json_pointerA(std::string_view route, std::vector<Data>& vec) {
 		std::vector<std::string_view> routeVec;
 		std::vector<Data> routeDataVec;
 
 
 		if (route.empty()) {
-			return 2;
+			vec.clear();
+			return true;
 		}
 
 		routeVec.reserve(route.size());
 		routeDataVec.reserve(route.size());
 
 		if (route[0] != '/') {
-			return 1;
+			return false;
 		}
 
 		// 1. route -> split with '/'  to routeVec.
@@ -622,24 +623,30 @@ namespace claujson {
 		// 3. using simdjson util, check valid for string in routeVec.
 
 		for (auto& x : routeVec) {
-			Data temp(x);
-			routeDataVec.push_back(std::move(temp));
+			Data temp(x); // do 2, 3.
+
+			if (temp.is_valid()) {
+				routeDataVec.push_back(std::move(temp));
+			}
+			else {
+				return false;
+			}
 		}
 
 		vec = std::move(routeDataVec);
 
-		return 0;
+		return true;
 	}
 
-	Data& Data::json_pointerB(const std::vector<Data>& routeDataVec, int option) { // option-> std::string_view route?
+	Data& Data::json_pointerB(const std::vector<Data>& routeDataVec) { // option-> std::string_view route?
 		static Data unvalid_data(nullptr, false);
 
-		if (is_structured() == false || 1 == option) {
+		if (is_structured() == false) {
 			return unvalid_data;
 		}
 
 		// the whole document.
-		if (2 == option) {
+		if (routeDataVec.empty()) {
 			return *this;
 		}
 
@@ -762,8 +769,14 @@ namespace claujson {
 		// 3. using simdjson util, check valid for string in routeVec.
 
 		for (auto& x : routeVec) {
-			Data temp(x);
-			routeDataVec.push_back(std::move(temp));
+			Data temp(x); 
+			
+			if (temp.is_valid()) {
+				routeDataVec.push_back(std::move(temp));
+			}
+			else {
+				return unvalid_data;
+			}
 		}
 
 		// 4. find Data with route. and return

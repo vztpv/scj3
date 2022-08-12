@@ -177,7 +177,17 @@ int main(int argc, char* argv[])
 			bool ok = x.first;
 
 			std::vector<claujson::Data> vec;
-			int op = claujson::Data::json_pointerA("/geometry/coordinates"sv, vec);
+			
+			if (false == claujson::Data::json_pointerA("/geometry/coordinates"sv, vec)) {
+				std::cout << "json pointer errror.\n";
+				return 1;
+			}
+			for (auto& x : vec) {
+				if (false == x.is_valid()) {
+					std::cout << "string error";
+					return 2;
+				}
+			}
 
 			double sum = 0;
 			if (true && ok) {
@@ -186,7 +196,7 @@ int main(int argc, char* argv[])
 					if (j.is_ptr()) {
 						auto& features = j.as_object()[1]; // j[1];
 						for (auto& feature : features.as_array()) {
-							auto& coordinate = feature.json_pointerB(vec, op).as_array()[0];  // { vec, op } // <- class??
+							auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
 							
 							for (auto& coordinate_ : coordinate.as_array()) {
 								for (auto& x : coordinate_.as_array()) {
@@ -207,13 +217,13 @@ int main(int argc, char* argv[])
 			std::cout << clock() - c << "ms\n";
 			std::cout << sum << " ";
 			std::cout << counter << "  ";
-			return 0;
+			//return 0;
 
 			int c1 = clock();
 
 			//claujson::LoadData::save("total_ends.json", j, false);
 
-			claujson::LoadData::save_parallel("total_end.json", j, 64);
+			//claujson::LoadData::save_parallel("total_end.json", j, 64);
 
 			//claujson::LoadData::save("total_ends.json", j, false);
 
@@ -224,16 +234,18 @@ int main(int argc, char* argv[])
 			int c2 = clock();
 			std::cout << "\nwrite " << c2 - c1 << "ms\n";
 
+			claujson::Data X("geometry"sv);
+			claujson::Data Y("coordinates"sv);
 
 			sum = 0; counter = 0; 
-			if (false && ok) {
+			if (true && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
 					auto& features = j.as_object()[1]; // j[1];
 					for (auto& feature : features.as_array()) {
-						auto& geometry = feature.as_object().at("geometry"sv); // as_array()[t].as_object()["geometry"];
+						auto& geometry = feature.as_object().at(X.str_val()); // as_array()[t].as_object()["geometry"];
 						if (geometry.is_ptr()) { // is_obj or arr?
-							auto& coordinates = geometry.as_object().at("coordinates"sv);
+							auto& coordinates = geometry.as_object().at(Y.str_val());
 							auto& coordinate = coordinates.as_array()[0];
 							for (auto& coordinate_ : coordinate.as_array()) {
 								for (auto& x : coordinate_.as_array()) {
