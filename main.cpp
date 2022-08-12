@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 			std::cout << y << " ";
 		}
 		{
-			Data& y = x.json_pointer("/foo/1"sv);
+			Data& y = x.json_pointer("/foo/0"sv);
 			std::cout << y << " ";
 		}
 		{
@@ -176,6 +176,8 @@ int main(int argc, char* argv[])
 			int counter = 0;
 			bool ok = x.first;
 
+			std::vector<claujson::Data> vec;
+			int op = claujson::Data::json_pointerA("/geometry/coordinates"sv, vec);
 
 			double sum = 0;
 			if (true && ok) {
@@ -184,11 +186,7 @@ int main(int argc, char* argv[])
 					if (j.is_ptr()) {
 						auto& features = j.as_object()[1]; // j[1];
 						for (auto& feature : features.as_array()) {
-							auto& geometry = feature.as_object().at("geometry"sv); // as_array()[t].as_object()["geometry"];
-							auto& coordinates = geometry.as_object().at("coordinates"sv);
-							auto& coordinate = coordinates.as_array()[0];
-							
-							//auto& coordinate = feature.json_pointer("/geometry/coordinates"sv).as_array()[0];
+							auto& coordinate = feature.json_pointerB(vec, op).as_array()[0];  // { vec, op } // <- class??
 							
 							for (auto& coordinate_ : coordinate.as_array()) {
 								for (auto& x : coordinate_.as_array()) {

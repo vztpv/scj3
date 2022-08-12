@@ -586,6 +586,137 @@ namespace claujson {
 		return false;
 	}
 
+	int Data::json_pointerA(std::string_view route, std::vector<Data>& vec) {
+		std::vector<std::string_view> routeVec;
+		std::vector<Data> routeDataVec;
+
+
+		if (route.empty()) {
+			return 2;
+		}
+
+		routeVec.reserve(route.size());
+		routeDataVec.reserve(route.size());
+
+		if (route[0] != '/') {
+			return 1;
+		}
+
+		// 1. route -> split with '/'  to routeVec.
+		size_t found_idx = 0; // first found_idx is 0, found '/'
+
+		while (found_idx != std::string_view::npos) {
+			size_t new_idx = route.find('/', found_idx + 1);
+
+			if (new_idx == std::string_view::npos) {
+				routeVec.push_back(sub_route(route, found_idx, route.size()));
+				break;
+			}
+			// else { ... }
+			routeVec.push_back(sub_route(route, found_idx, new_idx));
+
+			found_idx = new_idx;
+		}
+
+		// 2. using simdjson util, check utf-8 for string in routeVec.
+		// 3. using simdjson util, check valid for string in routeVec.
+
+		for (auto& x : routeVec) {
+			Data temp(x);
+			routeDataVec.push_back(std::move(temp));
+		}
+
+		vec = std::move(routeDataVec);
+
+		return 0;
+	}
+
+	Data& Data::json_pointerB(const std::vector<Data>& routeDataVec, int option) { // option-> std::string_view route?
+		static Data unvalid_data(nullptr, false);
+
+		if (is_structured() == false || 1 == option) {
+			return unvalid_data;
+		}
+
+		// the whole document.
+		if (2 == option) {
+			return *this;
+		}
+
+		// 4. find Data with route. and return
+		Data* data = this;
+
+		for (size_t i = 0; i < routeDataVec.size(); ++i) {
+			const Data& x = routeDataVec[i];
+
+			if (data->is_primitive()) {
+				if (i == routeDataVec.size() - 1) {
+					return *data;
+				}
+				else {
+					return unvalid_data;
+				}
+			}
+
+			Json* j = data->as_json_ptr();
+
+			if (j->is_array()) { // array -> with idx
+				size_t idx = 0;
+				bool found = false;
+				size_t arr_size = j->get_data_size();
+
+				bool chk = to_uint_for_json_pointer(x.str_val(), &idx);
+
+				if (!chk) {
+					return unvalid_data;
+				}
+
+				data = &j->get_value_list(idx);
+			}
+			else if (j->is_object()) { // object -> with key
+				std::string_view str = x.str_val();
+				std::string result(str);
+
+				size_t count = 0;
+
+				// chk ~0 -> ~, ~1 -> /
+				size_t idx = 0;
+
+				idx = str.find('~');
+
+				while (idx != std::string::npos) {
+					size_t k = idx;
+
+					if (k + 1 < str.size()) {
+						if (str[k + 1] == '0') {
+							result[k] = '~';
+							result.erase(result.begin() + k + 1);
+							count++;
+						}
+						else if (str[k + 1] == '1') {
+							result[k] = '/';
+							result.erase(result.begin() + k + 1);
+							count++;
+						}
+						else {
+							return unvalid_data;
+						}
+					}
+					else {
+						return unvalid_data;
+					}
+
+					idx = str.find('~');
+				}
+
+				result.resize(result.size() - count);
+				data = &j->at(result);
+			}
+		}
+
+		return *data;
+	}
+
 
 	// think.. Data vs Data& vs Data* ? 
 	// race condition..? not support multi-thread  access...
@@ -603,6 +734,13 @@ namespace claujson {
 
 		std::vector<std::string_view> routeVec;
 		std::vector<Data> routeDataVec;
+
+		routeVec.reserve(route.size());
+		routeDataVec.reserve(route.size());
+
+		if (route[0] != '/') {
+			return unvalid_data;
+		}
 
 		// 1. route -> split with '/'  to routeVec.
 		size_t found_idx = 0; // first found_idx is 0, found '/'
@@ -661,6 +799,8 @@ namespace claujson {
 			else if (j->is_object()) { // object -> with key
 				std::string_view str = x.str_val();
 				std::string result;
+
+				result.reserve(str.size());
 
 				// chk ~0 -> ~, ~1 -> /
 				for (size_t k = 0; k < str.size(); ++k) {

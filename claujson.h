@@ -113,6 +113,10 @@ namespace claujson {
 
 		Data& json_pointer(std::string_view route);
 
+		[[nodiscard]]
+		static int json_pointerA(std::string_view route, std::vector<Data>& vec);
+
+		Data& json_pointerB(const std::vector<Data>& routeDataVec, int option);
 
 		// todo - rename, and add  as_ref, as_ptr ?
 
