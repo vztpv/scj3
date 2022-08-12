@@ -179,14 +179,8 @@ int main(int argc, char* argv[])
 			std::vector<claujson::Data> vec;
 			
 			if (false == claujson::Data::json_pointerA("/geometry/coordinates"sv, vec)) {
-				std::cout << "json pointer errror.\n";
+				std::cout << "json pointer error.\n";
 				return 1;
-			}
-			for (auto& x : vec) {
-				if (false == x.is_valid()) {
-					std::cout << "string error";
-					return 2;
-				}
 			}
 
 			double sum = 0;
@@ -197,7 +191,6 @@ int main(int argc, char* argv[])
 						auto& features = j.as_object()[1]; // j[1];
 						for (auto& feature : features.as_array()) {
 							auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
-							
 							for (auto& coordinate_ : coordinate.as_array()) {
 								for (auto& x : coordinate_.as_array()) {
 									if (x.is_float()) {
