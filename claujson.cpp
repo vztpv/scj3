@@ -1105,11 +1105,45 @@ namespace claujson {
 			case DataType::BOOL:
 				return this->_bool_val == other._bool_val;
 				break;
+			case DataType::ARRAY_OR_OBJECT:
+			{
+				const Json* j = this->as_json_ptr();
+				const Json* k = other.as_json_ptr();
+
+				const size_t sz_j = j->get_data_size();
+				const size_t sz_k = k->get_data_size();
+
+				if (sz_j != sz_k) { return false; }
+
+				const size_t sz = sz_j;
+
+				if (j->is_array() && k->is_array()) {
+					for (size_t i = 0; i < sz; ++i) {
+						if (j->get_value_list(i) != k->get_value_list(i)) {
+							return false;
+						}
+					}
+				}
+				else if (j->is_object() && k->is_object()) {
+					for (size_t i = 0; i < sz; ++i) {
+						if (j->get_value_list(i) != k->get_value_list(i)) {
+							return false;
+						}
+						if (j->get_key_list(i) != k->get_key_list(i)) {
+							return false;
+						}
+					}
+				}
+				else {
+					return false;
+				}
+			}
+				break;
 			}
 			return true;
 		}
 		return false;
-	}
+	} 
 
 	bool Data::operator!=(const Data& other) const {
 		return !((*this) == other);
