@@ -1698,7 +1698,7 @@ namespace claujson {
 		}
 
 		 Array::Array(bool valid) : Json(valid) { }
-	
+
 		Data Array::Make() {
 			return Data(new Array());
 		}

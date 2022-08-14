@@ -174,8 +174,7 @@ namespace claujson {
 }
 
 namespace claujson {
-	// todo 
-	//- add bool is_key ...
+
 	INLINE claujson::Data& Convert(::claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
 		char* buf, uint8_t* string_buf, uint64_t id, bool& err);
 }
@@ -201,7 +200,7 @@ namespace claujson {
 		PtrWeak<Json> parent = nullptr;
 		bool valid = true; //
 	protected:
-		// check...
+		// check...  
 		static inline Data data_null{ nullptr, false }; // valid is false..
 	public:
 
@@ -308,6 +307,7 @@ namespace claujson {
 
 		bool chk_key_dup(size_t* idx) const;  // chk dupplication of key.
 
+		[[nodiscard]]
 		static Data Make();
 
 		explicit Object();
@@ -377,6 +377,7 @@ namespace claujson {
 		explicit Array(bool valid);
 	public:
 
+		[[nodiscard]]
 		static Data Make();
 
 		explicit Array();
@@ -457,3 +458,4 @@ namespace claujson {
 	// parse json str.
 	std::pair<bool, size_t> ParseStr(std::string_view str, int thr_num, Data& ut);
 }
+
