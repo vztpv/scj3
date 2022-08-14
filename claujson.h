@@ -449,7 +449,7 @@ namespace claujson {
 
 namespace claujson {
 
-	void save(const std::string& fileName, Data& global);
+	void save(const std::string& fileName, const Data& global);
 
 	void save_parallel(const std::string& fileName, Data j, size_t thr_num);
 	
@@ -457,5 +457,8 @@ namespace claujson {
 	std::pair<bool, size_t> Parse(const std::string& fileName, int thr_num, Data& ut);
 	// parse json str.
 	std::pair<bool, size_t> ParseStr(std::string_view str, int thr_num, Data& ut);
+
+	[[nodiscard]]
+	Data diff(const Data& x, const Data& y);
 }
 

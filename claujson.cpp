@@ -1425,7 +1425,7 @@ namespace claujson {
 				if (idx == -1) {
 					return false;
 				}
-				auto val = get_value_list(idx);
+				auto val = std::move(get_value_list(idx));
 				erase(idx);
 				add_object_element(key, std::move(val));
 				return true;
@@ -2592,10 +2592,10 @@ namespace claujson {
 					}
 					else {
 						if (parent->get_key_list(i).is_str() == false) {
-							out->add_array_element(parent->get_value_list(i));
+							out->add_array_element(std::move(parent->get_value_list(i)));
 						}
 						else { // out->is_object
-							out->add_object_element(parent->get_key_list(i), parent->get_value_list(i));
+							out->add_object_element(std::move(parent->get_key_list(i)), std::move(parent->get_value_list(i)));
 						}
 					}
 				}
@@ -3640,16 +3640,16 @@ namespace claujson {
 	{
 	private:
 		//                         
-		static void _save(StrStream& stream, Data data, std::vector<Json*>& chk_list, const int depth);
-		static void _save(StrStream& stream, Data data, const int depth);
+		static void _save(StrStream& stream, const Data& data, std::vector<Json*>& chk_list, const int depth);
+		static void _save(StrStream& stream, const Data& data, const int depth);
 
-		static void save_(StrStream& stream, Data global, Json* temp, bool hint);
+		static void save_(StrStream& stream, const Data& global, Json* temp, bool hint);
 
 	public:
 		// test?... just Data has one element 
-		static void save(const std::string& fileName, Data& global, bool hint = false);
+		static void save(const std::string& fileName, const Data& global, bool hint = false);
 
-		static void save(std::ostream& stream, Data& data);
+		static void save(std::ostream& stream, const Data& data);
 
 
 		static void save_parallel(const std::string& fileName, Data j, size_t thr_num);
@@ -3657,8 +3657,8 @@ namespace claujson {
 	};
 
 	//                            todo - change Json* ut to Data& data ?
-	void LoadData::_save(StrStream& stream, Data data, std::vector<Json*>& chk_list, const int depth) {
-		Json* ut = nullptr;
+	void LoadData::_save(StrStream& stream, const Data& data, std::vector<Json*>& chk_list, const int depth) {
+		const Json* ut = nullptr;
 
 		if (data.is_ptr()) {
 			ut = data.as_json_ptr();
@@ -3977,8 +3977,8 @@ namespace claujson {
 		}
 	}
 	
-	void LoadData::_save(StrStream& stream, Data data, const int depth) {
-		Json* ut = nullptr;
+	void LoadData::_save(StrStream& stream, const Data& data, const int depth) {
+		const Json* ut = nullptr;
 
 		if (data.is_ptr()) {
 			ut = data.as_json_ptr();
@@ -4299,7 +4299,7 @@ namespace claujson {
 	}
 
 	// todo... just Data has one element 
-	void LoadData::save(const std::string& fileName, Data& global, bool hint) {
+	void LoadData::save(const std::string& fileName, const Data& global, bool hint) {
 		StrStream stream;
 
 		if (global.is_ptr()) {
@@ -4385,13 +4385,13 @@ namespace claujson {
 		outFile.close();
 	}
 
-	void LoadData::save(std::ostream& stream, Data& data) {
+	void LoadData::save(std::ostream& stream, const Data& data) {
 		StrStream str_stream;
 		_save(str_stream, data, 0);
 		stream << std::string_view(str_stream.buf(), str_stream.buf_size());
 	}
 
-	void LoadData::save_(StrStream& stream, Data global, Json* temp, bool hint) {
+	void LoadData::save_(StrStream& stream, const Data& global, Json* temp, bool hint) {
 
 		std::vector<Json*> chk_list; // point for division?, virtual nodes? }}}?
 
@@ -4701,7 +4701,7 @@ namespace claujson {
 		return  { true, length };
 	}
 	
-	void save(const std::string& fileName, Data& global) {
+	void save(const std::string& fileName, const Data& global) {
 		LoadData::save(fileName, global, false);
 	}
 
@@ -4709,5 +4709,8 @@ namespace claujson {
 		LoadData::save_parallel(fileName, j, thr_num);
 	}
 
+	Data diff(const Data& x, const Data& y) {
+
+	}
 }
 

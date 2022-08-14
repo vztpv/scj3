@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
 
 			//claujson::save("total_ends.json", j);
 
-			//claujson::save_parallel("total_end.json", j, 64);
+			claujson::save_parallel("total_end.json", j, 64);
 
 			//claujson::save("total_ends.json", j);
 
