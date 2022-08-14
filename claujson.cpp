@@ -590,10 +590,9 @@ namespace claujson {
 		std::vector<std::string_view> routeVec;
 		std::vector<Data> routeDataVec;
 
-		;
 			
 		if (route.empty()) {
-			vec.clear()
+			vec.clear();
 			return true;
 		}
 
