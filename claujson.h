@@ -448,29 +448,10 @@ namespace claujson {
 
 namespace claujson {
 
-	class StrStream;
+	void save(const std::string& fileName, Data& global);
 
-	class LoadData //
-	{
-	private:
-		//                         
-		static void _save(StrStream& stream, Data data, std::vector<Json*>& chk_list, const int depth);
-		static void _save(StrStream& stream, Data data, const int depth);
-		
-		static void save_(StrStream& stream, Data global, Json* temp, bool hint);
-
-public:
-		// test?... just Data has one element 
-		static void save(const std::string& fileName, Data& global, bool hint = false);
-
-		static void save(std::ostream& stream, Data& data);
+	void save_parallel(const std::string& fileName, Data j, size_t thr_num);
 	
-
-		static void save_parallel(const std::string& fileName, Data j, size_t thr_num);
-
-	};
-
-
 	// parse json file.
 	std::pair<bool, size_t> Parse(const std::string& fileName, int thr_num, Data& ut);
 	// parse json str.

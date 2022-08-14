@@ -214,11 +214,11 @@ int main(int argc, char* argv[])
 
 			int c1 = clock();
 
-			//claujson::LoadData::save("total_ends.json", j, false);
+			//claujson::save("total_ends.json", j);
 
-			//claujson::LoadData::save_parallel("total_end.json", j, 64);
+			//claujson::save_parallel("total_end.json", j, 64);
 
-			//claujson::LoadData::save("total_ends.json", j, false);
+			//claujson::save("total_ends.json", j);
 
 			//std::cout << "\ncat \n";
 			//system("cat total_end.json");

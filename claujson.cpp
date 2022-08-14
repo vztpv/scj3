@@ -3634,6 +3634,28 @@ namespace claujson {
 		}
 	};
 
+	class StrStream;
+
+	class LoadData //
+	{
+	private:
+		//                         
+		static void _save(StrStream& stream, Data data, std::vector<Json*>& chk_list, const int depth);
+		static void _save(StrStream& stream, Data data, const int depth);
+
+		static void save_(StrStream& stream, Data global, Json* temp, bool hint);
+
+	public:
+		// test?... just Data has one element 
+		static void save(const std::string& fileName, Data& global, bool hint = false);
+
+		static void save(std::ostream& stream, Data& data);
+
+
+		static void save_parallel(const std::string& fileName, Data j, size_t thr_num);
+
+	};
+
 	//                            todo - change Json* ut to Data& data ?
 	void LoadData::_save(StrStream& stream, Data data, std::vector<Json*>& chk_list, const int depth) {
 		Json* ut = nullptr;
@@ -4677,6 +4699,14 @@ namespace claujson {
 
 
 		return  { true, length };
+	}
+	
+	void save(const std::string& fileName, Data& global) {
+		LoadData::save(fileName, global, false);
+	}
+
+	void save_parallel(const std::string& fileName, Data j, size_t thr_num) {
+		LoadData::save_parallel(fileName, j, thr_num);
 	}
 
 }
