@@ -4,6 +4,7 @@ experimental parallel json parser, (using simdjson)
   scanning - simd, parsing - multi-thread(used in clauparser),
   
   save - multi-thread
+  
 (C++17, 64bit)
 
 # 
