@@ -69,6 +69,19 @@ int main(int argc, char* argv[])
 		   "m~n" : 8
 		})";
 
+		std::string test2 = u8R"({
+		   "foo": ["bar2", "baz"] ,
+		   "" : 0,
+		   "a/b" : 1,
+		   "c%d" : 2,
+		   "e^f" : 3,
+		   "g|h" : 45,
+		   "i\\\\j" : 5,
+		   "k\"l" : 6,
+		   " " : 7,
+		   "m~n" : 8
+		})";
+
 		//	The following JSON strings evaluate to the accompanying values :
 
 	//	""           // the whole document
@@ -93,6 +106,16 @@ int main(int argc, char* argv[])
 
 			return 1;
 		}
+
+		Data y;
+		if (!claujson::ParseStr(test2, 1, y).first) {
+			std::cout << "fail\n";
+
+			claujson::Ptr<claujson::Json> clean(y.as_json_ptr());
+
+			return 1;
+		}
+
 		
 		std::cout << x << "\n";
 
@@ -145,7 +168,11 @@ int main(int argc, char* argv[])
 			std::cout << y << " ";
 		}
 
+		claujson::Data diff = claujson::diff(x, y);
+		std::cout << diff << "\n";
+
 		claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
+		claujson::Ptr<claujson::Json> clean2(y.as_json_ptr());
 	}
 
 	for (int i = 0; i < 3; ++i) {

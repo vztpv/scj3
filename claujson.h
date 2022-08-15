@@ -54,6 +54,8 @@ namespace claujson {
 
 	public:
 
+		Data clone() const;
+
 		explicit operator bool() const;
 
 		explicit Data(Json* x);
@@ -203,15 +205,15 @@ namespace claujson {
 		// check...  
 		static inline Data data_null{ nullptr, false }; // valid is false..
 	public:
+		inline static size_t npos = -1;
 
 		bool is_valid() const;
 	protected:
 		explicit Json(bool valid);
 	public:
-		explicit Json();
+		Json* clone() const;
 
-		Json(const Json&) = delete;
-		Json& operator=(const Json&) = delete;
+		explicit Json();
 
 		virtual ~Json();
 		
@@ -219,7 +221,7 @@ namespace claujson {
 
 		Data& at(std::string_view key);
 
-		size_t find(std::string_view key);
+		size_t find(std::string_view key) const;
 
 
 		Data& operator[](size_t idx);
@@ -305,6 +307,8 @@ namespace claujson {
 		explicit Object(bool valid);
 	public:
 
+		Json* clone() const;
+
 		bool chk_key_dup(size_t* idx) const;  // chk dupplication of key.
 
 		[[nodiscard]]
@@ -376,6 +380,8 @@ namespace claujson {
 	protected:
 		explicit Array(bool valid);
 	public:
+
+		Json* clone() const;
 
 		[[nodiscard]]
 		static Data Make();
@@ -460,5 +466,8 @@ namespace claujson {
 
 	[[nodiscard]]
 	Data diff(const Data& x, const Data& y);
+
+	[[nodiscard]]
+	Data patch(const Data& x, const Data& diff);
 }
 

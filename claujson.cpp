@@ -388,6 +388,17 @@ namespace claujson {
 }
 
 namespace claujson {
+
+
+	Data Data::clone() const {
+		Data x = *this;
+
+		if (x.is_ptr()) {
+			x._ptr_val = this->as_json_ptr()->clone();
+		}
+
+		return x;
+	}
 	Data::operator bool() const {
 		return valid;
 	}
@@ -1327,6 +1338,19 @@ namespace claujson {
 		return valid;
 	}
 
+
+	Json* Json::clone() const {
+		if (this->is_array()) {
+			return ((Array*)this)->clone();
+		}
+		else if (this->is_object()) {
+			return ((Object*)this)->clone();
+		}
+		else {
+			return nullptr;
+		}
+	}
+
 	Json::Json(bool valid) : valid(valid) { }
 
 	Json::Json() { }
@@ -1368,7 +1392,7 @@ namespace claujson {
 			return data_null;
 		}
 
-		size_t Json::find(std::string_view key) { // chk (uint64_t)-1 == (maximum)....-> eof?
+		size_t Json::find(std::string_view key) const { // chk (uint64_t)-1 == (maximum)....-> eof?
 			if (!is_object() || !is_valid()) {
 				return -1;
 			}
@@ -1464,6 +1488,12 @@ namespace claujson {
 				return (*vec)[x] < (*vec)[y];
 			}
 		};
+
+		Json* Object::clone() const {
+			Json* x = new Object(*this);
+
+			return x;
+		}
 
 		bool Object::chk_key_dup(size_t* idx) const {
 			bool has_dup = false;
@@ -1698,6 +1728,11 @@ namespace claujson {
 		}
 
 		 Array::Array(bool valid) : Json(valid) { }
+
+
+		 Json* Array::clone() const {
+			 return new Array(*this);
+		 }
 
 		Data Array::Make() {
 			return Data(new Array());
@@ -4709,8 +4744,194 @@ namespace claujson {
 		LoadData::save_parallel(fileName, j, thr_num);
 	}
 
+	static std::string escape_for_json_pointer(std::string str) {
+		// 1. ~ -> ~0
+		// 2. / -> ~1
+		// 1->2 ok, 2->1 no ok.
+		{
+			size_t idx = 0;
+			idx = str.find('~');
+			while (idx != std::string::npos) {
+				str = str.replace(str.begin() + idx, str.begin() + idx + 1, "~0");
+				idx = str.find("~", idx + 2);
+			}
+		}
+
+		{
+			size_t idx = 0;
+			idx = str.find('/');
+			while (idx != std::string::npos) {
+				str = str.replace(str.begin() + idx, str.begin() + idx + 1, "~1");
+				idx = str.find('/', idx + 2);
+			}
+		}
+
+		return str;
+	}
+
+
+	// /- -> / in array.
+	static Data _diff(const Data& x, const Data& y, std::string route) {
+		Data result(new Array());
+		Json* j = result.as_json_ptr();
+
+		if (x == y) {
+			return result;
+		}
+
+		if (x.type() != y.type()) {
+			Object* obj = new Object();
+
+			obj->add_object_element(Data("op"sv), Data("replace"sv));
+			obj->add_object_element(Data("path"sv), Data(route));
+			obj->add_object_element(Data("value"sv), Data(y.clone()));
+
+			j->add_object(Ptr<Json>(obj));
+			return result;
+		}
+
+		switch (x.type()) {
+		case DataType::ARRAY_OR_OBJECT:
+		{
+			const Json* jx = x.as_json_ptr();
+			const Json* jy = y.as_json_ptr();
+
+			if (jx->is_array()) {
+				size_t i = 0;
+				size_t sz_x = jx->get_data_size();
+				size_t sz_y = jy->get_data_size();
+
+				for (; i < sz_x && i < sz_y; ++i) {
+					std::string new_route = route;
+					new_route += '/';
+					new_route += fmt::to_string(i);
+
+					Data inner_diff = _diff(jx->get_value_list(i), jy->get_value_list(i), std::move(new_route));
+
+					{
+						Json* w = inner_diff.as_json_ptr();
+						size_t sz_w = w->get_data_size();
+
+						for (size_t t = 0; t < sz_w; ++t) {
+							Data temp = std::move(w->get_value_list(t));
+							j->add_object(Ptr<Json>(temp.as_json_ptr()));
+						}
+
+						Ptr<Json> clean(inner_diff.as_json_ptr());
+					}
+				}
+
+				for (; i < sz_x; ++i) {
+					Object* obj = new Object();
+
+					obj->add_object_element(Data("op"sv), Data("remove"sv));
+
+					std::string new_route = route;
+					new_route += '/';
+					new_route += fmt::to_string(i);
+
+					obj->add_object_element(Data("path"sv), Data(new_route));
+
+					j->add_object(Ptr<Json>(obj));
+				}
+
+				for (; i < sz_y; ++i) {
+					Object* obj = new Object();
+
+					obj->add_object_element(Data("op"sv), Data("add"sv));
+
+					std::string new_route = route;
+					new_route += '/'; 
+
+					obj->add_object_element(Data("path"sv), Data(new_route));
+					obj->add_object_element(Data("value"sv), Data(jy->get_value_list(i).clone()));
+
+					j->add_object(Ptr<Json>(obj));
+				}
+			}
+			else if (jx->is_object()) {
+				size_t sz_x = jx->get_data_size();
+				size_t sz_y = jy->get_data_size();
+
+				for (size_t i = 0; i < sz_x; ++i) {
+					std::string key = jx->get_key_list(i).str_val();
+					std::string new_route = route;
+					new_route += '/';
+					new_route += escape_for_json_pointer(key);
+
+					if (size_t idx = jy->find(key); idx != Json::npos) {
+						Data inner_diff = _diff(Data(jx->get_value_list(i)), jy->get_value_list(idx), new_route);
+
+						{
+							Json* w = inner_diff.as_json_ptr();
+							size_t sz_w = w->get_data_size();
+
+							for (size_t t = 0; t < sz_w; ++t) {
+								Data temp = std::move(w->get_value_list(t));
+								j->add_object(Ptr<Json>(temp.as_json_ptr()));
+							}
+
+							Ptr<Json> clean(inner_diff.as_json_ptr());
+						}
+					}
+					else {
+						Object* obj = new Object();
+
+						obj->add_object_element(Data("op"sv), Data("remove"sv));
+						obj->add_object_element(Data("path"sv), Data(new_route));
+
+						j->add_object(Ptr<Json>(obj));
+					}
+				}
+
+				for (size_t i = 0; i < sz_y; ++i) {
+					std::string key = jy->get_key_list(i).str_val();
+					std::string new_route = route;
+					new_route += '/';
+					new_route += (escape_for_json_pointer(key));
+
+					if (size_t idx = jx->find(key); idx == Json::npos) {
+						Object* obj = new Object();
+
+						obj->add_object_element(Data("op"sv), Data("add"sv));
+						obj->add_object_element(Data("path"sv), Data(new_route));
+						obj->add_object_element(Data("value"sv), Data(jy->get_value_list(i).clone()));
+
+						j->add_object(Ptr<Json>(obj));
+					}
+				}
+			}
+		}
+			break;
+		
+		case DataType::BOOL:
+		case DataType::NULL_:
+		case DataType::FLOAT:
+		case DataType::INT:
+		case DataType::UINT:
+		case DataType::STRING:
+			Object* obj = new Object();
+
+			obj->add_object_element(Data("op"sv), Data("replace"sv));
+			obj->add_object_element(Data("path"sv), Data(route));
+			obj->add_object_element(Data("value"sv), Data(y.clone()));
+
+			j->add_object(Ptr<Json>(obj));
+			break;
+		}
+
+		return result;
+	}
+
+
 	Data diff(const Data& x, const Data& y) {
+		return _diff(x, y, "");
+	}
+
+	Data patch(const Data& x, const Data& diff) {
 
 	}
+
 }
+
 
