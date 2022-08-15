@@ -113,7 +113,10 @@ namespace claujson {
 
 		void* ptr_val() const;
 
-		Data& json_pointer(std::string_view route);
+		Data& json_pointer(std::string_view route); 
+		
+		const Data& json_pointer(std::string_view route) const;
+
 
 		static bool json_pointerA(std::string_view route, std::vector<Data>& vec);
 
@@ -211,6 +214,9 @@ namespace claujson {
 	protected:
 		explicit Json(bool valid);
 	public:
+		Json(const Json& other) = delete;
+		Json& operator=(const Json& other) = delete;
+
 		Json* clone() const;
 
 		explicit Json();

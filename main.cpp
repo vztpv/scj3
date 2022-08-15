@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
 	// JSON Pointer.
 	{
-	//	For example, given the JSON document
+		//	For example, given the JSON document
 
 		std::string test = u8R"({
 		   "foo": ["bar", "baz"] ,
@@ -72,14 +72,15 @@ int main(int argc, char* argv[])
 		std::string test2 = u8R"({
 		   "foo": ["bar2", "baz"] ,
 		   "" : 0,
-		   "a/b" : 1,
+		  
 		   "c%d" : 2,
 		   "e^f" : 3,
 		   "g|h" : 45,
 		   "i\\\\j" : 5,
 		   "k\"l" : 6,
 		   " " : 7,
-		   "m~n" : 8
+		   "m~n" : 8,
+		   "zzz": 9
 		})";
 
 		//	The following JSON strings evaluate to the accompanying values :
@@ -97,7 +98,7 @@ int main(int argc, char* argv[])
 	//		"/ "         7
 	//		"/m~0n"      8
 		using claujson::Data;
-		
+
 		Data x;
 		if (!claujson::ParseStr(test, 1, x).first) {
 			std::cout << "fail\n";
@@ -116,7 +117,7 @@ int main(int argc, char* argv[])
 			return 1;
 		}
 
-		
+
 		std::cout << x << "\n";
 
 		{
@@ -171,8 +172,26 @@ int main(int argc, char* argv[])
 		claujson::Data diff = claujson::diff(x, y);
 		std::cout << diff << "\n";
 
-		claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
-		claujson::Ptr<claujson::Json> clean2(y.as_json_ptr());
+		claujson::Data result = claujson::patch(x, diff);
+
+		std::cout << result << "\n";
+
+		if (result == y) {
+			std::cout << "success\n";
+		}
+
+		{
+			claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
+		}
+		{
+			claujson::Ptr<claujson::Json> clean2(y.as_json_ptr());
+		}
+		{
+			claujson::Ptr<claujson::Json> clean3(diff.as_json_ptr());
+		}
+		{
+			claujson::Ptr<claujson::Json> clean4(result.as_json_ptr());
+		}
 	}
 
 	for (int i = 0; i < 3; ++i) {

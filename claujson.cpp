@@ -857,6 +857,126 @@ namespace claujson {
 
 		return *data;
 	}
+	const Data& Data::json_pointer(std::string_view route) const {
+		static const Data unvalid_data(nullptr, false);
+
+		if (is_structured() == false) {
+			return unvalid_data;
+		}
+
+		// the whole document.
+		if (route.empty()) {
+			return *this;
+		}
+
+		std::vector<std::string_view> routeVec;
+		std::vector<Data> routeDataVec;
+
+		routeVec.reserve(route.size());
+		routeDataVec.reserve(route.size());
+
+		if (route[0] != '/') {
+			return unvalid_data;
+		}
+
+		// 1. route -> split with '/'  to routeVec.
+		size_t found_idx = 0; // first found_idx is 0, found '/'
+
+		while (found_idx != std::string_view::npos) {
+			size_t new_idx = route.find('/', found_idx + 1);
+
+			if (new_idx == std::string_view::npos) {
+				routeVec.push_back(sub_route(route, found_idx, route.size()));
+				break;
+			}
+			// else { ... }
+			routeVec.push_back(sub_route(route, found_idx, new_idx));
+
+			found_idx = new_idx;
+		}
+
+		// 2. using simdjson util, check utf-8 for string in routeVec.
+		// 3. using simdjson util, check valid for string in routeVec.
+
+		for (auto& x : routeVec) {
+			Data temp(x);
+
+			if (temp.is_valid()) {
+				routeDataVec.push_back(std::move(temp));
+			}
+			else {
+				return unvalid_data;
+			}
+		}
+
+		// 4. find Data with route. and return
+		const Data* data = this;
+
+		for (size_t i = 0; i < routeDataVec.size(); ++i) {
+			Data& x = routeDataVec[i];
+
+			if (data->is_primitive()) {
+				if (i == routeDataVec.size() - 1) {
+					return *data;
+				}
+				else {
+					return unvalid_data;
+				}
+			}
+
+			const Json* j = data->as_json_ptr();
+
+			if (j->is_array()) { // array -> with idx
+				size_t idx = 0;
+				bool found = false;
+				size_t arr_size = j->get_data_size();
+
+				bool chk = to_uint_for_json_pointer(x.str_val(), &idx);
+
+				if (!chk) {
+					return unvalid_data;
+				}
+
+				data = &j->get_value_list(idx);
+			}
+			else if (j->is_object()) { // object -> with key
+				std::string_view str = x.str_val();
+				std::string result;
+
+				result.reserve(str.size());
+
+				// chk ~0 -> ~, ~1 -> /
+				for (size_t k = 0; k < str.size(); ++k) {
+					if (str[k] == '~') {
+						if (k + 1 < str.size()) {
+							if (str[k + 1] == '0') {
+								result.push_back('~');
+								++k;
+							}
+							else if (str[k + 1] == '1') {
+								result.push_back('/');
+								++k;
+							}
+							else {
+								return unvalid_data;
+							}
+						}
+						else {
+							return unvalid_data;
+						}
+					}
+					else {
+						result.push_back(str[k]);
+					}
+				}
+
+				data = &j->at(result);
+			}
+		}
+
+		return *data;
+	}
+
 
 
 	void Data::clear() {
@@ -1490,9 +1610,17 @@ namespace claujson {
 		};
 
 		Json* Object::clone() const {
-			Json* x = new Object(*this);
+			Json* result = new Object();
 
-			return x;
+			size_t sz = this->get_data_size();
+
+			for (size_t i = 0; i < sz; ++i) {
+				result->add_object_element(this->get_key_list(i).clone(), this->get_value_list(i).clone());
+			}
+
+			result->key = this->key.clone();
+
+			return result;
 		}
 
 		bool Object::chk_key_dup(size_t* idx) const {
@@ -1731,7 +1859,16 @@ namespace claujson {
 
 
 		 Json* Array::clone() const {
-			 return new Array(*this);
+			 Json* result = new Array();
+
+			 size_t sz = this->get_data_size();
+			 for (size_t i = 0; i < sz; ++i) {
+				 result->add_array_element(this->get_value_list(i).clone());
+			 }
+
+			 result->key = this->key.clone();
+
+			 return result;
 		 }
 
 		Data Array::Make() {
@@ -4804,7 +4941,7 @@ namespace claujson {
 				for (; i < sz_x && i < sz_y; ++i) {
 					std::string new_route = route;
 					new_route += '/';
-					new_route += fmt::to_string(i);
+					new_route += std::to_string(i);
 
 					Data inner_diff = _diff(jx->get_value_list(i), jy->get_value_list(i), std::move(new_route));
 
@@ -4821,46 +4958,44 @@ namespace claujson {
 					}
 				}
 
-				for (; i < sz_x; ++i) {
-					Object* obj = new Object();
+				if (i < sz_x) {
+					for (size_t _i = sz_x; _i > i; --i) {
+						Object* obj = new Object();
 
-					obj->add_object_element(Data("op"sv), Data("remove"sv));
+						obj->add_object_element(Data("op"sv), Data("remove"sv));
 
-					std::string new_route = route;
-					new_route += '/';
-					new_route += fmt::to_string(i);
+						obj->add_object_element(Data("path"sv), Data(route));
+						obj->add_object_element(Data("last_idx"sv), Data(_i - 1));
 
-					obj->add_object_element(Data("path"sv), Data(new_route));
-
-					j->add_object(Ptr<Json>(obj));
+						j->add_object(Ptr<Json>(obj));
+					}
 				}
+				else {
+					for (; i < sz_y; ++i) {
+						Object* obj = new Object();
 
-				for (; i < sz_y; ++i) {
-					Object* obj = new Object();
+						obj->add_object_element(Data("op"sv), Data("add"sv));
 
-					obj->add_object_element(Data("op"sv), Data("add"sv));
+						obj->add_object_element(Data("path"sv), Data(route));
 
-					std::string new_route = route;
-					new_route += '/'; 
+						obj->add_object_element(Data("value"sv), Data(jy->get_value_list(i).clone()));
 
-					obj->add_object_element(Data("path"sv), Data(new_route));
-					obj->add_object_element(Data("value"sv), Data(jy->get_value_list(i).clone()));
-
-					j->add_object(Ptr<Json>(obj));
+						j->add_object(Ptr<Json>(obj));
+					}
 				}
 			}
 			else if (jx->is_object()) {
 				size_t sz_x = jx->get_data_size();
 				size_t sz_y = jy->get_data_size();
 
-				for (size_t i = 0; i < sz_x; ++i) {
-					std::string key = jx->get_key_list(i).str_val();
+				for (size_t i = sz_x; i > 0; --i) {
+					std::string key = jx->get_key_list(i - 1).str_val();
 					std::string new_route = route;
 					new_route += '/';
 					new_route += escape_for_json_pointer(key);
 
 					if (size_t idx = jy->find(key); idx != Json::npos) {
-						Data inner_diff = _diff(Data(jx->get_value_list(i)), jy->get_value_list(idx), new_route);
+						Data inner_diff = _diff(Data(jx->get_value_list(i - 1)), jy->get_value_list(idx), new_route);
 
 						{
 							Json* w = inner_diff.as_json_ptr();
@@ -4878,7 +5013,8 @@ namespace claujson {
 						Object* obj = new Object();
 
 						obj->add_object_element(Data("op"sv), Data("remove"sv));
-						obj->add_object_element(Data("path"sv), Data(new_route));
+						obj->add_object_element(Data("path"sv), Data(route));
+						obj->add_object_element(Data("last_key"sv), Data(key));
 
 						j->add_object(Ptr<Json>(obj));
 					}
@@ -4886,15 +5022,13 @@ namespace claujson {
 
 				for (size_t i = 0; i < sz_y; ++i) {
 					std::string key = jy->get_key_list(i).str_val();
-					std::string new_route = route;
-					new_route += '/';
-					new_route += (escape_for_json_pointer(key));
 
 					if (size_t idx = jx->find(key); idx == Json::npos) {
 						Object* obj = new Object();
 
 						obj->add_object_element(Data("op"sv), Data("add"sv));
-						obj->add_object_element(Data("path"sv), Data(new_route));
+						obj->add_object_element(Data("path"sv), Data(route));
+						obj->add_object_element(Data("key"sv), Data(jy->get_key_list(i).clone()));
 						obj->add_object_element(Data("value"sv), Data(jy->get_value_list(i).clone()));
 
 						j->add_object(Ptr<Json>(obj));
@@ -4929,7 +5063,113 @@ namespace claujson {
 	}
 
 	Data patch(const Data& x, const Data& diff) {
+		Data unvalid_data(nullptr, false);
 
+		const Json* j_diff = diff.as_json_ptr();
+		
+		if (!j_diff->is_array()) {
+			return unvalid_data;
+		}
+
+		Data result = x.clone();
+
+		size_t sz_diff = j_diff->get_data_size();
+
+		for (size_t i = 0; i < sz_diff; ++i) {
+			const Object* obj = (const Object*)j_diff->get_value_list(i).as_json_ptr();
+			size_t op_idx = obj->find("op"sv);
+			size_t path_idx = obj->find("path"sv);
+			size_t value_idx = obj->find("value"sv);
+			size_t key_idx = obj->find("key"sv);
+
+			if (op_idx == Json::npos) {
+				Ptr<Json> clean(result.as_json_ptr());
+				return unvalid_data;
+			}
+
+			if (path_idx == Json::npos) {
+				Ptr<Json> clean(result.as_json_ptr());
+				return unvalid_data;
+			}
+
+			if (obj->get_value_list(op_idx).str_val() == "replace"sv) {
+				if (value_idx == Json::npos) {
+					Ptr<Json> clean(result.as_json_ptr());
+					return unvalid_data;
+				}
+
+				Data& value = result.json_pointer(obj->get_value_list(path_idx).str_val());
+				{
+					if (value.is_ptr()) {
+						Ptr<Json> clean(value.as_json_ptr());
+						value.clear();
+					}
+				}
+				value = obj->get_value_list(value_idx).clone();
+			}
+			else if (obj->get_value_list(op_idx).str_val() == "remove"sv) {
+				Json* parent = result.json_pointer(obj->get_value_list(path_idx).str_val()).as_json_ptr();
+				
+				// case : result.json_pointer returns root?
+				if (!parent) {
+					if (result.is_ptr()) {
+						Ptr<Json> clean(result.as_json_ptr());
+					}
+					result.clear();
+				}
+				else if (parent->is_array()) {
+					size_t last_idx_idx = obj->find("last_idx"sv);
+					if (last_idx_idx == Json::npos) {
+						Ptr<Json> clean(result.as_json_ptr());
+						return unvalid_data;
+					}
+
+					size_t last_idx = obj->get_value_list(last_idx_idx).uint_val();
+
+					delete parent->get_value_list(last_idx).as_json_ptr(); // chk!
+					parent->erase(last_idx);
+				}
+				else {
+					size_t last_key_idx = obj->find("last_key"sv);
+					if (last_key_idx == Json::npos) {
+						Ptr<Json> clean(result.as_json_ptr());
+						return unvalid_data;
+					}
+
+					std::string last_key = obj->get_value_list(last_key_idx).str_val();
+					size_t _idx = parent->find(last_key);
+					delete parent->get_value_list(_idx).as_json_ptr();
+					parent->erase(_idx);
+				}
+			}
+			else if (obj->get_value_list(op_idx).str_val() == "add"sv) {
+				if (value_idx == Json::npos) {
+					Ptr<Json> clean(result.as_json_ptr());
+					return unvalid_data;
+				}
+
+				Data& _ = result.json_pointer(obj->get_value_list(path_idx).str_val());
+
+				Json* parent = _.as_json_ptr();
+
+				// case : result.json_pointer returns root?
+				if (!parent) {
+					result = obj->get_value_list(value_idx).clone();
+				}
+				else if (parent->is_array()) {
+					parent->add_array_element(obj->get_value_list(value_idx).clone());
+				}
+				else if (parent->is_object()) {
+					if (key_idx == Json::npos) {
+						Ptr<Json> clean(result.as_json_ptr());
+						return unvalid_data;
+					}
+					parent->add_object_element(obj->get_value_list(key_idx).clone(), obj->get_value_list(value_idx).clone());
+				}
+			}
+		}
+
+		return result;
 	}
 
 }
