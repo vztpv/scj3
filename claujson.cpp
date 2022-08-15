@@ -4941,7 +4941,7 @@ namespace claujson {
 				for (; i < sz_x && i < sz_y; ++i) {
 					std::string new_route = route;
 					new_route += '/';
-					new_route += std::to_string(i);
+					new_route += fmt::to_string(i);
 
 					Data inner_diff = _diff(jx->get_value_list(i), jy->get_value_list(i), std::move(new_route));
 
