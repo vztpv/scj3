@@ -283,9 +283,9 @@ namespace claujson {
 
 		virtual void insert_array_element(size_t idx, Data val);
 
-		virtual void erase(std::string_view key);
+		virtual void erase(std::string_view key, bool real = false);
 
-		virtual void erase(size_t idx);
+		virtual void erase(size_t idx, bool real = false);
 
 
 	private:
@@ -1753,14 +1753,19 @@ namespace claujson {
 
 		void Object::insert_array_element(size_t idx, Data val) { std::cout << "err"; }
 
-		void Object::erase(std::string_view key) {
+		void Object::erase(std::string_view key, bool real) {
 			size_t idx = this->find(key);
-			erase(idx);
+			erase(idx, real);
 		}
 
-		void Object::erase(size_t idx) {
+		void Object::erase(size_t idx, bool real) {
 			if (!is_valid()) {
 				return;
+			}
+
+			if (real) {
+				clean(obj_key_vec[idx]);
+				clean(obj_val_vec[idx]);
 			}
 
 			obj_key_vec.erase(obj_key_vec.begin() + idx);
@@ -1984,16 +1989,19 @@ namespace claujson {
 			arr_vec.insert(arr_vec.begin() + idx, std::move(val));
 		}
 
-		void Array::erase(std::string_view key) {
+		void Array::erase(std::string_view key, bool real) {
 			size_t idx = this->find(key);
-			erase(idx);
+			erase(idx, real);
 		}
 
-		void Array::erase(size_t idx) {
+		void Array::erase(size_t idx, bool real) {
 			if (!is_valid()) {
 				return;
 			}
 
+			if (real) {
+				clean(arr_vec[idx]);
+			}
 
 			arr_vec.erase(arr_vec.begin() + idx);
 		}
@@ -2240,11 +2248,11 @@ namespace claujson {
 		}
 		void Root::insert_array_element(size_t idx, Data val) { std::cout << "not used.."; }
 
-		void Root::erase(std::string_view key) {
+		void Root::erase(std::string_view key, bool real) {
 			std::cout << "not used..";
 		}
 
-		void Root::erase(size_t idx) {
+		void Root::erase(size_t idx, bool real) {
 			std::cout << "not used..";
 		}
 
@@ -2654,8 +2662,8 @@ namespace claujson {
 		friend class LoadData;
 
 		static size_t Size(Json* root) {
-		return _Size(root) + 1;
-	}
+			return _Size(root) + 1;
+		}
 
 		 static size_t _Size(Json* root) {
 			 if (root == nullptr) {
@@ -4907,7 +4915,7 @@ namespace claujson {
 	}
 
 
-	// /- -> / in array.
+	// cf) /- -> / in array.
 	static Data _diff(const Data& x, const Data& y, std::string route) {
 		Data result(new Array());
 		Json* j = result.as_json_ptr();
@@ -5172,6 +5180,10 @@ namespace claujson {
 		return result;
 	}
 
+	void clean(Data& x) {
+		Ptr<Json> _(x.as_json_ptr());
+		x.set_null(); // ?
+	}
 }
 
 

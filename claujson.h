@@ -276,8 +276,8 @@ namespace claujson {
 
 		virtual void insert_array_element(size_t idx, Data val) = 0;
 
-		virtual void erase(std::string_view key) = 0;
-		virtual void erase(size_t idx) = 0;
+		virtual void erase(std::string_view key, bool real = false) = 0;
+		virtual void erase(size_t idx, bool real = false) = 0;
 
 	private:	
 		void set_parent(PtrWeak<Json> j);
@@ -356,9 +356,9 @@ namespace claujson {
 
 		virtual void insert_array_element(size_t idx, Data val);
 
-		virtual void erase(std::string_view key);
+		virtual void erase(std::string_view key, bool real = false);
 
-		virtual void erase(size_t idx);
+		virtual void erase(size_t idx, bool real = false);
 
 
 
@@ -433,9 +433,9 @@ namespace claujson {
 
 		virtual void insert_array_element(size_t idx, Data val);
 
-		virtual void erase(std::string_view key);
+		virtual void erase(std::string_view key, bool real = false);
 
-		virtual void erase(size_t idx);
+		virtual void erase(size_t idx, bool real = false);
 
 	private:
 		virtual void Link(Ptr<Json> j);
@@ -475,5 +475,7 @@ namespace claujson {
 
 	[[nodiscard]]
 	Data patch(const Data& x, const Data& diff);
+
+	void clean(Data& x);
 }
 
