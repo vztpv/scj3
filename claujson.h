@@ -20,7 +20,8 @@ namespace claujson {
 	using PtrWeak = T*;
 
 	template <class T>
-	using Ptr = std::unique_ptr<T>;
+	using Ptr = std::unique_ptr<T>; 
+	// Ptr - use std::move
 
 	class Data;
 	class Json;
@@ -31,10 +32,26 @@ namespace claujson {
 		char* buf, uint8_t* string_buf, uint64_t id, bool& err);
 
 	enum class DataType {
-		NONE, ARRAY_OR_OBJECT, INT, UINT, FLOAT, BOOL, NULL_, STRING
+		NONE, 
+		ARRAY_OR_OBJECT, // todo - ARRAY, OBJECT ?
+		INT, UINT, 
+		FLOAT, 
+		BOOL, 
+		NULL_, 
+		STRING
 	};
 
 	class Data {
+
+	public:
+		// todo - check type of Data....
+		// using INT_t = int64_t; 
+		// using UINT_t = uint64_t;
+		// using FlOAT_t = double;
+		// using STR_t = std::string;
+		// using BOOL_t = bool;
+
+	public:
 		friend std::ostream& operator<<(std::ostream& stream, const Data& data);
 
 		friend claujson::Data& Convert(Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
@@ -45,7 +62,10 @@ namespace claujson {
 			uint64_t _uint_val;
 			double _float_val;
 			std::string* _str_val;
-			Json* _ptr_val; // Array or Object , ...
+			Json* _ptr_val; // ARRAY_OR_OBJECT -> todo : Array, or Object?
+			
+			// cf) Array* _arr_val; , Object* _obj_val; 
+			
 			bool _bool_val;
 		};
 
@@ -67,7 +87,13 @@ namespace claujson {
 		explicit Data(uint64_t x);
 		explicit Data(double x);
 		
-		explicit Data(std::string_view x);
+		explicit Data(std::string_view x); // C++17
+		
+		// C++20~
+		// todo - 
+		//explicit Data(std::u8string_view x) {
+		//	//
+		//}
 
 		
 		
@@ -95,7 +121,7 @@ namespace claujson {
 
 		bool is_str() const;
 
-		bool is_ptr() const;
+		bool is_ptr() const; // check is_structured()
 
 		int64_t int_val() const;
 
@@ -123,7 +149,6 @@ namespace claujson {
 		Data& json_pointerB(const std::vector<Data>& routeDataVec);
 
 		// todo - rename, and add  as_ref, as_ptr ?
-
 		Array& as_array();
 		Object& as_object();
 		Json* as_json_ptr();
@@ -208,7 +233,7 @@ namespace claujson {
 		// check...  
 		static inline Data data_null{ nullptr, false }; // valid is false..
 	public:
-		inline static size_t npos = -1;
+		inline static size_t npos = -1; // 
 
 		bool is_valid() const;
 	protected:
@@ -255,7 +280,7 @@ namespace claujson {
 		virtual bool is_element() const = 0;
 		bool is_user_type() const;
 
-		// for valid with obejct or array or root.
+		// for valid with object or array or root.
 		virtual size_t get_data_size() const = 0;
 		virtual Data& get_value_list(size_t idx) = 0;
 		virtual Data& get_key_list(size_t idx) = 0;
@@ -268,13 +293,13 @@ namespace claujson {
 
 		virtual bool is_virtual() const = 0;
 
-		// 
-		virtual void add_object_element(Data key, Data val) = 0;
-		virtual void add_array_element(Data val) = 0;
-		virtual void add_array(Ptr<Json> arr) = 0; // 
-		virtual void add_object(Ptr<Json> obj) = 0;
+		// todo return type void -> bool.
+		virtual bool add_object_element(Data key, Data val) = 0;
+		virtual bool add_array_element(Data val) = 0;
+		virtual bool add_array(Ptr<Json> arr) = 0; // 
+		virtual bool add_object(Ptr<Json> obj) = 0;
 
-		virtual void insert_array_element(size_t idx, Data val) = 0;
+		virtual bool insert_array_element(size_t idx, Data val) = 0;
 
 		virtual void erase(std::string_view key, bool real = false) = 0;
 		virtual void erase(size_t idx, bool real = false) = 0;
@@ -349,12 +374,12 @@ namespace claujson {
 		virtual void reserve_data_list(size_t len);
 
 
-		virtual void add_object_element(Data key, Data val);
-		virtual void add_array_element(Data val);
-		virtual void add_array(Ptr<Json> arr);
-		virtual void add_object(Ptr<Json> obj);
+		virtual bool add_object_element(Data key, Data val);
+		virtual bool add_array_element(Data val);
+		virtual bool add_array(Ptr<Json> arr);
+		virtual bool add_object(Ptr<Json> obj);
 
-		virtual void insert_array_element(size_t idx, Data val);
+		virtual bool insert_array_element(size_t idx, Data val);
 
 		virtual void erase(std::string_view key, bool real = false);
 
@@ -423,15 +448,15 @@ namespace claujson {
 		std::vector<Data>::iterator end();
 		
 
-		virtual void add_object_element(Data key, Data val);
+		virtual bool add_object_element(Data key, Data val);
 		
-		virtual void add_array_element(Data val);
+		virtual bool add_array_element(Data val);
 
-		virtual void add_array(Ptr<Json> arr);
+		virtual bool add_array(Ptr<Json> arr);
 
-		virtual void add_object(Ptr<Json> obj);
+		virtual bool add_object(Ptr<Json> obj);
 
-		virtual void insert_array_element(size_t idx, Data val);
+		virtual bool insert_array_element(size_t idx, Data val);
 
 		virtual void erase(std::string_view key, bool real = false);
 
@@ -470,6 +495,12 @@ namespace claujson {
 	// parse json str.
 	std::pair<bool, size_t> ParseStr(std::string_view str, int thr_num, Data& ut);
 
+	// todo - c++20~
+	//inline std::pair<bool, size_t> ParseStr(std::u8string_view str, int thr_num, Data& ut) {
+	//	//
+	//	return { false , 0 };
+	//}
+	
 	[[nodiscard]]
 	Data diff(const Data& x, const Data& y);
 

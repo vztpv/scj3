@@ -275,13 +275,13 @@ namespace claujson {
 
 
 
-		virtual void add_object_element(Data key, Data val);
-		virtual void add_array_element(Data val);
+		virtual bool add_object_element(Data key, Data val);
+		virtual bool add_array_element(Data val);
 
-		virtual void add_array(Ptr<Json> arr);
-		virtual void add_object(Ptr<Json> obj);
+		virtual bool add_array(Ptr<Json> arr);
+		virtual bool add_object(Ptr<Json> obj);
 
-		virtual void insert_array_element(size_t idx, Data val);
+		virtual bool insert_array_element(size_t idx, Data val);
 
 		virtual void erase(std::string_view key, bool real = false);
 
@@ -1710,9 +1710,9 @@ namespace claujson {
 			obj_key_vec.reserve(len);
 		}
 
-		void Object::add_object_element(Data key, Data val) {
+		bool Object::add_object_element(Data key, Data val) {
 			if (!is_valid()) {
-				return;
+				return false;
 			}
 
 			if (val.is_ptr()) {
@@ -1721,12 +1721,14 @@ namespace claujson {
 			}
 			obj_key_vec.push_back(std::move(key));
 			obj_val_vec.push_back(std::move(val));
+			
+			return true;
 		}
 
-		void Object::add_array_element(Data val) { std::cout << "err"; }
-		void Object::add_array(Ptr<Json> arr) {
+		bool Object::add_array_element(Data val) { return false; }
+		bool Object::add_array(Ptr<Json> arr) {
 			if (!is_valid()) {
-				return;
+				return false;
 			}
 
 			if (arr->has_key()) {
@@ -1734,12 +1736,15 @@ namespace claujson {
 				obj_val_vec.push_back(Data(arr.release()));
 			}
 			else {
-				std::cout << "err";
+				return false;
 			}
+
+			return true;
 		}
-		void Object::add_object(Ptr<Json> obj) {
+
+		bool Object::add_object(Ptr<Json> obj) {
 			if (!is_valid()) {
-				return;
+				return false;
 			}
 
 			if (obj->has_key()) {
@@ -1747,11 +1752,13 @@ namespace claujson {
 				obj_val_vec.push_back(Data(obj.release()));
 			}
 			else {
-				std::cout << "err";
+				return false;
 			}
+
+			return true;
 		}
 
-		void Object::insert_array_element(size_t idx, Data val) { std::cout << "err"; }
+		bool Object::insert_array_element(size_t idx, Data val) { return false; }
 
 		void Object::erase(std::string_view key, bool real) {
 			size_t idx = this->find(key);
@@ -1943,50 +1950,56 @@ namespace claujson {
 			return arr_vec.end();
 		}
 
-		void Array::add_object_element(Data key, Data val) {
-			std::cout << "err";
+		bool Array::add_object_element(Data key, Data val) {
+			return false;
 		}
 
-		void Array::add_array_element(Data val) {
+		bool Array::add_array_element(Data val) {
 			if (!is_valid()) {
-				return;
+				return false;
 			}
 
 			arr_vec.push_back(std::move(val));
 
+			return true;
 		}
 		
-		void Array::add_array(Ptr<Json> arr) {
+		bool Array::add_array(Ptr<Json> arr) {
 			if (!is_valid()) {
-				return;
+				return false;
 			}
 
 			if (!arr->has_key()) {
 				arr_vec.push_back(Data(arr.release()));
 			}
 			else {
-				std::cout << "err";
+				return false;
 			}
+			return true;
 		}
-		void Array::add_object(Ptr<Json> obj) {
+		
+		bool Array::add_object(Ptr<Json> obj) {
 			if (!is_valid()) {
-				return;
+				return false;
 			}
 
 			if (!obj->has_key()) {
 				arr_vec.push_back(Data(obj.release()));
 			}
 			else {
-				std::cout << "err";
+				return false;
 			}
+			return true;
 		}
 
-		void Array::insert_array_element(size_t idx, Data val) {
+		bool Array::insert_array_element(size_t idx, Data val) {
 			if (!is_valid()) {
-				return;
+				return false;
 			}
 
 			arr_vec.insert(arr_vec.begin() + idx, std::move(val));
+
+			return true;
 		}
 
 		void Array::erase(std::string_view key, bool real) {
@@ -2231,22 +2244,31 @@ namespace claujson {
 
 
 
-		void Root::add_object_element(Data key, Data val) {
+		bool Root::add_object_element(Data key, Data val) {
 			obj_key_vec.push_back(std::move(key));
 			obj_val_vec.push_back(std::move(val));
+
+			return true;
 		}
-		void Root::add_array_element(Data val) {
+		bool Root::add_array_element(Data val) {
 			arr_vec.push_back(std::move(val));
+
+			return true;
 		}
 
 
-		void Root::add_array(Ptr<Json> arr) {
-			std::cout << "not used..";
+		bool Root::add_array(Ptr<Json> arr) {
+			//std::cout << "not used..";
+			return false;
 		}
-		void Root::add_object(Ptr<Json> obj) {
-			std::cout << "not used..";
+		bool Root::add_object(Ptr<Json> obj) {
+			//std::cout << "not used..";
+			return false;
 		}
-		void Root::insert_array_element(size_t idx, Data val) { std::cout << "not used.."; }
+		bool Root::insert_array_element(size_t idx, Data val) {
+			//std::cout << "not used.."; 
+			return false;
+		}
 
 		void Root::erase(std::string_view key, bool real) {
 			std::cout << "not used..";
