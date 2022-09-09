@@ -491,9 +491,9 @@ namespace claujson {
 	void save_parallel(const std::string& fileName, Data j, size_t thr_num);
 	
 	// parse json file.
-	std::pair<bool, size_t> Parse(const std::string& fileName, int thr_num, Data& ut);
+	std::pair<bool, size_t> Parse(const std::string& fileName, Data& ut, int thr_num);
 	// parse json str.
-	std::pair<bool, size_t> ParseStr(std::string_view str, int thr_num, Data& ut);
+	std::pair<bool, size_t> ParseStr(std::string_view str, Data& ut, int thr_num);
 
 	// todo - c++20~
 	//inline std::pair<bool, size_t> ParseStr(std::u8string_view str, int thr_num, Data& ut) {

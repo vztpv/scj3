@@ -16,6 +16,7 @@
 
 
 using namespace std::literals::string_view_literals;
+// using namespace std::literals::u8string_view_literals; // ?? 
 
 void utf_8_test() {
 	using claujson::Data;
@@ -94,7 +95,7 @@ void json_pointer_test() {
 	using claujson::Data;
 
 	Data x;
-	if (!claujson::ParseStr(test, 1, x).first) {
+	if (!claujson::ParseStr(test, x, 1).first) {
 		std::cout << "fail\n";
 
 		claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
@@ -103,7 +104,7 @@ void json_pointer_test() {
 	}
 
 	Data y;
-	if (!claujson::ParseStr(test2, 1, y).first) {
+	if (!claujson::ParseStr(test2, y, 1).first) {
 		std::cout << "fail\n";
 
 		claujson::Ptr<claujson::Json> clean(y.as_json_ptr());
@@ -207,7 +208,7 @@ int main(int argc, char* argv[])
 		{
 			int a = clock();
 
-			auto x = claujson::Parse(argv[1], 64, j);
+			auto x = claujson::Parse(argv[1], j, 64); // argv[1], j, 64 ??
 			if (!x.first) {
 				std::cout << "fail\n";
 
@@ -230,6 +231,8 @@ int main(int argc, char* argv[])
 
 			std::vector<claujson::Data> vec;
 			
+			// json_pointer, json_pinterA <- u8string_view?
+
 			if (false == claujson::Data::json_pointerA("/geometry/coordinates"sv, vec)) {
 				std::cout << "json pointer error.\n";
 				return 1;

@@ -3521,14 +3521,13 @@ namespace claujson {
 			for (int64_t a = start; a <= last; ++a) {
 				auto& x = imple->structural_indexes[a]; //  token_arr[a];
 				const simdjson::internal::tape_type type = (simdjson::internal::tape_type)buf[x];
-				bool key = false;
-				bool next_is_valid = false;
+				//bool key = false;
+				//bool next_is_valid = false;
 
 				switch ((int)type) {
 				case ',':
 					return a + 1;
 				default:
-					// error?
 					break;
 				}
 			}
@@ -4760,7 +4759,7 @@ namespace claujson {
 		}
 	}
 
-	std::pair<bool, size_t> Parse(const std::string& fileName, int thr_num, Data& ut)
+	std::pair<bool, size_t> Parse(const std::string& fileName, Data& ut, int thr_num)
 	{
 		if (thr_num <= 0) {
 			thr_num = std::thread::hardware_concurrency();
@@ -4831,7 +4830,7 @@ namespace claujson {
 
 		return  { true, length };
 	}
-	std::pair<bool, size_t> ParseStr(std::string_view str, int thr_num, Data& ut)
+	std::pair<bool, size_t> ParseStr(std::string_view str, Data& ut, int thr_num)
 	{
 		if (thr_num <= 0) {
 			thr_num = std::thread::hardware_concurrency();
