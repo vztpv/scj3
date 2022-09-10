@@ -7,7 +7,7 @@ parsing - multi-thread(used in clauparser),
 
 save - multi-thread
   
-(C++17, 64bit)
+(C++17, 64bit, Windows)
 
 # 
 
