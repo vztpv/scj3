@@ -35,17 +35,17 @@ void key_dup_test() {
 
 	Ptr<Object> x = Ptr<Object>(new Object());
 
-	x->add_object_element(Data("123"sv), Data(123));
-	x->add_object_element(Data("234"sv), Data(234));
-	x->add_object_element(Data("345"sv), Data(345));
-	x->add_object_element(Data("345"sv), Data(456));
+	x->add_object_element(Data("456"sv), Data(123));
+	x->add_object_element(Data("123"sv), Data(234));
+	x->add_object_element(Data("567"sv), Data(345));
+	x->add_object_element(Data("456"sv), Data(456));
 
 	size_t idx = 0;
 	bool found = false;
 
 	found = x->chk_key_dup(&idx);
 
-	std::cout << found << " " << idx << "\n";
+	std::cout << found << " " << "idx is " <<  idx << "\n";
 }
 
 void json_pointer_test() {

@@ -1639,7 +1639,7 @@ namespace claujson {
 				if (obj_key_vec[copy_[i]] == obj_key_vec[copy_[i - 1]]) {
 					has_dup = true;
 					if (idx) {
-						*idx = i - 1;
+						*idx = copy_[i - 1]; //
 					}
 					break;
 				}
@@ -2091,7 +2091,8 @@ namespace claujson {
 			}
 		}
 
-	// class Root, only used in class LoadData.
+	// class Root, only used in class LoadData2.
+		// todo - rename? PartialNode ?
 	
 		Root::~Root() {
 			for (auto& x : obj_val_vec) {
