@@ -225,8 +225,8 @@ namespace simdjson {
 
 namespace claujson {
 
-	// class Root, only used in class LoadData.
-	class Root : public Json {
+	// class PartialJson, only used in class LoadData.
+	class PartialJson : public Json {
 	protected:
 		std::vector<Data> arr_vec; // 
 		// in parsing...
@@ -235,22 +235,20 @@ namespace claujson {
 
 		Data virtualJson;
 	public:
-		virtual ~Root();
+		virtual ~PartialJson();
 
 	private:
 		friend class LoadData;
 		friend class LoadData2;
 
-		Root();
+		PartialJson();
 
 	public:
-		virtual bool is_root() const;
+		virtual bool is_partial_json() const;
 
 		virtual bool is_object() const;
 
 		virtual bool is_array() const;
-
-		virtual bool is_element() const;
 
 		virtual size_t get_data_size() const;
 
@@ -1402,8 +1400,7 @@ namespace claujson {
 				simdjson::writer writer{ temp };
 				uint8_t* value = reinterpret_cast<uint8_t*>(buf + idx);
 
-				// chk code...
-				if (id == 0) {
+				if (id == 0) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
 					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + simdjson::SIMDJSON_PADDING]);
 					if (copy.get() == nullptr) { throw "Error in Convert for new"; } // cf) new Json?
 					std::memcpy(copy.get(), &buf[idx], idx2 - idx);
@@ -1581,10 +1578,10 @@ namespace claujson {
 			return data_null;
 		}
 
-		bool Json::is_root() const { return false; }
+		bool Json::is_partial_json() const { return false; }
 
 		bool Json::is_user_type() const {
-			return is_object() || is_array() || is_root();
+			return is_object() || is_array() || is_partial_json();
 		}
 
 		void Json::set_parent(PtrWeak<Json> j) {
@@ -1668,9 +1665,7 @@ namespace claujson {
 		bool Object::is_array() const {
 			return false;
 		}
-		bool Object::is_element() const {
-			return false;
-		}
+		
 		size_t Object::get_data_size() const {
 			return obj_val_vec.size();
 		}
@@ -1903,9 +1898,7 @@ namespace claujson {
 		bool Array::is_array() const {
 			return true;
 		}
-		bool Array::is_element() const {
-			return false;
-		}
+
 		size_t Array::get_data_size() const {
 			return arr_vec.size();
 		}
@@ -2094,7 +2087,7 @@ namespace claujson {
 	// class Root, only used in class LoadData2.
 		// todo - rename? PartialNode ?
 	
-		Root::~Root() {
+		PartialJson::~PartialJson() {
 			for (auto& x : obj_val_vec) {
 				if (x.is_ptr()) {
 					delete ((Json*)x.ptr_val());
@@ -2112,22 +2105,20 @@ namespace claujson {
 			}
 		}
 
-		Root::Root() {
+		PartialJson::PartialJson() {
 
 		}
 
-		bool Root::is_root() const { return true; }
+		bool PartialJson::is_partial_json() const { return true; }
 
-		bool Root::is_object() const {
+		bool PartialJson::is_object() const {
 			return false;
 		}
-		bool Root::is_array() const {
+		bool PartialJson::is_array() const {
 			return false;
 		}
-		bool Root::is_element() const {
-			return false;
-		}
-		size_t Root::get_data_size() const {
+		
+		size_t PartialJson::get_data_size() const {
 			int count = 0;
 
 			if (virtualJson.is_ptr()) {
@@ -2137,7 +2128,7 @@ namespace claujson {
 			return arr_vec.size() + obj_val_vec.size() + count;
 		}
 
-		Data& Root::get_value_list(size_t idx) {
+		Data& PartialJson::get_value_list(size_t idx) {
 
 			if (virtualJson.is_ptr() && idx == 0) {
 				return virtualJson;
@@ -2155,7 +2146,7 @@ namespace claujson {
 		}
 
 
-		Data& Root::get_key_list(size_t idx) {
+		Data& PartialJson::get_key_list(size_t idx) {
 			if (virtualJson.is_ptr() && idx == 0) {
 				return data_null;
 			}
@@ -2172,7 +2163,7 @@ namespace claujson {
 		}
 
 
-		const Data& Root::get_value_list(size_t idx) const {
+		const Data& PartialJson::get_value_list(size_t idx) const {
 			if (virtualJson.is_ptr() && idx == 0) {
 				return virtualJson;
 			}
@@ -2189,7 +2180,7 @@ namespace claujson {
 		}
 
 
-		const Data& Root::get_key_list(size_t idx) const {
+		const Data& PartialJson::get_key_list(size_t idx) const {
 			if (virtualJson.is_ptr() && idx == 0) {
 				return data_null;
 			}
@@ -2206,7 +2197,7 @@ namespace claujson {
 		}
 
 
-		void Root::clear(size_t idx) { // use carefully..
+		void PartialJson::clear(size_t idx) { // use carefully..
 			if (virtualJson.is_ptr() && idx == 0) {
 				virtualJson.clear();
 				return;
@@ -2222,18 +2213,18 @@ namespace claujson {
 			}
 		}
 
-		bool Root::is_virtual() const {
+		bool PartialJson::is_virtual() const {
 			return false;
 		}
 		
-		void Root::clear() {
+		void PartialJson::clear() {
 			arr_vec.clear();
 			obj_key_vec.clear();
 			obj_val_vec.clear();
 			virtualJson.clear();
 		}
 
-		void Root::reserve_data_list(size_t len) {
+		void PartialJson::reserve_data_list(size_t len) {
 			if (!arr_vec.empty()) {
 				arr_vec.reserve(len);
 			}
@@ -2245,41 +2236,41 @@ namespace claujson {
 
 
 
-		bool Root::add_object_element(Data key, Data val) {
+		bool PartialJson::add_object_element(Data key, Data val) {
 			obj_key_vec.push_back(std::move(key));
 			obj_val_vec.push_back(std::move(val));
 
 			return true;
 		}
-		bool Root::add_array_element(Data val) {
+		bool PartialJson::add_array_element(Data val) {
 			arr_vec.push_back(std::move(val));
 
 			return true;
 		}
 
 
-		bool Root::add_array(Ptr<Json> arr) {
+		bool PartialJson::add_array(Ptr<Json> arr) {
 			//std::cout << "not used..";
 			return false;
 		}
-		bool Root::add_object(Ptr<Json> obj) {
+		bool PartialJson::add_object(Ptr<Json> obj) {
 			//std::cout << "not used..";
 			return false;
 		}
-		bool Root::insert_array_element(size_t idx, Data val) {
+		bool PartialJson::insert_array_element(size_t idx, Data val) {
 			//std::cout << "not used.."; 
 			return false;
 		}
 
-		void Root::erase(std::string_view key, bool real) {
+		void PartialJson::erase(std::string_view key, bool real) {
 			std::cout << "not used..";
 		}
 
-		void Root::erase(size_t idx, bool real) {
+		void PartialJson::erase(size_t idx, bool real) {
 			std::cout << "not used..";
 		}
 
-		void Root::Link(Ptr<Json> j) { // use carefully...
+		void PartialJson::Link(Ptr<Json> j) { // use carefully...
 
 			j->set_parent(this);
 
@@ -2293,7 +2284,7 @@ namespace claujson {
 		}
 
 
-		void Root::add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
+		void PartialJson::add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
 			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2) {
 
 				{
@@ -2325,7 +2316,7 @@ namespace claujson {
 				}
 		}
 
-		void Root::add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
+		void PartialJson::add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
 			char* buf, uint8_t* string_buf, uint64_t id) {
 
 				{
@@ -2343,7 +2334,7 @@ namespace claujson {
 				}
 		}
 
-		void Root::add_user_type(Ptr<Json> j) {
+		void PartialJson::add_user_type(Ptr<Json> j) {
 
 			j->set_parent(this);
 
@@ -2446,7 +2437,7 @@ namespace claujson {
 		}
 	}
 
-	inline void Root::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
+	inline void PartialJson::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
 		uint8_t* string_buf, int type, uint64_t id) {
 			{
 				Data temp;
@@ -2487,7 +2478,7 @@ namespace claujson {
 				json->set_parent(this);
 			}
 	}
-	inline void Root::add_user_type(int type) {
+	inline void PartialJson::add_user_type(int type) {
 		{
 
 			Json* json = nullptr;
@@ -2776,10 +2767,10 @@ namespace claujson {
 			Json* pos_ = pos;
 			Json* parent = pos_->get_parent();
 
-			Json* out = new Root(); //
+			Json* out = new PartialJson(); //
 
 
-			while (parent && parent->is_root() == false) {
+			while (parent && parent->is_partial_json() == false) {
 				long long idx = 0;
 				size_t len = parent->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
@@ -2978,7 +2969,7 @@ namespace claujson {
 						}
 					}
 					else { // item type.
-						if (_next->is_array() || _next->is_root()) {
+						if (_next->is_array() || _next->is_partial_json()) {
 							_next->add_array_element(std::move(_ut->get_value_list(i)));
 						}
 						else {
@@ -3133,6 +3124,7 @@ namespace claujson {
 
 				TokenTemp key; bool is_before_comma = false;
 				bool is_now_comma = false;
+				bool is_next_comma = false;
 
 				if (token_arr_start > 0) {
 					const simdjson::internal::tape_type before_type =
@@ -3143,6 +3135,8 @@ namespace claujson {
 
 
 				for (uint64_t i = 0; i < token_arr_len; ++i) {
+
+					is_now_comma = is_next_comma;
 
 					const simdjson::internal::tape_type type = get_type(buf[imple->structural_indexes[token_arr_start + i]]);
 
@@ -3205,7 +3199,7 @@ namespace claujson {
 					}
 
 
-					is_now_comma = __arr2[(int)is_now_comma][(unsigned char)type]; // comma_chk_table
+					is_next_comma = __arr2[(int)is_now_comma][(unsigned char)type]; // comma_chk_table
 					/*switch (type) {
 					case simdjson::internal::tape_type::END_ARRAY:
 					case simdjson::internal::tape_type::END_OBJECT:
@@ -3226,11 +3220,11 @@ namespace claujson {
 							get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
 
 						if (_type == simdjson::internal::tape_type::END_ARRAY || _type == simdjson::internal::tape_type::END_OBJECT) {
-							is_now_comma = false;
+							is_next_comma = false;
 						}
 					}
 					else {
-						is_now_comma = false;
+						is_next_comma = false;
 					}
 
 					// Left 1
@@ -3443,7 +3437,7 @@ namespace claujson {
 								}
 								++i;
 
-								is_now_comma = false;
+								is_next_comma = false;
 								is_before_comma = false;
 							}
 							else {
@@ -3540,7 +3534,7 @@ namespace claujson {
 			simdjson::internal::dom_parser_implementation* imple, int64_t& length,
 			std::vector<int64_t>& start, const int parse_num) // first, strVec.empty() must be true!!
 		{
-			Ptr<Json> _global = Ptr<Json>(new Root());
+			Ptr<Json> _global = Ptr<Json>(new PartialJson());
 			std::vector<Ptr<Json>> __global;
 
 			try {
@@ -3594,7 +3588,7 @@ namespace claujson {
 
 						__global = std::vector<Ptr<Json>>(pivots.size() - 1);
 						for (size_t i = 0; i < __global.size(); ++i) {
-							__global[i] = Ptr<Json>(new Root());
+							__global[i] = Ptr<Json>(new PartialJson());
 						}
 
 						std::vector<std::thread> thr(pivots.size() - 1);
@@ -3718,9 +3712,9 @@ namespace claujson {
 
 								// linearly merge and error check...
 								uint64_t before = i - 1;
-								for (uint64_t k = i - 1; k >= 0; --k) {
-									if (chk[k] == 0) {
-										before = k;
+								for (uint64_t k = i; k > 0; --k) {
+									if (chk[k - 1] == 0) {
+										before = k - 1;
 										break;
 									}
 								}
@@ -3836,9 +3830,8 @@ namespace claujson {
 		}
 	};
 
-	class StrStream;
 
-	class LoadData //
+	class LoadData // Save?
 	{
 	private:
 		//                         
@@ -5066,14 +5059,15 @@ namespace claujson {
 				}
 			}
 		}
-			break;
-		
+		break;
+
 		case DataType::BOOL:
 		case DataType::NULL_:
 		case DataType::FLOAT:
 		case DataType::INT:
 		case DataType::UINT:
 		case DataType::STRING:
+		{
 			Object* obj = new Object();
 
 			obj->add_object_element(Data("op"sv), Data("replace"sv));
@@ -5082,6 +5076,7 @@ namespace claujson {
 
 			j->add_object(Ptr<Json>(obj));
 			break;
+		}
 		}
 
 		return result;
@@ -5204,7 +5199,7 @@ namespace claujson {
 
 	void clean(Data& x) {
 		Ptr<Json> _(x.as_json_ptr());
-		x.set_null(); // ?
+		x.set_null(); //
 	}
 }
 

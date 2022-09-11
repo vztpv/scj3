@@ -216,7 +216,7 @@ namespace claujson {
 
 	class Array;
 	class Object;
-	class Root;
+	class PartialJson;
 
 	class Json {
 		friend class LoadData2;
@@ -224,7 +224,7 @@ namespace claujson {
 		friend class Data;
 		friend class Array;
 		friend class Object;
-		friend class Root;
+		friend class PartialJson;
 	protected:
 		Data key;
 		PtrWeak<Json> parent = nullptr;
@@ -276,8 +276,8 @@ namespace claujson {
 
 		virtual bool is_object() const = 0;
 		virtual bool is_array() const = 0;
-		virtual bool is_root() const;
-		virtual bool is_element() const = 0;
+		virtual bool is_partial_json() const;
+
 		bool is_user_type() const;
 
 		// for valid with object or array or root.
@@ -351,7 +351,7 @@ namespace claujson {
 
 		virtual bool is_object() const;
 		virtual bool is_array() const;
-		virtual bool is_element() const;
+
 		virtual size_t get_data_size() const;
 
 		virtual Data& get_value_list(size_t idx);
@@ -423,7 +423,7 @@ namespace claujson {
 
 		virtual bool is_object() const;
 		virtual bool is_array() const;
-		virtual bool is_element() const;
+
 		virtual size_t get_data_size() const;
 		
 		virtual Data& get_value_list(size_t idx);
