@@ -2802,7 +2802,7 @@ namespace claujson {
 					else if (parent->is_array()) { // parent->is_array()
 						temp = new VirtualArray();
 					}
-					else { // root
+					else { // PartialJson
 						// none
 					}
 
@@ -2959,7 +2959,7 @@ namespace claujson {
 				size_t _size = _ut->get_data_size();
 
 				for (size_t i = 0; i < _size; ++i) {
-					if (_ut->get_value_list(i).is_ptr()) { // root, array, object
+					if (_ut->get_value_list(i).is_ptr()) { // partial json, array, object
 						if (((Json*)(_ut->get_value_list(i).ptr_val()))->is_virtual()) {
 							//
 						}
@@ -3040,7 +3040,7 @@ namespace claujson {
 				size_t _size = _ut->get_data_size();
 
 				for (size_t i = 0; i < _size; ++i) {
-					if (_ut->get_value_list(i).is_ptr()) { // root, array, object
+					if (_ut->get_value_list(i).is_ptr()) { // partial json, array, object
 						if (((Json*)(_ut->get_value_list(i).ptr_val()))->is_virtual()) {
 							//
 						}
