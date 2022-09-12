@@ -17,7 +17,7 @@
 #elif SIMDJSON_IMPLEMENTATION_FALLBACK
 #define SIMDJSON_IMPLEMENTATION fallback
 #else
-#error "All possible implementations (including fallback) have been disabled! simdjson will not run."
+#error "All possible implementations (including fallback) have been disabled! claujson will not run."
 #endif
 
 

@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
 			if (true && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
-					if (j.is_ptr()) {
+					if (j.is_ptr()) { // if j is array or object, 
 						auto& features = j.as_object()[1]; // j[1];
 						for (auto& feature : features.as_array()) {
 							auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
