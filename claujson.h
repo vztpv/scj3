@@ -10,17 +10,20 @@
 #include <fstream>
 #include <iomanip>
 
-#define INLINE inline
-
 #include <string_view>
 
+
+#include "simdjson.h" // ver 2.2.2
+
 namespace claujson {
+
+	void init();
 
 	template <class T>
 	using PtrWeak = T*;
 
 	template <class T>
-	using Ptr = std::unique_ptr<T>; 
+	using Ptr = std::unique_ptr<T>;
 	// Ptr - use std::move
 
 	class Data;
@@ -28,17 +31,23 @@ namespace claujson {
 	class Array;
 	class Object;
 
-	claujson::Data& Convert(::claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
-		char* buf, uint8_t* string_buf, uint64_t id, bool& err);
-
-	enum class DataType {
-		NONE, 
+	enum DataType : int64_t {
+		NONE = 1,
 		ARRAY_OR_OBJECT, // todo - ARRAY, OBJECT ?
-		INT, UINT, 
-		FLOAT, 
-		BOOL, 
-		NULL_, 
-		STRING
+		INT, UINT,
+		FLOAT,
+		BOOL,
+		NULL_,
+		STRING,
+		UNVALID_NONE = -1,
+		UNVALID_ARRAY_OR_OBJECT = -2,
+		UNVALID_INT = -3,
+		UNVALID_UINT = -4,
+		UNVALID_FLOAT = -5,
+		UNVALID_BOOL = -6,
+		UNVALID_NULL_ = -7,
+		UNVALID_STRING = -8
+
 	};
 
 	class Data {
@@ -50,27 +59,26 @@ namespace claujson {
 		// using FlOAT_t = double;
 		// using STR_t = std::string;
 		// using BOOL_t = bool;
-
+		
 	public:
 		friend std::ostream& operator<<(std::ostream& stream, const Data& data);
 
 		friend claujson::Data& Convert(Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
-			char* buf, uint8_t* string_buf, uint64_t id, bool& err);
+			char* buf, uint8_t* string_buf, uint64_t id, bool& err, simdjson::internal::dom_parser_implementation* simdjson_imple);
 	private:
-		union {
+		union { // 64bit.. DO NOT build 32bit! //
 			int64_t _int_val = 0;
 			uint64_t _uint_val;
 			double _float_val;
 			std::string* _str_val;
 			Json* _ptr_val; // ARRAY_OR_OBJECT -> todo : Array, or Object?
-			
+
 			// cf) Array* _arr_val; , Object* _obj_val; 
-			
+
 			bool _bool_val;
 		};
 
-		bool valid = true;
-		DataType _type = DataType::NONE;
+		DataType _type = DataType::NONE; // type + valid
 
 	public:
 
@@ -86,17 +94,17 @@ namespace claujson {
 		explicit Data(int64_t x);
 		explicit Data(uint64_t x);
 		explicit Data(double x);
-		
+
 		explicit Data(std::string_view x); // C++17
-		
+
 		// C++20~
 		// todo - 
 		//explicit Data(std::u8string_view x) {
 		//	//
 		//}
 
-		
-		
+
+
 		explicit Data(bool x);
 		explicit Data(nullptr_t x);
 
@@ -139,8 +147,8 @@ namespace claujson {
 
 		void* ptr_val() const;
 
-		Data& json_pointer(std::string_view route); 
-		
+		Data& json_pointer(std::string_view route);
+
 		const Data& json_pointer(std::string_view route) const;
 
 
@@ -196,19 +204,12 @@ namespace claujson {
 
 		bool operator<(const Data& other) const;
 
-		Data& operator=(const Data& other);
+		Data& operator=(const Data& other) = delete;
 
 
 		Data& operator=(Data&& other) noexcept;
 	};
 }
-
-namespace claujson {
-
-	INLINE claujson::Data& Convert(::claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
-		char* buf, uint8_t* string_buf, uint64_t id, bool& err);
-}
-
 
 namespace claujson {
 	class LoadData;
@@ -247,7 +248,7 @@ namespace claujson {
 		explicit Json();
 
 		virtual ~Json();
-		
+
 		const Data& at(std::string_view key) const;
 
 		Data& at(std::string_view key);
@@ -263,13 +264,12 @@ namespace claujson {
 
 		PtrWeak<Json> get_parent() const;
 
-
 		const Data& get_key() const;
 	protected:
 		bool set_key(Data key);
 	public:
 		bool change_key(const Data& key, const Data& new_key);
-		
+
 		virtual Data& get_value();
 
 		virtual void reserve_data_list(size_t len) = 0;
@@ -304,7 +304,7 @@ namespace claujson {
 		virtual void erase(std::string_view key, bool real = false) = 0;
 		virtual void erase(size_t idx, bool real = false) = 0;
 
-	private:	
+	private:
 		void set_parent(PtrWeak<Json> j);
 
 
@@ -360,7 +360,7 @@ namespace claujson {
 
 
 		virtual const Data& get_value_list(size_t idx) const;
-		
+
 		virtual const Data& get_key_list(size_t idx) const;
 
 
@@ -425,7 +425,7 @@ namespace claujson {
 		virtual bool is_array() const;
 
 		virtual size_t get_data_size() const;
-		
+
 		virtual Data& get_value_list(size_t idx);
 
 		virtual Data& get_key_list(size_t idx);
@@ -435,7 +435,7 @@ namespace claujson {
 		virtual const Data& get_key_list(size_t idx) const;
 
 		virtual void clear(size_t idx);
-		
+
 		virtual bool is_virtual() const;
 
 		virtual void clear();
@@ -446,10 +446,10 @@ namespace claujson {
 		std::vector<Data>::iterator begin();
 
 		std::vector<Data>::iterator end();
-		
+
 
 		virtual bool add_object_element(Data key, Data val);
-		
+
 		virtual bool add_array_element(Data val);
 
 		virtual bool add_array(Ptr<Json> arr);
@@ -483,24 +483,24 @@ namespace claujson {
 
 }
 
-
 namespace claujson {
 
-	void save(const std::string& fileName, const Data& global);
-
-	void save_parallel(const std::string& fileName, Data j, size_t thr_num);
-	
 	// parse json file.
-	std::pair<bool, size_t> Parse(const std::string& fileName, Data& ut, int thr_num);
+	std::pair<bool, size_t> parse(const std::string& fileName, Data& ut, size_t thr_num);
 	// parse json str.
-	std::pair<bool, size_t> ParseStr(std::string_view str, Data& ut, int thr_num);
+	std::pair<bool, size_t> parse_str(std::string_view str, Data& ut, size_t thr_num);
 
 	// todo - c++20~
 	//inline std::pair<bool, size_t> ParseStr(std::u8string_view str, int thr_num, Data& ut) {
 	//	//
 	//	return { false , 0 };
 	//}
+
 	
+	void save(const std::string& fileName, const Data& global);
+
+	void save_parallel(const std::string& fileName, Data& j, size_t thr_num);
+
 	[[nodiscard]]
 	Data diff(const Data& x, const Data& y);
 

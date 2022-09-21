@@ -20,6 +20,7 @@ using namespace std::literals::string_view_literals;
 
 void utf_8_test() {
 	using claujson::Data;
+
 	// C++17 - stringview, C++20~ - u8string_view
 	Data x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
 	if (x) {
@@ -95,7 +96,7 @@ void json_pointer_test() {
 	using claujson::Data;
 
 	Data x;
-	if (!claujson::ParseStr(test, x, 1).first) {
+	if (!claujson::parse_str(test, x, 1).first) {
 		std::cout << "fail\n";
 
 		claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
@@ -104,7 +105,7 @@ void json_pointer_test() {
 	}
 
 	Data y;
-	if (!claujson::ParseStr(test2, y, 1).first) {
+	if (!claujson::parse_str(test2, y, 1).first) {
 		std::cout << "fail\n";
 
 		claujson::Ptr<claujson::Json> clean(y.as_json_ptr());
@@ -193,6 +194,7 @@ void json_pointer_test() {
 
 int main(int argc, char* argv[])
 {
+	claujson::init();
 
 	utf_8_test();
 	
@@ -208,7 +210,7 @@ int main(int argc, char* argv[])
 		{
 			int a = clock();
 
-			auto x = claujson::Parse(argv[1], j, 64); // argv[1], j, 64 ??
+			auto x = claujson::parse(argv[1], j, 64); // argv[1], j, 64 ??
 			if (!x.first) {
 				std::cout << "fail\n";
 
@@ -242,7 +244,7 @@ int main(int argc, char* argv[])
 			if (true && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
-					if (j.is_ptr()) { // if j is array or object, 
+					if (j.is_ptr()) {
 						auto& features = j.as_object()[1]; // j[1];
 						for (auto& feature : features.as_array()) {
 							auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
@@ -302,6 +304,10 @@ int main(int argc, char* argv[])
 
 										counter++;
 										chk++;
+
+										//claujson::Data test;
+										//x = test; // no ok.
+										//x = claujson::Data(0); // ok.
 									}
 								}
 							}

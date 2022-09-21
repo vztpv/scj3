@@ -2,24 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "claujson.h"
-#include "simdjson.h" // modified simdjson // using simdjson 2.0.1
-
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
-#define SIMDJSON_IMPLEMENTATION icelake
-#elif SIMDJSON_IMPLEMENTATION_HASWELL
-#define SIMDJSON_IMPLEMENTATION haswell //
-#elif SIMDJSON_IMPLEMENTATION_WESTMERE
-#define SIMDJSON_IMPLEMENTATION westmere
-#elif SIMDJSON_IMPLEMENTATION_ARM64
-#define SIMDJSON_IMPLEMENTATION arm64
-#elif SIMDJSON_IMPLEMENTATION_PPC64
-#define SIMDJSON_IMPLEMENTATION ppc64
-#elif SIMDJSON_IMPLEMENTATION_FALLBACK
-#define SIMDJSON_IMPLEMENTATION fallback
-#else
-#error "All possible implementations (including fallback) have been disabled! claujson will not run."
-#endif
-
+#include "simdjson.h" // modified simdjson // using simdjson 2.2.2 renewal!
 
 // for fast save
 #include "fmt/format.h"
@@ -99,7 +82,7 @@ namespace simdjson {
 	}
 
 
-	simdjson_really_inline bool validate_string(uint8_t* buf, size_t len, error_code& error) {
+	simdjson_really_inline bool validate_utf8_string(uint8_t* buf, size_t len, error_code& error) {
 		size_t idx = 0; //
 
 		while (idx < len) {
@@ -123,108 +106,11 @@ namespace simdjson {
 	}
 }
 
-namespace simdjson {
-
-	// fallback
-	struct writer {
-		/** The next place to write to tape */
-		uint64_t* next_tape_loc;
-
-		/** Write a signed 64-bit value to tape. */
-		simdjson_really_inline void append_s64(int64_t value) noexcept;
-
-		/** Write an unsigned 64-bit value to tape. */
-		simdjson_really_inline void append_u64(uint64_t value) noexcept;
-
-		/** Write a double value to tape. */
-		simdjson_really_inline void append_double(double value) noexcept;
-
-		/**
-		 * Append a tape entry (an 8-bit type,and 56 bits worth of value).
-		 */
-		simdjson_really_inline void append(uint64_t val, internal::tape_type t) noexcept;
-
-		/**
-		 * Skip the current tape entry without writing.
-		 *
-		 * Used to skip the start of the container, since we'll come back later to fill it in when the
-		 * container ends.
-		 */
-		simdjson_really_inline void skip() noexcept;
-
-		/**
-		 * Skip the number of tape entries necessary to write a large u64 or i64.
-		 */
-		simdjson_really_inline void skip_large_integer() noexcept;
-
-		/**
-		 * Skip the number of tape entries necessary to write a double.
-		 */
-		simdjson_really_inline void skip_double() noexcept;
-
-		/**
-		 * Write a value to a known location on tape.
-		 *
-		 * Used to go back and write out the start of a container after the container ends.
-		 */
-		simdjson_really_inline static void write(uint64_t& tape_loc, uint64_t val, internal::tape_type t) noexcept;
-
-	private:
-		/**
-		 * Append both the tape entry, and a supplementary value following it. Used for types that need
-		 * all 64 bits, such as double and uint64_t.
-		 */
-		template<typename T>
-		simdjson_really_inline void append2(uint64_t val, T val2, internal::tape_type t) noexcept;
-	}; // struct number_writer
-
-	simdjson_really_inline void writer::append_s64(int64_t value) noexcept {
-		append2(0, value, internal::tape_type::INT64);
-	}
-
-	simdjson_really_inline void writer::append_u64(uint64_t value) noexcept {
-		append(0, internal::tape_type::UINT64);
-		*next_tape_loc = value;
-		next_tape_loc++;
-	}
-
-	/** Write a double value to tape. */
-	simdjson_really_inline void writer::append_double(double value) noexcept {
-		append2(0, value, internal::tape_type::DOUBLE);
-	}
-
-	simdjson_really_inline void writer::skip() noexcept {
-		next_tape_loc++;
-	}
-
-	simdjson_really_inline void writer::skip_large_integer() noexcept {
-		next_tape_loc += 2;
-	}
-
-	simdjson_really_inline void writer::skip_double() noexcept {
-		next_tape_loc += 2;
-	}
-
-	simdjson_really_inline void writer::append(uint64_t val, internal::tape_type t) noexcept {
-		*next_tape_loc = val | ((uint64_t(char(t))) << 56);
-		next_tape_loc++;
-	}
-
-	template<typename T>
-	simdjson_really_inline void writer::append2(uint64_t val, T val2, internal::tape_type t) noexcept {
-		append(val, t);
-		static_assert(sizeof(val2) == sizeof(*next_tape_loc), "Type is not 64 bits!");
-		memcpy(next_tape_loc, &val2, sizeof(val2));
-		next_tape_loc++;
-	}
-
-	simdjson_really_inline void writer::write(uint64_t& tape_loc, uint64_t val, internal::tape_type t) noexcept {
-		tape_loc = val | ((uint64_t(char(t))) << 56);
-	}
-}
-
 namespace claujson {
-
+	
+	inline static simdjson::dom::parser test_;
+	inline static simdjson::internal::dom_parser_implementation* simdjson_imple = nullptr;
+	
 	// class PartialJson, only used in class LoadData.
 	class PartialJson : public Json {
 	protected:
@@ -389,7 +275,17 @@ namespace claujson {
 
 
 	Data Data::clone() const {
-		Data x = *this;
+		Data x;
+
+		x._type = this->_type; 
+
+		if (x._type == DataType::STRING) {
+			x._str_val = new std::string(this->_str_val->c_str(), this->_str_val->size());
+
+		}
+		else {
+			x._int_val = this->_int_val;
+		}
 
 		if (x.is_ptr()) {
 			x._ptr_val = this->as_json_ptr()->clone();
@@ -398,7 +294,23 @@ namespace claujson {
 		return x;
 	}
 	Data::operator bool() const {
-		return valid;
+		return this->_type > 0;
+	}
+
+	Data::Data(const Data& other)
+		: _type(other._type) 
+	{
+		if (_type == DataType::STRING) {
+			_str_val = new std::string(other._str_val->c_str(), other._str_val->size());
+
+		}
+		else {
+			_int_val = other._int_val;
+		}
+
+		if (is_ptr()) {
+			_ptr_val = other.as_json_ptr()->clone();
+		}
 	}
 
 	Data::Data(Json* x) {
@@ -422,12 +334,8 @@ namespace claujson {
 		set_float(x);
 	}
 	Data::Data(std::string_view x) {
-
-		try {
-			this->valid = set_str(x.data(), x.size());
-		}
-		catch (...) {
-			this->valid = false;
+		if (!set_str(x.data(), x.size())) {
+			this->_type = static_cast<DataType>(this->_type * -1);
 		}
 	}
 	//explicit Data(const char* x) {
@@ -444,8 +352,8 @@ namespace claujson {
 		set_type(DataType::NULL_);
 	}
 
-	Data::Data(nullptr_t, bool valid) : valid(valid) {
-		//
+	Data::Data(nullptr_t, bool valid) {
+		this->_type = static_cast<DataType>(this->_type * (valid ? 1 : -1));
 	}
 
 	DataType Data::type() const {
@@ -453,7 +361,7 @@ namespace claujson {
 	}
 
 	bool Data::is_valid() const {
-		return valid;
+		return this->_type > 0;
 	}
 
 
@@ -536,7 +444,7 @@ namespace claujson {
 	}
 
 
-	bool to_uint_for_json_pointer(std::string_view x, size_t* val) {
+	bool to_uint_for_json_pointer(std::string_view x, size_t* val, simdjson::internal::dom_parser_implementation* simdjson_imple) {
 		const char* buf = x.data();
 		size_t idx = 0;
 		size_t idx2 = x.size();
@@ -548,8 +456,8 @@ namespace claujson {
 			{
 				std::unique_ptr<uint8_t[]> copy;
 
-				uint64_t temp[2];
-				simdjson::writer writer{ temp };
+				uint64_t temp[2] = { 0 };
+
 				const uint8_t* value = reinterpret_cast<const uint8_t*>(buf + idx);
 
 				{ // chk code...
@@ -560,15 +468,15 @@ namespace claujson {
 					value = copy.get();
 				}
 
-				if (auto x = simdjson::SIMDJSON_IMPLEMENTATION::numberparsing::parse_number<simdjson::writer>(value, writer)
-					; x != simdjson::error_code::SUCCESS) {
+				if (auto x = simdjson_imple->parse_number(value, temp)
+					; x != simdjson::SUCCESS) {
 					std::cout << "parse number error. " << x << "\n";
 					return false;
 				}
 
 				long long int_val = 0;
 				unsigned long long uint_val = 0;
-				double float_val = 0;
+				//double float_val = 0;
 
 				switch (static_cast<simdjson::internal::tape_type>(temp[0] >> 56)) {
 				case simdjson::internal::tape_type::INT64:
@@ -678,10 +586,10 @@ namespace claujson {
 
 			if (j->is_array()) { // array -> with idx
 				size_t idx = 0;
-				bool found = false;
-				size_t arr_size = j->get_data_size();
+				//bool found = false;
+				//size_t arr_size = j->get_data_size();
 
-				bool chk = to_uint_for_json_pointer(x.str_val(), &idx);
+				bool chk = to_uint_for_json_pointer(x.str_val(), &idx, simdjson_imple);
 
 				if (!chk) {
 					return unvalid_data;
@@ -810,7 +718,7 @@ namespace claujson {
 				bool found = false;
 				size_t arr_size = j->get_data_size();
 
-				bool chk = to_uint_for_json_pointer(x.str_val(), &idx);
+				bool chk = to_uint_for_json_pointer(x.str_val(), &idx, simdjson_imple);
 
 				if (!chk) {
 					return unvalid_data;
@@ -926,10 +834,10 @@ namespace claujson {
 
 			if (j->is_array()) { // array -> with idx
 				size_t idx = 0;
-				bool found = false;
-				size_t arr_size = j->get_data_size();
+				//bool found = false;
+				//size_t arr_size = j->get_data_size();
 
-				bool chk = to_uint_for_json_pointer(x.str_val(), &idx);
+				bool chk = to_uint_for_json_pointer(x.str_val(), &idx, simdjson_imple);
 
 				if (!chk) {
 					return unvalid_data;
@@ -1068,7 +976,7 @@ namespace claujson {
 
 				simdjson::error_code e = simdjson::error_code::SUCCESS;
 
-				bool valid = simdjson::validate_string(buf_src, len, e);
+				bool valid = simdjson::validate_utf8_string(buf_src, len, e); // simdjson::validate_string
 
 				if (!valid || e != simdjson::error_code::SUCCESS) {
 					free(buf_src);
@@ -1080,7 +988,7 @@ namespace claujson {
 				}
 			}
 
-			if (auto* x = simdjson::SIMDJSON_IMPLEMENTATION::stringparsing::parse_string(buf_src, buf_dest); x == nullptr) {
+			if (auto* x = simdjson_imple->parse_string(buf_src, buf_dest); x == nullptr) {
 				free(buf_src);
 				free(buf_dest);
 
@@ -1112,7 +1020,7 @@ namespace claujson {
 			{
 				simdjson::error_code e = simdjson::error_code::SUCCESS;
 
-				bool valid = simdjson::validate_string(buf_src, len, e);
+				bool valid = simdjson::validate_utf8_string(buf_src, len, e);
 
 				if (!valid || e != simdjson::error_code::SUCCESS) {
 					std::cout << simdjson::error_message(e) << "\n";
@@ -1121,7 +1029,7 @@ namespace claujson {
 				}
 			}
 
-			if (auto* x = simdjson::SIMDJSON_IMPLEMENTATION::stringparsing::parse_string(buf_src, buf_dest); x == nullptr) {
+			if (auto* x = simdjson_imple->parse_string(buf_src, buf_dest); x == nullptr) {
 				std::cout << "Error in Convert for string";
 				return false;
 			}
@@ -1185,21 +1093,8 @@ namespace claujson {
 		}
 	}
 
-	Data::Data(const Data& other)
-		: _type(other._type) //, is_key(other.is_key) 
-	{
-		if (_type == DataType::STRING) {
-			_str_val = new std::string(other._str_val->c_str(), other._str_val->size());
-
-		}
-		else {
-			_int_val = other._int_val;
-		}
-		valid = other.valid;
-	}
-
 	Data::Data(Data&& other) noexcept
-		: _type(other._type) //, is_key(other.is_key) 
+		: _type(other._type) 
 	{
 
 		if (_type == DataType::STRING) {
@@ -1210,8 +1105,6 @@ namespace claujson {
 		else {
 			std::swap(_int_val, other._int_val);
 		}
-
-		std::swap(valid, other.valid);
 	}
 
 	Data::Data() : _int_val(0), _type(DataType::NONE) { }
@@ -1302,31 +1195,6 @@ namespace claujson {
 		return false;
 	}
 
-	Data& Data::operator=(const Data& other) {
-		if (this == &other) {
-			return *this;
-		}
-
-		if (this->_type != DataType::STRING && other._type == DataType::STRING) {
-			this->_str_val = new std::string();
-		}
-		else if (this->_type == DataType::STRING && other._type != DataType::STRING) {
-			delete this->_str_val;
-		}
-
-
-		if (this->_type == DataType::STRING) {
-			set_str(other._str_val->c_str(), other._str_val->size());
-		}
-		else {
-		}
-
-		this->_type = other._type; // fixed bug..
-		this->valid = other.valid;
-
-		return *this;
-	}
-
 
 	Data& Data::operator=(Data&& other) noexcept {
 		if (this == &other) {
@@ -1336,14 +1204,12 @@ namespace claujson {
 		std::swap(this->_type, other._type);
 		std::swap(this->_int_val, other._int_val);
 
-		std::swap(valid, other.valid);
-
 		return *this;
 	}
 
 
 	claujson::Data& Convert(claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
-		char* buf, uint8_t* string_buf, uint64_t id, bool& err) {
+		char* buf, uint8_t* string_buf, uint64_t id, bool& err, simdjson::internal::dom_parser_implementation* simdjson_imple) {
 
 		try {
 			data.clear();
@@ -1353,7 +1219,7 @@ namespace claujson {
 			switch (buf[idx]) {
 			case '"':
 			{
-				if (auto* x = simdjson::SIMDJSON_IMPLEMENTATION::stringparsing::parse_string((uint8_t*)&buf[idx] + 1,
+				if (auto* x = simdjson_imple->parse_string((uint8_t*)&buf[idx] + 1,
 					&string_buf[idx]); x == nullptr) {
 					throw "Error in Convert for string";
 				}
@@ -1368,7 +1234,7 @@ namespace claujson {
 			break;
 			case 't':
 			{
-				if (!simdjson::SIMDJSON_IMPLEMENTATION::atomparsing::is_valid_true_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
+				if (!simdjson_imple->is_valid_true_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
 					throw "Error in Convert for true";
 				}
 
@@ -1376,14 +1242,14 @@ namespace claujson {
 			}
 			break;
 			case 'f':
-				if (!simdjson::SIMDJSON_IMPLEMENTATION::atomparsing::is_valid_false_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
+				if (!simdjson_imple->is_valid_false_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
 					throw "Error in Convert for false";
 				}
 
 				data.set_bool(false);
 				break;
 			case 'n':
-				if (!simdjson::SIMDJSON_IMPLEMENTATION::atomparsing::is_valid_null_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
+				if (!simdjson_imple->is_valid_null_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
 					throw "Error in Convert for null";
 				}
 
@@ -1396,8 +1262,8 @@ namespace claujson {
 			{
 				std::unique_ptr<uint8_t[]> copy;
 
-				uint64_t temp[2];
-				simdjson::writer writer{ temp };
+				uint64_t temp[2] = { 0 };
+
 				uint8_t* value = reinterpret_cast<uint8_t*>(buf + idx);
 
 				if (id == 0) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
@@ -1408,8 +1274,8 @@ namespace claujson {
 					value = copy.get();
 				}
 
-				if (auto x = simdjson::SIMDJSON_IMPLEMENTATION::numberparsing::parse_number<simdjson::writer>(value, writer)
-					; x != simdjson::error_code::SUCCESS) {
+				if (auto x = simdjson_imple->parse_number(value, temp)
+					; x != simdjson::SUCCESS) {
 					std::cout << "parse number error. " << x << "\n";
 					throw "Error in Convert to parse number";
 				}
@@ -1568,7 +1434,7 @@ namespace claujson {
 				}
 				auto val = std::move(get_value_list(idx));
 				erase(idx);
-				add_object_element(key, std::move(val));
+				add_object_element(key.clone(), std::move(val));
 				return true;
 			}
 			return false;
@@ -1712,7 +1578,7 @@ namespace claujson {
 
 			if (val.is_ptr()) {
 				auto* x = (Json*)val.ptr_val();
-				x->set_key(key); // no need?
+				x->set_key(key.clone()); // no need?
 			}
 			obj_key_vec.push_back(std::move(key));
 			obj_val_vec.push_back(std::move(val));
@@ -1805,12 +1671,12 @@ namespace claujson {
 
 				bool e = false;
 
-				claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e);
+				claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e, simdjson_imple);
 
 				if (e) {
 					throw "Error in add_item_type";
 				}
-				claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e);
+				claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e, simdjson_imple);
 				if (e) {
 					throw "Error in add_item_type";
 				}
@@ -2049,7 +1915,7 @@ namespace claujson {
 			{
 				Data temp2;
 				bool e = false;
-				claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e);
+				claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e, simdjson_imple);
 				if (e) {
 
 					throw "Error in add_item_type";
@@ -2293,14 +2159,14 @@ namespace claujson {
 
 					bool e = false;
 
-					claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e);
+					claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e, simdjson_imple);
 
 					if (e) {
 
 						throw "Error in add_item_type";
 					}
 
-					claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e);
+					claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e, simdjson_imple);
 
 					if (e) {
 
@@ -2323,7 +2189,7 @@ namespace claujson {
 					Data temp2;
 					bool e = false;
 
-					claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e);
+					claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e, simdjson_imple);
 
 					if (e) {
 
@@ -2383,7 +2249,7 @@ namespace claujson {
 			Data temp;
 			bool e = false;
 
-			claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e);
+			claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e, simdjson_imple);
 			if (e) {
 				throw "Error in add_user_type";
 			}
@@ -2443,7 +2309,7 @@ namespace claujson {
 				Data temp;
 				bool e = false;
 
-				claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e);
+				claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e, simdjson_imple);
 
 				if (e) {
 					throw "Error in add_user_type";
@@ -3532,7 +3398,7 @@ namespace claujson {
 		static bool _LoadData(Data& global, char* buf, size_t buf_len,
 			uint8_t* string_buf,
 			simdjson::internal::dom_parser_implementation* imple, int64_t& length,
-			std::vector<int64_t>& start, const int parse_num) // first, strVec.empty() must be true!!
+			std::vector<int64_t>& start, size_t parse_num) // first, strVec.empty() must be true!!
 		{
 			Ptr<Json> _global = Ptr<Json>(new PartialJson());
 			std::vector<Ptr<Json>> __global;
@@ -3542,7 +3408,7 @@ namespace claujson {
 				{
 					// chk clear?
 
-					const int pivot_num = parse_num - 1;
+					const int pivot_num = static_cast<int>(parse_num) - 1;
 					//size_t token_arr_len = length; // size?
 
 
@@ -3786,7 +3652,7 @@ namespace claujson {
 		static bool parse(Data& global, char* buf, size_t buf_len,
 			uint8_t* string_buf,
 			simdjson::internal::dom_parser_implementation* imple,
-			int64_t length, std::vector<int64_t>& start, int thr_num) {
+			int64_t length, std::vector<int64_t>& start, size_t thr_num) {
 
 			return LoadData2::_LoadData(global, buf, buf_len, string_buf, imple, length, start, thr_num);
 		}
@@ -3847,7 +3713,7 @@ namespace claujson {
 		static void save(std::ostream& stream, const Data& data);
 
 
-		static void save_parallel(const std::string& fileName, Data j, size_t thr_num);
+		static void save_parallel(const std::string& fileName, Data& j, size_t thr_num);
 
 	};
 
@@ -4678,7 +4544,7 @@ namespace claujson {
 	}
 
 
-	void LoadData::save_parallel(const std::string& fileName, Data j, size_t thr_num) {
+	void LoadData::save_parallel(const std::string& fileName, Data& j, size_t thr_num) {
 
 		if (!j.is_ptr()) {
 			save(fileName, j, false);
@@ -4719,11 +4585,11 @@ namespace claujson {
 
 			std::vector<std::thread> thr(thr_num);
 
-			thr[0] = std::thread(save_, std::ref(stream[0]), j, temp_parent[0], (false));
+			thr[0] = std::thread(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], (false));
 
 
 			for (size_t i = 1; i < thr.size(); ++i) {
-				thr[i] = std::thread(save_, std::ref(stream[i]), claujson::Data(result[i - 1]->get_value_list(0)), temp_parent[i], (hint[i - 1]));
+				thr[i] = std::thread(save_, std::ref(stream[i]), std::cref(result[i - 1]->get_value_list(0)), temp_parent[i], (hint[i - 1]));
 			}
 
 			for (size_t i = 0; i < thr.size(); ++i) {
@@ -4753,7 +4619,7 @@ namespace claujson {
 		}
 	}
 
-	std::pair<bool, size_t> Parse(const std::string& fileName, Data& ut, int thr_num)
+	std::pair<bool, size_t> parse(const std::string& fileName, Data& ut, size_t thr_num)
 	{
 		if (thr_num <= 0) {
 			thr_num = std::thread::hardware_concurrency();
@@ -4780,8 +4646,9 @@ namespace claujson {
 
 			const auto& buf = test.raw_buf();
 			const auto& string_buf = test.raw_string_buf();
-			const auto& imple = test.raw_implementation();
 			const auto buf_len = test.raw_len();
+
+			auto* simdjson_imple = test.raw_implementation().get();
 
 			std::vector<int64_t> start(thr_num + 1, 0);
 			//std::vector<int> key;
@@ -4792,7 +4659,7 @@ namespace claujson {
 
 
 			{
-				size_t how_many = imple->n_structural_indexes;
+				size_t how_many = simdjson_imple->n_structural_indexes;
 				length = how_many;
 
 				start[0] = 0;
@@ -4811,7 +4678,7 @@ namespace claujson {
 			std::cout << b - a << "ms\n";
 
 			start[thr_num] = length;
-			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), imple.get(), length, start, thr_num)) // 0 : use all thread..
+			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), simdjson_imple, length, start, thr_num)) // 0 : use all thread..
 			{
 				return { false, 0 };
 			}
@@ -4824,7 +4691,7 @@ namespace claujson {
 
 		return  { true, length };
 	}
-	std::pair<bool, size_t> ParseStr(std::string_view str, Data& ut, int thr_num)
+	std::pair<bool, size_t> parse_str(std::string_view str, Data& ut, size_t thr_num)
 	{
 		if (thr_num <= 0) {
 			thr_num = std::thread::hardware_concurrency();
@@ -4838,6 +4705,7 @@ namespace claujson {
 		int _ = clock();
 
 		{
+
 			static simdjson::dom::parser test;
 
 			auto x = test.parse(str.data(), str.length());
@@ -4851,8 +4719,8 @@ namespace claujson {
 
 			const auto& buf = test.raw_buf();
 			const auto& string_buf = test.raw_string_buf();
-			const auto& imple = test.raw_implementation();
 			const auto buf_len = test.raw_len();
+			auto* simdjson_imple_ = test.raw_implementation().get();
 
 			std::vector<int64_t> start(thr_num + 1, 0);
 			//std::vector<int> key;
@@ -4863,7 +4731,7 @@ namespace claujson {
 
 
 			{
-				size_t how_many = imple->n_structural_indexes;
+				size_t how_many = simdjson_imple_->n_structural_indexes;
 				length = how_many;
 
 				start[0] = 0;
@@ -4882,7 +4750,7 @@ namespace claujson {
 			std::cout << b - a << "ms\n";
 
 			start[thr_num] = length;
-			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), imple.get(), length, start, thr_num)) // 0 : use all thread..
+			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), simdjson_imple_, length, start, thr_num)) // 0 : use all thread..
 			{
 				return { false, 0 };
 			}
@@ -4900,7 +4768,7 @@ namespace claujson {
 		LoadData::save(fileName, global, false);
 	}
 
-	void save_parallel(const std::string& fileName, Data j, size_t thr_num) {
+	void save_parallel(const std::string& fileName, Data& j, size_t thr_num) {
 		LoadData::save_parallel(fileName, j, thr_num);
 	}
 
@@ -5018,7 +4886,7 @@ namespace claujson {
 					new_route += escape_for_json_pointer(key);
 
 					if (size_t idx = jy->find(key); idx != Json::npos) {
-						Data inner_diff = _diff(Data(jx->get_value_list(i - 1)), jy->get_value_list(idx), new_route);
+						Data inner_diff = _diff((jx->get_value_list(i - 1)), jy->get_value_list(idx), new_route);
 
 						{
 							Json* w = inner_diff.as_json_ptr();
@@ -5200,6 +5068,19 @@ namespace claujson {
 	void clean(Data& x) {
 		Ptr<Json> _(x.as_json_ptr());
 		x.set_null(); //
+	}
+
+
+	void init() {
+		if (!simdjson_imple) {
+			Data ut; 
+			std::string_view str = "{}"sv;
+
+			auto x = test_.parse(str.data(), str.length());
+			simdjson_imple = test_.raw_implementation().get();
+
+			clean(ut);
+		}
 	}
 }
 
