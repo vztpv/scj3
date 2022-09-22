@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
 			if (!x.first) {
 				std::cout << "fail\n";
 
-				claujson::Ptr<claujson::Json> clean(j.as_json_ptr());
+				claujson::clean(j);
 				
 				return 1;
 			}

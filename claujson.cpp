@@ -297,6 +297,7 @@ namespace claujson {
 		return this->_type > 0;
 	}
 
+	/*
 	Data::Data(const Data& other)
 		: _type(other._type) 
 	{
@@ -307,11 +308,8 @@ namespace claujson {
 		else {
 			_int_val = other._int_val;
 		}
-
-		if (is_ptr()) {
-			_ptr_val = other.as_json_ptr()->clone();
-		}
 	}
+	*/
 
 	Data::Data(Json* x) {
 		set_ptr(x);
@@ -1593,7 +1591,7 @@ namespace claujson {
 			}
 
 			if (arr->has_key()) {
-				obj_key_vec.push_back(arr->get_key());
+				obj_key_vec.push_back(arr->get_key().clone());
 				obj_val_vec.push_back(Data(arr.release()));
 			}
 			else {
@@ -1609,7 +1607,7 @@ namespace claujson {
 			}
 
 			if (obj->has_key()) {
-				obj_key_vec.push_back(obj->get_key());
+				obj_key_vec.push_back(obj->get_key().clone());
 				obj_val_vec.push_back(Data(obj.release()));
 			}
 			else {
@@ -1656,7 +1654,7 @@ namespace claujson {
 
 			j->set_parent(this);
 
-			obj_key_vec.push_back(j->get_key());
+			obj_key_vec.push_back(j->get_key().clone());
 			obj_val_vec.push_back(Data(j.release()));
 		}
 
@@ -1719,7 +1717,7 @@ namespace claujson {
 			else if (j->has_key()) {
 				j->set_parent(this);
 
-				obj_key_vec.push_back(j->get_key());
+				obj_key_vec.push_back(j->get_key().clone());
 				obj_val_vec.push_back(Data(j.release()));
 			}
 			else {
@@ -2144,7 +2142,7 @@ namespace claujson {
 				arr_vec.push_back(Data(j.release()));
 			}
 			else {
-				obj_key_vec.push_back(j->get_key());
+				obj_key_vec.push_back(j->get_key().clone());
 				obj_val_vec.push_back(Data(j.release()));
 			}
 		}
@@ -2212,7 +2210,7 @@ namespace claujson {
 			}
 			else {
 				if (j->has_key()) {
-					obj_key_vec.push_back(j->get_key());
+					obj_key_vec.push_back(j->get_key().clone());
 					obj_val_vec.push_back(Data(j.release()));
 				}
 				else {
@@ -2267,7 +2265,7 @@ namespace claujson {
 				json = new Array();
 			}
 
-			obj_key_vec.push_back(temp);
+			obj_key_vec.push_back(temp.clone());
 			obj_val_vec.push_back(Data(json));
 
 			json->set_key(std::move(temp));
@@ -2332,7 +2330,7 @@ namespace claujson {
 
 
 				if (type == 0 || type == 1) {
-					obj_key_vec.push_back(temp);
+					obj_key_vec.push_back(temp.clone());
 					obj_val_vec.push_back(Data(json));
 				}
 				else {

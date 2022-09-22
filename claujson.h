@@ -192,7 +192,7 @@ namespace claujson {
 	public:
 		virtual ~Data();
 
-		Data(const Data& other);
+		Data(const Data& other) = delete;
 
 		Data(Data&& other) noexcept;
 
