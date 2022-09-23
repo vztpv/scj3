@@ -280,7 +280,7 @@ namespace claujson {
 		x._type = this->_type; 
 
 		if (x._type == DataType::STRING) {
-			x._str_val = new std::string(this->_str_val->c_str(), this->_str_val->size());
+			x._str_val = new std::string(this->_str_val->data(), this->_str_val->size());
 
 		}
 		else {
@@ -302,7 +302,7 @@ namespace claujson {
 		: _type(other._type) 
 	{
 		if (_type == DataType::STRING) {
-			_str_val = new std::string(other._str_val->c_str(), other._str_val->size());
+			_str_val = new std::string(other._str_val->data(), other._str_val->size());
 
 		}
 		else {

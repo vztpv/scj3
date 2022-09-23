@@ -195,7 +195,7 @@ void json_pointer_test() {
 int main(int argc, char* argv[])
 {
 	claujson::init();
-
+	
 	utf_8_test();
 	
 	key_dup_test();
@@ -284,7 +284,7 @@ int main(int argc, char* argv[])
 			int c2 = clock();
 			std::cout << "\nwrite " << c2 - c1 << "ms\n";
 
-			claujson::Data X("geometry"sv); // in here, utf_8, unicode(\uxxxxx) are checked..
+			claujson::Data X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
 			claujson::Data Y("coordinates"sv); // use claujson::Data.
 
 			sum = 0; counter = 0; 
