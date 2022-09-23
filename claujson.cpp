@@ -1103,6 +1103,8 @@ namespace claujson {
 		else {
 			std::swap(_int_val, other._int_val);
 		}
+
+		clean(other);
 	}
 
 	Data::Data() : _int_val(0), _type(DataType::NONE) { }
@@ -1201,6 +1203,8 @@ namespace claujson {
 
 		std::swap(this->_type, other._type);
 		std::swap(this->_int_val, other._int_val);
+
+		clean(other);
 
 		return *this;
 	}
