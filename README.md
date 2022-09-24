@@ -9,6 +9,8 @@ save - multi-thread
   
 (C++17, 64bit, Windows)
 
+(mimalloc, fmt)
+
 # 
 
 
