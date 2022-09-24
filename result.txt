@@ -1,3 +1,4 @@
+// test with intel i7 10700 cpu
 // my own json parser.
 109ms // simdjson`s stage1
 1ms
