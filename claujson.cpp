@@ -11,100 +11,6 @@
 #include <string_view>
 using namespace std::string_view_literals;
 
-namespace simdjson {
-
-	// fallback..
-	simdjson_really_inline bool is_continuation(uint8_t c) {
-		return (c & 0b11000000) == 0b10000000;
-	}
-
-	simdjson_really_inline void validate_utf8_character(uint8_t* buf, size_t& idx, size_t len, error_code& error) {
-		stage1_mode partial = stage1_mode::regular;
-
-		// Continuation
-		if (simdjson_unlikely((buf[idx] & 0b01000000) == 0)) {
-			// extra continuation
-			error = UTF8_ERROR;
-			idx++;
-			return;
-		}
-
-		// 2-byte
-		if ((buf[idx] & 0b00100000) == 0) {
-			// missing continuation
-			if (simdjson_unlikely(idx + 1 > len || !is_continuation(buf[idx + 1]))) {
-				if (idx + 1 > len && is_streaming(partial)) { idx = len; return; }
-				error = UTF8_ERROR;
-				idx++;
-				return;
-			}
-			// overlong: 1100000_ 10______
-			if (buf[idx] <= 0b11000001) { error = UTF8_ERROR; }
-			idx += 2;
-			return;
-		}
-
-		// 3-byte
-		if ((buf[idx] & 0b00010000) == 0) {
-			// missing continuation
-			if (simdjson_unlikely(idx + 2 > len || !is_continuation(buf[idx + 1]) || !is_continuation(buf[idx + 2]))) {
-				if (idx + 2 > len && is_streaming(partial)) { idx = len; return; }
-				error = UTF8_ERROR;
-				idx++;
-				return;
-			}
-			// overlong: 11100000 100_____ ________
-			if (buf[idx] == 0b11100000 && buf[idx + 1] <= 0b10011111) { error = UTF8_ERROR; }
-			// surrogates: U+D800-U+DFFF 11101101 101_____
-			if (buf[idx] == 0b11101101 && buf[idx + 1] >= 0b10100000) { error = UTF8_ERROR; }
-			idx += 3;
-			return;
-		}
-
-		// 4-byte
-		// missing continuation
-		if (simdjson_unlikely(idx + 3 > len || !is_continuation(buf[idx + 1]) || !is_continuation(buf[idx + 2]) || !is_continuation(buf[idx + 3]))) {
-			if (idx + 2 > len && is_streaming(partial)) { idx = len; return; }
-			error = UTF8_ERROR;
-			idx++;
-			return;
-		}
-		// overlong: 11110000 1000____ ________ ________
-		if (buf[idx] == 0b11110000 && buf[idx + 1] <= 0b10001111) { error = UTF8_ERROR; }
-		// too large: > U+10FFFF:
-		// 11110100 (1001|101_)____
-		// 1111(1___|011_|0101) 10______
-		// also includes 5, 6, 7 and 8 byte characters:
-		// 11111___
-		if (buf[idx] == 0b11110100 && buf[idx + 1] >= 0b10010000) { error = UTF8_ERROR; }
-		if (buf[idx] >= 0b11110101) { error = UTF8_ERROR; }
-		idx += 4;
-	}
-
-
-	simdjson_really_inline bool validate_utf8_string(uint8_t* buf, size_t len, error_code& error) {
-		size_t idx = 0; //
-
-		while (idx < len) {
-			if (buf[idx] == '\\') {
-				if (idx + 1 >= len) {
-					return false;
-				}
-				idx += 2;
-			}
-			else if (simdjson_unlikely(buf[idx] & 0b10000000)) {
-				validate_utf8_character(buf, idx, len, error);
-			}
-			else {
-				if (buf[idx] < (uint8_t)0x20) { error = UNESCAPED_CHARS; }
-				idx++;
-			}
-		}
-		if (idx >= len) { return true; }
-		return false;
-
-	}
-}
 
 namespace claujson {
 	
@@ -971,16 +877,13 @@ namespace claujson {
 
 			// chk... fallback..
 			{
+				bool valid = simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len); 
 
-				simdjson::error_code e = simdjson::error_code::SUCCESS;
-
-				bool valid = simdjson::validate_utf8_string(buf_src, len, e); // simdjson::validate_string
-
-				if (!valid || e != simdjson::error_code::SUCCESS) {
+				if (!valid) {
 					free(buf_src);
 					free(buf_dest);
 
-					std::cout << simdjson::error_message(e) << "\n";
+					std::cout << "not valid utf8" << "\n";
 					std::cout << "Error in Convert for string, validate...";
 					return false;
 				}
@@ -1016,12 +919,10 @@ namespace claujson {
 			buf_src[len] = '"';
 
 			{
-				simdjson::error_code e = simdjson::error_code::SUCCESS;
+				bool valid = simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
-				bool valid = simdjson::validate_utf8_string(buf_src, len, e);
-
-				if (!valid || e != simdjson::error_code::SUCCESS) {
-					std::cout << simdjson::error_message(e) << "\n";
+				if (!valid) {
+					std::cout << "not valid utf8" << "\n";
 					std::cout << "Error in Convert for string, validate...";
 					return false;
 				}
@@ -1210,7 +1111,7 @@ namespace claujson {
 	}
 
 
-	claujson::Data& Convert(claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
+	inline claujson::Data& Convert(claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
 		char* buf, uint8_t* string_buf, uint64_t id, bool& err, simdjson::internal::dom_parser_implementation* simdjson_imple) {
 
 		try {
@@ -2298,9 +2199,7 @@ namespace claujson {
 			else if (type == 1) {
 				arr_vec.push_back(Data(json));
 			}
-			else {
-				std::cout << "ERRRRRRRR";
-			}
+
 			json->set_parent(this);
 		}
 	}
@@ -2333,14 +2232,9 @@ namespace claujson {
 
 
 
-				if (type == 0 || type == 1) {
-					obj_key_vec.push_back(temp.clone());
-					obj_val_vec.push_back(Data(json));
-				}
-				else {
-					std::cout << "ERRRRRRRR";
-				}
-
+				obj_key_vec.push_back(temp.clone());
+				obj_val_vec.push_back(Data(json));
+				
 
 				json->set_key(std::move(temp));
 				json->set_parent(this);
@@ -2365,9 +2259,7 @@ namespace claujson {
 			else if (type == 1) {
 				arr_vec.push_back(Data(json));
 			}
-			else {
-				std::cout << "ERRRRRRRR";
-			}
+
 
 			json->set_parent(this);
 		}
@@ -3096,7 +2988,6 @@ namespace claujson {
 					}
 
 					// Left 1
-					//else
 					if (type == simdjson::internal::tape_type::START_OBJECT ||
 						type == simdjson::internal::tape_type::START_ARRAY) { // object start, array start
 

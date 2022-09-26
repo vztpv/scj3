@@ -10,7 +10,7 @@
 #include <ctime>
 
 
-#include "claujson.h" // using simdjson 2.0.1
+#include "claujson.h" // using simdjson 2.2.2
 
 #include <cstring>
 
@@ -195,12 +195,12 @@ void json_pointer_test() {
 int main(int argc, char* argv[])
 {
 	claujson::init();
-	
-	utf_8_test();
-	
-	key_dup_test();
 
-	json_pointer_test();
+	//utf_8_test();
+
+	//key_dup_test();
+
+	//json_pointer_test();
 
 
 	for (int i = 0; i < 3; ++i) {
@@ -211,11 +211,12 @@ int main(int argc, char* argv[])
 			int a = clock();
 
 			auto x = claujson::parse(argv[1], j, 64); // argv[1], j, 64 ??
+
 			if (!x.first) {
 				std::cout << "fail\n";
 
 				claujson::clean(j);
-				
+
 				return 1;
 			}
 
@@ -232,7 +233,7 @@ int main(int argc, char* argv[])
 			bool ok = x.first;
 
 			std::vector<claujson::Data> vec;
-			
+
 			// json_pointer, json_pinterA <- u8string_view?
 
 			if (false == claujson::Data::json_pointerA("/geometry/coordinates"sv, vec)) {
@@ -262,7 +263,7 @@ int main(int argc, char* argv[])
 					}
 				}
 			}
-		
+
 
 			std::cout << clock() - c << "ms\n";
 			std::cout << sum << " ";
@@ -287,7 +288,7 @@ int main(int argc, char* argv[])
 			claujson::Data X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
 			claujson::Data Y("coordinates"sv); // use claujson::Data.
 
-			sum = 0; counter = 0; 
+			sum = 0; counter = 0;
 			if (true && ok) {
 				int chk = 0;
 				for (int i = 0; i < 1; ++i) {
@@ -317,9 +318,9 @@ int main(int argc, char* argv[])
 			}
 			std::cout << clock() - c2 << "ms\n";
 			std::cout << "Re.. " << sum << " " << counter << "\n";
-			
+
 			claujson::Ptr<claujson::Json> clean(j.as_json_ptr());
-			
+
 			return !ok;
 		}
 		/*catch (...) {
@@ -330,6 +331,22 @@ int main(int argc, char* argv[])
 			std::cout << "internal error\n";
 			return 1;
 		}*/
+	}
+
+	{
+		claujson::Data j;
+		auto x = claujson::parse("total_end.json", j, 64); // argv[1], j, 64 ??
+		if (!x.first) {
+			std::cout << "fail\n";
+
+			claujson::clean(j);
+
+			return 1;
+		}
+
+		claujson::save_parallel("total_end2.json", j, 64);
+
+		claujson::clean(j);
 	}
 
 	return 0;
