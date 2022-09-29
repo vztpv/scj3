@@ -374,7 +374,7 @@ namespace claujson {
 
 				if (auto x = simdjson_imple->parse_number(value, temp)
 					; x != simdjson::SUCCESS) {
-					std::cout << "parse number error. " << x << "\n";
+					log << warn  << "parse number error. " << x << "\n";
 					return false;
 				}
 
@@ -883,8 +883,8 @@ namespace claujson {
 					free(buf_src);
 					free(buf_dest);
 
-					std::cout << "not valid utf8" << "\n";
-					std::cout << "Error in Convert for string, validate...";
+					log << warn  << "not valid utf8" << "\n";
+					log << warn  << "Error in Convert for string, validate...";
 					return false;
 				}
 			}
@@ -893,7 +893,7 @@ namespace claujson {
 				free(buf_src);
 				free(buf_dest);
 
-				std::cout << "Error in Convert for string";
+				log << warn  << "Error in Convert for string";
 				return false;
 			}
 			else {
@@ -922,14 +922,14 @@ namespace claujson {
 				bool valid = simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
-					std::cout << "not valid utf8" << "\n";
-					std::cout << "Error in Convert for string, validate...";
+					log << warn  << "not valid utf8" << "\n";
+					log << warn  << "Error in Convert for string, validate...";
 					return false;
 				}
 			}
 
 			if (auto* x = simdjson_imple->parse_string(buf_src, buf_dest); x == nullptr) {
-				std::cout << "Error in Convert for string";
+				log << warn  << "Error in Convert for string";
 				return false;
 			}
 			else {
@@ -986,7 +986,7 @@ namespace claujson {
 		
 	Data::~Data() {
 		if (_type == DataType::STRING && _str_val) {
-			//std::cout << "chk";
+			//log << warn  << "chk";
 			delete _str_val;
 			_str_val = nullptr;
 		}
@@ -1179,7 +1179,7 @@ namespace claujson {
 
 				if (auto x = simdjson_imple->parse_number(value, temp)
 					; x != simdjson::SUCCESS) {
-					std::cout << "parse number error. " << x << "\n";
+					log << warn  << "parse number error. " << x << "\n";
 					throw "Error in Convert to parse number";
 				}
 
@@ -1208,13 +1208,13 @@ namespace claujson {
 				break;
 			}
 			default:
-				std::cout << "convert error : " << (int)buf[idx] << " " << buf[idx] << "\n";
+				log << warn  << "convert error : " << (int)buf[idx] << " " << buf[idx] << "\n";
 				throw "Error in Convert : not expected";
 			}
 			return data;
 		}
 		catch (const char* str) {
-			std::cout << str << "\n";
+			log << warn  << str << "\n";
 			err = true;
 			return data;
 		}
@@ -1553,7 +1553,7 @@ namespace claujson {
 			}
 			else {
 				// error...
-				std::cout << "Link errr1";
+				log << warn  << "Link errr1";
 				return;
 			}
 
@@ -1597,13 +1597,13 @@ namespace claujson {
 			char* buf, uint8_t* string_buf, uint64_t id) {
 			// error
 
-			std::cout << "errr..";
+			log << warn  << "errr..";
 		}
 
 		void Object::add_user_type(int type) {
 			// error
 
-			std::cout << "errr..";
+			log << warn  << "errr..";
 
 			return;
 		}
@@ -1626,7 +1626,7 @@ namespace claujson {
 				obj_val_vec.push_back(Data(j.release()));
 			}
 			else {
-				std::cout << "chk..";
+				log << warn  << "chk..";
 				return;
 			}
 		}
@@ -1792,7 +1792,7 @@ namespace claujson {
 			else {
 				// error...
 
-				std::cout << "Link errr2";
+				log << warn  << "Link errr2";
 				return;
 			}
 
@@ -1805,7 +1805,7 @@ namespace claujson {
 			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2) {
 
 			// error
-			std::cout << "errr..";
+			log << warn  << "errr..";
 		}
 
 		void Array::add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
@@ -1829,7 +1829,7 @@ namespace claujson {
 
 		void Array::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
 			uint8_t* string_buf, int type, uint64_t id) {
-			std::cout << "errrr";
+			log << warn  << "errrr";
 		}
 
 		void Array::add_user_type(Ptr<Json> j) {
@@ -1848,7 +1848,7 @@ namespace claujson {
 			}
 			else {
 				// error..
-				std::cout << "errr..";
+				log << warn  << "errr..";
 				return;
 			}
 		}
@@ -2019,24 +2019,24 @@ namespace claujson {
 
 
 		bool PartialJson::add_array(Ptr<Json> arr) {
-			//std::cout << "not used..";
+			//log << warn  << "not used..";
 			return false;
 		}
 		bool PartialJson::add_object(Ptr<Json> obj) {
-			//std::cout << "not used..";
+			//log << warn  << "not used..";
 			return false;
 		}
 		bool PartialJson::insert_array_element(size_t idx, Data val) {
-			//std::cout << "not used.."; 
+			//log << warn  << "not used.."; 
 			return false;
 		}
 
 		void PartialJson::erase(std::string_view key, bool real) {
-			std::cout << "not used..";
+			log << warn  << "not used..";
 		}
 
 		void PartialJson::erase(size_t idx, bool real) {
-			std::cout << "not used..";
+			log << warn  << "not used..";
 		}
 
 		void PartialJson::Link(Ptr<Json> j) { // use carefully...
@@ -2119,7 +2119,7 @@ namespace claujson {
 					obj_val_vec.push_back(Data(j.release()));
 				}
 				else {
-					std::cout << "ERRR";
+					log << warn  << "ERRR";
 				}
 			}
 
@@ -2699,12 +2699,12 @@ namespace claujson {
 				class Json* _ut = ut;
 				class Json* _next = next;
 
-				//std::cout << "chk\n";
+				//log << warn  << "chk\n";
 				if (ut_next && _ut == *ut_next) {
 					*ut_next = _next;
 					chk_ut_next = true;
 
-					std::cout << "chked in merge...\n";
+					log << info  << "chked in merge...\n";
 				}
 
 				if (_next->is_array() && _ut->is_object()) {
@@ -2779,7 +2779,7 @@ namespace claujson {
 
 
 			while (true) {
-				//std::cout << "chk\n";
+				//log << warn  << "chk\n";
 
 				class Json* _ut = ut;
 				class Json* _next = next;
@@ -2794,7 +2794,7 @@ namespace claujson {
 
 				if (ut_next && _ut == (*ut_next)) {
 					*ut_next = _next;
-					std::cout << "chked in merge...\n";
+					log << info  << "chked in merge...\n";
 				}
 
 				size_t _size = _ut->get_data_size();
@@ -2902,7 +2902,7 @@ namespace claujson {
 
 
 					if (is_before_comma && type == simdjson::internal::tape_type::COMMA) {
-						std::cout << "before is comma\n";
+						log << warn  << "before is comma\n";
 						throw "Error in __Load... and case : , ,";
 						//
 					}
@@ -2913,7 +2913,7 @@ namespace claujson {
 							get_type(buf[imple->structural_indexes[token_arr_start + i - 1]]);
 
 						if (before_type == simdjson::internal::tape_type::START_ARRAY || before_type == simdjson::internal::tape_type::START_OBJECT) {
-							is_now_comma = false; //std::cout << "2-i " << i << "\n";
+							is_now_comma = false; //log << warn  << "2-i " << i << "\n";
 						}
 					}
 
@@ -2922,11 +2922,11 @@ namespace claujson {
 					}
 
 					if (!is_now_comma && type == simdjson::internal::tape_type::COMMA) {
-						std::cout << "now is not comma\n";
+						log << warn  << "now is not comma\n";
 						throw "Error in __Load.., now is comma but, no expect.";							//
 					}
 					if (is_now_comma && type != simdjson::internal::tape_type::COMMA) {
-						std::cout << "is now comma... but not..\n";
+						log << warn  << "is now comma... but not..\n";
 						throw "Error in __Load..., comma is expected but, is not";
 					}
 
@@ -2997,17 +2997,17 @@ namespace claujson {
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size() / 2);
 
 								if (Vec.size() % 2 == 1) {
-									std::cout << "Vec.size()%2==1\n";
+									log << warn  << "Vec.size()%2==1\n";
 									throw "Error in __Load..., key : value  error";
 								}
 
 								for (size_t x = 0; x < Vec.size(); x += 2) {
 									if (!Vec[x].is_key) {
-										std::cout << "vec[x].is not key\n";
+										log << warn  << "vec[x].is not key\n";
 										throw "Error in __Load..., key : value  error";
 									}
 									if (Vec[x + 1].is_key) {
-										std::cout << "vec[x].is key\n";
+										log << warn  << "vec[x].is key\n";
 										throw "Error in __Load..., key : value  error";
 									}
 									nestedUT[braceNum]->add_item_type((Vec[x].idx), Vec[x].idx2, Vec[x].len,
@@ -3020,7 +3020,7 @@ namespace claujson {
 
 								for (size_t x = 0; x < Vec.size(); x += 1) {
 									if (Vec[x].is_key) {
-										std::cout << "Vec[x].iskey\n";
+										log << warn  << "Vec[x].iskey\n";
 
 										throw "Error in __Load..., key : value  error";
 									}
@@ -3062,12 +3062,12 @@ namespace claujson {
 						type == simdjson::internal::tape_type::END_ARRAY) {
 
 						if (type == simdjson::internal::tape_type::END_ARRAY && nestedUT[braceNum]->is_object()) {
-							std::cout << "{]";
+							log << warn  << "{]";
 							throw "Error in __Load.., case : {]?";
 						}
 
 						if (type == simdjson::internal::tape_type::END_OBJECT && nestedUT[braceNum]->is_array()) {
-							std::cout << "[}";
+							log << warn  << "[}";
 
 
 							throw "Error in __Load.., case : [}?";
@@ -3081,18 +3081,18 @@ namespace claujson {
 
 
 								if (Vec.size() % 2 == 1) {
-									std::cout << "Vec.size() is odd\n";
+									log << warn  << "Vec.size() is odd\n";
 									throw "Error in __Load..., key : value  error";
 								}
 
 
 								for (size_t x = 0; x < Vec.size(); x += 2) {
 									if (!Vec[x].is_key) {
-										std::cout << "is not key\n";
+										log << warn  << "is not key\n";
 										throw "Error in __Load..., key : value  error";
 									}
 									if (Vec[x + 1].is_key) {
-										std::cout << "is key\n";
+										log << warn  << "is key\n";
 										throw "Error in __Load..., key : value  error";
 									}
 
@@ -3260,7 +3260,7 @@ namespace claujson {
 			catch (const char* _err) {
 				*err = -10;
 
-				std::cout << _err << "\n";
+				log << warn  << _err << "\n";
 				return false;
 			}
 			catch (...) {
@@ -3341,7 +3341,7 @@ namespace claujson {
 						pivots.push_back(length);
 					}
 					int b_ = clock();
-					//std::cout << "pivots.. " << b_ - a_ << "ms\n";
+					//log << warn  << "pivots.. " << b_ - a_ << "ms\n";
 					std::vector<class Json*> next(pivots.size() - 1, nullptr);
 					{
 
@@ -3382,7 +3382,7 @@ namespace claujson {
 
 						auto b = std::chrono::steady_clock::now();
 						auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
-						std::cout << "parse1 " << dur.count() << "ms\n";
+						log << info  << "parse1 " << dur.count() << "ms\n";
 
 						// check..
 						for (size_t i = 0; i < err.size(); ++i) {
@@ -3395,16 +3395,16 @@ namespace claujson {
 								break;
 							case -1:
 							case -4:
-								std::cout << "Syntax Error\n"; return false;
+								log << warn  << "Syntax Error\n"; return false;
 								break;
 							case -2:
-								std::cout << "error final state is not last_state!\n"; return false;
+								log << warn  << "error final state is not last_state!\n"; return false;
 								break;
 							case -3:
-								std::cout << "error x > buffer + buffer_len:\n"; return false;
+								log << warn  << "error x > buffer + buffer_len:\n"; return false;
 								break;
 							default:
-								std::cout << "unknown parser error\n"; return false;
+								log << warn  << "unknown parser error\n"; return false;
 								break;
 							}
 						}
@@ -3449,17 +3449,17 @@ namespace claujson {
 
 							if (__global[start]->get_data_size() > 0 && __global[start]->get_value_list(0).is_ptr()
 								&& ((Json*)__global[start]->get_value_list(0).ptr_val())->is_virtual()) {
-								std::cout << "not valid file1\n";
+								log << warn  << "not valid file1\n";
 								throw 1;
 							}
 							if (next[last] && next[last]->get_parent() != nullptr) {
-								std::cout << "not valid file2\n";
+								log << warn  << "not valid file2\n";
 								throw 2;
 							}
 
 							int err = Merge(_global.get(), __global[start].get(), &next[start]);
 							if (-1 == err || (pivots.size() == 0 && 1 == err)) {
-								std::cout << "not valid file3\n";
+								log << warn  << "not valid file3\n";
 								throw 3;
 							}
 
@@ -3481,12 +3481,12 @@ namespace claujson {
 								int err = Merge(next[before], __global[i].get(), &next[i]);
 
 								if (-1 == err) {
-									std::cout << "chk " << i << " " << __global.size() << "\n";
-									std::cout << "not valid file4\n";
+									log << warn  << "chk " << i << " " << __global.size() << "\n";
+									log << warn  << "not valid file4\n";
 									throw 4;
 								}
 								else if (i == last && 1 == err) {
-									std::cout << "not valid file5\n";
+									log << warn  << "not valid file5\n";
 									throw 5;
 								}
 							}
@@ -3498,13 +3498,13 @@ namespace claujson {
 						//
 
 						if (_global->is_user_type() && _global->get_data_size() > 1) { // bug fix..
-							std::cout << "not valid file6\n";
+							log << warn  << "not valid file6\n";
 							throw 6;
 						}
 
 						auto c = std::chrono::steady_clock::now();
 						auto dur2 = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
-						std::cout << "parse2 " << dur2.count() << "ms\n";
+						log << info  << "parse2 " << dur2.count() << "ms\n";
 					}
 					}
 					int a = clock();
@@ -3518,26 +3518,26 @@ namespace claujson {
 
 
 					int b = clock();
-					std::cout << "chk " << b - a << "ms\n";
+					log << info  << "chk " << b - a << "ms\n";
 
-					//	std::cout << clock() - a__ << "ms\n";
+					//	log << warn  << clock() - a__ << "ms\n";
 				}
-				//	std::cout << clock() - a__ << "ms\n";
+				//	log << warn  << clock() - a__ << "ms\n";
 				return true;
 			}
 			catch (int err) {
 
-				std::cout << "merge error " << err << "\n";
+				log << warn  << "merge error " << err << "\n";
 				return false;
 			}
 			catch (const char* err) {
 
-				std::cout << err << "\n";
+				log << warn  << err << "\n";
 				return false;
 			}
 			catch (...) {
 
-				std::cout << "interal error\n";
+				log << warn  << "interal error\n";
 				return false;
 			}
 
@@ -3661,7 +3661,7 @@ namespace claujson {
 						}
 					}
 					else {
-						//std::cout << "Error : no key\n";
+						//log << warn  << "Error : no key\n";
 					}
 					stream << " ";
 
@@ -3982,7 +3982,7 @@ namespace claujson {
 						}
 					}
 					else {
-						//std::cout << "Error : no key\n";
+						//log << warn  << "Error : no key\n";
 					}
 					stream << " ";
 
@@ -4531,8 +4531,8 @@ namespace claujson {
 			auto x = test.load(fileName);
 
 			if (x.error() != simdjson::error_code::SUCCESS) {
-				std::cout << "stage1 error : ";
-				std::cout << x.error() << "\n";
+				log << warn  << "stage1 error : ";
+				log << warn  << x.error() << "\n";
 
 				return { false, 0 };
 			}
@@ -4548,7 +4548,7 @@ namespace claujson {
 
 			int a = clock();
 
-			std::cout << a - _ << "ms\n";
+			log << info  << a - _ << "ms\n";
 
 
 			{
@@ -4562,13 +4562,13 @@ namespace claujson {
 			}
 
 			if (length == 0) {
-				std::cout << "empty json";
+				log << warn  << "empty json";
 				return { true, 0 };
 			}
 
 			int b = clock();
 
-			std::cout << b - a << "ms\n";
+			log << info  << b - a << "ms\n";
 
 			start[thr_num] = length;
 			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), simdjson_imple, length, start, thr_num)) // 0 : use all thread..
@@ -4576,10 +4576,10 @@ namespace claujson {
 				return { false, 0 };
 			}
 			int c = clock();
-			std::cout << c - b << "ms\n";
+			log << info  << c - b << "ms\n";
 		}
 		int c = clock();
-		std::cout << c - _ << "ms\n";
+		log << info << c - _ << "ms\n";
 
 
 		return  { true, length };
@@ -4604,8 +4604,8 @@ namespace claujson {
 			auto x = test.parse(str.data(), str.length());
 
 			if (x.error() != simdjson::error_code::SUCCESS) {
-				std::cout << "stage1 error : ";
-				std::cout << x.error() << "\n";
+				log << warn  << "stage1 error : ";
+				log << warn  << x.error() << "\n";
 
 				return { false, 0 };
 			}
@@ -4620,7 +4620,7 @@ namespace claujson {
 
 			int a = clock();
 
-			std::cout << a - _ << "ms\n";
+			log << info << a - _ << "ms\n";
 
 
 			{
@@ -4634,13 +4634,13 @@ namespace claujson {
 			}
 
 			if (length == 0) {
-				std::cout << "empty json";
+				log << warn  << "empty json";
 				return { true, 0 };
 			}
 
 			int b = clock();
 
-			std::cout << b - a << "ms\n";
+			log << info << b - a << "ms\n";
 
 			start[thr_num] = length;
 			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), simdjson_imple_, length, start, thr_num)) // 0 : use all thread..
@@ -4648,10 +4648,10 @@ namespace claujson {
 				return { false, 0 };
 			}
 			int c = clock();
-			std::cout << c - b << "ms\n";
+			log << warn  << c - b << "ms\n";
 		}
 		int c = clock();
-		std::cout << c - _ << "ms\n";
+		log << info << c - _ << "ms\n";
 
 
 		return  { true, length };

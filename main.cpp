@@ -194,6 +194,8 @@ void json_pointer_test() {
 
 int main(int argc, char* argv[])
 {
+	//claujson::log.warn(true);
+
 	claujson::init();
 
 	//utf_8_test();

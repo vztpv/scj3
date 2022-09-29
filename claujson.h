@@ -17,7 +17,134 @@
 
 namespace claujson {
 
-	void init();
+	class Log {
+	public:
+		class Info { };
+		class Warnning { };
+
+		enum class Option { CONSOLE, FILE, CONSOLE_AND_FILE, NO_PRINT };
+		class Option2 {
+		public:
+			static const int INFO = 1;
+			static const int WARN = 2;
+		};
+	private:
+		Option opt;
+		int opt2;
+		int state;
+		std::string fileName;
+	public:
+
+		Log() : state(0), opt(Option::CONSOLE), opt2(Option2::INFO | Option2::WARN), fileName("log.txt") {
+			//
+		}
+
+		template <class T>
+		Log& operator<<(const T& val) {
+			if (opt == Option::CONSOLE || opt == Option::CONSOLE_AND_FILE) {
+
+				if (state == 1 && (opt2 & Option2::INFO)) {
+					std::cout << val;
+				}
+				if (state == 2 && (opt2 & Option2::WARN)) {
+					std::cout << val;
+				}
+			}
+
+			if (opt == Option::FILE || opt == Option::CONSOLE_AND_FILE) {
+				std::ofstream outFile;
+				outFile.open(fileName, std::ios::app);
+				if (outFile) {
+					if (state == 1 && (opt2 & Option2::INFO)) {
+						outFile << val;
+					}
+					if (state == 2 && (opt2 & Option2::WARN)) {
+						outFile << val;
+					}
+					outFile.close();
+				}
+			}
+
+			return *this;
+		}
+
+		template <>
+		Log& operator<<(const Info&) {
+			state = 1;
+			
+			if (opt2 & Option2::INFO) {
+				*this << "[Info] : ";
+			}
+
+			return *this;
+		}
+
+		template <>
+		Log& operator<<(const Warnning&) {
+			state = 2;
+			
+			if (opt2 & Option2::WARN) {
+				*this << "[Warn] : ";
+			}
+
+			return *this;
+		}
+
+		Option option() const {
+			return opt;
+		}
+
+		int option2() const {
+			return opt2;
+		}
+
+		void console() {
+			opt = Option::CONSOLE;
+		}
+
+		void file() {
+			opt = Option::FILE;
+		}
+		
+		void console_and_file() {
+			opt = Option::CONSOLE_AND_FILE;
+		}
+
+		void no_print() {
+			opt = Option::NO_PRINT;
+		}
+
+		void file_name(const std::string& str) {
+			fileName = str;
+		}
+
+		void info(bool only = false) {
+			if (only) {
+				opt2 = Option2::INFO;
+			}
+			else {
+				opt2 = opt2 | Option2::INFO;
+			}
+		}
+		void warn(bool only = false) {
+			if (only) {
+				opt2 = Option2::WARN;
+			}
+			else {
+				opt2 = opt2 | Option2::WARN;
+			}
+		}
+	};
+
+	static Log::Info info;
+	static Log::Warnning warn;
+	inline Log log; // no static..
+
+
+
+	void init(); // call first, before use claujson..
+
+
 
 	template <class T>
 	using PtrWeak = T*;
