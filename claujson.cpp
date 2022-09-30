@@ -4648,7 +4648,7 @@ namespace claujson {
 				return { false, 0 };
 			}
 			int c = clock();
-			log << warn  << c - b << "ms\n";
+			log << info << c - b << "ms\n";
 		}
 		int c = clock();
 		log << info << c - _ << "ms\n";
