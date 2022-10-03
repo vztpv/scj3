@@ -13,8 +13,6 @@
 #include <string_view>
 
 
-#include "simdjson.h" // ver 2.2.2
-
 namespace claujson {
 
 	class Log {
@@ -191,7 +189,7 @@ namespace claujson {
 		friend std::ostream& operator<<(std::ostream& stream, const Data& data);
 
 		friend claujson::Data& Convert(Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
-			char* buf, uint8_t* string_buf, uint64_t id, bool& err, simdjson::internal::dom_parser_implementation* simdjson_imple);
+			char* buf, uint8_t* string_buf, uint64_t id, bool& err);
 	private:
 		union { // 64bit.. DO NOT build 32bit! //
 			int64_t _int_val = 0;

@@ -5138,9 +5138,9 @@ simdjson_warn_unused bool dom_parser_implementation::is_valid_null_atom(const ui
     return arm64::atomparsing::is_valid_null_atom(src, len);
 }
 
-simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc) noexcept {
+simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc, bool all) noexcept {
   auto error = stage1(_buf, _len, stage1_mode::regular);
-  if (error) { return error; } return error_code();
+  if (error) { return error; } if (!all) { return error_code(); }
   return stage2(_doc);
 }
 
@@ -6605,9 +6605,9 @@ simdjson_warn_unused bool dom_parser_implementation::is_valid_null_atom(const ui
     return fallback::atomparsing::is_valid_null_atom(src, len);
 }
 
-simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc) noexcept {
+simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc, bool all) noexcept {
   auto error = stage1(_buf, _len, stage1_mode::regular);
-  if (error) { return error; } return error_code();
+  if (error) { return error; } if (!all) { return error_code(); }
   return stage2(_doc);
 }
 
@@ -9003,9 +9003,9 @@ simdjson_warn_unused bool dom_parser_implementation::is_valid_null_atom(const ui
 }
 
 
-simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc) noexcept {
+simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc, bool all) noexcept {
   auto error = stage1(_buf, _len, stage1_mode::regular);
-  if (error) { return error; } return error_code();
+  if (error) { return error; } if (!all) { return error_code(); }
   return stage2(_doc);
 }
 
@@ -11353,9 +11353,9 @@ simdjson_warn_unused bool dom_parser_implementation::is_valid_null_atom(const ui
     return haswell::atomparsing::is_valid_null_atom(src, len);
 }
 
-simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc) noexcept {
+simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc, bool all) noexcept {
   auto error = stage1(_buf, _len, stage1_mode::regular);
-  if (error) { return error; } return error_code();
+  if (error) { return error; } if (!all) { return error_code(); }
   return stage2(_doc);
 }
 
@@ -13668,9 +13668,9 @@ simdjson_warn_unused bool dom_parser_implementation::is_valid_null_atom(const ui
     return ppc64::atomparsing::is_valid_null_atom(src, len);
 }
 
-simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc) noexcept {
+simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc, bool all) noexcept {
   auto error = stage1(_buf, _len, stage1_mode::regular);
-  if (error) { return error; } return error_code();
+  if (error) { return error; } if (!all) { return error_code(); }
   return stage2(_doc);
 }
 
@@ -16017,9 +16017,9 @@ simdjson_warn_unused bool dom_parser_implementation::is_valid_null_atom(const ui
 }
 
 
-simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc) noexcept {
+simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc, bool all) noexcept {
   auto error = stage1(_buf, _len, stage1_mode::regular);
-  if (error) { return error; } return error_code();
+  if (error) { return error; } if (!all) { return error_code(); }
   return stage2(_doc);
 }
 

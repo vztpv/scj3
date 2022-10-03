@@ -1,7 +1,6 @@
 
-#define _CRT_SECURE_NO_WARNINGS
-
 #include "claujson.h"
+
 #include "simdjson.h" // modified simdjson // using simdjson 2.2.2 renewal!
 
 // for fast save
@@ -14,7 +13,7 @@ using namespace std::string_view_literals;
 
 namespace claujson {
 	
-	inline static simdjson::dom::parser test_;
+	inline static simdjson::dom::parser_for_claujson test_;
 	inline static simdjson::internal::dom_parser_implementation* simdjson_imple = nullptr;
 	
 	// class PartialJson, only used in class LoadData.
@@ -1112,7 +1111,7 @@ namespace claujson {
 
 
 	inline claujson::Data& Convert(claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
-		char* buf, uint8_t* string_buf, uint64_t id, bool& err, simdjson::internal::dom_parser_implementation* simdjson_imple) {
+		char* buf, uint8_t* string_buf, uint64_t id, bool& err) {
 
 		try {
 			data.clear();
@@ -1574,12 +1573,12 @@ namespace claujson {
 
 				bool e = false;
 
-				claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e, simdjson_imple);
+				claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e);
 
 				if (e) {
 					throw "Error in add_item_type";
 				}
-				claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e, simdjson_imple);
+				claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e);
 				if (e) {
 					throw "Error in add_item_type";
 				}
@@ -1818,7 +1817,7 @@ namespace claujson {
 			{
 				Data temp2;
 				bool e = false;
-				claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e, simdjson_imple);
+				claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e);
 				if (e) {
 
 					throw "Error in add_item_type";
@@ -1853,7 +1852,7 @@ namespace claujson {
 			}
 		}
 
-	// class Root, only used in class LoadData2.
+	// class PartialJson, only used in class LoadData2.
 		// todo - rename? PartialNode ?
 	
 		PartialJson::~PartialJson() {
@@ -2062,14 +2061,14 @@ namespace claujson {
 
 					bool e = false;
 
-					claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e, simdjson_imple);
+					claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e);
 
 					if (e) {
 
 						throw "Error in add_item_type";
 					}
 
-					claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e, simdjson_imple);
+					claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e);
 
 					if (e) {
 
@@ -2092,7 +2091,7 @@ namespace claujson {
 					Data temp2;
 					bool e = false;
 
-					claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e, simdjson_imple);
+					claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e);
 
 					if (e) {
 
@@ -2152,7 +2151,7 @@ namespace claujson {
 			Data temp;
 			bool e = false;
 
-			claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e, simdjson_imple);
+			claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e);
 			if (e) {
 				throw "Error in add_user_type";
 			}
@@ -2210,7 +2209,7 @@ namespace claujson {
 				Data temp;
 				bool e = false;
 
-				claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e, simdjson_imple);
+				claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e);
 
 				if (e) {
 					throw "Error in add_user_type";
@@ -3646,7 +3645,7 @@ namespace claujson {
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf(buf + 2, "%04X", code);
+									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -3708,7 +3707,7 @@ namespace claujson {
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf(buf + 2, "%04X", code);
+									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -3750,7 +3749,7 @@ namespace claujson {
 									if (code > 0 && (code < 0x20 || code == 0x7F))
 									{
 										char buf[] = "\\uDDDD";
-										sprintf(buf + 2, "%04X", code);
+										sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 										stream << buf;
 									}
 									else {
@@ -3841,7 +3840,7 @@ namespace claujson {
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf(buf + 2, "%04X", code);
+									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -3901,7 +3900,7 @@ namespace claujson {
 						if (code > 0 && (code < 0x20 || code == 0x7F))
 						{
 							char buf[] = "\\uDDDD";
-							sprintf(buf + 2, "%04X", code);
+							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 							stream << buf;
 						}
 						else {
@@ -3967,7 +3966,7 @@ namespace claujson {
 								if (code > 0 && (code < 0x20 || code == 0x7F)) // chk this... with validate_string function. from simdjson..
 								{
 									char buf[] = "\\uDDDD";
-									sprintf(buf + 2, "%04X", code);
+									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -4029,7 +4028,7 @@ namespace claujson {
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf(buf + 2, "%04X", code);
+									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -4071,7 +4070,7 @@ namespace claujson {
 									if (code > 0 && (code < 0x20 || code == 0x7F))
 									{
 										char buf[] = "\\uDDDD";
-										sprintf(buf + 2, "%04X", code);
+										sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 										stream << buf;
 									}
 									else {
@@ -4162,7 +4161,7 @@ namespace claujson {
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf(buf + 2, "%04X", code);
+									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -4222,7 +4221,7 @@ namespace claujson {
 						if (code > 0 && (code < 0x20 || code == 0x7F))
 						{
 							char buf[] = "\\uDDDD";
-							sprintf(buf + 2, "%04X", code);
+							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 							stream << buf;
 						}
 						else {
@@ -4306,7 +4305,7 @@ namespace claujson {
 						if (code > 0 && (code < 0x20 || code == 0x7F))
 						{
 							char buf[] = "\\uDDDD";
-							sprintf(buf + 2, "%04X", code);
+							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 							stream << buf;
 						}
 						else {
@@ -4408,7 +4407,7 @@ namespace claujson {
 						if (code > 0 && (code < 0x20 || code == 0x7F))
 						{
 							char buf[] = "\\uDDDD";
-							sprintf(buf + 2, "%04X", code);
+							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
 							stream << buf;
 						}
 						else {
@@ -4526,7 +4525,7 @@ namespace claujson {
 		int _ = clock();
 
 		{
-			static simdjson::dom::parser test;
+			static simdjson::dom::parser_for_claujson test;
 
 			auto x = test.load(fileName);
 
@@ -4599,7 +4598,7 @@ namespace claujson {
 
 		{
 
-			static simdjson::dom::parser test;
+			static simdjson::dom::parser_for_claujson test;
 
 			auto x = test.parse(str.data(), str.length());
 

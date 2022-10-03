@@ -2,15 +2,15 @@
 // now, test only haswell..
 // need C++17, 64bit..
 
-#define _CRT_SECURE_NO_WARNINGS
 #include "mimalloc-new-delete.h"
 
 #include <iostream>
 #include <string>
 #include <ctime>
 
-
 #include "claujson.h" // using simdjson 2.2.2
+
+#include "simdjson.h"
 
 #include <cstring>
 
@@ -191,10 +191,20 @@ void json_pointer_test() {
 }
 
 
-
 int main(int argc, char* argv[])
 {
-	//claujson::log.warn(true);
+
+	{
+		
+		int a = clock();
+		simdjson::dom::parser x;
+		auto y = x.load("citylots.json");
+		int b = clock();
+		std::cout << y.error() << " ";
+		std::cout << b - a << "ms\n";
+	}
+
+	//claujson::log.no_print();
 
 	claujson::init();
 
@@ -210,6 +220,7 @@ int main(int argc, char* argv[])
 
 		//try
 		{
+
 			int a = clock();
 
 			auto x = claujson::parse(argv[1], j, 64); // argv[1], j, 64 ??

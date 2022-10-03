@@ -2905,7 +2905,7 @@ public:
    * @param len The length of the json document.
    * @return The error code, or SUCCESS if there was no error.
    */
-  simdjson_warn_unused virtual error_code parse(const uint8_t *buf, size_t len, dom::document &doc) noexcept = 0;
+  simdjson_warn_unused virtual error_code parse(const uint8_t *buf, size_t len, dom::document &doc, bool all = true) noexcept = 0;
 
   /**
    * @private For internal implementation use
@@ -4331,7 +4331,7 @@ public:
    * or lower the amount of allocated memory.
    * Passsing zero clears the memory.
    */
-  error_code allocate(size_t len) noexcept;
+  error_code allocate(size_t len, bool pass_tape = false) noexcept;
   /** @private Capacity in bytes, in terms
    * of how many bytes of input JSON we can
    * support.
@@ -4397,21 +4397,6 @@ static constexpr size_t MINIMAL_DOCUMENT_CAPACITY = 32;
  * @note This is not thread safe: one parser cannot produce two documents at the same time!
  */
 class parser {
-public:  
-    std::unique_ptr<char[]>& raw_buf() {
-        return loaded_bytes;
-    }
-    std::unique_ptr<uint8_t[]>& raw_string_buf() {
-        return doc.string_buf;
-    }
-    std::unique_ptr<internal::dom_parser_implementation>& raw_implementation() {
-        return implementation;
-    }
-    uint64_t raw_len() {
-        return len;
-    }
-private:
-    uint64_t len = 0;
 public:
   /**
    * Create a JSON parser.
@@ -4603,7 +4588,7 @@ public:
    *         - other json errors if parsing fails. You should not rely on these errors to always the same for the
    *           same document: they may vary under runtime dispatch (so they may vary depending on your system and hardware).
    */
-  inline simdjson_result<element> parse_into_document(document& doc, const uint8_t *buf, size_t len, bool realloc_if_needed = true) & noexcept;
+  virtual inline simdjson_result<element> parse_into_document(document& doc, const uint8_t *buf, size_t len, bool realloc_if_needed = true) & noexcept;
   inline simdjson_result<element> parse_into_document(document& doc, const uint8_t *buf, size_t len, bool realloc_if_needed = true) && =delete;
   /** @overload parse_into_document(const uint8_t *buf, size_t len, bool realloc_if_needed) */
   simdjson_inline simdjson_result<element> parse_into_document(document& doc, const char *buf, size_t len, bool realloc_if_needed = true) & noexcept;
@@ -4909,7 +4894,7 @@ public:
   inline bool dump_raw_tape(std::ostream &os) const noexcept;
 
 
-private:
+protected:
   /**
    * The maximum document length this parser will automatically support.
    *
@@ -4950,7 +4935,7 @@ private:
    * and auto-allocate if not. This also allocates memory if needed in the
    * provided document.
    */
-  inline error_code ensure_capacity(document& doc, size_t desired_capacity) noexcept;
+  virtual inline error_code ensure_capacity(document& doc, size_t desired_capacity) noexcept;
 
   /** Read the file into loaded_bytes */
   inline simdjson_result<size_t> read_file(const std::string &path) noexcept;
@@ -4960,6 +4945,30 @@ private:
 
 
 }; // class parser
+
+class parser_for_claujson : public parser {
+public:
+    std::unique_ptr<char[]>& raw_buf() {
+        return loaded_bytes;
+    }
+    std::unique_ptr<uint8_t[]>& raw_string_buf() {
+        return doc.string_buf;
+    }
+    std::unique_ptr<internal::dom_parser_implementation>& raw_implementation() {
+        return implementation;
+    }
+    uint64_t raw_len() {
+        return len;
+    }
+
+
+protected:
+    inline error_code ensure_capacity(document& target_document, size_t desired_capacity) noexcept;
+
+    inline simdjson_result<element> parse_into_document(document& provided_doc, const uint8_t* buf, size_t len, bool realloc_if_needed) & noexcept;
+private:
+    uint64_t len = 0;
+};
 
 } // namespace dom
 } // namespace simdjson
@@ -7771,7 +7780,7 @@ inline size_t document::capacity() const noexcept {
 }
 
 simdjson_warn_unused
-inline error_code document::allocate(size_t capacity) noexcept {
+inline error_code document::allocate(size_t capacity, bool pass_tape) noexcept {
   if (capacity == 0) {
     string_buf.reset();
     tape.reset();
@@ -7789,14 +7798,22 @@ inline error_code document::allocate(size_t capacity) noexcept {
   // and we would need capacity/3 * 5 bytes on the string buffer
   size_t string_capacity = SIMDJSON_ROUNDUP_N(5 * capacity / 3 + SIMDJSON_PADDING, 64);
   string_buf.reset( new (std::nothrow) uint8_t[string_capacity]);
-  //tape.reset(new (std::ndom_parser_implementation::parseothrow) uint64_t[tape_capacity]);
-  if(!(string_buf)) { // }&& tape)) {
+  if (pass_tape == false) {
+      tape.reset(new (std::nothrow) uint64_t[tape_capacity]);
+  }
+ if (!pass_tape && !(string_buf) && tape) {
     allocated_capacity = 0;
     string_buf.reset();
     tape.reset();
     return MEMALLOC;
   }
-  // Technically the allocated_capacity might be larger than capacity
+ if (pass_tape && !(string_buf)) {
+     allocated_capacity = 0;
+     string_buf.reset();
+     tape.reset();
+     return MEMALLOC;
+ }
+ // Technically the allocated_capacity might be larger than capacity
   // so the next line is pessimistic.
   allocated_capacity = capacity;
   return SUCCESS;
@@ -8752,7 +8769,7 @@ inline simdjson_result<element> parser::parse_into_document(document& provided_d
     }
     std::memcpy(static_cast<void *>(loaded_bytes.get()), buf, len);
   }
-  this->len = len;
+
   _error = implementation->parse(realloc_if_needed ? reinterpret_cast<const uint8_t*>(loaded_bytes.get()): buf, len, provided_doc);
 
   if (_error) { return _error; }
@@ -8760,6 +8777,31 @@ inline simdjson_result<element> parser::parse_into_document(document& provided_d
   return provided_doc.root();
 }
 
+inline simdjson_result<element> parser_for_claujson::parse_into_document(document& provided_doc, const uint8_t* buf, size_t len, bool realloc_if_needed) & noexcept {
+    // Important: we need to ensure that document has enough capacity.
+    // Important: It is possible that provided_doc is actually the internal 'doc' within the parser!!!
+    error_code _error = ensure_capacity(provided_doc, len);
+    if (_error) { return _error; }
+    if (realloc_if_needed) {
+        // Make sure we have enough capacity to copy len bytes
+        if (!loaded_bytes || _loaded_bytes_capacity < len) {
+            loaded_bytes.reset(internal::allocate_padded_buffer(len));
+            if (!loaded_bytes) {
+                return MEMALLOC;
+            }
+            _loaded_bytes_capacity = len;
+        }
+        std::memcpy(static_cast<void*>(loaded_bytes.get()), buf, len);
+    }
+
+    this->len = len;
+
+    _error = implementation->parse(realloc_if_needed ? reinterpret_cast<const uint8_t*>(loaded_bytes.get()) : buf, len, provided_doc, false);
+
+    if (_error) { return _error; }
+
+    return provided_doc.root();
+}
 simdjson_inline simdjson_result<element> parser::parse_into_document(document& provided_doc, const char *buf, size_t len, bool realloc_if_needed) & noexcept {
   return parse_into_document(provided_doc, reinterpret_cast<const uint8_t *>(buf), len, realloc_if_needed);
 }
@@ -8856,6 +8898,28 @@ inline error_code parser::ensure_capacity(document& target_document, size_t desi
     if(err2 != SUCCESS) { return error = err2; }
   }
   return SUCCESS;
+}
+
+inline error_code parser_for_claujson::ensure_capacity(document& target_document, size_t desired_capacity) noexcept {
+    // 1. It is wasteful to allocate a document and a parser for documents spanning less than MINIMAL_DOCUMENT_CAPACITY bytes.
+    // 2. If we allow desired_capacity = 0 then it is possible to exit this function with implementation == nullptr.
+    if (desired_capacity < MINIMAL_DOCUMENT_CAPACITY) { desired_capacity = MINIMAL_DOCUMENT_CAPACITY; }
+    // If we don't have enough capacity, (try to) automatically bump it.
+    // If the document needs allocation, do it too.
+    // Both in one if statement to minimize unlikely branching.
+    //
+    // Note: we must make sure that this function is called if capacity() == 0. We do so because we
+    // ensure that desired_capacity > 0.
+    if (simdjson_unlikely(capacity() < desired_capacity || target_document.capacity() < desired_capacity)) {
+        if (desired_capacity > max_capacity()) {
+            return error = CAPACITY;
+        }
+        error_code err1 = target_document.capacity() < desired_capacity ? target_document.allocate(desired_capacity, true) : SUCCESS;
+        error_code err2 = capacity() < desired_capacity ? allocate(desired_capacity, max_depth()) : SUCCESS;
+        if (err1 != SUCCESS) { return error = err1; }
+        if (err2 != SUCCESS) { return error = err2; }
+    }
+    return SUCCESS;
 }
 
 simdjson_inline void parser::set_max_capacity(size_t max_capacity) noexcept {
@@ -9714,7 +9778,7 @@ public:
   dom_parser_implementation(const dom_parser_implementation &) = delete;
   dom_parser_implementation &operator=(const dom_parser_implementation &) = delete;
 
-  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc) noexcept final;
+  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc, bool all = true) noexcept final;
   simdjson_warn_unused error_code stage1(const uint8_t *buf, size_t len, stage1_mode partial) noexcept final;
   simdjson_warn_unused error_code stage2(dom::document &doc) noexcept final;
   simdjson_warn_unused error_code stage2_next(dom::document &doc) noexcept final;
@@ -12064,7 +12128,7 @@ public:
   dom_parser_implementation(const dom_parser_implementation &) = delete;
   dom_parser_implementation &operator=(const dom_parser_implementation &) = delete;
 
-  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc) noexcept final;
+  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc, bool all = true) noexcept final;
   simdjson_warn_unused error_code stage1(const uint8_t *buf, size_t len, stage1_mode partial) noexcept final;
   simdjson_warn_unused error_code stage2(dom::document &doc) noexcept final;
   simdjson_warn_unused error_code stage2_next(dom::document &doc) noexcept final;
@@ -13841,7 +13905,7 @@ public:
   dom_parser_implementation(const dom_parser_implementation &) = delete;
   dom_parser_implementation &operator=(const dom_parser_implementation &) = delete;
 
-  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc) noexcept final;
+  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc, bool all = true) noexcept final;
   simdjson_warn_unused error_code stage1(const uint8_t *buf, size_t len, stage1_mode partial) noexcept final;
   simdjson_warn_unused error_code stage2(dom::document &doc) noexcept final;
   simdjson_warn_unused error_code stage2_next(dom::document &doc) noexcept final;
@@ -16037,7 +16101,7 @@ public:
   dom_parser_implementation(const dom_parser_implementation &) = delete;
   dom_parser_implementation &operator=(const dom_parser_implementation &) = delete;
 
-  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc) noexcept final;
+  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc, bool all = true) noexcept final;
   simdjson_warn_unused error_code stage1(const uint8_t *buf, size_t len, stage1_mode partial) noexcept final;
   simdjson_warn_unused error_code stage2(dom::document &doc) noexcept final;
   simdjson_warn_unused error_code stage2_next(dom::document &doc) noexcept final;
@@ -18164,7 +18228,7 @@ public:
   dom_parser_implementation(const dom_parser_implementation &) = delete;
   dom_parser_implementation &operator=(const dom_parser_implementation &) = delete;
 
-  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc) noexcept final;
+  simdjson_warn_unused error_code parse(const uint8_t *buf, size_t len, dom::document &doc, bool all = true) noexcept final;
   simdjson_warn_unused error_code stage1(const uint8_t *buf, size_t len, stage1_mode partial) noexcept final;
   simdjson_warn_unused error_code stage2(dom::document &doc) noexcept final;
   simdjson_warn_unused error_code stage2_next(dom::document &doc) noexcept final;
@@ -20505,7 +20569,7 @@ public:
     dom_parser_implementation(const dom_parser_implementation&) = delete;
     dom_parser_implementation& operator=(const dom_parser_implementation&) = delete;
 
-    simdjson_warn_unused error_code parse(const uint8_t* buf, size_t len, dom::document& doc) noexcept final;
+    simdjson_warn_unused error_code parse(const uint8_t* buf, size_t len, dom::document& doc, bool all = true) noexcept final;
     simdjson_warn_unused error_code stage1(const uint8_t* buf, size_t len, stage1_mode partial) noexcept final;
     simdjson_warn_unused error_code stage2(dom::document& doc) noexcept final;
     simdjson_warn_unused error_code stage2_next(dom::document& doc) noexcept final;
