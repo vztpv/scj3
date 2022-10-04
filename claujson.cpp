@@ -1474,7 +1474,7 @@ namespace claujson {
 		}
 
 		bool Object::add_object_element(Data key, Data val) {
-			if (!is_valid()) {
+			if (!is_valid() || !key.is_str()) {
 				return false;
 			}
 
