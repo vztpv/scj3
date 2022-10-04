@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 	{
 		
 		int a = clock();
-		simdjson::dom::parser x;
+		_simdjson::dom::parser x;
 		auto y = x.load("citylots.json");
 		int b = clock();
 		std::cout << y.error() << " ";

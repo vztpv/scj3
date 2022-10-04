@@ -13,8 +13,8 @@ using namespace std::string_view_literals;
 
 namespace claujson {
 	
-	inline static simdjson::dom::parser_for_claujson test_;
-	inline static simdjson::internal::dom_parser_implementation* simdjson_imple = nullptr;
+	inline static _simdjson::dom::parser_for_claujson test_;
+	inline static _simdjson::internal::dom_parser_implementation* simdjson_imple = nullptr;
 	
 	// class PartialJson, only used in class LoadData.
 	class PartialJson : public Json {
@@ -347,7 +347,7 @@ namespace claujson {
 	}
 
 
-	bool to_uint_for_json_pointer(std::string_view x, size_t* val, simdjson::internal::dom_parser_implementation* simdjson_imple) {
+	bool to_uint_for_json_pointer(std::string_view x, size_t* val, _simdjson::internal::dom_parser_implementation* simdjson_imple) {
 		const char* buf = x.data();
 		size_t idx = 0;
 		size_t idx2 = x.size();
@@ -364,15 +364,15 @@ namespace claujson {
 				const uint8_t* value = reinterpret_cast<const uint8_t*>(buf + idx);
 
 				{ // chk code...
-					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + simdjson::SIMDJSON_PADDING]); // x.size() + padding
+					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + _simdjson::SIMDJSON_PADDING]); // x.size() + padding
 					if (copy.get() == nullptr) { return false; } // cf) new Json?
 					std::memcpy(copy.get(), &buf[idx], idx2 - idx);
-					std::memset(copy.get() + idx2 - idx, ' ', simdjson::SIMDJSON_PADDING);
+					std::memset(copy.get() + idx2 - idx, ' ', _simdjson::SIMDJSON_PADDING);
 					value = copy.get();
 				}
 
 				if (auto x = simdjson_imple->parse_number(value, temp)
-					; x != simdjson::SUCCESS) {
+					; x != _simdjson::SUCCESS) {
 					log << warn  << "parse number error. " << x << "\n";
 					return false;
 				}
@@ -381,20 +381,20 @@ namespace claujson {
 				unsigned long long uint_val = 0;
 				//double float_val = 0;
 
-				switch (static_cast<simdjson::internal::tape_type>(temp[0] >> 56)) {
-				case simdjson::internal::tape_type::INT64:
+				switch (static_cast<_simdjson::internal::tape_type>(temp[0] >> 56)) {
+				case _simdjson::internal::tape_type::INT64:
 					memcpy(&int_val, &temp[1], sizeof(uint64_t));
 					*val = int_val;
 
 					return true;
 					break;
-				case simdjson::internal::tape_type::UINT64:
+				case _simdjson::internal::tape_type::UINT64:
 					memcpy(&uint_val, &temp[1], sizeof(uint64_t));
 					*val = uint_val;
 					
 					return true;
 					break;
-				case simdjson::internal::tape_type::DOUBLE:
+				case _simdjson::internal::tape_type::DOUBLE:
 					// error.
 					return false;
 					break;
@@ -855,28 +855,28 @@ namespace claujson {
 		const size_t block_size = 1024;
 
 
-		uint8_t buf_src[block_size + simdjson::SIMDJSON_PADDING];
-		uint8_t buf_dest[block_size + simdjson::SIMDJSON_PADDING];
+		uint8_t buf_src[block_size + _simdjson::SIMDJSON_PADDING];
+		uint8_t buf_dest[block_size + _simdjson::SIMDJSON_PADDING];
 
 
 		if (len >= block_size) {
-			uint8_t* buf_src = (uint8_t*)calloc(len + simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
-			uint8_t* buf_dest = (uint8_t*)calloc(len + simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
+			uint8_t* buf_src = (uint8_t*)calloc(len + _simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
+			uint8_t* buf_dest = (uint8_t*)calloc(len + _simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
 			if (!buf_src || !buf_dest) {
 				if (buf_src) { free(buf_src); }
 				if (buf_dest) { free(buf_dest); }
 
 				return false;
 			}
-			memset(buf_src, '"', len + simdjson::SIMDJSON_PADDING);
-			memset(buf_dest, '"', len + simdjson::SIMDJSON_PADDING);
+			memset(buf_src, '"', len + _simdjson::SIMDJSON_PADDING);
+			memset(buf_dest, '"', len + _simdjson::SIMDJSON_PADDING);
 
 			memcpy(buf_src, str, len);
 			buf_src[len] = '"';
 
 			// chk... fallback..
 			{
-				bool valid = simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len); 
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len); 
 
 				if (!valid) {
 					free(buf_src);
@@ -911,14 +911,14 @@ namespace claujson {
 			free(buf_dest);
 		}
 		else {
-			memset(buf_src, '"', block_size + simdjson::SIMDJSON_PADDING);
-			memset(buf_dest, '"', block_size + simdjson::SIMDJSON_PADDING);
+			memset(buf_src, '"', block_size + _simdjson::SIMDJSON_PADDING);
+			memset(buf_dest, '"', block_size + _simdjson::SIMDJSON_PADDING);
 
 			memcpy(buf_src, str, len);
 			buf_src[len] = '"';
 
 			{
-				bool valid = simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					log << warn  << "not valid utf8" << "\n";
@@ -1169,15 +1169,15 @@ namespace claujson {
 				uint8_t* value = reinterpret_cast<uint8_t*>(buf + idx);
 
 				if (id == 0) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
-					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + simdjson::SIMDJSON_PADDING]);
+					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + _simdjson::SIMDJSON_PADDING]);
 					if (copy.get() == nullptr) { throw "Error in Convert for new"; } // cf) new Json?
 					std::memcpy(copy.get(), &buf[idx], idx2 - idx);
-					std::memset(copy.get() + idx2 - idx, ' ', simdjson::SIMDJSON_PADDING);
+					std::memset(copy.get() + idx2 - idx, ' ', _simdjson::SIMDJSON_PADDING);
 					value = copy.get();
 				}
 
 				if (auto x = simdjson_imple->parse_number(value, temp)
-					; x != simdjson::SUCCESS) {
+					; x != _simdjson::SUCCESS) {
 					log << warn  << "parse number error. " << x << "\n";
 					throw "Error in Convert to parse number";
 				}
@@ -1186,18 +1186,18 @@ namespace claujson {
 				unsigned long long uint_val = 0;
 				double float_val = 0;
 
-				switch (static_cast<simdjson::internal::tape_type>(temp[0] >> 56)) {
-				case simdjson::internal::tape_type::INT64:
+				switch (static_cast<_simdjson::internal::tape_type>(temp[0] >> 56)) {
+				case _simdjson::internal::tape_type::INT64:
 					memcpy(&int_val, &temp[1], sizeof(uint64_t));
 
 					data.set_int(int_val);
 					break;
-				case simdjson::internal::tape_type::UINT64:
+				case _simdjson::internal::tape_type::UINT64:
 					memcpy(&uint_val, &temp[1], sizeof(uint64_t));
 
 					data.set_uint(uint_val);
 					break;
-				case simdjson::internal::tape_type::DOUBLE:
+				case _simdjson::internal::tape_type::DOUBLE:
 					memcpy(&float_val, &temp[1], sizeof(uint64_t));
 
 					data.set_float(float_val);
@@ -2398,15 +2398,15 @@ namespace claujson {
  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1
  , 1  , 1  , 1  , 1  , 1  , 1  } };
 
-	inline simdjson::internal::tape_type get_type(unsigned char x) {
-		return (simdjson::internal::tape_type)__arr[x]; // more fast version..
+	inline _simdjson::internal::tape_type get_type(unsigned char x) {
+		return (_simdjson::internal::tape_type)__arr[x]; // more fast version..
 		/*
 		switch (x) {
 		case '-':
 		case '0':
 		case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
-			return simdjson::internal::tape_type::DOUBLE; // number?
+			return _simdjson::internal::tape_type::DOUBLE; // number?
 			break;
 		case '"':
 		case 't':
@@ -2416,15 +2416,15 @@ namespace claujson {
 		case '[':
 		case '}':
 		case ']':
-			return	(simdjson::internal::tape_type)(x);
+			return	(_simdjson::internal::tape_type)(x);
 			break;
 		case ':':
 		case ',':
 
-			return	(simdjson::internal::tape_type)(x);
+			return	(_simdjson::internal::tape_type)(x);
 			break;
 		}
-		return simdjson::internal::tape_type::NONE;*/
+		return _simdjson::internal::tape_type::NONE;*/
 	}
 
 	class LoadData;
@@ -2856,7 +2856,7 @@ namespace claujson {
 
 		static bool __LoadData(char* buf, size_t buf_len,
 			uint8_t* string_buf,
-			simdjson::internal::dom_parser_implementation* imple,
+			_simdjson::internal::dom_parser_implementation* imple,
 			int64_t token_arr_start, size_t token_arr_len, Ptr<Json>& _global,
 			int start_state, int last_state, class Json** next, int* err, uint64_t no)
 		{
@@ -2886,10 +2886,10 @@ namespace claujson {
 				bool is_next_comma = false;
 
 				if (token_arr_start > 0) {
-					const simdjson::internal::tape_type before_type =
+					const _simdjson::internal::tape_type before_type =
 						get_type(buf[imple->structural_indexes[token_arr_start - 1]]);
 
-					is_before_comma = before_type == simdjson::internal::tape_type::COMMA;
+					is_before_comma = before_type == _simdjson::internal::tape_type::COMMA;
 				}
 
 
@@ -2897,10 +2897,10 @@ namespace claujson {
 
 					is_now_comma = is_next_comma;
 
-					const simdjson::internal::tape_type type = get_type(buf[imple->structural_indexes[token_arr_start + i]]);
+					const _simdjson::internal::tape_type type = get_type(buf[imple->structural_indexes[token_arr_start + i]]);
 
 
-					if (is_before_comma && type == simdjson::internal::tape_type::COMMA) {
+					if (is_before_comma && type == _simdjson::internal::tape_type::COMMA) {
 						log << warn  << "before is comma\n";
 						throw "Error in __Load... and case : , ,";
 						//
@@ -2908,10 +2908,10 @@ namespace claujson {
 
 
 					if (token_arr_start + i > 0) {
-						const simdjson::internal::tape_type before_type =
+						const _simdjson::internal::tape_type before_type =
 							get_type(buf[imple->structural_indexes[token_arr_start + i - 1]]);
 
-						if (before_type == simdjson::internal::tape_type::START_ARRAY || before_type == simdjson::internal::tape_type::START_OBJECT) {
+						if (before_type == _simdjson::internal::tape_type::START_ARRAY || before_type == _simdjson::internal::tape_type::START_OBJECT) {
 							is_now_comma = false; //log << warn  << "2-i " << i << "\n";
 						}
 					}
@@ -2920,28 +2920,28 @@ namespace claujson {
 						is_now_comma = false;
 					}
 
-					if (!is_now_comma && type == simdjson::internal::tape_type::COMMA) {
+					if (!is_now_comma && type == _simdjson::internal::tape_type::COMMA) {
 						log << warn  << "now is not comma\n";
 						throw "Error in __Load.., now is comma but, no expect.";							//
 					}
-					if (is_now_comma && type != simdjson::internal::tape_type::COMMA) {
+					if (is_now_comma && type != _simdjson::internal::tape_type::COMMA) {
 						log << warn  << "is now comma... but not..\n";
 						throw "Error in __Load..., comma is expected but, is not";
 					}
 
 
-					is_before_comma = type == simdjson::internal::tape_type::COMMA;
+					is_before_comma = type == _simdjson::internal::tape_type::COMMA;
 
-					if (type == simdjson::internal::tape_type::COMMA) {
+					if (type == _simdjson::internal::tape_type::COMMA) {
 						if (token_arr_start + i + 1 < imple->n_structural_indexes) {
-							const simdjson::internal::tape_type _type = // next_type
+							const _simdjson::internal::tape_type _type = // next_type
 								get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
 
-							if (_type == simdjson::internal::tape_type::END_ARRAY || _type == simdjson::internal::tape_type::END_OBJECT) {
+							if (_type == _simdjson::internal::tape_type::END_ARRAY || _type == _simdjson::internal::tape_type::END_OBJECT) {
 								throw "Error in __Load..,  case : , } or , ]";
 								//
 							}
-							else if (_type == simdjson::internal::tape_type::COLON) {
+							else if (_type == _simdjson::internal::tape_type::COLON) {
 								throw "Error in __Load... case :    , : ";
 							}
 
@@ -2952,7 +2952,7 @@ namespace claujson {
 						}
 					}
 
-					if (type == simdjson::internal::tape_type::COLON) {
+					if (type == _simdjson::internal::tape_type::COLON) {
 						throw "Error in __Load..., checked colon..";
 						//
 					}
@@ -2960,25 +2960,25 @@ namespace claujson {
 
 					is_next_comma = __arr2[(int)is_now_comma][(unsigned char)type]; // comma_chk_table
 					/*switch (type) {
-					case simdjson::internal::tape_type::END_ARRAY:
-					case simdjson::internal::tape_type::END_OBJECT:
-					case simdjson::internal::tape_type::STRING:
-					case simdjson::internal::tape_type::INT:
-					case simdjson::internal::tape_type::UINT:
-					case simdjson::internal::tape_type::DOUBLE:
-					case simdjson::internal::tape_type::TRUE_VALUE:
-					case simdjson::internal::tape_type::FALSE_VALUE:
-					case simdjson::internal::tape_type::NULL_VALUE:
-					case simdjson::internal::tape_type::NONE: //
+					case _simdjson::internal::tape_type::END_ARRAY:
+					case _simdjson::internal::tape_type::END_OBJECT:
+					case _simdjson::internal::tape_type::STRING:
+					case _simdjson::internal::tape_type::INT:
+					case _simdjson::internal::tape_type::UINT:
+					case _simdjson::internal::tape_type::DOUBLE:
+					case _simdjson::internal::tape_type::TRUE_VALUE:
+					case _simdjson::internal::tape_type::FALSE_VALUE:
+					case _simdjson::internal::tape_type::NULL_VALUE:
+					case _simdjson::internal::tape_type::NONE: //
 						is_now_comma = true;
 						break;
 					} */
 
 					if (token_arr_start + i + 1 < imple->n_structural_indexes) {
-						const simdjson::internal::tape_type _type = // next_type
+						const _simdjson::internal::tape_type _type = // next_type
 							get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
 
-						if (_type == simdjson::internal::tape_type::END_ARRAY || _type == simdjson::internal::tape_type::END_OBJECT) {
+						if (_type == _simdjson::internal::tape_type::END_ARRAY || _type == _simdjson::internal::tape_type::END_OBJECT) {
 							is_next_comma = false;
 						}
 					}
@@ -2987,8 +2987,8 @@ namespace claujson {
 					}
 
 					// Left 1
-					if (type == simdjson::internal::tape_type::START_OBJECT ||
-						type == simdjson::internal::tape_type::START_ARRAY) { // object start, array start
+					if (type == _simdjson::internal::tape_type::START_OBJECT ||
+						type == _simdjson::internal::tape_type::START_ARRAY) { // object start, array start
 
 						if (!Vec.empty()) {
 
@@ -3033,11 +3033,11 @@ namespace claujson {
 
 						if (key.is_key) {
 							nestedUT[braceNum]->add_user_type(key.idx, key.idx2, key.len, buf, string_buf,
-								type == simdjson::internal::tape_type::START_OBJECT ? 0 : 1, key.id); // object vs array
+								type == _simdjson::internal::tape_type::START_OBJECT ? 0 : 1, key.id); // object vs array
 							key.is_key = false;
 						}
 						else {
-							nestedUT[braceNum]->add_user_type(type == simdjson::internal::tape_type::START_OBJECT ? 0 : 1);
+							nestedUT[braceNum]->add_user_type(type == _simdjson::internal::tape_type::START_OBJECT ? 0 : 1);
 						}
 
 
@@ -3057,15 +3057,15 @@ namespace claujson {
 
 					}
 					// Right 2
-					else if (type == simdjson::internal::tape_type::END_OBJECT ||
-						type == simdjson::internal::tape_type::END_ARRAY) {
+					else if (type == _simdjson::internal::tape_type::END_OBJECT ||
+						type == _simdjson::internal::tape_type::END_ARRAY) {
 
-						if (type == simdjson::internal::tape_type::END_ARRAY && nestedUT[braceNum]->is_object()) {
+						if (type == _simdjson::internal::tape_type::END_ARRAY && nestedUT[braceNum]->is_object()) {
 							log << warn  << "{]";
 							throw "Error in __Load.., case : {]?";
 						}
 
-						if (type == simdjson::internal::tape_type::END_OBJECT && nestedUT[braceNum]->is_array()) {
+						if (type == _simdjson::internal::tape_type::END_OBJECT && nestedUT[braceNum]->is_array()) {
 							log << warn  << "[}";
 
 
@@ -3075,7 +3075,7 @@ namespace claujson {
 						state = 0;
 
 						if (!Vec.empty()) {
-							if (type == simdjson::internal::tape_type::END_OBJECT) {
+							if (type == _simdjson::internal::tape_type::END_OBJECT) {
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size() / 2);
 
 
@@ -3119,7 +3119,7 @@ namespace claujson {
 
 							Ptr<Json> ut;
 
-							if (type == simdjson::internal::tape_type::END_OBJECT) {
+							if (type == _simdjson::internal::tape_type::END_OBJECT) {
 								ut = Ptr<Json>(new VirtualObject());
 							}
 							else {
@@ -3181,9 +3181,9 @@ namespace claujson {
 								data.is_key = true;
 
 								if (token_arr_start + i + 2 < imple->n_structural_indexes) {
-									const simdjson::internal::tape_type _type = (simdjson::internal::tape_type)buf[imple->structural_indexes[token_arr_start + i + 2]];
+									const _simdjson::internal::tape_type _type = (_simdjson::internal::tape_type)buf[imple->structural_indexes[token_arr_start + i + 2]];
 
-									if (_type == simdjson::internal::tape_type::START_ARRAY || _type == simdjson::internal::tape_type::START_OBJECT) {
+									if (_type == _simdjson::internal::tape_type::START_ARRAY || _type == _simdjson::internal::tape_type::START_OBJECT) {
 										key = std::move(data);
 									}
 									else {
@@ -3269,11 +3269,11 @@ namespace claujson {
 			}
 		}
 
-		static int64_t FindDivisionPlace(char* buf, simdjson::internal::dom_parser_implementation* imple, int64_t start, int64_t last)
+		static int64_t FindDivisionPlace(char* buf, _simdjson::internal::dom_parser_implementation* imple, int64_t start, int64_t last)
 		{
 			for (int64_t a = start; a <= last; ++a) {
 				auto& x = imple->structural_indexes[a]; //  token_arr[a];
-				const simdjson::internal::tape_type type = (simdjson::internal::tape_type)buf[x];
+				const _simdjson::internal::tape_type type = (_simdjson::internal::tape_type)buf[x];
 				//bool key = false;
 				//bool next_is_valid = false;
 
@@ -3289,7 +3289,7 @@ namespace claujson {
 
 		static bool _LoadData(Data& global, char* buf, size_t buf_len,
 			uint8_t* string_buf,
-			simdjson::internal::dom_parser_implementation* imple, int64_t& length,
+			_simdjson::internal::dom_parser_implementation* imple, int64_t& length,
 			std::vector<int64_t>& start, size_t parse_num) // first, strVec.empty() must be true!!
 		{
 			Ptr<Json> _global = Ptr<Json>(new PartialJson());
@@ -3543,7 +3543,7 @@ namespace claujson {
 		}
 		static bool parse(Data& global, char* buf, size_t buf_len,
 			uint8_t* string_buf,
-			simdjson::internal::dom_parser_implementation* imple,
+			_simdjson::internal::dom_parser_implementation* imple,
 			int64_t length, std::vector<int64_t>& start, size_t thr_num) {
 
 			return LoadData2::_LoadData(global, buf, buf_len, string_buf, imple, length, start, thr_num);
@@ -4526,11 +4526,11 @@ namespace claujson {
 
 		{
 			// not static??
-			static simdjson::dom::parser_for_claujson test;
+			static _simdjson::dom::parser_for_claujson test;
 
 			auto x = test.load(fileName);
 
-			if (x.error() != simdjson::error_code::SUCCESS) {
+			if (x.error() != _simdjson::error_code::SUCCESS) {
 				log << warn  << "stage1 error : ";
 				log << warn  << x.error() << "\n";
 
@@ -4599,11 +4599,11 @@ namespace claujson {
 
 		{
 			// not static?
-			static simdjson::dom::parser_for_claujson test;
+			static _simdjson::dom::parser_for_claujson test;
 
 			auto x = test.parse(str.data(), str.length());
 
-			if (x.error() != simdjson::error_code::SUCCESS) {
+			if (x.error() != _simdjson::error_code::SUCCESS) {
 				log << warn  << "stage1 error : ";
 				log << warn  << x.error() << "\n";
 

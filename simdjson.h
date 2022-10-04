@@ -14,8 +14,8 @@
 
     int main(void) {
       // load from `twitter.json` file:
-      simdjson::dom::parser parser;
-      simdjson::dom::element tweets = parser.load("twitter.json");
+      _simdjson::dom::parser parser;
+      _simdjson::dom::element tweets = parser.load("twitter.json");
       std::cout << tweets["search_metadata"]["count"] << " results." << std::endl;
 
       // Parse and iterate through an array of objects
@@ -24,10 +24,10 @@
         {  "12545" : {"a":11.44, "b":12.78, "c": 11111111}  }
         ] )"_padded;
 
-      for (simdjson::dom::object obj : parser.parse(abstract_json)) {
+      for (_simdjson::dom::object obj : parser.parse(abstract_json)) {
         for(const auto key_value : obj) {
           cout << "key: " << key_value.key << " : ";
-          simdjson::dom::object innerobj = key_value.value;
+          _simdjson::dom::object innerobj = key_value.value;
           cout << "a: " << double(innerobj["a"]) << ", ";
           cout << "b: " << double(innerobj["b"]) << ", ";
           cout << "c: " << int64_t(innerobj["c"]) << endl;
@@ -45,7 +45,7 @@
 /** The version of simdjson being used (major.minor.revision) */
 #define SIMDJSON_VERSION 2.2.2
 
-namespace simdjson {
+namespace _simdjson {
 enum {
   /**
    * The major version (MAJOR.minor.revision) of simdjson being used.
@@ -60,7 +60,7 @@ enum {
    */
   SIMDJSON_VERSION_REVISION = 2
 };
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_SIMDJSON_VERSION_H
 /* end file include/simdjson/simdjson_version.h */
@@ -296,7 +296,7 @@ use a 64-bit target such as x64, 64-bit ARM or 64-bit PPC.")
 #endif // SIMDJSON_PORTABILITY_H
 /* end file include/simdjson/portability.h */
 
-namespace simdjson {
+namespace _simdjson {
 
 namespace internal {
 /**
@@ -343,7 +343,7 @@ constexpr size_t SIMDJSON_PADDING = 64;
  */
 constexpr size_t DEFAULT_MAX_DEPTH = 1024;
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #if defined(__GNUC__)
   // Marks a block with a name so that MCA analysis can see it.
@@ -2266,7 +2266,7 @@ SIMDJSON_DISABLE_UNDESIRED_WARNINGS
 
 #include <string>
 
-namespace simdjson {
+namespace _simdjson {
 
 /**
  * All possible errors returned by simdjson. These error codes are subject to change
@@ -2564,7 +2564,7 @@ using ErrorValues [[deprecated("This is an alias and will be removed, use error_
 [[deprecated("Error codes should be stored and returned as `error_code`, use `error_message()` instead.")]]
 inline const std::string error_message(int error) noexcept;
 #endif // SIMDJSON_DISABLE_DEPRECATED_API
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ERROR_H
 /* end file include/simdjson/error.h */
@@ -2581,7 +2581,7 @@ inline const std::string error_message(int error) noexcept;
 #include <string>
 #include <ostream>
 
-namespace simdjson {
+namespace _simdjson {
 
 class padded_string_view;
 
@@ -2716,14 +2716,14 @@ inline std::ostream& operator<<(std::ostream& out, const padded_string& s) { ret
 inline std::ostream& operator<<(std::ostream& out, simdjson_result<padded_string> &s) noexcept(false) { return out << s.value(); }
 #endif
 
-} // namespace simdjson
+} // namespace _simdjson
 
 // This is deliberately outside of simdjson so that people get it without having to use the namespace
-inline simdjson::padded_string operator "" _padded(const char *str, size_t len) {
-  return simdjson::padded_string(str, len);
+inline _simdjson::padded_string operator "" _padded(const char *str, size_t len) {
+  return _simdjson::padded_string(str, len);
 }
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 
 // The allocate_padded_buffer function is a low-level function to allocate memory
@@ -2735,7 +2735,7 @@ namespace internal {
 inline char *allocate_padded_buffer(size_t length) noexcept;
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_PADDED_STRING_H
 /* end file include/simdjson/padded_string.h */
@@ -2743,7 +2743,7 @@ inline char *allocate_padded_buffer(size_t length) noexcept;
 #include <ostream>
 #include <sstream>
 
-namespace simdjson {
+namespace _simdjson {
 
 
 
@@ -2763,7 +2763,7 @@ namespace simdjson {
  */
 simdjson_warn_unused error_code minify(const char *buf, size_t len, char *dst, size_t &dst_len) noexcept;
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_MINIFY_H
 /* end file include/simdjson/minify.h */
@@ -2777,7 +2777,7 @@ simdjson_warn_unused error_code minify(const char *buf, size_t len, char *dst, s
 #include <string>
 #include <ostream>
 
-namespace simdjson {
+namespace _simdjson {
 
 /**
  * User-provided string that promises it has extra padded bytes at the end for use with parser::parse().
@@ -2839,7 +2839,7 @@ public:
 inline std::ostream& operator<<(std::ostream& out, simdjson_result<padded_string_view> &s) noexcept(false) { return out << s.value(); }
 #endif
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_PADDED_STRING_VIEW_H
 /* end file include/simdjson/padded_string_view.h */
@@ -2853,7 +2853,7 @@ inline std::ostream& operator<<(std::ostream& out, simdjson_result<padded_string
 
 #include <memory>
 
-namespace simdjson {
+namespace _simdjson {
 
 namespace dom {
 class document;
@@ -3087,7 +3087,7 @@ inline error_code dom_parser_implementation::allocate(size_t capacity, size_t ma
 }
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INTERNAL_DOM_PARSER_IMPLEMENTATION_H
 /* end file include/simdjson/internal/dom_parser_implementation.h */
@@ -3148,7 +3148,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <cpuid.h>
 #endif
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 
 
@@ -3319,7 +3319,7 @@ static inline uint32_t detect_supported_architectures() {
 #endif // end SIMD extension detection code
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INTERNAL_ISADETECTION_H
 /* end file include/simdjson/internal/isadetection.h */
@@ -3327,7 +3327,7 @@ static inline uint32_t detect_supported_architectures() {
 #include <atomic>
 #include <vector>
 
-namespace simdjson {
+namespace _simdjson {
 
 /**
  * Validate the UTF-8 string.
@@ -3373,7 +3373,7 @@ public:
   /**
    * The name of this implementation.
    *
-   *     const implementation *impl = simdjson::get_active_implementation();
+   *     const implementation *impl = _simdjson::get_active_implementation();
    *     cout << "simdjson is optimized for " << impl->name() << "(" << impl->description() << ")" << endl;
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
@@ -3383,7 +3383,7 @@ public:
   /**
    * The description of this implementation.
    *
-   *     const implementation *impl = simdjson::get_active_implementation();
+   *     const implementation *impl = _simdjson::get_active_implementation();
    *     cout << "simdjson is optimized for " << impl->name() << "(" << impl->description() << ")" << endl;
    *
    * @return the name of the implementation, e.g. "haswell", "westmere", "arm64"
@@ -3412,7 +3412,7 @@ public:
   /**
    * @private For internal implementation use
    *
-   *     const implementation *impl = simdjson::get_active_implementation();
+   *     const implementation *impl = _simdjson::get_active_implementation();
    *     cout << "simdjson is optimized for " << impl->name() << "(" << impl->description() << ")" << endl;
    *
    * @param capacity The largest document that will be passed to the parser.
@@ -3506,10 +3506,10 @@ public:
    *
    * Case sensitive.
    *
-   *     const implementation *impl = simdjson::get_available_implementations()["westmere"];
+   *     const implementation *impl = _simdjson::get_available_implementations()["westmere"];
    *     if (!impl) { exit(1); }
    *     if (!imp->supported_by_runtime_system()) { exit(1); }
-   *     simdjson::get_active_implementation() = impl;
+   *     _simdjson::get_active_implementation() = impl;
    *
    * @param name the implementation to find, e.g. "westmere", "haswell", "arm64"
    * @return the implementation, or nullptr if the parse failed.
@@ -3526,8 +3526,8 @@ public:
    *
    * This is used to initialize the implementation on startup.
    *
-   *     const implementation *impl = simdjson::available_implementation::detect_best_supported();
-   *     simdjson::get_active_implementation() = impl;
+   *     const implementation *impl = _simdjson::available_implementation::detect_best_supported();
+   *     _simdjson::get_active_implementation() = impl;
    *
    * @return the most advanced supported implementation for the current host, or an
    *         implementation that returns UNSUPPORTED_ARCHITECTURE if there is no supported
@@ -3568,7 +3568,7 @@ extern SIMDJSON_DLLIMPORTEXPORT const internal::available_implementation_list& g
   */
 extern SIMDJSON_DLLIMPORTEXPORT internal::atomic_ptr<const implementation>& get_active_implementation();
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_IMPLEMENTATION_H
 /* end file include/simdjson/implementation.h */
@@ -3582,7 +3582,7 @@ extern SIMDJSON_DLLIMPORTEXPORT internal::atomic_ptr<const implementation>& get_
 #include <string>
 #include <utility>
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
   // We store the error code so we can validate the error message is associated with the right code
   struct error_code_info {
@@ -3756,7 +3756,7 @@ template<typename T>
 simdjson_inline simdjson_result<T>::simdjson_result() noexcept
     : internal::simdjson_result_base<T>() {}
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INLINE_ERROR_H
 /* end file include/simdjson/error-inl.h */
@@ -3770,7 +3770,7 @@ simdjson_inline simdjson_result<T>::simdjson_result() noexcept
 #include <memory>
 #include <string>
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 
 // The allocate_padded_buffer function is a low-level function to allocate memory
@@ -3924,7 +3924,7 @@ inline simdjson_result<padded_string> padded_string::load(std::string_view filen
   return s;
 }
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INLINE_PADDED_STRING_H
 /* end file include/simdjson/padded_string-inl.h */
@@ -3938,7 +3938,7 @@ inline simdjson_result<padded_string> padded_string::load(std::string_view filen
 #include <memory>
 #include <string>
 
-namespace simdjson {
+namespace _simdjson {
 
 inline padded_string_view::padded_string_view(const char* s, size_t len, size_t capacity) noexcept
   : std::string_view(s, len), _capacity(capacity)
@@ -3964,7 +3964,7 @@ inline size_t padded_string_view::capacity() const noexcept { return _capacity; 
 
 inline size_t padded_string_view::padding() const noexcept { return capacity() - length(); }
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_PADDED_STRING_VIEW_INL_H
 /* end file include/simdjson/padded_string_view-inl.h */
@@ -3989,7 +3989,7 @@ SIMDJSON_DISABLE_UNDESIRED_WARNINGS
 #ifndef SIMDJSON_INTERNAL_TAPE_TYPE_H
 #define SIMDJSON_INTERNAL_TAPE_TYPE_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 
 /**
@@ -4015,12 +4015,12 @@ enum class tape_type {
 }; // enum class tape_type
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INTERNAL_TAPE_TYPE_H
 /* end file include/simdjson/internal/tape_type.h */
 
-namespace simdjson {
+namespace _simdjson {
 
 namespace dom {
   class document;
@@ -4064,12 +4064,12 @@ public:
 };
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INTERNAL_TAPE_REF_H
 /* end file include/simdjson/internal/tape_ref.h */
 
-namespace simdjson {
+namespace _simdjson {
 
 namespace internal {
 template<typename T>
@@ -4202,7 +4202,7 @@ private:
   friend class element;
   friend struct simdjson_result<element>;
   template<typename T>
-  friend class simdjson::internal::string_builder;
+  friend class _simdjson::internal::string_builder;
 };
 
 
@@ -4228,7 +4228,7 @@ public:
 
 
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #if defined(__cpp_lib_ranges)
 #include <ranges>
@@ -4236,10 +4236,10 @@ public:
 namespace std {
 namespace ranges {
 template<>
-inline constexpr bool enable_view<simdjson::dom::array> = true;
+inline constexpr bool enable_view<_simdjson::dom::array> = true;
 #if SIMDJSON_EXCEPTIONS
 template<>
-inline constexpr bool enable_view<simdjson::simdjson_result<simdjson::dom::array>> = true;
+inline constexpr bool enable_view<_simdjson::simdjson_result<_simdjson::dom::array>> = true;
 #endif // SIMDJSON_EXCEPTIONS
 } // namespace ranges
 } // namespace std
@@ -4262,7 +4262,7 @@ inline constexpr bool enable_view<simdjson::simdjson_result<simdjson::dom::array
 #include <memory>
 #include <ostream>
 
-namespace simdjson {
+namespace _simdjson {
 namespace dom {
 
 class element;
@@ -4345,7 +4345,7 @@ private:
 }; // class document
 
 } // namespace dom
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_DOM_DOCUMENT_H
 /* end file include/simdjson/dom/document.h */
@@ -4353,7 +4353,7 @@ private:
 #include <ostream>
 #include <string>
 
-namespace simdjson {
+namespace _simdjson {
 
 namespace dom {
 
@@ -4493,8 +4493,8 @@ public:
    *
    *   const char *json      = R"({"key":"value"})";
    *   const size_t json_len = std::strlen(json);
-   *   simdjson::dom::parser parser;
-   *   simdjson::dom::element element = parser.parse(json, json_len);
+   *   _simdjson::dom::parser parser;
+   *   _simdjson::dom::element element = parser.parse(json, json_len);
    *
    * If you set realloc_if_needed to false (e.g., parser.parse(json, json_len, false)),
    * you must provide a buffer with at least SIMDJSON_PADDING extra bytes at the end.
@@ -4510,8 +4510,8 @@ public:
    *   std::unique_ptr<char[]> padded_json_copy{new char[json_len + SIMDJSON_PADDING]};
    *   std::memcpy(padded_json_copy.get(), json, json_len);
    *   std::memset(padded_json_copy.get() + json_len, '\0', SIMDJSON_PADDING);
-   *   simdjson::dom::parser parser;
-   *   simdjson::dom::element element = parser.parse(padded_json_copy.get(), json_len, false);
+   *   _simdjson::dom::parser parser;
+   *   _simdjson::dom::element element = parser.parse(padded_json_copy.get(), json_len, false);
    *
    * ### Parser Capacity
    *
@@ -4665,10 +4665,10 @@ public:
    * @param batch_size The batch size to use. MUST be larger than the largest document. The sweet
    *                   spot is cache-related: small enough to fit in cache, yet big enough to
    *                   parse as many documents as possible in one tight loop.
-   *                   Defaults to 1MB (as simdjson::dom::DEFAULT_BATCH_SIZE), which has been a reasonable sweet
+   *                   Defaults to 1MB (as _simdjson::dom::DEFAULT_BATCH_SIZE), which has been a reasonable sweet
    *                   spot in our tests.
-   *                   If you set the batch_size to a value smaller than simdjson::dom::MINIMAL_BATCH_SIZE
-   *                   (currently 32B), it will be replaced by simdjson::dom::MINIMAL_BATCH_SIZE.
+   *                   If you set the batch_size to a value smaller than _simdjson::dom::MINIMAL_BATCH_SIZE
+   *                   (currently 32B), it will be replaced by _simdjson::dom::MINIMAL_BATCH_SIZE.
    * @return The stream, or an error. An empty input will yield 0 documents rather than an EMPTY error. Errors:
    *         - IO_ERROR if there was an error opening or reading the file.
    *         - MEMALLOC if the parser does not have enough capacity and memory allocation fails.
@@ -4971,7 +4971,7 @@ private:
 };
 
 } // namespace dom
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_DOM_PARSER_H
 /* end file include/simdjson/dom/parser.h */
@@ -4981,7 +4981,7 @@ private:
 #include <condition_variable>
 #endif
 
-namespace simdjson {
+namespace _simdjson {
 namespace dom {
 
 
@@ -5203,15 +5203,15 @@ private:
    * pre-allocating a capacity defined by the batch_size defined when creating the
    * document_stream object.
    *
-   * The function returns simdjson::EMPTY if there is no more data to be parsed.
+   * The function returns _simdjson::EMPTY if there is no more data to be parsed.
    *
-   * The function returns simdjson::SUCCESS (as integer = 0) in case of success
+   * The function returns _simdjson::SUCCESS (as integer = 0) in case of success
    * and indicates that the buffer has successfully been parsed to the end.
    * Every document it contained has been parsed without error.
    *
    * The function returns an error code from simdjson/simdjson.h in case of failure
-   * such as simdjson::CAPACITY, simdjson::MEMALLOC, simdjson::DEPTH_ERROR and so forth;
-   * the simdjson::error_message function converts these error codes into a string).
+   * such as _simdjson::CAPACITY, _simdjson::MEMALLOC, _simdjson::DEPTH_ERROR and so forth;
+   * the _simdjson::error_message function converts these error codes into a string).
    *
    * You can also check validity by calling parser.is_valid(). The same parser can
    * and should be reused for the other documents in the buffer.
@@ -5290,7 +5290,7 @@ public:
 #endif // SIMDJSON_EXCEPTIONS
 }; // struct simdjson_result<dom::document_stream>
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_DOCUMENT_STREAM_H
 /* end file include/simdjson/dom/document_stream.h */
@@ -5300,7 +5300,7 @@ public:
 
 #include <ostream>
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 template<typename T>
 class string_builder;
@@ -5765,7 +5765,7 @@ private:
   friend class array;
   friend struct simdjson_result<element>;
   template<typename T>
-  friend class simdjson::internal::string_builder;
+  friend class _simdjson::internal::string_builder;
 
 };
 
@@ -5832,7 +5832,7 @@ public:
 };
 
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_DOM_DOCUMENT_H
 /* end file include/simdjson/dom/element.h */
@@ -5841,7 +5841,7 @@ public:
 #define SIMDJSON_DOM_OBJECT_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 template<typename T>
 class string_builder;
@@ -6049,7 +6049,7 @@ private:
   friend class element;
   friend struct simdjson_result<element>;
   template<typename T>
-  friend class simdjson::internal::string_builder;
+  friend class _simdjson::internal::string_builder;
 };
 
 /**
@@ -6090,7 +6090,7 @@ public:
 #endif // SIMDJSON_EXCEPTIONS
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #if defined(__cpp_lib_ranges)
 #include <ranges>
@@ -6098,10 +6098,10 @@ public:
 namespace std {
 namespace ranges {
 template<>
-inline constexpr bool enable_view<simdjson::dom::object> = true;
+inline constexpr bool enable_view<_simdjson::dom::object> = true;
 #if SIMDJSON_EXCEPTIONS
 template<>
-inline constexpr bool enable_view<simdjson::simdjson_result<simdjson::dom::object>> = true;
+inline constexpr bool enable_view<_simdjson::simdjson_result<_simdjson::dom::object>> = true;
 #endif // SIMDJSON_EXCEPTIONS
 } // namespace ranges
 } // namespace std
@@ -6115,7 +6115,7 @@ inline constexpr bool enable_view<simdjson::simdjson_result<simdjson::dom::objec
 
 #include <vector>
 
-namespace simdjson {
+namespace _simdjson {
 
 /**
  * The string_builder template and mini_formatter class
@@ -6139,11 +6139,11 @@ public:
   /** Construct an initially empty builder, would print the empty string **/
   string_builder() = default;
   /** Append an element to the builder (to be printed) **/
-  inline void append(simdjson::dom::element value);
+  inline void append(_simdjson::dom::element value);
   /** Append an array to the builder (to be printed) **/
-  inline void append(simdjson::dom::array value);
+  inline void append(_simdjson::dom::array value);
   /** Append an object to the builder (to be printed) **/
-  inline void append(simdjson::dom::object value);
+  inline void append(_simdjson::dom::object value);
   /** Reset the builder (so that it would print the empty string) **/
   simdjson_inline void clear();
   /**
@@ -6155,7 +6155,7 @@ public:
    */
   simdjson_inline std::string_view str() const;
   /** Append a key_value_pair to the builder (to be printed) **/
-  simdjson_inline void append(simdjson::dom::key_value_pair value);
+  simdjson_inline void append(_simdjson::dom::key_value_pair value);
 private:
   formatter format{};
 };
@@ -6221,14 +6221,14 @@ namespace dom {
  * @param value The element.
  * @throw if there is an error with the underlying output stream. simdjson itself will not throw.
  */
-inline std::ostream& operator<<(std::ostream& out, simdjson::dom::element value) {
-    simdjson::internal::string_builder<> sb;
+inline std::ostream& operator<<(std::ostream& out, _simdjson::dom::element value) {
+    _simdjson::internal::string_builder<> sb;
     sb.append(value);
     return (out << sb.str());
 }
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::dom::element> x) {
-    if (x.error()) { throw simdjson::simdjson_error(x.error()); }
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::dom::element> x) {
+    if (x.error()) { throw _simdjson::simdjson_error(x.error()); }
     return (out << x.value());
 }
 #endif
@@ -6239,14 +6239,14 @@ inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<sim
  * @param value The array.
  * @throw if there is an error with the underlying output stream. simdjson itself will not throw.
  */
-inline std::ostream& operator<<(std::ostream& out, simdjson::dom::array value)  {
-    simdjson::internal::string_builder<> sb;
+inline std::ostream& operator<<(std::ostream& out, _simdjson::dom::array value)  {
+    _simdjson::internal::string_builder<> sb;
     sb.append(value);
     return (out << sb.str());
 }
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::dom::array> x) {
-    if (x.error()) { throw simdjson::simdjson_error(x.error()); }
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::dom::array> x) {
+    if (x.error()) { throw _simdjson::simdjson_error(x.error()); }
     return (out << x.value());
 }
 #endif
@@ -6257,14 +6257,14 @@ inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<sim
  * @param value The object.
  * @throw if there is an error with the underlying output stream. simdjson itself will not throw.
  */
-inline std::ostream& operator<<(std::ostream& out, simdjson::dom::object value)   {
-    simdjson::internal::string_builder<> sb;
+inline std::ostream& operator<<(std::ostream& out, _simdjson::dom::object value)   {
+    _simdjson::internal::string_builder<> sb;
     sb.append(value);
     return (out << sb.str());
 }
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out,  simdjson::simdjson_result<simdjson::dom::object> x) {
-    if (x.error()) { throw  simdjson::simdjson_error(x.error()); }
+inline std::ostream& operator<<(std::ostream& out,  _simdjson::simdjson_result<_simdjson::dom::object> x) {
+    if (x.error()) { throw  _simdjson::simdjson_error(x.error()); }
     return (out << x.value());
 }
 #endif
@@ -6283,7 +6283,7 @@ std::string to_string(T x)   {
     // in C++, to_string is standard: http://www.cplusplus.com/reference/string/to_string/
     // Currently minify and to_string are identical but in the future, they may
     // differ.
-    simdjson::internal::string_builder<> sb;
+    _simdjson::internal::string_builder<> sb;
     sb.append(x);
     std::string_view answer = sb.str();
     return std::string(answer.data(), answer.size());
@@ -6318,7 +6318,7 @@ std::string minify(simdjson_result<T> x) {
 #endif
 
 
-} // namespace simdjson
+} // namespace _simdjson
 
 
 #endif
@@ -6338,14 +6338,14 @@ std::string minify(simdjson_result<T> x) {
 #define SIMDJSON_DOM_PARSEDJSON_H
 
 
-namespace simdjson {
+namespace _simdjson {
 
 /**
  * @deprecated Use `dom::parser` instead.
  */
 using ParsedJson [[deprecated("Use dom::parser instead")]] = dom::parser;
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_DOM_PARSEDJSON_H
 /* end file include/simdjson/dom/parsedjson.h */
@@ -6354,7 +6354,7 @@ using ParsedJson [[deprecated("Use dom::parser instead")]] = dom::parser;
 #define SIMDJSON_JSONIOUTIL_H
 
 
-namespace simdjson {
+namespace _simdjson {
 
 #if SIMDJSON_EXCEPTIONS
 #ifndef SIMDJSON_DISABLE_DEPRECATED_API
@@ -6365,12 +6365,12 @@ inline padded_string get_corpus(const char *path) {
 #endif // SIMDJSON_DISABLE_DEPRECATED_API
 #endif // SIMDJSON_EXCEPTIONS
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_JSONIOUTIL_H
 /* end file include/simdjson/jsonioutil.h */
 
-namespace simdjson {
+namespace _simdjson {
 
 //
 // C API (json_parse and build_parsed_json) declarations
@@ -6477,7 +6477,7 @@ int json_parse(const char *buf, dom::parser &parser) noexcept = delete;
 /** @private We do not want to allow implicit conversion from C string to std::string. */
 dom::parser build_parsed_json(const char *buf) noexcept = delete;
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_DOM_JSONPARSER_H
 /* end file include/simdjson/dom/jsonparser.h */
@@ -6502,7 +6502,7 @@ dom::parser build_parsed_json(const char *buf) noexcept = delete;
 #include <ostream>
 #include <sstream>
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 
 class escape_json_string;
@@ -6557,14 +6557,14 @@ inline std::ostream& operator<<(std::ostream& out, const escape_json_string &une
 }
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INTERNAL_JSONFORMATUTILS_H
 /* end file include/simdjson/internal/jsonformatutils.h */
 
 #ifndef SIMDJSON_DISABLE_DEPRECATED_API
 
-namespace simdjson {
+namespace _simdjson {
 /** @private **/
 class [[deprecated("Use the new DOM navigation API instead (see doc/basics.md)")]] dom::parser::Iterator {
 public:
@@ -6814,7 +6814,7 @@ public:
   scopeindex_t *depth_index{};
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 #endif // SIMDJSON_DISABLE_DEPRECATED_API
 
 #endif // SIMDJSON_DOM_PARSEDJSON_ITERATOR_H
@@ -6829,7 +6829,7 @@ public:
 
 #include <utility>
 
-namespace simdjson {
+namespace _simdjson {
 
 //
 // simdjson_result<dom::array> inline implementation
@@ -6973,7 +6973,7 @@ inline bool array::iterator::operator>(const array::iterator& other) const noexc
 } // namespace dom
 
 
-} // namespace simdjson
+} // namespace _simdjson
 
 /* begin file include/simdjson/dom/element-inl.h */
 #ifndef SIMDJSON_INLINE_ELEMENT_H
@@ -6982,7 +6982,7 @@ inline bool array::iterator::operator>(const array::iterator& other) const noexc
 #include <cstring>
 #include <utility>
 
-namespace simdjson {
+namespace _simdjson {
 
 //
 // simdjson_result<dom::element> inline implementation
@@ -7399,17 +7399,17 @@ inline std::ostream& operator<<(std::ostream& out, element_type type) {
 
 } // namespace dom
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INLINE_ELEMENT_H
 /* end file include/simdjson/dom/element-inl.h */
 
 #if defined(__cpp_lib_ranges)
-static_assert(std::ranges::view<simdjson::dom::array>);
-static_assert(std::ranges::sized_range<simdjson::dom::array>);
+static_assert(std::ranges::view<_simdjson::dom::array>);
+static_assert(std::ranges::sized_range<_simdjson::dom::array>);
 #if SIMDJSON_EXCEPTIONS
-static_assert(std::ranges::view<simdjson::simdjson_result<simdjson::dom::array>>);
-static_assert(std::ranges::sized_range<simdjson::simdjson_result<simdjson::dom::array>>);
+static_assert(std::ranges::view<_simdjson::simdjson_result<_simdjson::dom::array>>);
+static_assert(std::ranges::sized_range<_simdjson::simdjson_result<_simdjson::dom::array>>);
 #endif // SIMDJSON_EXCEPTIONS
 #endif // defined(__cpp_lib_ranges)
 
@@ -7422,7 +7422,7 @@ static_assert(std::ranges::sized_range<simdjson::simdjson_result<simdjson::dom::
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
-namespace simdjson {
+namespace _simdjson {
 namespace dom {
 
 #ifdef SIMDJSON_THREADS_ENABLED
@@ -7753,7 +7753,7 @@ simdjson_inline dom::document_stream::iterator simdjson_result<dom::document_str
 #endif // SIMDJSON_DISABLE_DEPRECATED_API
 #endif // SIMDJSON_EXCEPTIONS
 
-} // namespace simdjson
+} // namespace _simdjson
 #endif // SIMDJSON_INLINE_DOCUMENT_STREAM_H
 /* end file include/simdjson/dom/document_stream-inl.h */
 /* begin file include/simdjson/dom/document-inl.h */
@@ -7765,7 +7765,7 @@ simdjson_inline dom::document_stream::iterator simdjson_result<dom::document_str
 #include <ostream>
 #include <cstring>
 
-namespace simdjson {
+namespace _simdjson {
 namespace dom {
 
 //
@@ -7916,7 +7916,7 @@ inline bool document::dump_raw_tape(std::ostream &os) const noexcept {
 }
 
 } // namespace dom
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INLINE_DOCUMENT_H
 /* end file include/simdjson/dom/document-inl.h */
@@ -7927,7 +7927,7 @@ inline bool document::dump_raw_tape(std::ostream &os) const noexcept {
 #include <cstring>
 #include <string>
 
-namespace simdjson {
+namespace _simdjson {
 
 //
 // simdjson_result<dom::object> inline implementation
@@ -8158,14 +8158,14 @@ inline key_value_pair::key_value_pair(std::string_view _key, element _value) noe
 
 } // namespace dom
 
-} // namespace simdjson
+} // namespace _simdjson
 
 #if defined(__cpp_lib_ranges)
-static_assert(std::ranges::view<simdjson::dom::object>);
-static_assert(std::ranges::sized_range<simdjson::dom::object>);
+static_assert(std::ranges::view<_simdjson::dom::object>);
+static_assert(std::ranges::sized_range<_simdjson::dom::object>);
 #if SIMDJSON_EXCEPTIONS
-static_assert(std::ranges::view<simdjson::simdjson_result<simdjson::dom::object>>);
-static_assert(std::ranges::sized_range<simdjson::simdjson_result<simdjson::dom::object>>);
+static_assert(std::ranges::view<_simdjson::simdjson_result<_simdjson::dom::object>>);
+static_assert(std::ranges::sized_range<_simdjson::simdjson_result<_simdjson::dom::object>>);
 #endif // SIMDJSON_EXCEPTIONS
 #endif // defined(__cpp_lib_ranges)
 
@@ -8179,7 +8179,7 @@ static_assert(std::ranges::sized_range<simdjson::simdjson_result<simdjson::dom::
 
 #ifndef SIMDJSON_DISABLE_DEPRECATED_API
 
-namespace simdjson {
+namespace _simdjson {
 
 // VS2017 reports deprecated warnings when you define a deprecated class's methods.
 SIMDJSON_PUSH_DISABLE_WARNINGS
@@ -8653,7 +8653,7 @@ bool dom::parser::Iterator::relative_move_to(const char *pointer,
 }
 
 SIMDJSON_POP_DISABLE_WARNINGS
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_DISABLE_DEPRECATED_API
 
@@ -8667,7 +8667,7 @@ SIMDJSON_POP_DISABLE_WARNINGS
 #include <cstdio>
 #include <climits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace dom {
 
 //
@@ -8860,7 +8860,7 @@ inline error_code parser::allocate(size_t capacity, size_t max_depth) noexcept {
   if (implementation) {
     err = implementation->allocate(capacity, max_depth);
   } else {
-    err = simdjson::get_active_implementation()->create_dom_parser_implementation(capacity, max_depth, implementation);
+    err = _simdjson::get_active_implementation()->create_dom_parser_implementation(capacity, max_depth, implementation);
   }
   if (err) { return err; }
   return SUCCESS;
@@ -8931,7 +8931,7 @@ simdjson_inline void parser::set_max_capacity(size_t max_capacity) noexcept {
 }
 
 } // namespace dom
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INLINE_PARSER_H
 /* end file include/simdjson/dom/parser-inl.h */
@@ -8941,7 +8941,7 @@ simdjson_inline void parser::set_max_capacity(size_t max_capacity) noexcept {
 
 #include <cstring>
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 
 //
@@ -9042,7 +9042,7 @@ inline std::string_view internal::tape_ref::get_string_view() const noexcept {
 }
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INLINE_TAPE_REF_H
 /* end file include/simdjson/internal/tape_ref-inl.h */
@@ -9055,11 +9055,11 @@ inline std::string_view internal::tape_ref::get_string_view() const noexcept {
 #include <cinttypes>
 #include <type_traits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace dom {
 inline bool parser::print_json(std::ostream &os) const noexcept {
   if (!valid) { return false; }
-  simdjson::internal::string_builder<> sb;
+  _simdjson::internal::string_builder<> sb;
   sb.append(doc.root());
   std::string_view answer = sb.str();
   os << answer;
@@ -9293,8 +9293,8 @@ simdjson_inline std::string_view mini_formatter::str() const {
  **/
 
 template <class serializer>
-inline void string_builder<serializer>::append(simdjson::dom::element value) {
-  // using tape_type = simdjson::internal::tape_type;
+inline void string_builder<serializer>::append(_simdjson::dom::element value) {
+  // using tape_type = _simdjson::internal::tape_type;
   size_t depth = 0;
   constexpr size_t MAX_DEPTH = 16;
   bool is_object[MAX_DEPTH];
@@ -9320,7 +9320,7 @@ inline void string_builder<serializer>::append(simdjson::dom::element value) {
       // If we're too deep, we need to recurse to go deeper.
       depth++;
       if (simdjson_unlikely(depth >= MAX_DEPTH)) {
-        append(simdjson::dom::array(iter));
+        append(_simdjson::dom::array(iter));
         iter.json_index = iter.matching_brace_index() - 1; // Jump to the ]
         depth--;
         break;
@@ -9347,7 +9347,7 @@ inline void string_builder<serializer>::append(simdjson::dom::element value) {
       // If we're too deep, we need to recurse to go deeper.
       depth++;
       if (simdjson_unlikely(depth >= MAX_DEPTH)) {
-        append(simdjson::dom::object(iter));
+        append(_simdjson::dom::object(iter));
         iter.json_index = iter.matching_brace_index() - 1; // Jump to the }
         depth--;
         break;
@@ -9424,7 +9424,7 @@ inline void string_builder<serializer>::append(simdjson::dom::element value) {
 }
 
 template <class serializer>
-inline void string_builder<serializer>::append(simdjson::dom::object value) {
+inline void string_builder<serializer>::append(_simdjson::dom::object value) {
   format.start_object();
   auto pair = value.begin();
   auto end = value.end();
@@ -9439,7 +9439,7 @@ inline void string_builder<serializer>::append(simdjson::dom::object value) {
 }
 
 template <class serializer>
-inline void string_builder<serializer>::append(simdjson::dom::array value) {
+inline void string_builder<serializer>::append(_simdjson::dom::array value) {
   format.start_array();
   auto iter = value.begin();
   auto end = value.end();
@@ -9454,7 +9454,7 @@ inline void string_builder<serializer>::append(simdjson::dom::array value) {
 }
 
 template <class serializer>
-simdjson_inline void string_builder<serializer>::append(simdjson::dom::key_value_pair kv) {
+simdjson_inline void string_builder<serializer>::append(_simdjson::dom::key_value_pair kv) {
   format.key(kv.key);
   append(kv.value);
 }
@@ -9471,7 +9471,7 @@ simdjson_inline std::string_view string_builder<serializer>::str() const {
 
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif
 /* end file include/simdjson/dom/serialization-inl.h */
@@ -9514,7 +9514,7 @@ void found_string(const uint8_t *buf, const uint8_t *parsed_begin,
 void found_bad_string(const uint8_t *buf);
 #endif
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 // structural chars here are
 // they are { 0x7b } 0x7d : 0x3a [ 0x5b ] 0x5d , 0x2c (and NULL)
@@ -9526,7 +9526,7 @@ extern SIMDJSON_DLLIMPORTEXPORT const bool structural_or_whitespace[256];
 extern SIMDJSON_DLLIMPORTEXPORT const uint32_t digit_to_val32[886];
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INTERNAL_JSONCHARUTILS_TABLES_H
 /* end file include/simdjson/internal/jsoncharutils_tables.h */
@@ -9535,7 +9535,7 @@ extern SIMDJSON_DLLIMPORTEXPORT const uint32_t digit_to_val32[886];
 #define SIMDJSON_INTERNAL_NUMBERPARSING_TABLES_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace internal {
 /**
  * The smallest non-zero float (binary64) is 2^-1074.
@@ -9586,7 +9586,7 @@ extern SIMDJSON_DLLIMPORTEXPORT const double power_of_ten[];
 // never rounded up. Uses about 10KB.
 extern SIMDJSON_DLLIMPORTEXPORT const uint64_t power_of_five_128[];
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INTERNAL_NUMBERPARSING_TABLES_H
 /* end file include/simdjson/internal/numberparsing_tables.h */
@@ -9596,7 +9596,7 @@ extern SIMDJSON_DLLIMPORTEXPORT const uint64_t power_of_five_128[];
 
 #include <cstdint>
 
-namespace simdjson { // table modified and copied from
+namespace _simdjson { // table modified and copied from
 namespace internal { // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetTable
 
 extern SIMDJSON_DLLIMPORTEXPORT const unsigned char BitsSetTable256mul2[256];
@@ -9607,7 +9607,7 @@ extern SIMDJSON_DLLIMPORTEXPORT const uint8_t pshufb_combine_table[272];
 extern SIMDJSON_DLLIMPORTEXPORT const uint64_t thintable_epi8[256];
 
 } // namespace internal
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_INTERNAL_SIMDPRUNE_TABLES_H
 /* end file include/simdjson/internal/simdprune_tables.h */
@@ -9701,30 +9701,30 @@ SIMDJSON_DISABLE_UNDESIRED_WARNINGS
 
 #if SIMDJSON_IMPLEMENTATION_ARM64
 
-namespace simdjson {
+namespace _simdjson {
 /**
  * Implementation for NEON (ARMv8).
  */
 namespace arm64 {
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 
 /* begin file include/simdjson/arm64/implementation.h */
 #ifndef SIMDJSON_ARM64_IMPLEMENTATION_H
 #define SIMDJSON_ARM64_IMPLEMENTATION_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 
 namespace {
-using namespace simdjson;
-using namespace simdjson::dom;
+using namespace _simdjson;
+using namespace _simdjson::dom;
 }
 
-class implementation final : public simdjson::implementation {
+class implementation final : public _simdjson::implementation {
 public:
-  simdjson_inline implementation() : simdjson::implementation("arm64", "ARM NEON", internal::instruction_set::NEON) {}
+  simdjson_inline implementation() : _simdjson::implementation("arm64", "ARM NEON", internal::instruction_set::NEON) {}
   simdjson_warn_unused error_code create_dom_parser_implementation(
     size_t capacity,
     size_t max_length,
@@ -9735,7 +9735,7 @@ public:
 };
 
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ARM64_IMPLEMENTATION_H
 /* end file include/simdjson/arm64/implementation.h */
@@ -9748,7 +9748,7 @@ public:
 // Declarations
 /* begin file include/simdjson/generic/dom_parser_implementation.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 
 // expectation: sizeof(open_container) = 64/8.
@@ -9798,9 +9798,9 @@ private:
 };
 
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 
 inline dom_parser_implementation::dom_parser_implementation() noexcept = default;
@@ -9832,7 +9832,7 @@ inline simdjson_warn_unused error_code dom_parser_implementation::set_max_depth(
 }
 
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/dom_parser_implementation.h */
 /* begin file include/simdjson/arm64/intrinsics.h */
 #ifndef SIMDJSON_ARM64_INTRINSICS_H
@@ -9842,7 +9842,7 @@ inline simdjson_warn_unused error_code dom_parser_implementation::set_max_depth(
 // you use visual studio or other compilers.
 #include <arm_neon.h>
 
-static_assert(sizeof(uint8x16_t) <= simdjson::SIMDJSON_PADDING, "insufficient padding for arm64");
+static_assert(sizeof(uint8x16_t) <= _simdjson::SIMDJSON_PADDING, "insufficient padding for arm64");
 
 #endif //  SIMDJSON_ARM64_INTRINSICS_H
 /* end file include/simdjson/arm64/intrinsics.h */
@@ -9850,7 +9850,7 @@ static_assert(sizeof(uint8x16_t) <= simdjson::SIMDJSON_PADDING, "insufficient pa
 #ifndef SIMDJSON_ARM64_BITMANIPULATION_H
 #define SIMDJSON_ARM64_BITMANIPULATION_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 namespace {
 
@@ -9941,7 +9941,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2, uint64_t *re
 
 } // unnamed namespace
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ARM64_BITMANIPULATION_H
 /* end file include/simdjson/arm64/bitmanipulation.h */
@@ -9949,7 +9949,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2, uint64_t *re
 #ifndef SIMDJSON_ARM64_BITMASK_H
 #define SIMDJSON_ARM64_BITMASK_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 namespace {
 
@@ -9983,7 +9983,7 @@ simdjson_inline uint64_t prefix_xor(uint64_t bitmask) {
 
 } // unnamed namespace
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif
 /* end file include/simdjson/arm64/bitmask.h */
@@ -9994,7 +9994,7 @@ simdjson_inline uint64_t prefix_xor(uint64_t bitmask) {
 #include <type_traits>
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 namespace {
 namespace simd {
@@ -10515,13 +10515,13 @@ simdjson_inline int8x16_t make_int8x16_t(int8_t x1,  int8_t x2,  int8_t x3,  int
 } // namespace simd
 } // unnamed namespace
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ARM64_SIMD_H
 /* end file include/simdjson/arm64/simd.h */
 /* begin file include/simdjson/generic/jsoncharutils.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 namespace {
 namespace jsoncharutils {
@@ -10633,10 +10633,10 @@ simdjson_inline value128 full_multiplication(uint64_t value1, uint64_t value2) {
 } // namespace jsoncharutils
 } // unnamed namespace
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/jsoncharutils.h */
 /* begin file include/simdjson/generic/atomparsing.h */
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 namespace {
 /// @private
@@ -10700,14 +10700,14 @@ simdjson_inline bool is_valid_null_atom(const uint8_t *src, size_t len) {
 } // namespace atomparsing
 } // unnamed namespace
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/atomparsing.h */
 /* begin file include/simdjson/arm64/stringparsing.h */
 #ifndef SIMDJSON_ARM64_STRINGPARSING_H
 #define SIMDJSON_ARM64_STRINGPARSING_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 namespace {
 
@@ -10748,7 +10748,7 @@ simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uin
 
 } // unnamed namespace
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ARM64_STRINGPARSING_H
 /* end file include/simdjson/arm64/stringparsing.h */
@@ -10756,7 +10756,7 @@ simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uin
 #ifndef SIMDJSON_ARM64_NUMBERPARSING_H
 #define SIMDJSON_ARM64_NUMBERPARSING_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 namespace {
 
@@ -10772,14 +10772,14 @@ static simdjson_inline uint32_t parse_eight_digits_unrolled(const uint8_t *chars
 
 } // unnamed namespace
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 
 #define SIMDJSON_SWAR_NUMBER_PARSING 1
 
 /* begin file include/simdjson/generic/numberparsing.h */
 #include <limits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace arm64 {
 
 namespace ondemand {
@@ -10858,9 +10858,9 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // and s / p will produce correctly rounded values.
     //
     if (power < 0) {
-      d = d / simdjson::internal::power_of_ten[-power];
+      d = d / _simdjson::internal::power_of_ten[-power];
     } else {
-      d = d * simdjson::internal::power_of_ten[power];
+      d = d * _simdjson::internal::power_of_ten[power];
     }
     if (negative) {
       d = -d;
@@ -10940,14 +10940,14 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
   // We want the most significant 64 bits of the product. We know
   // this will be non-zero because the most significant bit of i is
   // 1.
-  const uint32_t index = 2 * uint32_t(power - simdjson::internal::smallest_power);
+  const uint32_t index = 2 * uint32_t(power - _simdjson::internal::smallest_power);
   // Optimization: It may be that materializing the index as a variable might confuse some compilers and prevent effective complex-addressing loads. (Done for code clarity.)
   //
   // The full_multiplication function computes the 128-bit product of two 64-bit words
   // with a returned value of type value128 with a "low component" corresponding to the
   // 64-bit least significant bits of the product and with a "high component" corresponding
   // to the 64-bit most significant bits of the product.
-  simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index]);
+  _simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index]);
   // Both i and power_of_five_128[index] have their most significant bit set to 1 which
   // implies that the either the most or the second most significant bit of the product
   // is 1. We pack values in this manner for efficiency reasons: it maximizes the use
@@ -10981,7 +10981,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // with a returned value of type value128 with a "low component" corresponding to the
     // 64-bit least significant bits of the product and with a "high component" corresponding
     // to the 64-bit most significant bits of the product.
-    simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index + 1]);
+    _simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index + 1]);
     firstproduct.low += secondproduct.high;
     if(secondproduct.high > firstproduct.low) { firstproduct.high++; }
     // At this point, we might need to add at most one to firstproduct, but this
@@ -11082,7 +11082,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
 // The string parsing itself always succeeds. We know that there is at least
 // one digit.
 static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -11096,7 +11096,7 @@ static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
   return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 }
 static bool parse_float_fallback(const uint8_t *ptr, const uint8_t *end_ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -11267,14 +11267,14 @@ simdjson_inline error_code write_float(const uint8_t *const src, bool negative, 
   // NOTE: it's weird that the simdjson_unlikely() only wraps half the if, but it seems to get slower any other
   // way we've tried: https://github.com/simdjson/simdjson/pull/990#discussion_r448497331
   // To future reader: we'd love if someone found a better way, or at least could explain this result!
-  if (simdjson_unlikely(exponent < simdjson::internal::smallest_power) || (exponent > simdjson::internal::largest_power)) {
+  if (simdjson_unlikely(exponent < _simdjson::internal::smallest_power) || (exponent > _simdjson::internal::largest_power)) {
     //
     // Important: smallest_power is such that it leads to a zero value.
     // Observe that 18446744073709551615e-343 == 0, i.e. (2**64 - 1) e -343 is zero
     // so something x 10^-343 goes to zero, but not so with  something x 10^-342.
-    static_assert(simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
+    static_assert(_simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
     //
-    if((exponent < simdjson::internal::smallest_power) || (i == 0)) {
+    if((exponent < _simdjson::internal::smallest_power) || (i == 0)) {
       WRITE_DOUBLE(0, src, writer);
       return SUCCESS;
     } else { // (exponent > largest_power) and (i != 0)
@@ -11809,7 +11809,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if (jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -11930,7 +11930,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if ((p != src_end) && jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -12008,7 +12008,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 
   if (*p != '"') { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -12028,7 +12028,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 } // namespace numberparsing
 } // unnamed namespace
 } // namespace arm64
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/numberparsing.h */
 
 #endif // SIMDJSON_ARM64_NUMBERPARSING_H
@@ -12047,30 +12047,30 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 
 #if SIMDJSON_IMPLEMENTATION_FALLBACK
 
-namespace simdjson {
+namespace _simdjson {
 /**
  * Fallback implementation (runs on any machine).
  */
 namespace fallback {
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 
 /* begin file include/simdjson/fallback/implementation.h */
 #ifndef SIMDJSON_FALLBACK_IMPLEMENTATION_H
 #define SIMDJSON_FALLBACK_IMPLEMENTATION_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace fallback {
 
 namespace {
-using namespace simdjson;
-using namespace simdjson::dom;
+using namespace _simdjson;
+using namespace _simdjson::dom;
 }
 
-class implementation final : public simdjson::implementation {
+class implementation final : public _simdjson::implementation {
 public:
-  simdjson_inline implementation() : simdjson::implementation(
+  simdjson_inline implementation() : _simdjson::implementation(
       "fallback",
       "Generic fallback implementation",
       0
@@ -12085,7 +12085,7 @@ public:
 };
 
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_FALLBACK_IMPLEMENTATION_H
 /* end file include/simdjson/fallback/implementation.h */
@@ -12098,7 +12098,7 @@ public:
 // Declarations
 /* begin file include/simdjson/generic/dom_parser_implementation.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace fallback {
 
 // expectation: sizeof(open_container) = 64/8.
@@ -12148,9 +12148,9 @@ private:
 };
 
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 namespace fallback {
 
 inline dom_parser_implementation::dom_parser_implementation() noexcept = default;
@@ -12182,7 +12182,7 @@ inline simdjson_warn_unused error_code dom_parser_implementation::set_max_depth(
 }
 
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/dom_parser_implementation.h */
 /* begin file include/simdjson/fallback/bitmanipulation.h */
 #ifndef SIMDJSON_FALLBACK_BITMANIPULATION_H
@@ -12190,7 +12190,7 @@ inline simdjson_warn_unused error_code dom_parser_implementation::set_max_depth(
 
 #include <limits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace fallback {
 namespace {
 
@@ -12228,13 +12228,13 @@ simdjson_inline int leading_zeroes(uint64_t input_num) {
 
 } // unnamed namespace
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_FALLBACK_BITMANIPULATION_H
 /* end file include/simdjson/fallback/bitmanipulation.h */
 /* begin file include/simdjson/generic/jsoncharutils.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace fallback {
 namespace {
 namespace jsoncharutils {
@@ -12346,10 +12346,10 @@ simdjson_inline value128 full_multiplication(uint64_t value1, uint64_t value2) {
 } // namespace jsoncharutils
 } // unnamed namespace
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/jsoncharutils.h */
 /* begin file include/simdjson/generic/atomparsing.h */
-namespace simdjson {
+namespace _simdjson {
 namespace fallback {
 namespace {
 /// @private
@@ -12413,14 +12413,14 @@ simdjson_inline bool is_valid_null_atom(const uint8_t *src, size_t len) {
 } // namespace atomparsing
 } // unnamed namespace
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/atomparsing.h */
 /* begin file include/simdjson/fallback/stringparsing.h */
 #ifndef SIMDJSON_FALLBACK_STRINGPARSING_H
 #define SIMDJSON_FALLBACK_STRINGPARSING_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace fallback {
 namespace {
 
@@ -12446,7 +12446,7 @@ simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uin
 
 } // unnamed namespace
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_FALLBACK_STRINGPARSING_H
 /* end file include/simdjson/fallback/stringparsing.h */
@@ -12461,7 +12461,7 @@ void found_unsigned_integer(uint64_t result, const uint8_t *buf);
 void found_float(double result, const uint8_t *buf);
 #endif
 
-namespace simdjson {
+namespace _simdjson {
 namespace fallback {
 namespace {
 // credit: https://johnnylee-sde.github.io/Fast-numeric-string-to-int/
@@ -12478,14 +12478,14 @@ static simdjson_inline uint32_t parse_eight_digits_unrolled(const uint8_t *chars
 
 } // unnamed namespace
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 
 #define SIMDJSON_SWAR_NUMBER_PARSING 1
 
 /* begin file include/simdjson/generic/numberparsing.h */
 #include <limits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace fallback {
 
 namespace ondemand {
@@ -12564,9 +12564,9 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // and s / p will produce correctly rounded values.
     //
     if (power < 0) {
-      d = d / simdjson::internal::power_of_ten[-power];
+      d = d / _simdjson::internal::power_of_ten[-power];
     } else {
-      d = d * simdjson::internal::power_of_ten[power];
+      d = d * _simdjson::internal::power_of_ten[power];
     }
     if (negative) {
       d = -d;
@@ -12646,14 +12646,14 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
   // We want the most significant 64 bits of the product. We know
   // this will be non-zero because the most significant bit of i is
   // 1.
-  const uint32_t index = 2 * uint32_t(power - simdjson::internal::smallest_power);
+  const uint32_t index = 2 * uint32_t(power - _simdjson::internal::smallest_power);
   // Optimization: It may be that materializing the index as a variable might confuse some compilers and prevent effective complex-addressing loads. (Done for code clarity.)
   //
   // The full_multiplication function computes the 128-bit product of two 64-bit words
   // with a returned value of type value128 with a "low component" corresponding to the
   // 64-bit least significant bits of the product and with a "high component" corresponding
   // to the 64-bit most significant bits of the product.
-  simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index]);
+  _simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index]);
   // Both i and power_of_five_128[index] have their most significant bit set to 1 which
   // implies that the either the most or the second most significant bit of the product
   // is 1. We pack values in this manner for efficiency reasons: it maximizes the use
@@ -12687,7 +12687,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // with a returned value of type value128 with a "low component" corresponding to the
     // 64-bit least significant bits of the product and with a "high component" corresponding
     // to the 64-bit most significant bits of the product.
-    simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index + 1]);
+    _simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index + 1]);
     firstproduct.low += secondproduct.high;
     if(secondproduct.high > firstproduct.low) { firstproduct.high++; }
     // At this point, we might need to add at most one to firstproduct, but this
@@ -12788,7 +12788,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
 // The string parsing itself always succeeds. We know that there is at least
 // one digit.
 static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -12802,7 +12802,7 @@ static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
   return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 }
 static bool parse_float_fallback(const uint8_t *ptr, const uint8_t *end_ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -12973,14 +12973,14 @@ simdjson_inline error_code write_float(const uint8_t *const src, bool negative, 
   // NOTE: it's weird that the simdjson_unlikely() only wraps half the if, but it seems to get slower any other
   // way we've tried: https://github.com/simdjson/simdjson/pull/990#discussion_r448497331
   // To future reader: we'd love if someone found a better way, or at least could explain this result!
-  if (simdjson_unlikely(exponent < simdjson::internal::smallest_power) || (exponent > simdjson::internal::largest_power)) {
+  if (simdjson_unlikely(exponent < _simdjson::internal::smallest_power) || (exponent > _simdjson::internal::largest_power)) {
     //
     // Important: smallest_power is such that it leads to a zero value.
     // Observe that 18446744073709551615e-343 == 0, i.e. (2**64 - 1) e -343 is zero
     // so something x 10^-343 goes to zero, but not so with  something x 10^-342.
-    static_assert(simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
+    static_assert(_simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
     //
-    if((exponent < simdjson::internal::smallest_power) || (i == 0)) {
+    if((exponent < _simdjson::internal::smallest_power) || (i == 0)) {
       WRITE_DOUBLE(0, src, writer);
       return SUCCESS;
     } else { // (exponent > largest_power) and (i != 0)
@@ -13515,7 +13515,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if (jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -13636,7 +13636,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if ((p != src_end) && jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -13714,7 +13714,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 
   if (*p != '"') { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -13734,7 +13734,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 } // namespace numberparsing
 } // unnamed namespace
 } // namespace fallback
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/numberparsing.h */
 
 #endif // SIMDJSON_FALLBACK_NUMBERPARSING_H
@@ -13760,13 +13760,13 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 #define SIMDJSON_UNTARGET_ICELAKE SIMDJSON_UNTARGET_REGION
 #endif
 
-namespace simdjson {
+namespace _simdjson {
 /**
  * Implementation for Icelake (Intel AVX512).
  */
 namespace icelake {
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 
 //
 // These two need to be included outside SIMDJSON_TARGET_ICELAKE
@@ -13777,14 +13777,14 @@ namespace icelake {
 
 
 // The constructor may be executed on any host, so we take care not to use SIMDJSON_TARGET_ICELAKE
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 
-using namespace simdjson;
+using namespace _simdjson;
 
-class implementation final : public simdjson::implementation {
+class implementation final : public _simdjson::implementation {
 public:
-  simdjson_inline implementation() : simdjson::implementation(
+  simdjson_inline implementation() : _simdjson::implementation(
       "icelake",
       "Intel/AMD AVX512",
       internal::instruction_set::AVX2 | internal::instruction_set::PCLMULQDQ | internal::instruction_set::BMI1 | internal::instruction_set::BMI2 | internal::instruction_set::AVX512F | internal::instruction_set::AVX512DQ | internal::instruction_set::AVX512CD | internal::instruction_set::AVX512BW | internal::instruction_set::AVX512VL | internal::instruction_set::AVX512VBMI2
@@ -13799,7 +13799,7 @@ public:
 };
 
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ICELAKE_IMPLEMENTATION_H
 /* end file include/simdjson/icelake/implementation.h */
@@ -13858,7 +13858,7 @@ public:
 #endif //  _blsr_u64
 #endif // SIMDJSON_CLANG_VISUAL_STUDIO
 
-static_assert(sizeof(__m512i) <= simdjson::SIMDJSON_PADDING, "insufficient padding for icelake");
+static_assert(sizeof(__m512i) <= _simdjson::SIMDJSON_PADDING, "insufficient padding for icelake");
 
 #endif // SIMDJSON_ICELAKE_INTRINSICS_H
 /* end file include/simdjson/icelake/intrinsics.h */
@@ -13875,7 +13875,7 @@ SIMDJSON_TARGET_ICELAKE
 // Declarations
 /* begin file include/simdjson/generic/dom_parser_implementation.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 
 // expectation: sizeof(open_container) = 64/8.
@@ -13925,9 +13925,9 @@ private:
 };
 
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 
 inline dom_parser_implementation::dom_parser_implementation() noexcept = default;
@@ -13959,13 +13959,13 @@ inline simdjson_warn_unused error_code dom_parser_implementation::set_max_depth(
 }
 
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/dom_parser_implementation.h */
 /* begin file include/simdjson/icelake/bitmanipulation.h */
 #ifndef SIMDJSON_ICELAKE_BITMANIPULATION_H
 #define SIMDJSON_ICELAKE_BITMANIPULATION_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 namespace {
 
@@ -14020,7 +14020,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2,
 
 } // unnamed namespace
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ICELAKE_BITMANIPULATION_H
 /* end file include/simdjson/icelake/bitmanipulation.h */
@@ -14028,7 +14028,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2,
 #ifndef SIMDJSON_ICELAKE_BITMASK_H
 #define SIMDJSON_ICELAKE_BITMASK_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 namespace {
 
@@ -14047,7 +14047,7 @@ simdjson_inline uint64_t prefix_xor(const uint64_t bitmask) {
 
 } // unnamed namespace
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ICELAKE_BITMASK_H
 /* end file include/simdjson/icelake/bitmask.h */
@@ -14082,7 +14082,7 @@ inline __m512i _mm512_set_epi8(uint8_t a0, uint8_t a1, uint8_t a2, uint8_t a3, u
 
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 namespace {
 namespace simd {
@@ -14421,13 +14421,13 @@ namespace simd {
 
 } // unnamed namespace
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ICELAKE_SIMD_H
 /* end file include/simdjson/icelake/simd.h */
 /* begin file include/simdjson/generic/jsoncharutils.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 namespace {
 namespace jsoncharutils {
@@ -14539,10 +14539,10 @@ simdjson_inline value128 full_multiplication(uint64_t value1, uint64_t value2) {
 } // namespace jsoncharutils
 } // unnamed namespace
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/jsoncharutils.h */
 /* begin file include/simdjson/generic/atomparsing.h */
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 namespace {
 /// @private
@@ -14606,14 +14606,14 @@ simdjson_inline bool is_valid_null_atom(const uint8_t *src, size_t len) {
 } // namespace atomparsing
 } // unnamed namespace
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/atomparsing.h */
 /* begin file include/simdjson/icelake/stringparsing.h */
 #ifndef SIMDJSON_ICELAKE_STRINGPARSING_H
 #define SIMDJSON_ICELAKE_STRINGPARSING_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 namespace {
 
@@ -14649,7 +14649,7 @@ simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uin
 
 } // unnamed namespace
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_ICELAKE_STRINGPARSING_H
 /* end file include/simdjson/icelake/stringparsing.h */
@@ -14657,7 +14657,7 @@ simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uin
 #ifndef SIMDJSON_ICELAKE_NUMBERPARSING_H
 #define SIMDJSON_ICELAKE_NUMBERPARSING_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 namespace {
 
@@ -14681,14 +14681,14 @@ static simdjson_inline uint32_t parse_eight_digits_unrolled(const uint8_t *chars
 
 } // unnamed namespace
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 
 #define SIMDJSON_SWAR_NUMBER_PARSING 1
 
 /* begin file include/simdjson/generic/numberparsing.h */
 #include <limits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace icelake {
 
 namespace ondemand {
@@ -14767,9 +14767,9 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // and s / p will produce correctly rounded values.
     //
     if (power < 0) {
-      d = d / simdjson::internal::power_of_ten[-power];
+      d = d / _simdjson::internal::power_of_ten[-power];
     } else {
-      d = d * simdjson::internal::power_of_ten[power];
+      d = d * _simdjson::internal::power_of_ten[power];
     }
     if (negative) {
       d = -d;
@@ -14849,14 +14849,14 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
   // We want the most significant 64 bits of the product. We know
   // this will be non-zero because the most significant bit of i is
   // 1.
-  const uint32_t index = 2 * uint32_t(power - simdjson::internal::smallest_power);
+  const uint32_t index = 2 * uint32_t(power - _simdjson::internal::smallest_power);
   // Optimization: It may be that materializing the index as a variable might confuse some compilers and prevent effective complex-addressing loads. (Done for code clarity.)
   //
   // The full_multiplication function computes the 128-bit product of two 64-bit words
   // with a returned value of type value128 with a "low component" corresponding to the
   // 64-bit least significant bits of the product and with a "high component" corresponding
   // to the 64-bit most significant bits of the product.
-  simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index]);
+  _simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index]);
   // Both i and power_of_five_128[index] have their most significant bit set to 1 which
   // implies that the either the most or the second most significant bit of the product
   // is 1. We pack values in this manner for efficiency reasons: it maximizes the use
@@ -14890,7 +14890,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // with a returned value of type value128 with a "low component" corresponding to the
     // 64-bit least significant bits of the product and with a "high component" corresponding
     // to the 64-bit most significant bits of the product.
-    simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index + 1]);
+    _simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index + 1]);
     firstproduct.low += secondproduct.high;
     if(secondproduct.high > firstproduct.low) { firstproduct.high++; }
     // At this point, we might need to add at most one to firstproduct, but this
@@ -14991,7 +14991,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
 // The string parsing itself always succeeds. We know that there is at least
 // one digit.
 static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -15005,7 +15005,7 @@ static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
   return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 }
 static bool parse_float_fallback(const uint8_t *ptr, const uint8_t *end_ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -15176,14 +15176,14 @@ simdjson_inline error_code write_float(const uint8_t *const src, bool negative, 
   // NOTE: it's weird that the simdjson_unlikely() only wraps half the if, but it seems to get slower any other
   // way we've tried: https://github.com/simdjson/simdjson/pull/990#discussion_r448497331
   // To future reader: we'd love if someone found a better way, or at least could explain this result!
-  if (simdjson_unlikely(exponent < simdjson::internal::smallest_power) || (exponent > simdjson::internal::largest_power)) {
+  if (simdjson_unlikely(exponent < _simdjson::internal::smallest_power) || (exponent > _simdjson::internal::largest_power)) {
     //
     // Important: smallest_power is such that it leads to a zero value.
     // Observe that 18446744073709551615e-343 == 0, i.e. (2**64 - 1) e -343 is zero
     // so something x 10^-343 goes to zero, but not so with  something x 10^-342.
-    static_assert(simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
+    static_assert(_simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
     //
-    if((exponent < simdjson::internal::smallest_power) || (i == 0)) {
+    if((exponent < _simdjson::internal::smallest_power) || (i == 0)) {
       WRITE_DOUBLE(0, src, writer);
       return SUCCESS;
     } else { // (exponent > largest_power) and (i != 0)
@@ -15718,7 +15718,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if (jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -15839,7 +15839,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if ((p != src_end) && jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -15917,7 +15917,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 
   if (*p != '"') { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -15937,7 +15937,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 } // namespace numberparsing
 } // unnamed namespace
 } // namespace icelake
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/numberparsing.h */
 
 #endif // SIMDJSON_ICELAKE_NUMBERPARSING_H
@@ -15964,13 +15964,13 @@ SIMDJSON_UNTARGET_ICELAKE
 #define SIMDJSON_UNTARGET_HASWELL SIMDJSON_UNTARGET_REGION
 #endif
 
-namespace simdjson {
+namespace _simdjson {
 /**
  * Implementation for Haswell (Intel AVX2).
  */
 namespace haswell {
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 
 //
 // These two need to be included outside SIMDJSON_TARGET_HASWELL
@@ -15981,14 +15981,14 @@ namespace haswell {
 
 
 // The constructor may be executed on any host, so we take care not to use SIMDJSON_TARGET_HASWELL
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 
-using namespace simdjson;
+using namespace _simdjson;
 
-class implementation final : public simdjson::implementation {
+class implementation final : public _simdjson::implementation {
 public:
-  simdjson_inline implementation() : simdjson::implementation(
+  simdjson_inline implementation() : _simdjson::implementation(
       "haswell",
       "Intel/AMD AVX2",
       internal::instruction_set::AVX2 | internal::instruction_set::PCLMULQDQ | internal::instruction_set::BMI1 | internal::instruction_set::BMI2
@@ -16003,7 +16003,7 @@ public:
 };
 
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_HASWELL_IMPLEMENTATION_H
 /* end file include/simdjson/haswell/implementation.h */
@@ -16054,7 +16054,7 @@ public:
 #endif //  _blsr_u64
 #endif // SIMDJSON_CLANG_VISUAL_STUDIO
 
-static_assert(sizeof(__m256i) <= simdjson::SIMDJSON_PADDING, "insufficient padding for haswell kernel.");
+static_assert(sizeof(__m256i) <= _simdjson::SIMDJSON_PADDING, "insufficient padding for haswell kernel.");
 
 #endif // SIMDJSON_HASWELL_INTRINSICS_H
 /* end file include/simdjson/haswell/intrinsics.h */
@@ -16071,7 +16071,7 @@ SIMDJSON_TARGET_HASWELL
 // Declarations
 /* begin file include/simdjson/generic/dom_parser_implementation.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 
 // expectation: sizeof(open_container) = 64/8.
@@ -16122,9 +16122,9 @@ private:
 };
 
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 
 inline dom_parser_implementation::dom_parser_implementation() noexcept = default;
@@ -16156,13 +16156,13 @@ inline simdjson_warn_unused error_code dom_parser_implementation::set_max_depth(
 }
 
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/dom_parser_implementation.h */
 /* begin file include/simdjson/haswell/bitmanipulation.h */
 #ifndef SIMDJSON_HASWELL_BITMANIPULATION_H
 #define SIMDJSON_HASWELL_BITMANIPULATION_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 namespace {
 
@@ -16217,7 +16217,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2,
 
 } // unnamed namespace
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_HASWELL_BITMANIPULATION_H
 /* end file include/simdjson/haswell/bitmanipulation.h */
@@ -16225,7 +16225,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2,
 #ifndef SIMDJSON_HASWELL_BITMASK_H
 #define SIMDJSON_HASWELL_BITMASK_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 namespace {
 
@@ -16244,7 +16244,7 @@ simdjson_inline uint64_t prefix_xor(const uint64_t bitmask) {
 
 } // unnamed namespace
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_HASWELL_BITMASK_H
 /* end file include/simdjson/haswell/bitmask.h */
@@ -16253,7 +16253,7 @@ simdjson_inline uint64_t prefix_xor(const uint64_t bitmask) {
 #define SIMDJSON_HASWELL_SIMD_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 namespace {
 namespace simd {
@@ -16612,13 +16612,13 @@ namespace simd {
 
 } // unnamed namespace
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_HASWELL_SIMD_H
 /* end file include/simdjson/haswell/simd.h */
 /* begin file include/simdjson/generic/jsoncharutils.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 namespace {
 namespace jsoncharutils {
@@ -16730,10 +16730,10 @@ simdjson_inline value128 full_multiplication(uint64_t value1, uint64_t value2) {
 } // namespace jsoncharutils
 } // unnamed namespace
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/jsoncharutils.h */
 /* begin file include/simdjson/generic/atomparsing.h */
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 namespace {
 /// @private
@@ -16797,14 +16797,14 @@ simdjson_inline bool is_valid_null_atom(const uint8_t *src, size_t len) {
 } // namespace atomparsing
 } // unnamed namespace
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/atomparsing.h */
 /* begin file include/simdjson/haswell/stringparsing.h */
 #ifndef SIMDJSON_HASWELL_STRINGPARSING_H
 #define SIMDJSON_HASWELL_STRINGPARSING_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 namespace {
 
@@ -16840,7 +16840,7 @@ simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uin
 
 } // unnamed namespace
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_HASWELL_STRINGPARSING_H
 /* end file include/simdjson/haswell/stringparsing.h */
@@ -16848,7 +16848,7 @@ simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uin
 #ifndef SIMDJSON_HASWELL_NUMBERPARSING_H
 #define SIMDJSON_HASWELL_NUMBERPARSING_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 namespace {
 
@@ -16872,14 +16872,14 @@ static simdjson_inline uint32_t parse_eight_digits_unrolled(const uint8_t *chars
 
 } // unnamed namespace
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 
 #define SIMDJSON_SWAR_NUMBER_PARSING 1
 
 /* begin file include/simdjson/generic/numberparsing.h */
 #include <limits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace haswell {
 
 namespace ondemand {
@@ -16958,9 +16958,9 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // and s / p will produce correctly rounded values.
     //
     if (power < 0) {
-      d = d / simdjson::internal::power_of_ten[-power];
+      d = d / _simdjson::internal::power_of_ten[-power];
     } else {
-      d = d * simdjson::internal::power_of_ten[power];
+      d = d * _simdjson::internal::power_of_ten[power];
     }
     if (negative) {
       d = -d;
@@ -17040,14 +17040,14 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
   // We want the most significant 64 bits of the product. We know
   // this will be non-zero because the most significant bit of i is
   // 1.
-  const uint32_t index = 2 * uint32_t(power - simdjson::internal::smallest_power);
+  const uint32_t index = 2 * uint32_t(power - _simdjson::internal::smallest_power);
   // Optimization: It may be that materializing the index as a variable might confuse some compilers and prevent effective complex-addressing loads. (Done for code clarity.)
   //
   // The full_multiplication function computes the 128-bit product of two 64-bit words
   // with a returned value of type value128 with a "low component" corresponding to the
   // 64-bit least significant bits of the product and with a "high component" corresponding
   // to the 64-bit most significant bits of the product.
-  simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index]);
+  _simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index]);
   // Both i and power_of_five_128[index] have their most significant bit set to 1 which
   // implies that the either the most or the second most significant bit of the product
   // is 1. We pack values in this manner for efficiency reasons: it maximizes the use
@@ -17081,7 +17081,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // with a returned value of type value128 with a "low component" corresponding to the
     // 64-bit least significant bits of the product and with a "high component" corresponding
     // to the 64-bit most significant bits of the product.
-    simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index + 1]);
+    _simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index + 1]);
     firstproduct.low += secondproduct.high;
     if(secondproduct.high > firstproduct.low) { firstproduct.high++; }
     // At this point, we might need to add at most one to firstproduct, but this
@@ -17182,7 +17182,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
 // The string parsing itself always succeeds. We know that there is at least
 // one digit.
 static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -17196,7 +17196,7 @@ static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
   return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 }
 static bool parse_float_fallback(const uint8_t *ptr, const uint8_t *end_ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -17367,14 +17367,14 @@ simdjson_inline error_code write_float(const uint8_t *const src, bool negative, 
   // NOTE: it's weird that the simdjson_unlikely() only wraps half the if, but it seems to get slower any other
   // way we've tried: https://github.com/simdjson/simdjson/pull/990#discussion_r448497331
   // To future reader: we'd love if someone found a better way, or at least could explain this result!
-  if (simdjson_unlikely(exponent < simdjson::internal::smallest_power) || (exponent > simdjson::internal::largest_power)) {
+  if (simdjson_unlikely(exponent < _simdjson::internal::smallest_power) || (exponent > _simdjson::internal::largest_power)) {
     //
     // Important: smallest_power is such that it leads to a zero value.
     // Observe that 18446744073709551615e-343 == 0, i.e. (2**64 - 1) e -343 is zero
     // so something x 10^-343 goes to zero, but not so with  something x 10^-342.
-    static_assert(simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
+    static_assert(_simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
     //
-    if((exponent < simdjson::internal::smallest_power) || (i == 0)) {
+    if((exponent < _simdjson::internal::smallest_power) || (i == 0)) {
       WRITE_DOUBLE(0, src, writer);
       return SUCCESS;
     } else { // (exponent > largest_power) and (i != 0)
@@ -17909,7 +17909,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if (jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -18030,7 +18030,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if ((p != src_end) && jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -18108,7 +18108,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 
   if (*p != '"') { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -18128,7 +18128,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 } // namespace numberparsing
 } // unnamed namespace
 } // namespace haswell
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/numberparsing.h */
 
 #endif // SIMDJSON_HASWELL_NUMBERPARSING_H
@@ -18147,31 +18147,31 @@ SIMDJSON_UNTARGET_HASWELL
 
 #if SIMDJSON_IMPLEMENTATION_PPC64
 
-namespace simdjson {
+namespace _simdjson {
 /**
  * Implementation for ALTIVEC (PPC64).
  */
 namespace ppc64 {
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 
 /* begin file include/simdjson/ppc64/implementation.h */
 #ifndef SIMDJSON_PPC64_IMPLEMENTATION_H
 #define SIMDJSON_PPC64_IMPLEMENTATION_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 
 namespace {
-using namespace simdjson;
-using namespace simdjson::dom;
+using namespace _simdjson;
+using namespace _simdjson::dom;
 } // namespace
 
-class implementation final : public simdjson::implementation {
+class implementation final : public _simdjson::implementation {
 public:
   simdjson_inline implementation()
-      : simdjson::implementation("ppc64", "PPC64 ALTIVEC",
+      : _simdjson::implementation("ppc64", "PPC64 ALTIVEC",
                                  internal::instruction_set::ALTIVEC) {}
   simdjson_warn_unused error_code create_dom_parser_implementation(
       size_t capacity, size_t max_length,
@@ -18185,7 +18185,7 @@ public:
 };
 
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_PPC64_IMPLEMENTATION_H
 /* end file include/simdjson/ppc64/implementation.h */
@@ -18198,7 +18198,7 @@ public:
 // Declarations
 /* begin file include/simdjson/generic/dom_parser_implementation.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 
 // expectation: sizeof(open_container) = 64/8.
@@ -18248,9 +18248,9 @@ private:
 };
 
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 
 inline dom_parser_implementation::dom_parser_implementation() noexcept = default;
@@ -18282,7 +18282,7 @@ inline simdjson_warn_unused error_code dom_parser_implementation::set_max_depth(
 }
 
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/dom_parser_implementation.h */
 /* begin file include/simdjson/ppc64/intrinsics.h */
 #ifndef SIMDJSON_PPC64_INTRINSICS_H
@@ -18302,7 +18302,7 @@ inline simdjson_warn_unused error_code dom_parser_implementation::set_max_depth(
 #undef vector
 #endif
 
-static_assert(sizeof(__vector unsigned char) <= simdjson::SIMDJSON_PADDING, "insufficient padding for ppc64");
+static_assert(sizeof(__vector unsigned char) <= _simdjson::SIMDJSON_PADDING, "insufficient padding for ppc64");
 
 #endif //  SIMDJSON_PPC64_INTRINSICS_H
 /* end file include/simdjson/ppc64/intrinsics.h */
@@ -18310,7 +18310,7 @@ static_assert(sizeof(__vector unsigned char) <= simdjson::SIMDJSON_PADDING, "ins
 #ifndef SIMDJSON_PPC64_BITMANIPULATION_H
 #define SIMDJSON_PPC64_BITMANIPULATION_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 namespace {
 
@@ -18374,7 +18374,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2,
 
 } // unnamed namespace
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_PPC64_BITMANIPULATION_H
 /* end file include/simdjson/ppc64/bitmanipulation.h */
@@ -18382,7 +18382,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2,
 #ifndef SIMDJSON_PPC64_BITMASK_H
 #define SIMDJSON_PPC64_BITMASK_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 namespace {
 
@@ -18418,7 +18418,7 @@ simdjson_inline uint64_t prefix_xor(uint64_t bitmask) {
 
 } // unnamed namespace
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif
 /* end file include/simdjson/ppc64/bitmask.h */
@@ -18428,7 +18428,7 @@ simdjson_inline uint64_t prefix_xor(uint64_t bitmask) {
 
 #include <type_traits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 namespace {
 namespace simd {
@@ -18889,13 +18889,13 @@ template <typename T> struct simd8x64 {
 } // namespace simd
 } // unnamed namespace
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_PPC64_SIMD_INPUT_H
 /* end file include/simdjson/ppc64/simd.h */
 /* begin file include/simdjson/generic/jsoncharutils.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 namespace {
 namespace jsoncharutils {
@@ -19007,10 +19007,10 @@ simdjson_inline value128 full_multiplication(uint64_t value1, uint64_t value2) {
 } // namespace jsoncharutils
 } // unnamed namespace
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/jsoncharutils.h */
 /* begin file include/simdjson/generic/atomparsing.h */
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 namespace {
 /// @private
@@ -19074,14 +19074,14 @@ simdjson_inline bool is_valid_null_atom(const uint8_t *src, size_t len) {
 } // namespace atomparsing
 } // unnamed namespace
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/atomparsing.h */
 /* begin file include/simdjson/ppc64/stringparsing.h */
 #ifndef SIMDJSON_PPC64_STRINGPARSING_H
 #define SIMDJSON_PPC64_STRINGPARSING_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 namespace {
 
@@ -19134,7 +19134,7 @@ backslash_and_quote::copy_and_find(const uint8_t *src, uint8_t *dst) {
 
 } // unnamed namespace
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_PPC64_STRINGPARSING_H
 /* end file include/simdjson/ppc64/stringparsing.h */
@@ -19148,7 +19148,7 @@ backslash_and_quote::copy_and_find(const uint8_t *src, uint8_t *dst) {
 #include <sys/endian.h>
 #endif
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 namespace {
 
@@ -19172,14 +19172,14 @@ parse_eight_digits_unrolled(const uint8_t *chars) {
 
 } // unnamed namespace
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 
 #define SIMDJSON_SWAR_NUMBER_PARSING 1
 
 /* begin file include/simdjson/generic/numberparsing.h */
 #include <limits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace ppc64 {
 
 namespace ondemand {
@@ -19258,9 +19258,9 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // and s / p will produce correctly rounded values.
     //
     if (power < 0) {
-      d = d / simdjson::internal::power_of_ten[-power];
+      d = d / _simdjson::internal::power_of_ten[-power];
     } else {
-      d = d * simdjson::internal::power_of_ten[power];
+      d = d * _simdjson::internal::power_of_ten[power];
     }
     if (negative) {
       d = -d;
@@ -19340,14 +19340,14 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
   // We want the most significant 64 bits of the product. We know
   // this will be non-zero because the most significant bit of i is
   // 1.
-  const uint32_t index = 2 * uint32_t(power - simdjson::internal::smallest_power);
+  const uint32_t index = 2 * uint32_t(power - _simdjson::internal::smallest_power);
   // Optimization: It may be that materializing the index as a variable might confuse some compilers and prevent effective complex-addressing loads. (Done for code clarity.)
   //
   // The full_multiplication function computes the 128-bit product of two 64-bit words
   // with a returned value of type value128 with a "low component" corresponding to the
   // 64-bit least significant bits of the product and with a "high component" corresponding
   // to the 64-bit most significant bits of the product.
-  simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index]);
+  _simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index]);
   // Both i and power_of_five_128[index] have their most significant bit set to 1 which
   // implies that the either the most or the second most significant bit of the product
   // is 1. We pack values in this manner for efficiency reasons: it maximizes the use
@@ -19381,7 +19381,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // with a returned value of type value128 with a "low component" corresponding to the
     // 64-bit least significant bits of the product and with a "high component" corresponding
     // to the 64-bit most significant bits of the product.
-    simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index + 1]);
+    _simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index + 1]);
     firstproduct.low += secondproduct.high;
     if(secondproduct.high > firstproduct.low) { firstproduct.high++; }
     // At this point, we might need to add at most one to firstproduct, but this
@@ -19482,7 +19482,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
 // The string parsing itself always succeeds. We know that there is at least
 // one digit.
 static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -19496,7 +19496,7 @@ static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
   return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 }
 static bool parse_float_fallback(const uint8_t *ptr, const uint8_t *end_ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -19667,14 +19667,14 @@ simdjson_inline error_code write_float(const uint8_t *const src, bool negative, 
   // NOTE: it's weird that the simdjson_unlikely() only wraps half the if, but it seems to get slower any other
   // way we've tried: https://github.com/simdjson/simdjson/pull/990#discussion_r448497331
   // To future reader: we'd love if someone found a better way, or at least could explain this result!
-  if (simdjson_unlikely(exponent < simdjson::internal::smallest_power) || (exponent > simdjson::internal::largest_power)) {
+  if (simdjson_unlikely(exponent < _simdjson::internal::smallest_power) || (exponent > _simdjson::internal::largest_power)) {
     //
     // Important: smallest_power is such that it leads to a zero value.
     // Observe that 18446744073709551615e-343 == 0, i.e. (2**64 - 1) e -343 is zero
     // so something x 10^-343 goes to zero, but not so with  something x 10^-342.
-    static_assert(simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
+    static_assert(_simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
     //
-    if((exponent < simdjson::internal::smallest_power) || (i == 0)) {
+    if((exponent < _simdjson::internal::smallest_power) || (i == 0)) {
       WRITE_DOUBLE(0, src, writer);
       return SUCCESS;
     } else { // (exponent > largest_power) and (i != 0)
@@ -20209,7 +20209,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if (jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -20330,7 +20330,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if ((p != src_end) && jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -20408,7 +20408,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 
   if (*p != '"') { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -20428,7 +20428,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 } // namespace numberparsing
 } // unnamed namespace
 } // namespace ppc64
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/numberparsing.h */
 
 #endif // SIMDJSON_PPC64_NUMBERPARSING_H
@@ -20455,13 +20455,13 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 #define SIMDJSON_UNTARGET_WESTMERE SIMDJSON_UNTARGET_REGION
 #endif
 
-namespace simdjson {
+namespace _simdjson {
 /**
  * Implementation for Westmere (Intel SSE4.2).
  */
 namespace westmere {
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 
 //
 // These two need to be included outside SIMDJSON_TARGET_WESTMERE
@@ -20472,17 +20472,17 @@ namespace westmere {
 
 
 // The constructor may be executed on any host, so we take care not to use SIMDJSON_TARGET_WESTMERE
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 
 namespace {
-using namespace simdjson;
-using namespace simdjson::dom;
+using namespace _simdjson;
+using namespace _simdjson::dom;
 }
 
-class implementation final : public simdjson::implementation {
+class implementation final : public _simdjson::implementation {
 public:
-  simdjson_inline implementation() : simdjson::implementation("westmere", "Intel/AMD SSE4.2", internal::instruction_set::SSE42 | internal::instruction_set::PCLMULQDQ) {}
+  simdjson_inline implementation() : _simdjson::implementation("westmere", "Intel/AMD SSE4.2", internal::instruction_set::SSE42 | internal::instruction_set::PCLMULQDQ) {}
   simdjson_warn_unused error_code create_dom_parser_implementation(
     size_t capacity,
     size_t max_length,
@@ -20493,7 +20493,7 @@ public:
 };
 
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_WESTMERE_IMPLEMENTATION_H
 /* end file include/simdjson/westmere/implementation.h */
@@ -20522,7 +20522,7 @@ public:
 #include <wmmintrin.h>  // for  _mm_clmulepi64_si128
 #endif
 
-static_assert(sizeof(__m128i) <= simdjson::SIMDJSON_PADDING, "insufficient padding for westmere");
+static_assert(sizeof(__m128i) <= _simdjson::SIMDJSON_PADDING, "insufficient padding for westmere");
 
 #endif // SIMDJSON_WESTMERE_INTRINSICS_H
 /* end file include/simdjson/westmere/intrinsics.h */
@@ -20539,7 +20539,7 @@ SIMDJSON_TARGET_WESTMERE
 // Declarations
 /* begin file include/simdjson/generic/dom_parser_implementation.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 
 // expectation: sizeof(open_container) = 64/8.
@@ -20590,9 +20590,9 @@ private:
 };
 
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 
 inline dom_parser_implementation::dom_parser_implementation() noexcept = default;
@@ -20624,13 +20624,13 @@ inline simdjson_warn_unused error_code dom_parser_implementation::set_max_depth(
 }
 
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/dom_parser_implementation.h */
 /* begin file include/simdjson/westmere/bitmanipulation.h */
 #ifndef SIMDJSON_WESTMERE_BITMANIPULATION_H
 #define SIMDJSON_WESTMERE_BITMANIPULATION_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 namespace {
 
@@ -20694,7 +20694,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2,
 
 } // unnamed namespace
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_WESTMERE_BITMANIPULATION_H
 /* end file include/simdjson/westmere/bitmanipulation.h */
@@ -20702,7 +20702,7 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2,
 #ifndef SIMDJSON_WESTMERE_BITMASK_H
 #define SIMDJSON_WESTMERE_BITMASK_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 namespace {
 
@@ -20721,7 +20721,7 @@ simdjson_inline uint64_t prefix_xor(const uint64_t bitmask) {
 
 } // unnamed namespace
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_WESTMERE_BITMASK_H
 /* end file include/simdjson/westmere/bitmask.h */
@@ -20730,7 +20730,7 @@ simdjson_inline uint64_t prefix_xor(const uint64_t bitmask) {
 #define SIMDJSON_WESTMERE_SIMD_H
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 namespace {
 namespace simd {
@@ -21060,13 +21060,13 @@ namespace simd {
 } // namespace simd
 } // unnamed namespace
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_WESTMERE_SIMD_INPUT_H
 /* end file include/simdjson/westmere/simd.h */
 /* begin file include/simdjson/generic/jsoncharutils.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 namespace {
 namespace jsoncharutils {
@@ -21178,10 +21178,10 @@ simdjson_inline value128 full_multiplication(uint64_t value1, uint64_t value2) {
 } // namespace jsoncharutils
 } // unnamed namespace
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/jsoncharutils.h */
 /* begin file include/simdjson/generic/atomparsing.h */
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 namespace {
 /// @private
@@ -21245,13 +21245,13 @@ simdjson_inline bool is_valid_null_atom(const uint8_t *src, size_t len) {
 } // namespace atomparsing
 } // unnamed namespace
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/atomparsing.h */
 /* begin file include/simdjson/westmere/stringparsing.h */
 #ifndef SIMDJSON_WESTMERE_STRINGPARSING_H
 #define SIMDJSON_WESTMERE_STRINGPARSING_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 namespace {
 
@@ -21289,7 +21289,7 @@ simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uin
 
 } // unnamed namespace
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_WESTMERE_STRINGPARSING_H
 /* end file include/simdjson/westmere/stringparsing.h */
@@ -21297,7 +21297,7 @@ simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uin
 #ifndef SIMDJSON_WESTMERE_NUMBERPARSING_H
 #define SIMDJSON_WESTMERE_NUMBERPARSING_H
 
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 namespace {
 
@@ -21321,14 +21321,14 @@ static simdjson_inline uint32_t parse_eight_digits_unrolled(const uint8_t *chars
 
 } // unnamed namespace
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 
 #define SIMDJSON_SWAR_NUMBER_PARSING 1
 
 /* begin file include/simdjson/generic/numberparsing.h */
 #include <limits>
 
-namespace simdjson {
+namespace _simdjson {
 namespace westmere {
 
 namespace ondemand {
@@ -21407,9 +21407,9 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // and s / p will produce correctly rounded values.
     //
     if (power < 0) {
-      d = d / simdjson::internal::power_of_ten[-power];
+      d = d / _simdjson::internal::power_of_ten[-power];
     } else {
-      d = d * simdjson::internal::power_of_ten[power];
+      d = d * _simdjson::internal::power_of_ten[power];
     }
     if (negative) {
       d = -d;
@@ -21489,14 +21489,14 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
   // We want the most significant 64 bits of the product. We know
   // this will be non-zero because the most significant bit of i is
   // 1.
-  const uint32_t index = 2 * uint32_t(power - simdjson::internal::smallest_power);
+  const uint32_t index = 2 * uint32_t(power - _simdjson::internal::smallest_power);
   // Optimization: It may be that materializing the index as a variable might confuse some compilers and prevent effective complex-addressing loads. (Done for code clarity.)
   //
   // The full_multiplication function computes the 128-bit product of two 64-bit words
   // with a returned value of type value128 with a "low component" corresponding to the
   // 64-bit least significant bits of the product and with a "high component" corresponding
   // to the 64-bit most significant bits of the product.
-  simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index]);
+  _simdjson::internal::value128 firstproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index]);
   // Both i and power_of_five_128[index] have their most significant bit set to 1 which
   // implies that the either the most or the second most significant bit of the product
   // is 1. We pack values in this manner for efficiency reasons: it maximizes the use
@@ -21530,7 +21530,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
     // with a returned value of type value128 with a "low component" corresponding to the
     // 64-bit least significant bits of the product and with a "high component" corresponding
     // to the 64-bit most significant bits of the product.
-    simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, simdjson::internal::power_of_five_128[index + 1]);
+    _simdjson::internal::value128 secondproduct = jsoncharutils::full_multiplication(i, _simdjson::internal::power_of_five_128[index + 1]);
     firstproduct.low += secondproduct.high;
     if(secondproduct.high > firstproduct.low) { firstproduct.high++; }
     // At this point, we might need to add at most one to firstproduct, but this
@@ -21631,7 +21631,7 @@ simdjson_inline bool compute_float_64(int64_t power, uint64_t i, bool negative, 
 // The string parsing itself always succeeds. We know that there is at least
 // one digit.
 static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -21645,7 +21645,7 @@ static bool parse_float_fallback(const uint8_t *ptr, double *outDouble) {
   return !(*outDouble > (std::numeric_limits<double>::max)() || *outDouble < std::numeric_limits<double>::lowest());
 }
 static bool parse_float_fallback(const uint8_t *ptr, const uint8_t *end_ptr, double *outDouble) {
-  *outDouble = simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
+  *outDouble = _simdjson::internal::from_chars(reinterpret_cast<const char *>(ptr), reinterpret_cast<const char *>(end_ptr));
   // We do not accept infinite values.
 
   // Detecting finite values in a portable manner is ridiculously hard, ideally
@@ -21816,14 +21816,14 @@ simdjson_inline error_code write_float(const uint8_t *const src, bool negative, 
   // NOTE: it's weird that the simdjson_unlikely() only wraps half the if, but it seems to get slower any other
   // way we've tried: https://github.com/simdjson/simdjson/pull/990#discussion_r448497331
   // To future reader: we'd love if someone found a better way, or at least could explain this result!
-  if (simdjson_unlikely(exponent < simdjson::internal::smallest_power) || (exponent > simdjson::internal::largest_power)) {
+  if (simdjson_unlikely(exponent < _simdjson::internal::smallest_power) || (exponent > _simdjson::internal::largest_power)) {
     //
     // Important: smallest_power is such that it leads to a zero value.
     // Observe that 18446744073709551615e-343 == 0, i.e. (2**64 - 1) e -343 is zero
     // so something x 10^-343 goes to zero, but not so with  something x 10^-342.
-    static_assert(simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
+    static_assert(_simdjson::internal::smallest_power <= -342, "smallest_power is not small enough");
     //
-    if((exponent < simdjson::internal::smallest_power) || (i == 0)) {
+    if((exponent < _simdjson::internal::smallest_power) || (i == 0)) {
       WRITE_DOUBLE(0, src, writer);
       return SUCCESS;
     } else { // (exponent > largest_power) and (i != 0)
@@ -22358,7 +22358,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if (jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -22479,7 +22479,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double(const uint8
 
   if ((p != src_end) && jsoncharutils::is_not_structural_or_whitespace(*p)) { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -22557,7 +22557,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 
   if (*p != '"') { return NUMBER_ERROR; }
 
-  overflow = overflow || exponent < simdjson::internal::smallest_power || exponent > simdjson::internal::largest_power;
+  overflow = overflow || exponent < _simdjson::internal::smallest_power || exponent > _simdjson::internal::largest_power;
 
   //
   // Assemble (or slow-parse) the float
@@ -22577,7 +22577,7 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
 } // namespace numberparsing
 } // unnamed namespace
 } // namespace westmere
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/numberparsing.h */
 
 #endif //  SIMDJSON_WESTMERE_NUMBERPARSING_H
@@ -22623,7 +22623,7 @@ SIMDJSON_POP_DISABLE_WARNINGS
 
 // Interface declarations
 /* begin file include/simdjson/generic/implementation_simdjson_result_base.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 
 // This is a near copy of include/error.h's implementation_simdjson_result_base, except it doesn't use std::pair
@@ -22747,10 +22747,10 @@ protected:
 }; // struct implementation_simdjson_result_base
 
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/implementation_simdjson_result_base.h */
 /* begin file include/simdjson/generic/ondemand.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 /**
  * A fast, simple, DOM-like interface that parses JSON as you use it.
@@ -22764,10 +22764,10 @@ using depth_t = int32_t;
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
 /* begin file include/simdjson/generic/ondemand/json_type.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 /**
@@ -22906,9 +22906,9 @@ inline std::ostream& operator<<(std::ostream& out, simdjson_result<json_type> &t
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_type> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_type> {
@@ -22919,10 +22919,10 @@ public:
   simdjson_inline ~simdjson_result() noexcept = default; ///< @private
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/json_type.h */
 /* begin file include/simdjson/generic/ondemand/token_position.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -22931,10 +22931,10 @@ using token_position = const uint32_t *;
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/token_position.h */
 /* begin file include/simdjson/generic/ondemand/logger.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -22973,11 +22973,11 @@ static inline void log_error(const value_iterator &iter, const char *error, cons
 } // namespace logger
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/logger.h */
 /* begin file include/simdjson/generic/ondemand/raw_json_string.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -23146,9 +23146,9 @@ simdjson_unused simdjson_inline bool operator!=(std::string_view c, const raw_js
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::raw_json_string> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::raw_json_string> {
@@ -23162,10 +23162,10 @@ public:
   simdjson_inline simdjson_warn_unused simdjson_result<std::string_view> unescape(SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_iterator &iter) const noexcept;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/raw_json_string.h */
 /* begin file include/simdjson/generic/ondemand/token_iterator.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -23289,9 +23289,9 @@ protected:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::token_iterator> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::token_iterator> {
@@ -23302,10 +23302,10 @@ public:
   simdjson_inline ~simdjson_result() noexcept = default; ///< @private
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/token_iterator.h */
 /* begin file include/simdjson/generic/ondemand/json_iterator.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -23596,9 +23596,9 @@ protected:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_iterator> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_iterator> {
@@ -23609,10 +23609,10 @@ public:
   simdjson_inline simdjson_result() noexcept = default;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/json_iterator.h */
 /* begin file include/simdjson/generic/ondemand/value_iterator.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -24066,9 +24066,9 @@ protected:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value_iterator> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value_iterator> {
@@ -24078,11 +24078,11 @@ public:
   simdjson_inline simdjson_result() noexcept = default;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/value_iterator.h */
 /* begin file include/simdjson/generic/ondemand/array_iterator.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -24148,9 +24148,9 @@ private:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array_iterator> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array_iterator> {
@@ -24169,11 +24169,11 @@ public:
   simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array_iterator> &operator++() noexcept;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/array_iterator.h */
 /* begin file include/simdjson/generic/ondemand/object_iterator.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -24218,9 +24218,9 @@ private:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object_iterator> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object_iterator> {
@@ -24243,11 +24243,11 @@ public:
   simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object_iterator> &operator++() noexcept;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/object_iterator.h */
 /* begin file include/simdjson/generic/ondemand/array.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -24415,9 +24415,9 @@ protected:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array> {
@@ -24435,11 +24435,11 @@ public:
   simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> at_pointer(std::string_view json_pointer) noexcept;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/array.h */
 /* begin file include/simdjson/generic/ondemand/document.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -24734,7 +24734,7 @@ public:
    * JSON `{ "x": 1, "y": 2, "z": 3 }`:
    *
    * ```c++
-   * simdjson::ondemand::parser parser;
+   * _simdjson::ondemand::parser parser;
    * auto obj = parser.parse(R"( { "x": 1, "y": 2, "z": 3 } )"_padded);
    * double z = obj.find_field("z");
    * double y = obj.find_field("y");
@@ -25077,9 +25077,9 @@ private:
 };
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document> {
@@ -25144,11 +25144,11 @@ public:
 };
 
 
-} // namespace simdjson
+} // namespace _simdjson
 
 
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference> {
@@ -25205,11 +25205,11 @@ public:
 };
 
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/document.h */
 /* begin file include/simdjson/generic/ondemand/value.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -25493,7 +25493,7 @@ public:
    * JSON `{ "x": 1, "y": 2, "z": 3 }`:
    *
    * ```c++
-   * simdjson::ondemand::parser parser;
+   * _simdjson::ondemand::parser parser;
    * auto obj = parser.parse(R"( { "x": 1, "y": 2, "z": 3 } )"_padded);
    * double z = obj.find_field("z");
    * double y = obj.find_field("y");
@@ -25769,9 +25769,9 @@ protected:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> {
@@ -25821,7 +25821,7 @@ public:
    * JSON `{ "x": 1, "y": 2, "z": 3 }`:
    *
    * ```c++
-   * simdjson::ondemand::parser parser;
+   * _simdjson::ondemand::parser parser;
    * auto obj = parser.parse(R"( { "x": 1, "y": 2, "z": 3 } )"_padded);
    * double z = obj.find_field("z");
    * double y = obj.find_field("y");
@@ -25889,11 +25889,11 @@ public:
   simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> at_pointer(std::string_view json_pointer) noexcept;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/value.h */
 /* begin file include/simdjson/generic/ondemand/field.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -25946,9 +25946,9 @@ protected:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::field> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::field> {
@@ -25962,11 +25962,11 @@ public:
   simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> value() noexcept;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/field.h */
 /* begin file include/simdjson/generic/ondemand/object.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -25991,7 +25991,7 @@ public:
    * JSON `{ "x": 1, "y": 2, "z": 3 }`:
    *
    * ```c++
-   * simdjson::ondemand::parser parser;
+   * _simdjson::ondemand::parser parser;
    * auto obj = parser.parse(R"( { "x": 1, "y": 2, "z": 3 } )"_padded);
    * double z = obj.find_field("z");
    * double y = obj.find_field("y");
@@ -26166,9 +26166,9 @@ protected:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object> {
@@ -26192,11 +26192,11 @@ public:
 
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/object.h */
 /* begin file include/simdjson/generic/ondemand/parser.h */
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -26486,9 +26486,9 @@ private:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::parser> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::parser> {
@@ -26498,7 +26498,7 @@ public:
   simdjson_inline simdjson_result() noexcept = default;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/parser.h */
 /* begin file include/simdjson/generic/ondemand/document_stream.h */
 #ifdef SIMDJSON_THREADS_ENABLED
@@ -26507,7 +26507,7 @@ public:
 #include <condition_variable>
 #endif
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -26744,15 +26744,15 @@ private:
    * pre-allocating a capacity defined by the batch_size defined when creating the
    * document_stream object.
    *
-   * The function returns simdjson::EMPTY if there is no more data to be parsed.
+   * The function returns _simdjson::EMPTY if there is no more data to be parsed.
    *
-   * The function returns simdjson::SUCCESS (as integer = 0) in case of success
+   * The function returns _simdjson::SUCCESS (as integer = 0) in case of success
    * and indicates that the buffer has successfully been parsed to the end.
    * Every document it contained has been parsed without error.
    *
    * The function returns an error code from simdjson/simdjson.h in case of failure
-   * such as simdjson::CAPACITY, simdjson::MEMALLOC, simdjson::DEPTH_ERROR and so forth;
-   * the simdjson::error_message function converts these error codes into a string).
+   * such as _simdjson::CAPACITY, _simdjson::MEMALLOC, _simdjson::DEPTH_ERROR and so forth;
+   * the _simdjson::error_message function converts these error codes into a string).
    *
    * You can also check validity by calling parser.is_valid(). The same parser can
    * and should be reused for the other documents in the buffer.
@@ -26818,9 +26818,9 @@ private:
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 template<>
 struct simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_stream> : public SIMDJSON_BUILTIN_IMPLEMENTATION::implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_stream> {
 public:
@@ -26829,11 +26829,11 @@ public:
   simdjson_inline simdjson_result() noexcept = default;
 };
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/document_stream.h */
 /* begin file include/simdjson/generic/ondemand/serialization.h */
 
-namespace simdjson {
+namespace _simdjson {
 /**
  * Create a string-view instance out of a document instance. The string-view instance
  * contains JSON text that is suitable to be parsed as JSON again.
@@ -26859,7 +26859,7 @@ inline simdjson_result<std::string_view> to_json_string(simdjson_result<SIMDJSON
 inline simdjson_result<std::string_view> to_json_string(simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> x);
 inline simdjson_result<std::string_view> to_json_string(simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object> x);
 inline simdjson_result<std::string_view> to_json_string(simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array> x);
-} // namespace simdjson
+} // namespace _simdjson
 
 /**
  * We want to support argument-dependent lookup (ADL).
@@ -26868,7 +26868,7 @@ inline simdjson_result<std::string_view> to_json_string(simdjson_result<SIMDJSON
  * Credit: @madhur4127
  * See https://github.com/simdjson/simdjson/issues/1768
  */
-namespace simdjson { namespace SIMDJSON_BUILTIN_IMPLEMENTATION { namespace ondemand {
+namespace _simdjson { namespace SIMDJSON_BUILTIN_IMPLEMENTATION { namespace ondemand {
 
 /**
  * Print JSON to an output stream.
@@ -26877,9 +26877,9 @@ namespace simdjson { namespace SIMDJSON_BUILTIN_IMPLEMENTATION { namespace ondem
  * @param value The element.
  * @throw if there is an error with the underlying output stream. simdjson itself will not throw.
  */
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value x);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value x);
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> x);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> x);
 #endif
 /**
  * Print JSON to an output stream.
@@ -26888,9 +26888,9 @@ inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<sim
  * @param value The array.
  * @throw if there is an error with the underlying output stream. simdjson itself will not throw.
  */
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array value);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array value);
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array> x);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array> x);
 #endif
 /**
  * Print JSON to an output stream.
@@ -26899,13 +26899,13 @@ inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<sim
  * @param value The array.
  * @throw if there is an error with the underlying output stream. simdjson itself will not throw.
  */
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document& value);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document& value);
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document>&& x);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document>&& x);
 #endif
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference& value);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference& value);
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference>&& x);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference>&& x);
 #endif
 /**
  * Print JSON to an output stream.
@@ -26914,17 +26914,17 @@ inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<sim
  * @param value The object.
  * @throw if there is an error with the underlying output stream. simdjson itself will not throw.
  */
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object value);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object value);
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object> x);
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object> x);
 #endif
-}}} // namespace simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand
+}}} // namespace _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand
 /* end file include/simdjson/generic/ondemand/serialization.h */
 /* end file include/simdjson/generic/ondemand.h */
 
 // Inline definitions
 /* begin file include/simdjson/generic/implementation_simdjson_result_base-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 
 //
@@ -27003,11 +27003,11 @@ simdjson_inline implementation_simdjson_result_base<T>::implementation_simdjson_
     : implementation_simdjson_result_base(std::forward<T>(value), SUCCESS) {}
 
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/implementation_simdjson_result_base-inl.h */
 /* begin file include/simdjson/generic/ondemand-inl.h */
 /* begin file include/simdjson/generic/ondemand/json_type-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -27113,19 +27113,19 @@ simdjson_inline void number::skip_double() noexcept {
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_type>::simdjson_result(SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_type &&value) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_type>(std::forward<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_type>(value)) {}
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_type>::simdjson_result(error_code error) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_type>(error) {}
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/json_type-inl.h */
 /* begin file include/simdjson/generic/ondemand/logger-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 namespace logger {
@@ -27289,10 +27289,10 @@ inline void log_line(const json_iterator &iter, token_position index, depth_t de
 } // namespace logger
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/logger-inl.h */
 /* begin file include/simdjson/generic/ondemand/raw_json_string-inl.h */
-namespace simdjson {
+namespace _simdjson {
 
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
@@ -27458,9 +27458,9 @@ simdjson_unused simdjson_inline std::ostream &operator<<(std::ostream &out, cons
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::raw_json_string>::simdjson_result(SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::raw_json_string &&value) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::raw_json_string>(std::forward<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::raw_json_string>(value)) {}
@@ -27476,10 +27476,10 @@ simdjson_inline simdjson_warn_unused simdjson_result<std::string_view> simdjson_
   return first.unescape(iter);
 }
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/raw_json_string-inl.h */
 /* begin file include/simdjson/generic/ondemand/token_iterator-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -27547,19 +27547,19 @@ simdjson_inline bool token_iterator::operator<=(const token_iterator &other) con
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::token_iterator>::simdjson_result(SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::token_iterator &&value) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::token_iterator>(std::forward<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::token_iterator>(value)) {}
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::token_iterator>::simdjson_result(error_code error) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::token_iterator>(error) {}
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/token_iterator-inl.h */
 /* begin file include/simdjson/generic/ondemand/json_iterator-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -27926,19 +27926,19 @@ simdjson_warn_unused simdjson_inline bool json_iterator::copy_to_buffer(const ui
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_iterator>::simdjson_result(SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_iterator &&value) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_iterator>(std::forward<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_iterator>(value)) {}
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_iterator>::simdjson_result(error_code error) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::json_iterator>(error) {}
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/json_iterator-inl.h */
 /* begin file include/simdjson/generic/ondemand/value_iterator-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -28895,19 +28895,19 @@ simdjson_inline error_code value_iterator::report_error(error_code error, const 
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value_iterator>::simdjson_result(SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value_iterator &&value) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value_iterator>(std::forward<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value_iterator>(value)) {}
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value_iterator>::simdjson_result(error_code error) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value_iterator>(error) {}
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/value_iterator-inl.h */
 /* begin file include/simdjson/generic/ondemand/array_iterator-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -28937,9 +28937,9 @@ simdjson_inline array_iterator &array_iterator::operator++() noexcept {
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array_iterator>::simdjson_result(
   SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array_iterator &&value
@@ -28972,10 +28972,10 @@ simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array
   return *this;
 }
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/array_iterator-inl.h */
 /* begin file include/simdjson/generic/ondemand/object_iterator-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -29062,9 +29062,9 @@ SIMDJSON_POP_DISABLE_WARNINGS
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object_iterator>::simdjson_result(
   SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object_iterator &&value
@@ -29100,10 +29100,10 @@ simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::objec
   return *this;
 }
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/object_iterator-inl.h */
 /* begin file include/simdjson/generic/ondemand/array-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -29267,9 +29267,9 @@ simdjson_inline simdjson_result<value> array::at(size_t index) noexcept {
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array>::simdjson_result(
   SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array &&value
@@ -29310,10 +29310,10 @@ simdjson_inline  simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::valu
   if (error()) { return error(); }
   return first.at_pointer(json_pointer);
 }
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/array-inl.h */
 /* begin file include/simdjson/generic/ondemand/document-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -29565,9 +29565,9 @@ simdjson_inline simdjson_result<value> document::at_pointer(std::string_view jso
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document>::simdjson_result(
   SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document &&value
@@ -29800,10 +29800,10 @@ simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value
 }
 
 
-} // namespace simdjson
+} // namespace _simdjson
 
 
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -29858,11 +29858,11 @@ simdjson_inline document_reference::operator document&() const noexcept { return
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
 
 
-namespace simdjson {
+namespace _simdjson {
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference>::simdjson_result(SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference value, error_code error)
   noexcept : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference>(std::forward<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference>(value), error) {}
 
@@ -30034,10 +30034,10 @@ simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value
 }
 
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/document-inl.h */
 /* begin file include/simdjson/generic/ondemand/value-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -30240,9 +30240,9 @@ simdjson_inline simdjson_result<value> value::at_pointer(std::string_view json_p
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value>::simdjson_result(
   SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value &&value
@@ -30453,10 +30453,10 @@ simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value
   return first.at_pointer(json_pointer);
 }
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/value-inl.h */
 /* begin file include/simdjson/generic/ondemand/field-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -30501,9 +30501,9 @@ simdjson_inline value field::value() && noexcept {
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::field>::simdjson_result(
   SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::field &&value
@@ -30533,10 +30533,10 @@ simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value
   return std::move(first.value());
 }
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/field-inl.h */
 /* begin file include/simdjson/generic/ondemand/object-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -30702,9 +30702,9 @@ simdjson_inline simdjson_result<bool> object::reset() & noexcept {
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object>::simdjson_result(SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object &&value) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object>(std::forward<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object>(value)) {}
@@ -30764,10 +30764,10 @@ simdjson_inline  simdjson_result<size_t> simdjson_result<SIMDJSON_BUILTIN_IMPLEM
   return first.count_fields();
 }
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/object-inl.h */
 /* begin file include/simdjson/generic/ondemand/parser-inl.h */
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -30790,7 +30790,7 @@ simdjson_warn_unused simdjson_inline error_code parser::allocate(size_t new_capa
     SIMDJSON_TRY( implementation->set_capacity(new_capacity) );
     SIMDJSON_TRY( implementation->set_max_depth(new_max_depth) );
   } else {
-    SIMDJSON_TRY( simdjson::get_active_implementation()->create_dom_parser_implementation(new_capacity, new_max_depth, implementation) );
+    SIMDJSON_TRY( _simdjson::get_active_implementation()->create_dom_parser_implementation(new_capacity, new_max_depth, implementation) );
   }
   _capacity = new_capacity;
   _max_depth = new_max_depth;
@@ -30896,22 +30896,22 @@ simdjson_inline simdjson_warn_unused simdjson_result<std::string_view> parser::u
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::parser>::simdjson_result(SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::parser &&value) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::parser>(std::forward<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::parser>(value)) {}
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::parser>::simdjson_result(error_code error) noexcept
     : implementation_simdjson_result_base<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::parser>(error) {}
 
-} // namespace simdjson
+} // namespace _simdjson
 /* end file include/simdjson/generic/ondemand/parser-inl.h */
 /* begin file include/simdjson/generic/ondemand/document_stream-inl.h */
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
-namespace simdjson {
+namespace _simdjson {
 namespace SIMDJSON_BUILTIN_IMPLEMENTATION {
 namespace ondemand {
 
@@ -31295,9 +31295,9 @@ inline void document_stream::start_stage1_thread() noexcept {
 
 } // namespace ondemand
 } // namespace SIMDJSON_BUILTIN_IMPLEMENTATION
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson {
+namespace _simdjson {
 
 simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_stream>::simdjson_result(
   error_code error
@@ -31319,7 +31319,7 @@ simdjson_inline simdjson_result<SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::docum
 /* begin file include/simdjson/generic/ondemand/serialization-inl.h */
 
 
-namespace simdjson {
+namespace _simdjson {
 
 inline std::string_view trim(const std::string_view str) noexcept {
   // We can almost surely do better by rolling our own find_first_not_of function.
@@ -31416,29 +31416,29 @@ inline simdjson_result<std::string_view> to_json_string(simdjson_result<SIMDJSON
   if (x.error()) { return x.error(); }
   return to_json_string(x.value_unsafe());
 }
-} // namespace simdjson
+} // namespace _simdjson
 
-namespace simdjson { namespace SIMDJSON_BUILTIN_IMPLEMENTATION { namespace ondemand {
+namespace _simdjson { namespace SIMDJSON_BUILTIN_IMPLEMENTATION { namespace ondemand {
 
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value x) {
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value x) {
   std::string_view v;
-  auto error = simdjson::to_json_string(x).get(v);
-  if(error == simdjson::SUCCESS) {
+  auto error = _simdjson::to_json_string(x).get(v);
+  if(error == _simdjson::SUCCESS) {
     return (out << v);
   } else {
-    throw simdjson::simdjson_error(error);
+    throw _simdjson::simdjson_error(error);
   }
 }
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> x) {
-  if (x.error()) { throw simdjson::simdjson_error(x.error()); }
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value> x) {
+  if (x.error()) { throw _simdjson::simdjson_error(x.error()); }
   return (out << x.value());
 }
 #else
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value x) {
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::value x) {
   std::string_view v;
-  auto error = simdjson::to_json_string(x).get(v);
-  if(error == simdjson::SUCCESS) {
+  auto error = _simdjson::to_json_string(x).get(v);
+  if(error == _simdjson::SUCCESS) {
     return (out << v);
   } else {
     return (out << error);
@@ -31447,24 +31447,24 @@ inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IM
 #endif
 
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array value) {
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array value) {
   std::string_view v;
-  auto error = simdjson::to_json_string(value).get(v);
-  if(error == simdjson::SUCCESS) {
+  auto error = _simdjson::to_json_string(value).get(v);
+  if(error == _simdjson::SUCCESS) {
     return (out << v);
   } else {
-    throw simdjson::simdjson_error(error);
+    throw _simdjson::simdjson_error(error);
   }
 }
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array> x) {
-  if (x.error()) { throw simdjson::simdjson_error(x.error()); }
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array> x) {
+  if (x.error()) { throw _simdjson::simdjson_error(x.error()); }
   return (out << x.value());
 }
 #else
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array value) {
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::array value) {
   std::string_view v;
-  auto error = simdjson::to_json_string(value).get(v);
-  if(error == simdjson::SUCCESS) {
+  auto error = _simdjson::to_json_string(value).get(v);
+  if(error == _simdjson::SUCCESS) {
     return (out << v);
   } else {
     return (out << error);
@@ -31473,37 +31473,37 @@ inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IM
 #endif
 
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document& value)  {
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document& value)  {
   std::string_view v;
-  auto error = simdjson::to_json_string(value).get(v);
-  if(error == simdjson::SUCCESS) {
+  auto error = _simdjson::to_json_string(value).get(v);
+  if(error == _simdjson::SUCCESS) {
     return (out << v);
   } else {
-    throw simdjson::simdjson_error(error);
+    throw _simdjson::simdjson_error(error);
   }
 }
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference& value)  {
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference& value)  {
   std::string_view v;
-  auto error = simdjson::to_json_string(value).get(v);
-  if(error == simdjson::SUCCESS) {
+  auto error = _simdjson::to_json_string(value).get(v);
+  if(error == _simdjson::SUCCESS) {
     return (out << v);
   } else {
-    throw simdjson::simdjson_error(error);
+    throw _simdjson::simdjson_error(error);
   }
 }
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document>&& x) {
-  if (x.error()) { throw simdjson::simdjson_error(x.error()); }
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document>&& x) {
+  if (x.error()) { throw _simdjson::simdjson_error(x.error()); }
   return (out << x.value());
 }
-inline std::ostream& operator<<(std::ostream& out, simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference>&& x) {
-  if (x.error()) { throw simdjson::simdjson_error(x.error()); }
+inline std::ostream& operator<<(std::ostream& out, _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document_reference>&& x) {
+  if (x.error()) { throw _simdjson::simdjson_error(x.error()); }
   return (out << x.value());
 }
 #else
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document& value)  {
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::document& value)  {
   std::string_view v;
-  auto error = simdjson::to_json_string(value).get(v);
-  if(error == simdjson::SUCCESS) {
+  auto error = _simdjson::to_json_string(value).get(v);
+  if(error == _simdjson::SUCCESS) {
     return (out << v);
   } else {
     return (out << error);
@@ -31512,36 +31512,36 @@ inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IM
 #endif
 
 #if SIMDJSON_EXCEPTIONS
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object value) {
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object value) {
   std::string_view v;
-  auto error = simdjson::to_json_string(value).get(v);
-  if(error == simdjson::SUCCESS) {
+  auto error = _simdjson::to_json_string(value).get(v);
+  if(error == _simdjson::SUCCESS) {
     return (out << v);
   } else {
-    throw simdjson::simdjson_error(error);
+    throw _simdjson::simdjson_error(error);
   }
 }
-inline std::ostream& operator<<(std::ostream& out,  simdjson::simdjson_result<simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object> x) {
-  if (x.error()) { throw  simdjson::simdjson_error(x.error()); }
+inline std::ostream& operator<<(std::ostream& out,  _simdjson::simdjson_result<_simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object> x) {
+  if (x.error()) { throw  _simdjson::simdjson_error(x.error()); }
   return (out << x.value());
 }
 #else
-inline std::ostream& operator<<(std::ostream& out, simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object value) {
+inline std::ostream& operator<<(std::ostream& out, _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand::object value) {
   std::string_view v;
-  auto error = simdjson::to_json_string(value).get(v);
-  if(error == simdjson::SUCCESS) {
+  auto error = _simdjson::to_json_string(value).get(v);
+  if(error == _simdjson::SUCCESS) {
     return (out << v);
   } else {
     return (out << error);
   }
 }
 #endif
-}}} // namespace simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand
+}}} // namespace _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand
 /* end file include/simdjson/generic/ondemand/serialization-inl.h */
 /* end file include/simdjson/generic/ondemand-inl.h */
 
 
-namespace simdjson {
+namespace _simdjson {
   /**
    * Represents the best statically linked simdjson implementation that can be used by the compiling
    * program.
@@ -31554,7 +31554,7 @@ namespace simdjson {
    */
   namespace builtin = SIMDJSON_BUILTIN_IMPLEMENTATION;
   /**
-   * @copydoc simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand
+   * @copydoc _simdjson::SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand
    */
   namespace ondemand = SIMDJSON_BUILTIN_IMPLEMENTATION::ondemand;
   /**
@@ -31564,7 +31564,7 @@ namespace simdjson {
    * It is handy to be able to check what builtin was used: builtin_implementation()->name().
    */
   const implementation * builtin_implementation();
-} // namespace simdjson
+} // namespace _simdjson
 
 #endif // SIMDJSON_BUILTIN_H
 /* end file include/simdjson/builtin.h */
