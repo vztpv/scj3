@@ -4525,6 +4525,7 @@ namespace claujson {
 		int _ = clock();
 
 		{
+			// not static??
 			static simdjson::dom::parser_for_claujson test;
 
 			auto x = test.load(fileName);
@@ -4597,7 +4598,7 @@ namespace claujson {
 		int _ = clock();
 
 		{
-
+			// not static?
 			static simdjson::dom::parser_for_claujson test;
 
 			auto x = test.parse(str.data(), str.length());

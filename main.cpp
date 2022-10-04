@@ -223,6 +223,7 @@ int main(int argc, char* argv[])
 
 			int a = clock();
 
+			// not-thread-safe..
 			auto x = claujson::parse(argv[1], j, 64); // argv[1], j, 64 ??
 
 			if (!x.first) {
@@ -244,10 +245,10 @@ int main(int argc, char* argv[])
 
 			int counter = 0;
 			bool ok = x.first;
-
+			 
 			std::vector<claujson::Data> vec;
 
-			// json_pointer, json_pinterA <- u8string_view?
+			// json_pointer, json_pointerA <- u8string_view?
 
 			if (false == claujson::Data::json_pointerA("/geometry/coordinates"sv, vec)) {
 				std::cout << "json pointer error.\n";
@@ -287,6 +288,7 @@ int main(int argc, char* argv[])
 
 			//claujson::save("total_ends.json", j);
 
+			// not thread-safe.
 			claujson::save_parallel("total_end.json", j, 64);
 
 			//claujson::save("total_ends.json", j);
