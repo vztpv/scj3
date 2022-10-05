@@ -11,7 +11,7 @@ save - multi-thread
 
 (mimalloc, fmt)
 
-# 
+# Use claujson.h, claujson.lib, mimalloc. in windows11.
 
 
 
