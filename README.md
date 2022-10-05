@@ -1,4 +1,4 @@
-# scj3
+# scj3 - claujson
 experimental parallel json parser, (using simdjson)
 
 scanning - simd,
