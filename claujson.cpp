@@ -1179,7 +1179,7 @@ namespace claujson {
 				if (auto x = simdjson_imple->parse_number(value, temp)
 					; x != _simdjson::SUCCESS) {
 					log << warn  << "parse number error. " << x << "\n";
-					ERROR("parse number error. "sv);
+					ERROR("parse number error. ");
 					//throw "Error in Convert to parse number";
 				}
 
@@ -1556,7 +1556,7 @@ namespace claujson {
 			else {
 				// error...
 				log << warn  << "Link errr1";
-				ERROR("Link Error"sv);
+				ERROR("Link Error");
 				return;
 			}
 
@@ -1601,14 +1601,14 @@ namespace claujson {
 			// error
 
 			log << warn  << "errr..";
-			ERROR("Error Object::add_item_type"sv);
+			ERROR("Error Object::add_item_type");
 		}
 
 		void Object::add_user_type(int type) {
 			// error
 
 			log << warn  << "errr..";
-			ERROR("Error Object::add_user_type"sv);
+			ERROR("Error Object::add_user_type");
 			return;
 		}
 
@@ -1631,7 +1631,7 @@ namespace claujson {
 			}
 			else {
 				log << warn  << "chk..";
-				ERROR("Object::add_user_type, j has no key"sv);
+				ERROR("Object::add_user_type, j has no key");
 				return;
 			}
 		}
@@ -1798,7 +1798,7 @@ namespace claujson {
 				// error...
 
 				log << warn  << "Link errr2";
-				ERROR("Link Error"sv);
+				ERROR("Link Error");
 				return;
 			}
 
@@ -1812,7 +1812,7 @@ namespace claujson {
 
 			// error
 			log << warn  << "errr..";
-			ERROR("Error Array::add_item_type"sv);
+			ERROR("Error Array::add_item_type");
 		}
 
 		void Array::add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
@@ -1837,7 +1837,7 @@ namespace claujson {
 		void Array::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
 			uint8_t* string_buf, int type, uint64_t id) {
 			log << warn  << "errrr";
-			ERROR("Array::add_user_type1"sv);
+			ERROR("Array::add_user_type1");
 		}
 
 		void Array::add_user_type(Ptr<Json> j) {
@@ -1857,7 +1857,7 @@ namespace claujson {
 			else {
 				// error..
 				log << warn  << "errr..";
-				ERROR("Array::add_user_type2"sv);
+				ERROR("Array::add_user_type2");
 				return;
 			}
 		}
