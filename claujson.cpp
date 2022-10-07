@@ -2005,6 +2005,11 @@ namespace claujson {
 
 
 		bool PartialJson::add_object_element(Data key, Data val) {
+			if (val.is_ptr()) {
+				auto* x = (Json*)val.ptr_val();
+				x->set_key(key.clone()); // no need?
+			}
+
 			obj_key_vec.push_back(std::move(key));
 			obj_val_vec.push_back(std::move(val));
 
