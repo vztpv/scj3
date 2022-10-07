@@ -1180,7 +1180,7 @@ namespace claujson {
 					; x != _simdjson::SUCCESS) {
 					log << warn  << "parse number error. " << x << "\n";
 					ERROR("parse number error. "sv);
-					throw "Error in Convert to parse number";
+					//throw "Error in Convert to parse number";
 				}
 
 				long long int_val = 0;
@@ -1210,13 +1210,13 @@ namespace claujson {
 			default:
 				log << warn  << "convert error : " << (int)buf[idx] << " " << buf[idx] << "\n";
 				ERROR("convert Error");
-				throw "Error in Convert : not expected";
+				//throw "Error in Convert : not expected";
 			}
 			return data;
 		}
 		catch (const char* str) {
 			log << warn  << str << "\n";
-			ERROR(str);
+			//ERROR(str);
 			err = true;
 			return data;
 		}
@@ -3285,8 +3285,6 @@ namespace claujson {
 
 				log << warn  << _err << "\n";
 
-				ERROR(_err);
-
 				return false;
 			}
 			catch (...) {
@@ -3554,20 +3552,20 @@ namespace claujson {
 			catch (int err) {
 
 				log << warn  << "merge error " << err << "\n";
-				ERROR("Merge Error"sv);
+				//ERROR("Merge Error"sv);
 				return false;
 			}
 			catch (const char* err) {
 
 				log << warn  << err << "\n";
-				ERROR("Merge Error"sv);
+				//ERROR("Merge Error"sv);
 
 				return false;
 			}
 			catch (...) {
 
 				log << warn  << "internal error\n";
-				ERROR("Internal Error"sv);
+				//ERROR("Internal Error"sv);
 				return false;
 			}
 
@@ -4565,7 +4563,7 @@ namespace claujson {
 				log << warn  << "stage1 error : ";
 				log << warn  << x.error() << "\n";
 				
-				ERROR(_simdjson::error_message(x.error()));
+				//ERROR(_simdjson::error_message(x.error()));
 
 				return { false, 0 };
 			}

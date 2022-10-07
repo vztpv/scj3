@@ -134,7 +134,7 @@ namespace claujson {
 		}
 	};
 
-
+	/*
 	class Error {
 	private:
 		int state = 0;
@@ -174,17 +174,18 @@ namespace claujson {
 			state = 0;
 		}
 	};
-
+	*/
 
 	static Log::Info info;
 	static Log::Warning warn;
 	inline Log log; // no static..
 
-	inline Error error;
+	// inline Error error;
 
 #define ERROR(msg) \
 	do { \
-		error.make(__LINE__, std::string_view(msg)); \
+		throw msg; \
+		/* error.make(__LINE__, std::string_view(msg)); */ \
 	} while (false) 
 
 
