@@ -1179,6 +1179,7 @@ namespace claujson {
 				if (auto x = simdjson_imple->parse_number(value, temp)
 					; x != _simdjson::SUCCESS) {
 					log << warn  << "parse number error. " << x << "\n";
+					ERROR("parse number error. "sv);
 					throw "Error in Convert to parse number";
 				}
 
@@ -1208,12 +1209,14 @@ namespace claujson {
 			}
 			default:
 				log << warn  << "convert error : " << (int)buf[idx] << " " << buf[idx] << "\n";
+				ERROR("convert Error");
 				throw "Error in Convert : not expected";
 			}
 			return data;
 		}
 		catch (const char* str) {
 			log << warn  << str << "\n";
+			ERROR(str);
 			err = true;
 			return data;
 		}
@@ -1553,6 +1556,7 @@ namespace claujson {
 			else {
 				// error...
 				log << warn  << "Link errr1";
+				ERROR("Link Error"sv);
 				return;
 			}
 
@@ -1597,13 +1601,14 @@ namespace claujson {
 			// error
 
 			log << warn  << "errr..";
+			ERROR("Error Object::add_item_type"sv);
 		}
 
 		void Object::add_user_type(int type) {
 			// error
 
 			log << warn  << "errr..";
-
+			ERROR("Error Object::add_user_type"sv);
 			return;
 		}
 
@@ -1626,6 +1631,7 @@ namespace claujson {
 			}
 			else {
 				log << warn  << "chk..";
+				ERROR("Object::add_user_type, j has no key"sv);
 				return;
 			}
 		}
@@ -1792,6 +1798,7 @@ namespace claujson {
 				// error...
 
 				log << warn  << "Link errr2";
+				ERROR("Link Error"sv);
 				return;
 			}
 
@@ -1805,6 +1812,7 @@ namespace claujson {
 
 			// error
 			log << warn  << "errr..";
+			ERROR("Error Array::add_item_type"sv);
 		}
 
 		void Array::add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
@@ -1829,6 +1837,7 @@ namespace claujson {
 		void Array::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
 			uint8_t* string_buf, int type, uint64_t id) {
 			log << warn  << "errrr";
+			ERROR("Array::add_user_type1"sv);
 		}
 
 		void Array::add_user_type(Ptr<Json> j) {
@@ -1848,6 +1857,7 @@ namespace claujson {
 			else {
 				// error..
 				log << warn  << "errr..";
+				ERROR("Array::add_user_type2"sv);
 				return;
 			}
 		}
@@ -2024,23 +2034,28 @@ namespace claujson {
 
 		bool PartialJson::add_array(Ptr<Json> arr) {
 			//log << warn  << "not used..";
+			ERROR("NOT USED");
 			return false;
 		}
 		bool PartialJson::add_object(Ptr<Json> obj) {
 			//log << warn  << "not used..";
+			ERROR("NOT USED");
 			return false;
 		}
 		bool PartialJson::insert_array_element(size_t idx, Data val) {
 			//log << warn  << "not used.."; 
+			ERROR("NOT USED");
 			return false;
 		}
 
 		void PartialJson::erase(std::string_view key, bool real) {
 			log << warn  << "not used..";
+			ERROR("NOT USED");
 		}
 
 		void PartialJson::erase(size_t idx, bool real) {
 			log << warn  << "not used..";
+			ERROR("NOT USED");
 		}
 
 		void PartialJson::Link(Ptr<Json> j) { // use carefully...
@@ -2124,6 +2139,7 @@ namespace claujson {
 				}
 				else {
 					log << warn  << "ERRR";
+					ERROR("PartialJson::add_user_type");
 				}
 			}
 
@@ -2907,6 +2923,7 @@ namespace claujson {
 
 					if (is_before_comma && type == _simdjson::internal::tape_type::COMMA) {
 						log << warn  << "before is comma\n";
+
 						throw "Error in __Load... and case : , ,";
 						//
 					}
@@ -2927,10 +2944,12 @@ namespace claujson {
 
 					if (!is_now_comma && type == _simdjson::internal::tape_type::COMMA) {
 						log << warn  << "now is not comma\n";
+
 						throw "Error in __Load.., now is comma but, no expect.";							//
 					}
 					if (is_now_comma && type != _simdjson::internal::tape_type::COMMA) {
 						log << warn  << "is now comma... but not..\n";
+
 						throw "Error in __Load..., comma is expected but, is not";
 					}
 
@@ -3265,6 +3284,9 @@ namespace claujson {
 				*err = -10;
 
 				log << warn  << _err << "\n";
+
+				ERROR(_err);
+
 				return false;
 			}
 			catch (...) {
@@ -3532,16 +3554,20 @@ namespace claujson {
 			catch (int err) {
 
 				log << warn  << "merge error " << err << "\n";
+				ERROR("Merge Error"sv);
 				return false;
 			}
 			catch (const char* err) {
 
 				log << warn  << err << "\n";
+				ERROR("Merge Error"sv);
+
 				return false;
 			}
 			catch (...) {
 
-				log << warn  << "interal error\n";
+				log << warn  << "internal error\n";
+				ERROR("Internal Error"sv);
 				return false;
 			}
 
@@ -4538,6 +4564,8 @@ namespace claujson {
 			if (x.error() != _simdjson::error_code::SUCCESS) {
 				log << warn  << "stage1 error : ";
 				log << warn  << x.error() << "\n";
+				
+				ERROR(_simdjson::error_message(x.error()));
 
 				return { false, 0 };
 			}

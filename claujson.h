@@ -18,7 +18,7 @@ namespace claujson {
 	class Log {
 	public:
 		class Info { };
-		class Warnning { };
+		class Warning { };
 
 		enum class Option { CONSOLE, FILE, CONSOLE_AND_FILE, NO_PRINT };
 		class Option2 {
@@ -78,7 +78,7 @@ namespace claujson {
 		}
 
 		template <>
-		Log& operator<<(const Warnning&) {
+		Log& operator<<(const Warning&) {
 			state = 2;
 			
 			if (opt2 & Option2::WARN) {
@@ -134,9 +134,58 @@ namespace claujson {
 		}
 	};
 
+
+	class Error {
+	private:
+		int state = 0;
+		size_t line;
+		char _msg[1024 + 1];
+		size_t msg_size;
+	public:
+		Error() : line(0), msg_size(0), _msg("") { }
+
+		std::string_view msg() const {
+			return std::string_view(_msg, msg_size);
+		}
+
+		void make(size_t line, std::string_view msg) {
+			make(line, msg.data(), msg.size());
+		}
+
+		void make(size_t line, const char* msg, size_t msg_size) {
+			this->state = 1;
+			this->line = line;
+
+			if (msg_size > 1024) {
+				msg_size = 1024;
+			}
+
+			strncpy_s(this->_msg, msg, msg_size);
+
+			this->_msg[msg_size] = '\0';
+			this->msg_size = msg_size;
+		}
+
+		bool has_error() const {
+			return state == 1;
+		}
+
+		void clean() {
+			state = 0;
+		}
+	};
+
+
 	static Log::Info info;
-	static Log::Warnning warn;
+	static Log::Warning warn;
 	inline Log log; // no static..
+
+	inline Error error;
+
+#define ERROR(msg) \
+	do { \
+		error.make(__LINE__, std::string_view(msg)); \
+	} while (false) 
 
 
 

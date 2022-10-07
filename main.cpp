@@ -336,6 +336,9 @@ int main(int argc, char* argv[])
 
 			claujson::Ptr<claujson::Json> clean(j.as_json_ptr());
 
+			std::cout << (claujson::error.has_error() ? ("has error") : ("no error")) << "\n";
+			std::cout << claujson::error.msg() << "\n";
+
 			return !ok;
 		}
 		/*catch (...) {
@@ -363,6 +366,9 @@ int main(int argc, char* argv[])
 
 		claujson::clean(j);
 	}
+
+	std::cout << (claujson::error.has_error() ? ( "has error" ) : ( "no error" )) << "\n";
+	std::cout << claujson::error.msg() << "\n";
 
 	return 0;
 }
