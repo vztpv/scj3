@@ -2841,7 +2841,7 @@ namespace claujson {
 							ERROR("Error in Merge, root must have not key");
 						}
 
-						if (_next->is_array()) {
+						if (_next->is_array() || _next->is_partial_json()) {
 							_next->add_array_element(std::move(_ut->get_value_list(i)));
 						}
 						else {
