@@ -1123,7 +1123,7 @@ namespace claujson {
 			{
 				if (auto* x = simdjson_imple->parse_string((uint8_t*)&buf[idx] + 1,
 					&string_buf[idx]); x == nullptr) {
-					throw "Error in Convert for string";
+					ERROR("Error in Convert for string");
 				}
 				else {
 					*x = '\0';
@@ -1137,7 +1137,7 @@ namespace claujson {
 			case 't':
 			{
 				if (!simdjson_imple->is_valid_true_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
-					throw "Error in Convert for true";
+					ERROR("Error in Convert for true");
 				}
 
 				data.set_bool(true);
@@ -1145,14 +1145,14 @@ namespace claujson {
 			break;
 			case 'f':
 				if (!simdjson_imple->is_valid_false_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
-					throw "Error in Convert for false";
+					ERROR("Error in Convert for false");
 				}
 
 				data.set_bool(false);
 				break;
 			case 'n':
 				if (!simdjson_imple->is_valid_null_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
-					throw "Error in Convert for null";
+					ERROR("Error in Convert for null");
 				}
 
 				data.set_null();
@@ -1170,7 +1170,7 @@ namespace claujson {
 
 				if (id == 0) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
 					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + _simdjson::SIMDJSON_PADDING]);
-					if (copy.get() == nullptr) { throw "Error in Convert for new"; } // cf) new Json?
+					if (copy.get() == nullptr) { ERROR("Error in Convert for new"); } // cf) new Json?
 					std::memcpy(copy.get(), &buf[idx], idx2 - idx);
 					std::memset(copy.get() + idx2 - idx, ' ', _simdjson::SIMDJSON_PADDING);
 					value = copy.get();
@@ -1445,7 +1445,7 @@ namespace claujson {
 			return obj_val_vec[idx];
 		}
 
-		Data& Object::get_key_list(size_t idx) { // if key change then also obj_vec[idex].second.key? change??
+		Data& Object::get_key_list(size_t idx) { // if key change then also obj_val_vec[idx].key? change??
 			return obj_key_vec[idx];
 		}
 
@@ -1580,15 +1580,15 @@ namespace claujson {
 				claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e);
 
 				if (e) {
-					throw "Error in add_item_type";
+					ERROR("Error in add_item_type");
 				}
 				claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e);
 				if (e) {
-					throw "Error in add_item_type";
+					ERROR("Error in add_item_type");
 				}
 
 				if (temp.type() != DataType::STRING) {
-					throw "Error in add_item_type, key is not string";
+					ERROR("Error in add_item_type, key is not string");
 				}
 
 				obj_key_vec.push_back(std::move(temp));
@@ -1828,7 +1828,7 @@ namespace claujson {
 				claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e);
 				if (e) {
 
-					throw "Error in add_item_type";
+					ERROR("Error in add_item_type");
 				}
 				arr_vec.push_back(std::move(temp2));
 			}
@@ -2085,18 +2085,18 @@ namespace claujson {
 
 					if (e) {
 
-						throw "Error in add_item_type";
+						ERROR("Error in add_item_type");
 					}
 
 					claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e);
 
 					if (e) {
 
-						throw "Error in add_item_type";
+						ERROR("Error in add_item_type");
 					}
 
 					if (temp.type() != DataType::STRING) {
-						throw "Error in add_item_type, key is not string";
+						ERROR("Error in add_item_type, key is not string");
 					}
 
 					obj_key_vec.push_back(std::move(temp));
@@ -2115,7 +2115,7 @@ namespace claujson {
 
 					if (e) {
 
-						throw "Error in add_item_type";
+						ERROR("Error in add_item_type");
 					}
 
 					arr_vec.push_back(std::move(temp2));
@@ -2174,11 +2174,11 @@ namespace claujson {
 
 			claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e);
 			if (e) {
-				throw "Error in add_user_type";
+				ERROR("Error in add_user_type");
 			}
 
 			if (temp.type() != DataType::STRING) {
-				throw "Error in add_item_type, key is not string";
+				ERROR("Error in add_item_type, key is not string");
 			}
 
 			Json* json = nullptr;
@@ -2233,11 +2233,11 @@ namespace claujson {
 				claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e);
 
 				if (e) {
-					throw "Error in add_user_type";
+					ERROR("Error in add_user_type");
 				}
 
 				if (temp.type() != DataType::STRING) {
-					throw "Error in add_item_type, key is not string";
+					ERROR("Error in add_item_type, key is not string");
 				}
 
 
@@ -2728,10 +2728,10 @@ namespace claujson {
 				}
 
 				if (_next->is_array() && _ut->is_object()) {
-					throw "Error in Merge, next is array but child? is object";
+					ERROR("Error in Merge, next is array but child? is object");
 				}
 				if (_next->is_object() && _ut->is_array()) {
-					throw "Error in Merge, next is object but child? is array";
+					ERROR("Error in Merge, next is object but child? is array");
 				}
 
 
@@ -2805,10 +2805,10 @@ namespace claujson {
 				class Json* _next = next;
 
 				if (_next->is_array() && _ut->is_object()) {
-					throw "Error in Merge, next is array but child? is object";
+					ERROR("Error in Merge, next is array but child? is object");
 				}
 				if (_next->is_object() && _ut->is_array()) {
-					throw "Error in Merge, next is object but child? is array";
+					ERROR("Error in Merge, next is object but child? is array");
 				}
 
 
@@ -2924,7 +2924,7 @@ namespace claujson {
 					if (is_before_comma && type == _simdjson::internal::tape_type::COMMA) {
 						log << warn  << "before is comma\n";
 
-						throw "Error in __Load... and case : , ,";
+						ERROR("Error in __Load... and case : , ,");
 						//
 					}
 
@@ -2945,12 +2945,12 @@ namespace claujson {
 					if (!is_now_comma && type == _simdjson::internal::tape_type::COMMA) {
 						log << warn  << "now is not comma\n";
 
-						throw "Error in __Load.., now is comma but, no expect.";							//
+						ERROR("Error in __Load.., now is comma but, no expect.");							//
 					}
 					if (is_now_comma && type != _simdjson::internal::tape_type::COMMA) {
 						log << warn  << "is now comma... but not..\n";
 
-						throw "Error in __Load..., comma is expected but, is not";
+						ERROR("Error in __Load..., comma is expected but, is not");
 					}
 
 
@@ -2962,22 +2962,22 @@ namespace claujson {
 								get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
 
 							if (_type == _simdjson::internal::tape_type::END_ARRAY || _type == _simdjson::internal::tape_type::END_OBJECT) {
-								throw "Error in __Load..,  case : , } or , ]";
+								ERROR("Error in __Load..,  case : , } or , ]");
 								//
 							}
 							else if (_type == _simdjson::internal::tape_type::COLON) {
-								throw "Error in __Load... case :    , : ";
+								ERROR("Error in __Load... case :    , : ");
 							}
 
 							continue;
 						}
 						else {
-							throw "Error in __Load..., last valid char? is , ";
+							ERROR("Error in __Load..., last valid char? is , ");
 						}
 					}
 
 					if (type == _simdjson::internal::tape_type::COLON) {
-						throw "Error in __Load..., checked colon..";
+						ERROR("Error in __Load..., checked colon..");
 						//
 					}
 
@@ -3021,17 +3021,17 @@ namespace claujson {
 
 								if (Vec.size() % 2 == 1) {
 									log << warn  << "Vec.size()%2==1\n";
-									throw "Error in __Load..., key : value  error";
+									ERROR("Error in __Load..., key : value  error");
 								}
 
 								for (size_t x = 0; x < Vec.size(); x += 2) {
 									if (!Vec[x].is_key) {
 										log << warn  << "vec[x].is not key\n";
-										throw "Error in __Load..., key : value  error";
+										ERROR("Error in __Load..., key : value  error");
 									}
 									if (Vec[x + 1].is_key) {
 										log << warn  << "vec[x].is key\n";
-										throw "Error in __Load..., key : value  error";
+										ERROR("Error in __Load..., key : value  error");
 									}
 									nestedUT[braceNum]->add_item_type((Vec[x].idx), Vec[x].idx2, Vec[x].len,
 										(Vec[x + 1].idx), Vec[x + 1].idx2, Vec[x + 1].len,
@@ -3045,7 +3045,7 @@ namespace claujson {
 									if (Vec[x].is_key) {
 										log << warn  << "Vec[x].iskey\n";
 
-										throw "Error in __Load..., key : value  error";
+										ERROR("Error in __Load..., key : value  error");
 									}
 									nestedUT[braceNum]->add_item_type((Vec[x].idx), Vec[x].idx2, Vec[x].len, buf, string_buf, Vec[x].id);
 								}
@@ -3086,14 +3086,14 @@ namespace claujson {
 
 						if (type == _simdjson::internal::tape_type::END_ARRAY && nestedUT[braceNum]->is_object()) {
 							log << warn  << "{]";
-							throw "Error in __Load.., case : {]?";
+							ERROR("Error in __Load.., case : {]?");
 						}
 
 						if (type == _simdjson::internal::tape_type::END_OBJECT && nestedUT[braceNum]->is_array()) {
 							log << warn  << "[}";
 
 
-							throw "Error in __Load.., case : [}?";
+							ERROR("Error in __Load.., case : [}?");
 						}
 
 						state = 0;
@@ -3105,18 +3105,18 @@ namespace claujson {
 
 								if (Vec.size() % 2 == 1) {
 									log << warn  << "Vec.size() is odd\n";
-									throw "Error in __Load..., key : value  error";
+									ERROR("Error in __Load..., key : value  error");
 								}
 
 
 								for (size_t x = 0; x < Vec.size(); x += 2) {
 									if (!Vec[x].is_key) {
 										log << warn  << "is not key\n";
-										throw "Error in __Load..., key : value  error";
+										ERROR("Error in __Load..., key : value  error");
 									}
 									if (Vec[x + 1].is_key) {
 										log << warn  << "is key\n";
-										throw "Error in __Load..., key : value  error";
+										ERROR("Error in __Load..., key : value  error");
 									}
 
 									nestedUT[braceNum]->add_item_type(Vec[x].idx, Vec[x].idx2, Vec[x].len,
@@ -3128,7 +3128,7 @@ namespace claujson {
 
 								for (auto& x : Vec) {
 									if (x.is_key) {
-										throw "Error in __Load.., expect no key but has key...";
+										ERROR("Error in __Load.., expect no key but has key...");
 									}
 
 									nestedUT[braceNum]->add_item_type((x.idx), x.idx2, x.len, buf, string_buf, x.id);
@@ -3241,16 +3241,16 @@ namespace claujson {
 					if (Vec[0].is_key) {
 						for (size_t x = 0; x < Vec.size(); x += 2) {
 							if (!Vec[x].is_key) {
-								throw "Error in __Load..., key : value  error";
+								ERROR("Error in __Load..., key : value  error");
 							}
 
 							if (Vec.size() % 2 == 1) {
-								throw "Error in __Load..., key : value  error";
+								ERROR("Error in __Load..., key : value  error");
 							}
 
 
 							if (Vec[x + 1].is_key) {
-								throw "Error in __Load..., key : value  error";
+								ERROR("Error in __Load..., key : value  error");
 							}
 
 							nestedUT[braceNum]->add_item_type(Vec[x].idx, Vec[x].idx2, Vec[x].len, Vec[x + 1].idx, Vec[x + 1].idx2, Vec[x + 1].len,
@@ -3260,7 +3260,7 @@ namespace claujson {
 					else {
 						for (size_t x = 0; x < Vec.size(); x += 1) {
 							if (Vec[x].is_key) {
-								throw "Error in __Load..., array element has key..";
+								ERROR("Error in __Load..., array element has key..");
 							}
 
 							nestedUT[braceNum]->add_item_type(Vec[x].idx, Vec[x].idx2, Vec[x].len, buf, string_buf, Vec[x].id);

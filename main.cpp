@@ -206,26 +206,155 @@ int main(int argc, char* argv[])
 
 	//claujson::log.no_print();
 
-	claujson::init();
+	try {
+		claujson::init();
 
-	//utf_8_test();
+		//utf_8_test();
 
-	//key_dup_test();
+		//key_dup_test();
 
-	//json_pointer_test();
+		//json_pointer_test();
 
 
-	for (int i = 0; i < 3; ++i) {
-		claujson::Data j;
+		for (int i = 0; i < 3; ++i) {
+			claujson::Data j;
 
-		//try
+			//try
+			{
+
+				int a = clock();
+
+				// not-thread-safe..
+				auto x = claujson::parse(argv[1], j, 64); // argv[1], j, 64 ??
+
+				if (!x.first) {
+					std::cout << "fail\n";
+
+					claujson::clean(j);
+
+					return 1;
+				}
+
+				int b = clock();
+				std::cout << "total " << b - a << "ms\n";
+
+				//claujson::LoadData::save(std::cout, ut);
+				//claujson::LoadData::save("output14.json", j);
+
+				int c = clock();
+				std::cout << "write " << c - b << "ms\n";
+
+				int counter = 0;
+				bool ok = x.first;
+
+				std::vector<claujson::Data> vec;
+
+				// json_pointer, json_pointerA <- u8string_view?
+
+				if (false == claujson::Data::json_pointerA("/geometry/coordinates"sv, vec)) {
+					std::cout << "json pointer error.\n";
+					return 1;
+				}
+
+				double sum = 0;
+				if (true && ok) {
+					int chk = 0;
+					for (int i = 0; i < 1; ++i) {
+						if (j.is_ptr()) {
+							auto& features = j.as_object()[1]; // j[1];
+							for (auto& feature : features.as_array()) {
+								auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
+								for (auto& coordinate_ : coordinate.as_array()) {
+									for (auto& x : coordinate_.as_array()) {
+										if (x.is_float()) {
+											sum += x.float_val();
+
+											counter++;
+											chk++;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+
+				std::cout << clock() - c << "ms\n";
+				std::cout << sum << " ";
+				std::cout << counter << "  ";
+				//return 0;
+
+				int c1 = clock();
+
+				//claujson::save("total_ends.json", j);
+
+				// not thread-safe.
+				claujson::save_parallel("total_end.json", j, 64);
+
+				//claujson::save("total_ends.json", j);
+
+				//std::cout << "\ncat \n";
+				//system("cat total_end.json");
+				//std::cout << "\n";
+
+				int c2 = clock();
+				std::cout << "\nwrite " << c2 - c1 << "ms\n";
+
+				claujson::Data X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
+				claujson::Data Y("coordinates"sv); // use claujson::Data.
+
+				sum = 0; counter = 0;
+				if (true && ok) {
+					int chk = 0;
+					for (int i = 0; i < 1; ++i) {
+						auto& features = j.as_object()[1]; // j[1];
+						for (auto& feature : features.as_array()) {
+							auto& geometry = feature.as_object().at(X.str_val()); // as_array()[t].as_object()["geometry"];
+							if (geometry.is_ptr()) { // is_obj or arr?  -> is_structured
+								auto& coordinates = geometry.as_object().at(Y.str_val()); // todo - add? at(const Data& data) ?
+								auto& coordinate = coordinates.as_array()[0];
+								for (auto& coordinate_ : coordinate.as_array()) {
+									for (auto& x : coordinate_.as_array()) {
+										if (x.is_float()) { // x.is_int(), x.is_uint() <- 
+											sum += x.float_val();
+
+											counter++;
+											chk++;
+
+											//claujson::Data test;
+											//x = test; // no ok.
+											//x = claujson::Data(0); // ok.
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				std::cout << clock() - c2 << "ms\n";
+				std::cout << "Re.. " << sum << " " << counter << "\n";
+
+				claujson::Ptr<claujson::Json> clean(j.as_json_ptr());
+
+				//std::cout << (claujson::error.has_error() ? ("has error") : ("no error")) << "\n";
+				//std::cout << claujson::error.msg() << "\n";
+
+				return !ok;
+			}
+			/*catch (...) {
+				if (j.is_ptr() && j.ptr_val()) {
+					claujson::Ptr<claujson::Json> clean(&j.as_json());
+				}
+
+				std::cout << "internal error\n";
+				return 1;
+			}*/
+		}
+
 		{
-
-			int a = clock();
-
-			// not-thread-safe..
-			auto x = claujson::parse(argv[1], j, 64); // argv[1], j, 64 ??
-
+			claujson::Data j;
+			auto x = claujson::parse("total_end.json", j, 64); // argv[1], j, 64 ??
 			if (!x.first) {
 				std::cout << "fail\n";
 
@@ -234,139 +363,15 @@ int main(int argc, char* argv[])
 				return 1;
 			}
 
-			int b = clock();
-			std::cout << "total " << b - a << "ms\n";
-
-			//claujson::LoadData::save(std::cout, ut);
-			//claujson::LoadData::save("output14.json", j);
-
-			int c = clock();
-			std::cout << "write " << c - b << "ms\n";
-
-			int counter = 0;
-			bool ok = x.first;
-			 
-			std::vector<claujson::Data> vec;
-
-			// json_pointer, json_pointerA <- u8string_view?
-
-			if (false == claujson::Data::json_pointerA("/geometry/coordinates"sv, vec)) {
-				std::cout << "json pointer error.\n";
-				return 1;
-			}
-
-			double sum = 0;
-			if (true && ok) {
-				int chk = 0;
-				for (int i = 0; i < 1; ++i) {
-					if (j.is_ptr()) {
-						auto& features = j.as_object()[1]; // j[1];
-						for (auto& feature : features.as_array()) {
-							auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
-							for (auto& coordinate_ : coordinate.as_array()) {
-								for (auto& x : coordinate_.as_array()) {
-									if (x.is_float()) {
-										sum += x.float_val();
-
-										counter++;
-										chk++;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-
-
-			std::cout << clock() - c << "ms\n";
-			std::cout << sum << " ";
-			std::cout << counter << "  ";
-			//return 0;
-
-			int c1 = clock();
-
-			//claujson::save("total_ends.json", j);
-
-			// not thread-safe.
-			claujson::save_parallel("total_end.json", j, 64);
-
-			//claujson::save("total_ends.json", j);
-
-			//std::cout << "\ncat \n";
-			//system("cat total_end.json");
-			//std::cout << "\n";
-
-			int c2 = clock();
-			std::cout << "\nwrite " << c2 - c1 << "ms\n";
-
-			claujson::Data X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
-			claujson::Data Y("coordinates"sv); // use claujson::Data.
-
-			sum = 0; counter = 0;
-			if (true && ok) {
-				int chk = 0;
-				for (int i = 0; i < 1; ++i) {
-					auto& features = j.as_object()[1]; // j[1];
-					for (auto& feature : features.as_array()) {
-						auto& geometry = feature.as_object().at(X.str_val()); // as_array()[t].as_object()["geometry"];
-						if (geometry.is_ptr()) { // is_obj or arr?  -> is_structured
-							auto& coordinates = geometry.as_object().at(Y.str_val()); // todo - add? at(const Data& data) ?
-							auto& coordinate = coordinates.as_array()[0];
-							for (auto& coordinate_ : coordinate.as_array()) {
-								for (auto& x : coordinate_.as_array()) {
-									if (x.is_float()) { // x.is_int(), x.is_uint() <- 
-										sum += x.float_val();
-
-										counter++;
-										chk++;
-
-										//claujson::Data test;
-										//x = test; // no ok.
-										//x = claujson::Data(0); // ok.
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			std::cout << clock() - c2 << "ms\n";
-			std::cout << "Re.. " << sum << " " << counter << "\n";
-
-			claujson::Ptr<claujson::Json> clean(j.as_json_ptr());
-
-			//std::cout << (claujson::error.has_error() ? ("has error") : ("no error")) << "\n";
-			//std::cout << claujson::error.msg() << "\n";
-
-			return !ok;
-		}
-		/*catch (...) {
-			if (j.is_ptr() && j.ptr_val()) {
-				claujson::Ptr<claujson::Json> clean(&j.as_json());
-			}
-
-			std::cout << "internal error\n";
-			return 1;
-		}*/
-	}
-
-	{
-		claujson::Data j;
-		auto x = claujson::parse("total_end.json", j, 64); // argv[1], j, 64 ??
-		if (!x.first) {
-			std::cout << "fail\n";
+			claujson::save_parallel("total_end2.json", j, 64);
 
 			claujson::clean(j);
-
-			return 1;
 		}
-
-		claujson::save_parallel("total_end2.json", j, 64);
-
-		claujson::clean(j);
 	}
-
+	catch (...) {
+		std::cout << "chk..\n";
+		return 1;
+	}
 	//std::cout << (claujson::error.has_error() ? ( "has error" ) : ( "no error" )) << "\n";
 	//std::cout << claujson::error.msg() << "\n";
 
