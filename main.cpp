@@ -195,6 +195,24 @@ int main(int argc, char* argv[])
 {
 
 	{
+		auto str = R"("A" : 3 )"sv;
+
+		claujson::init();
+
+		claujson::Data ut;
+		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
+	}
+
+	{
+		auto str = R"(3, 4)"sv;
+
+		claujson::init();
+
+		claujson::Data ut;
+		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
+	}
+
+	{
 		
 		int a = clock();
 		_simdjson::dom::parser x;

@@ -2749,6 +2749,12 @@ namespace claujson {
 						}
 					}
 					else { // item type.
+						
+						// root
+						if (_next->get_parent() == nullptr && _ut->get_key_list(i)) {
+							ERROR("Error in Merge, root must have not key");
+						}
+
 						if (_next->is_array() || _next->is_partial_json()) {
 							_next->add_array_element(std::move(_ut->get_value_list(i)));
 						}
@@ -2830,6 +2836,11 @@ namespace claujson {
 						}
 					}
 					else { // item type.
+						// root
+						if (_next->get_parent() == nullptr && _ut->get_key_list(i)) {
+							ERROR("Error in Merge, root must have not key");
+						}
+
 						if (_next->is_array()) {
 							_next->add_array_element(std::move(_ut->get_value_list(i)));
 						}
