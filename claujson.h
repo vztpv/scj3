@@ -671,6 +671,7 @@ namespace claujson {
 	//	return { false , 0 };
 	//}
 
+	std::string save_to_str(const Data& global);
 	
 	void save(const std::string& fileName, const Data& global);
 

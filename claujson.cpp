@@ -118,7 +118,7 @@ namespace claujson {
 	std::ostream& operator<<(std::ostream& stream, const claujson::Data& data) {
 
 		if (false == data.is_valid()) {
-			stream << "not valid\n";
+			stream << "--not valid\n";
 			return stream;
 		}
 
@@ -2017,6 +2017,14 @@ namespace claujson {
 
 
 		bool PartialJson::add_object_element(Data key, Data val) {
+			if (!is_valid() || !key.is_str()) {
+				return false;
+			}
+			if (!arr_vec.empty()) {
+				ERROR("partialJson is array or object.");
+				return false;
+			}
+
 			if (val.is_ptr()) {
 				auto* x = (Json*)val.ptr_val();
 				x->set_key(key.clone()); // no need?
@@ -2028,6 +2036,11 @@ namespace claujson {
 			return true;
 		}
 		bool PartialJson::add_array_element(Data val) {
+			if (!obj_key_vec.empty()) {
+				ERROR("partialJson is array or object.");
+				return false;
+			}
+
 			arr_vec.push_back(std::move(val));
 
 			return true;
@@ -2086,19 +2099,22 @@ namespace claujson {
 					claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e);
 
 					if (e) {
-
 						ERROR("Error in add_item_type");
 					}
 
 					claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e);
 
 					if (e) {
-
 						ERROR("Error in add_item_type");
 					}
 
 					if (temp.type() != DataType::STRING) {
 						ERROR("Error in add_item_type, key is not string");
+					}
+
+
+					if (!arr_vec.empty()) {
+						ERROR("partialJson is array or object.");
 					}
 
 					obj_key_vec.push_back(std::move(temp));
@@ -2120,6 +2136,10 @@ namespace claujson {
 						ERROR("Error in add_item_type");
 					}
 
+					if (!obj_key_vec.empty()) {
+						ERROR("partialJson is array or object.");
+					}
+
 					arr_vec.push_back(std::move(temp2));
 				}
 		}
@@ -2132,9 +2152,18 @@ namespace claujson {
 				virtualJson = Data(j.release());
 			}
 			else if (j->has_key() == false) {
+				if (!obj_key_vec.empty()) {
+					ERROR("partialJson is array or object.");
+				}
+
 				arr_vec.push_back(Data(j.release()));
 			}
 			else {
+				
+				if (!arr_vec.empty()) {
+					ERROR("partialJson is array or object.");
+				}
+
 				if (j->has_key()) {
 					obj_key_vec.push_back(j->get_key().clone());
 					obj_val_vec.push_back(Data(j.release()));
@@ -2231,6 +2260,10 @@ namespace claujson {
 	inline void PartialJson::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
 		uint8_t* string_buf, int type, uint64_t id) {
 			{
+				if (!arr_vec.empty()) {
+					ERROR("partialJson is array or object.");
+				}
+
 				Data temp;
 				bool e = false;
 
@@ -2266,6 +2299,9 @@ namespace claujson {
 	}
 	inline void PartialJson::add_user_type(int type) {
 		{
+			if (!obj_key_vec.empty()) {
+				ERROR("PartialJson is array or object.");
+			}
 
 			Json* json = nullptr;
 
@@ -2743,6 +2779,7 @@ namespace claujson {
 				size_t _size = _ut->get_data_size();
 
 				for (size_t i = 0; i < _size; ++i) {
+
 					if (_ut->get_value_list(i).is_ptr()) { // partial json, array, object
 						if (((Json*)(_ut->get_value_list(i).ptr_val()))->is_virtual()) {
 							//
@@ -2752,7 +2789,6 @@ namespace claujson {
 							if (_next->get_parent() == nullptr && _ut->get_key_list(i).is_str()) {
 								ERROR("Error in Merge, root must have not key");
 							}
-
 
 							_next->Link(Ptr<Json>(((Json*)(_ut->get_value_list(i).ptr_val()))));
 							_ut->clear(i);
@@ -3183,15 +3219,15 @@ namespace claujson {
 							for (size_t i = 0; i < len; ++i) {
 								if (nestedUT[braceNum]->get_value_list(i).is_ptr()) {
 									if (!ut->add_user_type(Ptr<Json>((Json*)nestedUT[braceNum]->get_value_list(i).ptr_val()))) {
-										nestedUT[braceNum]->clear();
+										//
 									}
 								}
 								else {
-									if (ut->is_object()) {
+									if (ut->is_object()) { 
 										ut->add_object_element(std::move(nestedUT[braceNum]->get_key_list(i)),
 											std::move(nestedUT[braceNum]->get_value_list(i)));
 									}
-									else {
+									else { 
 										ut->add_array_element(std::move(nestedUT[braceNum]->get_value_list(i)));
 									}
 								}
@@ -3510,6 +3546,7 @@ namespace claujson {
 								throw 2;
 							}
 
+							
 							int err = Merge(_global.get(), __global[start].get(), &next[start]);
 							if (-1 == err || (pivots.size() == 0 && 1 == err)) {
 								log << warn  << "not valid file3\n";
@@ -3550,7 +3587,7 @@ namespace claujson {
 						//}
 						//
 
-						if (_global->is_user_type() && _global->get_data_size() > 1) { // bug fix..
+						if ( _global->get_data_size() > 1) { // bug fix..
 							log << warn  << "not valid file6\n";
 							throw 6;
 						}
@@ -3662,10 +3699,89 @@ namespace claujson {
 
 		static void save(std::ostream& stream, const Data& data);
 
+		static std::string save_to_str(const Data& data);
 
 		static void save_parallel(const std::string& fileName, Data& j, size_t thr_num);
 
 	};
+
+
+	std::string LoadData::save_to_str(const Data& global) {
+		StrStream stream;
+
+		if (global.is_ptr()) {
+			bool is_arr = global.as_json_ptr()->is_array();
+
+			if (is_arr) {
+				stream << " [ ";
+			}
+			else {
+				stream << " { ";
+			}
+
+			_save(stream, global, 0);
+
+			if (is_arr) {
+				stream << " ] ";
+			}
+			else {
+				stream << " } ";
+			}
+
+		}
+		else {
+			auto& x = global;
+			if (x.type() == DataType::STRING) {
+				stream << "\"";
+
+				size_t len = x.str_val().size();
+				for (uint64_t j = 0; j < len; ++j) {
+					switch ((x.str_val())[j]) {
+					case '\\':
+						stream << "\\\\";
+						break;
+					case '\"':
+						stream << "\\\"";
+						break;
+					case '\n':
+						stream << "\\n";
+						break;
+
+					default:
+
+						int code = (x.str_val())[j];
+						if (code > 0 && (code < 0x20 || code == 0x7F))
+						{
+							char buf[] = "\\uDDDD";
+							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+							stream << buf;
+						}
+						else {
+							stream << (x.str_val())[j];
+						}
+
+					}
+				}stream << "\"";
+			}
+			else if (x.type() == DataType::BOOL) {
+				stream << (x.bool_val() ? "true" : "false");
+			}
+			else if (x.type() == DataType::FLOAT) {
+				stream << (x.float_val());
+			}
+			else if (x.type() == DataType::INT) {
+				stream << x.int_val();
+			}
+			else if (x.type() == DataType::UINT) {
+				stream << x.uint_val();
+			}
+			else if (x.type() == DataType::NULL_) {
+				stream << "null";
+			}
+		}
+
+		return std::string(stream.buf(), stream.buf_size());
+	}
 
 	//                            todo - change Json* ut to Data& data ?
 	void LoadData::_save(StrStream& stream, const Data& data, std::vector<Json*>& chk_list, const int depth) {
@@ -4646,6 +4762,8 @@ namespace claujson {
 	}
 	std::pair<bool, size_t> parse_str(std::string_view str, Data& ut, size_t thr_num)
 	{
+
+		
 		log << info << str << "\n";
 
 		if (thr_num <= 0) {
@@ -4671,7 +4789,6 @@ namespace claujson {
 
 				return { false, 0 };
 			}
-
 			const auto& buf = test.raw_buf();
 			const auto& string_buf = test.raw_string_buf();
 			const auto buf_len = test.raw_len();
@@ -4705,6 +4822,7 @@ namespace claujson {
 			log << info << b - a << "ms\n";
 
 			start[thr_num] = length;
+
 			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), simdjson_imple_, length, start, thr_num)) // 0 : use all thread..
 			{
 				return { false, 0 };
@@ -4719,6 +4837,12 @@ namespace claujson {
 		return  { true, length };
 	}
 	
+
+	std::string save_to_str(const Data& global) {
+		return LoadData::save_to_str(global);
+	}
+
+
 	void save(const std::string& fileName, const Data& global) {
 		LoadData::save(fileName, global, false);
 	}
