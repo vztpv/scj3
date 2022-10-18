@@ -92,7 +92,7 @@ namespace claujson {
 
 		virtual void add_user_type(int type);
 
-		virtual void add_user_type(Ptr<Json> j);
+		virtual bool add_user_type(Ptr<Json> j);
 
 
 	};
@@ -1612,10 +1612,10 @@ namespace claujson {
 			return;
 		}
 
-		void Object::add_user_type(Ptr<Json> j) {
+		bool Object::add_user_type(Ptr<Json> j) {
 			if (!is_valid()) {
-				return;
-			}
+				return false;
+			} 
 
 			if (j->is_virtual()) {
 				j->set_parent(this);
@@ -1631,9 +1631,10 @@ namespace claujson {
 			}
 			else {
 				log << warn  << "chk..";
-				ERROR("Object::add_user_type, j has no key");
-				return;
+				return false;
 			}
+
+			return true;
 		}
 
 		 Array::Array(bool valid) : Json(valid) { }
@@ -1840,9 +1841,9 @@ namespace claujson {
 			ERROR("Array::add_user_type1");
 		}
 
-		void Array::add_user_type(Ptr<Json> j) {
+		bool Array::add_user_type(Ptr<Json> j) {
 			if (!is_valid()) {
-				return;
+				return false;
 			}
 
 
@@ -1857,9 +1858,10 @@ namespace claujson {
 			else {
 				// error..
 				log << warn  << "errr..";
-				ERROR("Array::add_user_type2");
-				return;
+				return false;
 			}
+
+			return true;
 		}
 
 	// class PartialJson, only used in class LoadData2.
@@ -2122,7 +2124,7 @@ namespace claujson {
 				}
 		}
 
-		void PartialJson::add_user_type(Ptr<Json> j) {
+		bool PartialJson::add_user_type(Ptr<Json> j) {
 
 			j->set_parent(this);
 
@@ -2139,9 +2141,11 @@ namespace claujson {
 				}
 				else {
 					log << warn  << "ERRR";
-					ERROR("PartialJson::add_user_type");
+					return false; //ERROR("PartialJson::add_user_type");
 				}
 			}
+
+			return true;
 
 		}
 
@@ -2744,6 +2748,12 @@ namespace claujson {
 							//
 						}
 						else {
+							// root
+							if (_next->get_parent() == nullptr && _ut->get_key_list(i).is_str()) {
+								ERROR("Error in Merge, root must have not key");
+							}
+
+
 							_next->Link(Ptr<Json>(((Json*)(_ut->get_value_list(i).ptr_val()))));
 							_ut->clear(i);
 						}
@@ -2751,7 +2761,7 @@ namespace claujson {
 					else { // item type.
 						
 						// root
-						if (_next->get_parent() == nullptr && _ut->get_key_list(i)) {
+						if (_next->get_parent() == nullptr && _ut->get_key_list(i).is_str()) {
 							ERROR("Error in Merge, root must have not key");
 						}
 
@@ -2831,6 +2841,12 @@ namespace claujson {
 							//
 						}
 						else {
+							// root
+							if (_next->get_parent() == nullptr && _ut->get_key_list(i)) {
+								ERROR("Error in Merge, root must have not key");
+							}
+
+
 							_next->Link(Ptr<Json>(((Json*)(_ut->get_value_list(i).ptr_val()))));
 							_ut->clear(i);
 						}
@@ -3166,7 +3182,9 @@ namespace claujson {
 
 							for (size_t i = 0; i < len; ++i) {
 								if (nestedUT[braceNum]->get_value_list(i).is_ptr()) {
-									ut->add_user_type(Ptr<Json>((Json*)nestedUT[braceNum]->get_value_list(i).ptr_val()));
+									if (!ut->add_user_type(Ptr<Json>((Json*)nestedUT[braceNum]->get_value_list(i).ptr_val()))) {
+										nestedUT[braceNum]->clear();
+									}
 								}
 								else {
 									if (ut->is_object()) {
@@ -4628,6 +4646,8 @@ namespace claujson {
 	}
 	std::pair<bool, size_t> parse_str(std::string_view str, Data& ut, size_t thr_num)
 	{
+		log << info << str << "\n";
+
 		if (thr_num <= 0) {
 			thr_num = std::thread::hardware_concurrency();
 		}

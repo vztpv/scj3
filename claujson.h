@@ -501,7 +501,7 @@ namespace claujson {
 
 		virtual void add_user_type(int type) = 0; // int type -> enum?
 
-		virtual void add_user_type(Ptr<Json> j) = 0;
+		virtual bool add_user_type(Ptr<Json> j) = 0;
 	};
 
 	class Object : public Json {
@@ -576,7 +576,7 @@ namespace claujson {
 
 		virtual void add_user_type(int type);
 
-		virtual void add_user_type(Ptr<Json> j);
+		virtual bool add_user_type(Ptr<Json> j);
 	};
 
 	class Array : public Json {
@@ -652,7 +652,7 @@ namespace claujson {
 
 		virtual void add_user_type(int type);
 
-		virtual void add_user_type(Ptr<Json> j);
+		virtual bool add_user_type(Ptr<Json> j);
 
 	};
 

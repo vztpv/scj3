@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
 	}
 
 	{
-		auto str = R"(3, 4)"sv;
+		auto str = R"(3,  3)"sv;
 
 		claujson::init();
 
@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
 
 		for (int i = 0; i < 3; ++i) {
 			claujson::Data j;
-
+			bool ok;
 			//try
 			{
 
@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
 				std::cout << "write " << c - b << "ms\n";
 
 				int counter = 0;
-				bool ok = x.first;
+				ok = x.first;
 
 				std::vector<claujson::Data> vec;
 
@@ -358,8 +358,10 @@ int main(int argc, char* argv[])
 				//std::cout << (claujson::error.has_error() ? ("has error") : ("no error")) << "\n";
 				//std::cout << claujson::error.msg() << "\n";
 
-				return !ok;
+				//
 			}
+			
+			return !ok;
 			/*catch (...) {
 				if (j.is_ptr() && j.ptr_val()) {
 					claujson::Ptr<claujson::Json> clean(&j.as_json());
