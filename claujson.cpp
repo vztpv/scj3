@@ -180,8 +180,12 @@ namespace claujson {
 
 
 	Data Data::clone() const {
-		Data x;
+		if (!is_valid()) {
+			return Data(nullptr, false);
+		}
 
+		Data x;
+		
 		x._type = this->_type; 
 
 		if (x._type == DataType::STRING) {
@@ -199,7 +203,7 @@ namespace claujson {
 		return x;
 	}
 	Data::operator bool() const {
-		return this->_type > 0;
+		return this->_valid;
 	}
 
 	/*
@@ -264,7 +268,7 @@ namespace claujson {
 	}
 
 	bool Data::is_valid() const {
-		return this->_type > 0;
+		return this->_valid;
 	}
 
 
@@ -826,6 +830,10 @@ namespace claujson {
 		_type = DataType::ARRAY_OR_OBJECT; // chk change DataType:: ~~ -> DataType:: ~~
 	}
 	void Data::set_int(long long x) {
+		if (!is_valid()) {
+			return;
+		}
+
 		if (_type == DataType::STRING) {
 			delete _str_val;
 		}
@@ -834,6 +842,9 @@ namespace claujson {
 	}
 
 	void Data::set_uint(unsigned long long x) {
+		if (!is_valid()) {
+			return;
+		}
 		if (_type == DataType::STRING) {
 			delete _str_val;
 		}
@@ -842,6 +853,9 @@ namespace claujson {
 	}
 
 	void Data::set_float(double x) {
+		if (!is_valid()) {
+			return;
+		}
 		if (_type == DataType::STRING) {
 			delete _str_val;
 		}
@@ -851,6 +865,9 @@ namespace claujson {
 	}
 
 	bool Data::set_str(const char* str, size_t len) {
+		if (!is_valid()) {
+			return false;
+		}
 
 		const size_t block_size = 1024;
 
@@ -960,6 +977,9 @@ namespace claujson {
 	}
 
 	void Data::set_bool(bool x) {
+		if (!is_valid()) {
+			return;
+		}
 		if (_type == DataType::STRING) {
 			delete _str_val;
 		}
@@ -972,6 +992,9 @@ namespace claujson {
 	}
 
 	void Data::set_null() {
+		if (!is_valid()) {
+			return;
+		}
 		if (_type == DataType::STRING) {
 			delete _str_val;
 		}
@@ -992,8 +1015,11 @@ namespace claujson {
 	}
 
 	Data::Data(Data&& other) noexcept
-		: _type(other._type) 
+		: _type(other._type), _valid(other._valid)
 	{
+		if (!other.is_valid()) {
+			return;
+		}
 
 		if (_type == DataType::STRING) {
 			_str_val = other._str_val;
@@ -1007,7 +1033,7 @@ namespace claujson {
 		clean(other);
 	}
 
-	Data::Data() : _int_val(0), _type(DataType::NONE) { }
+	Data::Data() : _int_val(0), _valid(true), _type(DataType::NONE) { }
 
 	bool Data::operator==(const Data& other) const { // chk array or object?
 		if (this->_type == other._type) {
@@ -1098,6 +1124,10 @@ namespace claujson {
 
 	Data& Data::operator=(Data&& other) noexcept {
 		if (this == &other) {
+			return *this;
+		}
+
+		if (!is_valid()) {
 			return *this;
 		}
 

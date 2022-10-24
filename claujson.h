@@ -213,16 +213,7 @@ namespace claujson {
 		FLOAT,
 		BOOL,
 		NULL_,
-		STRING,
-		UNVALID_NONE = -1,
-		UNVALID_ARRAY_OR_OBJECT = -2,
-		UNVALID_INT = -3,
-		UNVALID_UINT = -4,
-		UNVALID_FLOAT = -5,
-		UNVALID_BOOL = -6,
-		UNVALID_NULL_ = -7,
-		UNVALID_STRING = -8
-
+		STRING
 	};
 
 	class Data {
@@ -254,6 +245,7 @@ namespace claujson {
 		};
 
 		DataType _type = DataType::NONE; // type + valid
+		bool _valid = true;
 
 	public:
 
