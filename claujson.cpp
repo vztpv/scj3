@@ -242,7 +242,7 @@ namespace claujson {
 	}
 	Data::Data(std::string_view x) {
 		if (!set_str(x.data(), x.size())) {
-			this->_type = static_cast<DataType>(this->_type * -1);
+			this->_valid = false;
 		}
 	}
 	//explicit Data(const char* x) {
@@ -260,7 +260,8 @@ namespace claujson {
 	}
 
 	Data::Data(nullptr_t, bool valid) {
-		this->_type = static_cast<DataType>(this->_type * (valid ? 1 : -1));
+		set_type(DataType::NULL_);
+		this->_valid = valid;
 	}
 
 	DataType Data::type() const {
