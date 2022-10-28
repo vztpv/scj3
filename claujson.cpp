@@ -1,7 +1,7 @@
 
 #include "claujson.h"
 
-#include "simdjson.h" // modified simdjson // using simdjson 2.2.2 renewal!
+#include "simdjson.h" // modified simdjson // using simdjson 2.2.2 
 
 // for fast save
 #include "fmt/format.h"
@@ -19,8 +19,8 @@ namespace claujson {
 	// class PartialJson, only used in class LoadData.
 	class PartialJson : public Json {
 	protected:
-		std::vector<Data> arr_vec; // 
-		// in parsing...
+		std::vector<Data> arr_vec; 
+		//
 		std::vector<Data> obj_key_vec;
 		std::vector<Data> obj_val_vec;
 
@@ -80,15 +80,14 @@ namespace claujson {
 	private:
 		virtual void Link(Ptr<Json> j);
 
-		virtual void add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2);
+		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx);
 
-		virtual void add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id);
+		virtual void add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t val_token_idx);
 
-
-		virtual void add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
-			uint8_t* string_buf, int type, uint64_t id);
+		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+			uint8_t* string_buf, int ut_type, uint64_t key_token_idx);
 
 		virtual void add_user_type(int type);
 
@@ -272,6 +271,9 @@ namespace claujson {
 		return this->_valid;
 	}
 
+	bool Data::is_null() const {
+		return is_valid() && type() == DataType::NULL_;
+	}
 
 	bool Data::is_primitive() const {
 		return is_valid() && !is_ptr();
@@ -1141,33 +1143,33 @@ namespace claujson {
 	}
 
 
-	inline claujson::Data& Convert(claujson::Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
-		char* buf, uint8_t* string_buf, uint64_t id, bool& err) {
+	inline claujson::Data& Convert(claujson::Data& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
+		char* buf, uint8_t* string_buf, uint64_t token_idx, bool& err) {
 
 		try {
 			data.clear();
 
 			uint32_t string_length;
 
-			switch (buf[idx]) {
+			switch (buf[buf_idx]) {
 			case '"':
 			{
-				if (auto* x = simdjson_imple->parse_string((uint8_t*)&buf[idx] + 1,
-					&string_buf[idx]); x == nullptr) {
+				if (auto* x = simdjson_imple->parse_string((uint8_t*)&buf[buf_idx] + 1,
+					&string_buf[buf_idx]); x == nullptr) {
 					ERROR("Error in Convert for string");
 				}
 				else {
 					*x = '\0';
-					string_length = uint32_t(x - &string_buf[idx]);
+					string_length = uint32_t(x - &string_buf[buf_idx]);
 				}
 
 				// chk token_arr_start + i + 1 >= imple->n_structural_indexes...
-				data.set_str_in_parse(reinterpret_cast<char*>(&string_buf[idx]), string_length);
+				data.set_str_in_parse(reinterpret_cast<char*>(&string_buf[buf_idx]), string_length);
 			}
 			break;
 			case 't':
 			{
-				if (!simdjson_imple->is_valid_true_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
+				if (!simdjson_imple->is_valid_true_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
 					ERROR("Error in Convert for true");
 				}
 
@@ -1175,14 +1177,14 @@ namespace claujson {
 			}
 			break;
 			case 'f':
-				if (!simdjson_imple->is_valid_false_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
+				if (!simdjson_imple->is_valid_false_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
 					ERROR("Error in Convert for false");
 				}
 
 				data.set_bool(false);
 				break;
 			case 'n':
-				if (!simdjson_imple->is_valid_null_atom(reinterpret_cast<uint8_t*>(&buf[idx]), idx2 - idx)) {
+				if (!simdjson_imple->is_valid_null_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
 					ERROR("Error in Convert for null");
 				}
 
@@ -1197,13 +1199,13 @@ namespace claujson {
 
 				uint64_t temp[2] = { 0 };
 
-				uint8_t* value = reinterpret_cast<uint8_t*>(buf + idx);
+				uint8_t* value = reinterpret_cast<uint8_t*>(buf + buf_idx);
 
-				if (id == 0) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
-					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + _simdjson::SIMDJSON_PADDING]);
+				if (token_idx == 0) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
+					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[next_buf_idx - buf_idx + _simdjson::SIMDJSON_PADDING]);
 					if (copy.get() == nullptr) { ERROR("Error in Convert for new"); } // cf) new Json?
-					std::memcpy(copy.get(), &buf[idx], idx2 - idx);
-					std::memset(copy.get() + idx2 - idx, ' ', _simdjson::SIMDJSON_PADDING);
+					std::memcpy(copy.get(), &buf[buf_idx], next_buf_idx - buf_idx);
+					std::memset(copy.get() + next_buf_idx - buf_idx, ' ', _simdjson::SIMDJSON_PADDING);
 					value = copy.get();
 				}
 
@@ -1239,7 +1241,7 @@ namespace claujson {
 				break;
 			}
 			default:
-				log << warn  << "convert error : " << (int)buf[idx] << " " << buf[idx] << "\n";
+				log << warn  << "convert error : " << (int)buf[buf_idx] << " " << buf[buf_idx] << "\n";
 				ERROR("convert Error");
 				//throw "Error in Convert : not expected";
 			}
@@ -1597,8 +1599,8 @@ namespace claujson {
 			obj_val_vec.push_back(Data(j.release()));
 		}
 
-		void Object::add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2) {
+		void Object::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx) {
 			if (!is_valid()) {
 				return;
 			}
@@ -1608,12 +1610,12 @@ namespace claujson {
 
 				bool e = false;
 
-				claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e);
+				claujson::Convert(temp, key_buf_idx, key_next_buf_idx, true, buf, string_buf, key_token_idx, e);
 
 				if (e) {
 					ERROR("Error in add_item_type");
 				}
-				claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e);
+				claujson::Convert(temp2, val_buf_idx, val_next_buf_idx, false, buf, string_buf, val_token_idx, e);
 				if (e) {
 					ERROR("Error in add_item_type");
 				}
@@ -1627,8 +1629,8 @@ namespace claujson {
 			}
 		}
 
-		void Object::add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id) {
+		void Object::add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t val_token_idx) {
 			// error
 
 			log << warn  << "errr..";
@@ -1829,7 +1831,7 @@ namespace claujson {
 			else {
 				// error...
 
-				log << warn  << "Link errr2";
+				log << warn  << "Link error2";
 				ERROR("Link Error");
 				return;
 			}
@@ -1839,16 +1841,16 @@ namespace claujson {
 			arr_vec.push_back(Data(j.release()));
 		}
 
-		void Array::add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2) {
+		void Array::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx) {
 
 			// error
-			log << warn  << "errr..";
+			log << warn  << "error..";
 			ERROR("Error Array::add_item_type");
 		}
 
-		void Array::add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id) {
+		void Array::add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t val_token_idx) {
 			if (!is_valid()) {
 				return;
 			}
@@ -1857,7 +1859,7 @@ namespace claujson {
 			{
 				Data temp2;
 				bool e = false;
-				claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e);
+				claujson::Convert(temp2, val_buf_idx, val_next_buf_idx, true, buf, string_buf, val_token_idx, e);
 				if (e) {
 
 					ERROR("Error in add_item_type");
@@ -1866,9 +1868,9 @@ namespace claujson {
 			}
 		}
 
-		void Array::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
-			uint8_t* string_buf, int type, uint64_t id) {
-			log << warn  << "errrr";
+		void Array::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+			uint8_t* string_buf, int type, uint64_t key_token_idx) {
+			log << warn  << "error";
 			ERROR("Array::add_user_type1");
 		}
 
@@ -1888,7 +1890,7 @@ namespace claujson {
 			}
 			else {
 				// error..
-				log << warn  << "errr..";
+				log << warn  << "error..";
 				return false;
 			}
 
@@ -2079,17 +2081,17 @@ namespace claujson {
 
 
 		bool PartialJson::add_array(Ptr<Json> arr) {
-			//log << warn  << "not used..";
+			log << warn  << "not used..";
 			ERROR("NOT USED");
 			return false;
 		}
 		bool PartialJson::add_object(Ptr<Json> obj) {
-			//log << warn  << "not used..";
+			log << warn  << "not used..";
 			ERROR("NOT USED");
 			return false;
 		}
 		bool PartialJson::insert_array_element(size_t idx, Data val) {
-			//log << warn  << "not used.."; 
+			log << warn  << "not used.."; 
 			ERROR("NOT USED");
 			return false;
 		}
@@ -2118,8 +2120,8 @@ namespace claujson {
 		}
 
 
-		void PartialJson::add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2) {
+		void PartialJson::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx, 
+			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx) {
 
 				{
 					Data temp;
@@ -2127,13 +2129,13 @@ namespace claujson {
 
 					bool e = false;
 
-					claujson::Convert(temp, idx11, idx12, len1, true, buf, string_buf, id, e);
+					claujson::Convert(temp, key_buf_idx, key_next_buf_idx,  true, buf, string_buf, key_token_idx, e);
 
 					if (e) {
 						ERROR("Error in add_item_type");
 					}
 
-					claujson::Convert(temp2, idx21, idx22, len2, false, buf, string_buf, id2, e);
+					claujson::Convert(temp2, val_buf_idx, val_next_buf_idx,  false, buf, string_buf, val_token_idx, e);
 
 					if (e) {
 						ERROR("Error in add_item_type");
@@ -2153,14 +2155,14 @@ namespace claujson {
 				}
 		}
 
-		void PartialJson::add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id) {
+		void PartialJson::add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx, 
+			char* buf, uint8_t* string_buf, uint64_t val_token_idx) {
 
 				{
 					Data temp2;
 					bool e = false;
 
-					claujson::Convert(temp2, idx21, idx22, len2, true, buf, string_buf, id, e);
+					claujson::Convert(temp2, val_buf_idx, val_next_buf_idx, true, buf, string_buf, val_token_idx, e);
 
 					if (e) {
 
@@ -2184,7 +2186,7 @@ namespace claujson {
 			}
 			else if (j->has_key() == false) {
 				if (!obj_key_vec.empty()) {
-					ERROR("partialJson is array or object.");
+					return false; //ERROR("partialJson is array or object.");
 				}
 
 				arr_vec.push_back(Data(j.release()));
@@ -2192,7 +2194,7 @@ namespace claujson {
 			else {
 				
 				if (!arr_vec.empty()) {
-					ERROR("partialJson is array or object.");
+					return false; //ERROR("partialJson is array or object.");
 				}
 
 				if (j->has_key()) {
@@ -2200,7 +2202,7 @@ namespace claujson {
 					obj_val_vec.push_back(Data(j.release()));
 				}
 				else {
-					log << warn  << "ERRR";
+					log << warn  << "ERROR";
 					return false; //ERROR("PartialJson::add_user_type");
 				}
 			}
@@ -2226,8 +2228,8 @@ namespace claujson {
 		}
 	
 
-	inline void Object::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
-		uint8_t* string_buf, int type, uint64_t id) {
+	inline void Object::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+		uint8_t* string_buf, int type, uint64_t key_token_idx) {
 		if (!is_valid()) {
 			return;
 		}
@@ -2236,7 +2238,7 @@ namespace claujson {
 			Data temp;
 			bool e = false;
 
-			claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e);
+			claujson::Convert(temp, key_buf_idx, key_next_buf_idx, true, buf, string_buf, key_token_idx, e);
 			if (e) {
 				ERROR("Error in add_user_type");
 			}
@@ -2288,8 +2290,8 @@ namespace claujson {
 		}
 	}
 
-	inline void PartialJson::add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
-		uint8_t* string_buf, int type, uint64_t id) {
+	inline void PartialJson::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+		uint8_t* string_buf, int type, uint64_t key_token_idx) {
 			{
 				if (!arr_vec.empty()) {
 					ERROR("partialJson is array or object.");
@@ -2298,7 +2300,7 @@ namespace claujson {
 				Data temp;
 				bool e = false;
 
-				claujson::Convert(temp, idx, idx2, len, true, buf, string_buf, id, e);
+				claujson::Convert(temp, key_buf_idx, key_next_buf_idx, true, buf, string_buf, key_token_idx, e);
 
 				if (e) {
 					ERROR("Error in add_user_type");
@@ -2408,7 +2410,7 @@ namespace claujson {
 // as_array
 // if (valid && ((Json*)_ptr_val)->is_array()) { return ~~ } return 
 
-	inline unsigned char __arr[256] = {
+	inline unsigned char __type_arr[256] = {
 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
 , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
 , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
@@ -2437,7 +2439,7 @@ namespace claujson {
 , 59  , 59  , 59  , 59  , 59  , 59
 	};
 
-	inline unsigned char __arr2[2][256] = { { 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
+	inline unsigned char __comma_chk_table[2][256] = { { 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
  , 0  , 0  , 0  , 0  , 1  , 0  , 0  , 0  , 0  , 0
@@ -2490,8 +2492,9 @@ namespace claujson {
  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1
  , 1  , 1  , 1  , 1  , 1  , 1  } };
 
+	// not exact type! for int, uint, float. ( int, uint, float -> float )
 	inline _simdjson::internal::tape_type get_type(unsigned char x) {
-		return (_simdjson::internal::tape_type)__arr[x]; // more fast version..
+		return (_simdjson::internal::tape_type)__type_arr[x]; // more fast version..
 		/*
 		switch (x) {
 		case '-':
@@ -2960,11 +2963,10 @@ namespace claujson {
 
 		struct TokenTemp { // need to rename.
 			// 
-			int64_t idx;  // buf_idx?
-			int64_t idx2; // next_buf_idx?
-			int64_t len;
+			int64_t buf_idx;  // buf_idx?
+			int64_t next_buf_idx; // next_buf_idx?
 			//Json
-			uint64_t id; // token_idx?
+			uint64_t token_idx; // token_idx?
 			//
 			bool is_key = false;
 		};
@@ -3076,7 +3078,7 @@ namespace claujson {
 					}
 
 
-					is_next_comma = __arr2[(int)is_now_comma][(unsigned char)type]; // comma_chk_table
+					is_next_comma = __comma_chk_table[(int)is_now_comma][(unsigned char)type]; // comma_chk_table
 					/*switch (type) {
 					case _simdjson::internal::tape_type::END_ARRAY:
 					case _simdjson::internal::tape_type::END_OBJECT:
@@ -3127,9 +3129,9 @@ namespace claujson {
 										log << warn  << "vec[x].is key\n";
 										ERROR("Error in __Load..., key : value  error");
 									}
-									nestedUT[braceNum]->add_item_type((Vec[x].idx), Vec[x].idx2, Vec[x].len,
-										(Vec[x + 1].idx), Vec[x + 1].idx2, Vec[x + 1].len,
-										buf, string_buf, Vec[x].id, Vec[x + 1].id);
+									nestedUT[braceNum]->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx, 
+										(Vec[x + 1].buf_idx), Vec[x + 1].next_buf_idx, 
+										buf, string_buf, Vec[x].token_idx, Vec[x + 1].token_idx);
 								}
 							}
 							else {
@@ -3141,7 +3143,7 @@ namespace claujson {
 
 										ERROR("Error in __Load..., key : value  error");
 									}
-									nestedUT[braceNum]->add_item_type((Vec[x].idx), Vec[x].idx2, Vec[x].len, buf, string_buf, Vec[x].id);
+									nestedUT[braceNum]->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx, buf, string_buf, Vec[x].token_idx);
 								}
 							}
 
@@ -3150,8 +3152,8 @@ namespace claujson {
 
 
 						if (key.is_key) {
-							nestedUT[braceNum]->add_user_type(key.idx, key.idx2, key.len, buf, string_buf,
-								type == _simdjson::internal::tape_type::START_OBJECT ? 0 : 1, key.id); // object vs array
+							nestedUT[braceNum]->add_user_type(key.buf_idx, key.next_buf_idx, buf, string_buf,
+								type == _simdjson::internal::tape_type::START_OBJECT ? 0 : 1, key.token_idx); // object vs array
 							key.is_key = false;
 						}
 						else {
@@ -3213,8 +3215,8 @@ namespace claujson {
 										ERROR("Error in __Load..., key : value  error");
 									}
 
-									nestedUT[braceNum]->add_item_type(Vec[x].idx, Vec[x].idx2, Vec[x].len,
-										Vec[x + 1].idx, Vec[x + 1].idx2, Vec[x + 1].len, buf, string_buf, Vec[x].id, Vec[x + 1].id);
+									nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx,
+										Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx, buf, string_buf, Vec[x].token_idx, Vec[x + 1].token_idx);
 								}
 							}
 							else { // END_ARRAY
@@ -3225,7 +3227,7 @@ namespace claujson {
 										ERROR("Error in __Load.., expect no key but has key...");
 									}
 
-									nestedUT[braceNum]->add_item_type((x.idx), x.idx2, x.len, buf, string_buf, x.id);
+									nestedUT[braceNum]->add_item_type((x.buf_idx), x.next_buf_idx, buf, string_buf, x.token_idx);
 								}
 							}
 
@@ -3235,7 +3237,7 @@ namespace claujson {
 
 						if (braceNum == 0) {
 
-							Ptr<Json> ut;
+							Ptr<Json> ut; // is v_array or v_object.
 
 							if (type == _simdjson::internal::tape_type::END_OBJECT) {
 								ut = Ptr<Json>(new VirtualObject());
@@ -3249,9 +3251,7 @@ namespace claujson {
 
 							for (size_t i = 0; i < len; ++i) {
 								if (nestedUT[braceNum]->get_value_list(i).is_ptr()) {
-									if (!ut->add_user_type(Ptr<Json>((Json*)nestedUT[braceNum]->get_value_list(i).ptr_val()))) {
-										//
-									}
+									ut->add_user_type(Ptr<Json>((Json*)nestedUT[braceNum]->get_value_list(i).ptr_val()));
 								}
 								else {
 									if (ut->is_object()) { 
@@ -3282,14 +3282,14 @@ namespace claujson {
 						{
 							TokenTemp data;
 
-							data.idx = imple->structural_indexes[token_arr_start + i];
-							data.id = token_arr_start + i;
+							data.buf_idx = imple->structural_indexes[token_arr_start + i];
+							data.token_idx = token_arr_start + i;
 
 							if (token_arr_start + i + 1 < imple->n_structural_indexes) {
-								data.idx2 = imple->structural_indexes[token_arr_start + i + 1];
+								data.next_buf_idx = imple->structural_indexes[token_arr_start + i + 1];
 							}
 							else {
-								data.idx2 = buf_len;
+								data.next_buf_idx = buf_len;
 							}
 
 							bool is_key = false;
@@ -3349,8 +3349,8 @@ namespace claujson {
 								ERROR("Error in __Load..., key : value  error");
 							}
 
-							nestedUT[braceNum]->add_item_type(Vec[x].idx, Vec[x].idx2, Vec[x].len, Vec[x + 1].idx, Vec[x + 1].idx2, Vec[x + 1].len,
-								buf, string_buf, Vec[x].id, Vec[x + 1].id);
+							nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx, 
+								buf, string_buf, Vec[x].token_idx, Vec[x + 1].token_idx);
 						}
 					}
 					else {
@@ -3359,7 +3359,7 @@ namespace claujson {
 								ERROR("Error in __Load..., array element has key..");
 							}
 
-							nestedUT[braceNum]->add_item_type(Vec[x].idx, Vec[x].idx2, Vec[x].len, buf, string_buf, Vec[x].id);
+							nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, buf, string_buf, Vec[x].token_idx);
 						}
 					}
 
@@ -3676,6 +3676,7 @@ namespace claujson {
 		}
 	};
 
+	// using fmt, for speed.
 	class StrStream {
 	private:
 		fmt::memory_buffer out;
@@ -5183,6 +5184,8 @@ namespace claujson {
 
 	void init() {
 		if (!simdjson_imple) {
+			log.no_print();
+
 			Data ut; 
 			std::string_view str = "{}"sv;
 

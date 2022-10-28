@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
 
 	try {
 		claujson::init();
-
+		claujson::log.console();
 		//utf_8_test();
 
 		//key_dup_test();

@@ -1,10 +1,12 @@
 ﻿#pragma once
 
+// 64bit.. DO NOT build 32bit! //
 
 #include <iostream>
 #include <memory>
 #include <map>
 #include <vector>
+#include <list>
 #include <string>
 #include <set>
 #include <fstream>
@@ -229,7 +231,7 @@ namespace claujson {
 	public:
 		friend std::ostream& operator<<(std::ostream& stream, const Data& data);
 
-		friend claujson::Data& Convert(Data& data, uint64_t idx, uint64_t idx2, uint64_t len, bool key,
+		friend claujson::Data& Convert(Data& data, uint64_t idx, uint64_t idx2, bool key,
 			char* buf, uint8_t* string_buf, uint64_t id, bool& err);
 	private:
 		union { // 64bit.. DO NOT build 32bit! //
@@ -244,7 +246,7 @@ namespace claujson {
 			bool _bool_val;
 		};
 
-		DataType _type = DataType::NONE; // type + valid
+		DataType _type = DataType::NONE; 
 		bool _valid = true;
 
 	public:
@@ -282,9 +284,11 @@ namespace claujson {
 
 		bool is_valid() const;
 
-		bool is_primitive() const;
+		bool is_null() const;
 
-		bool is_structured() const;
+		bool is_primitive() const; // int, uint, float, bool(true, false), string, null
+
+		bool is_structured() const; // array or object (or used in inner )
 
 		bool is_int() const;
 
@@ -323,7 +327,6 @@ namespace claujson {
 
 		Data& json_pointerB(const std::vector<Data>& routeDataVec);
 
-		// todo - rename, and add  as_ref, as_ptr ?
 		Array& as_array();
 		Object& as_object();
 		Json* as_json_ptr();
@@ -398,7 +401,6 @@ namespace claujson {
 		PtrWeak<Json> parent = nullptr;
 		bool valid = true; //
 	protected:
-		// check...  
 		static inline Data data_null{ nullptr, false }; // valid is false..
 	public:
 		inline static size_t npos = -1; // 
@@ -439,7 +441,7 @@ namespace claujson {
 
 		virtual Data& get_value();
 
-		virtual void reserve_data_list(size_t len) = 0;
+		virtual void reserve_data_list(size_t len) = 0; // if object, reserve key_list and value_list, if array, reserve value_list.
 
 		virtual bool is_object() const = 0;
 		virtual bool is_array() const = 0;
@@ -448,7 +450,7 @@ namespace claujson {
 		bool is_user_type() const;
 
 		// for valid with object or array or root.
-		virtual size_t get_data_size() const = 0;
+		virtual size_t get_data_size() const = 0; // data_size == key_list_size (if object), and data_size == value_list_size.
 		virtual Data& get_value_list(size_t idx) = 0;
 		virtual Data& get_key_list(size_t idx) = 0;
 
@@ -478,16 +480,15 @@ namespace claujson {
 	private:
 		virtual void Link(Ptr<Json> j) = 0;
 
-		// private, friend?
+		// need rename param....!
+		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx) = 0;
 
-		virtual void add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2) = 0;
+		virtual void add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t val_token_idx) = 0;
 
-		virtual void add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id) = 0;
-
-		virtual void add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
-			uint8_t* string_buf, int type, uint64_t id) = 0;
+		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+			uint8_t* string_buf, int ut_type, uint64_t key_token_idx) = 0;
 
 		//
 
@@ -507,7 +508,7 @@ namespace claujson {
 
 		Json* clone() const;
 
-		bool chk_key_dup(size_t* idx) const;  // chk dupplication of key.
+		bool chk_key_dup(size_t* idx) const;  // chk dupplication of key. only Object, Virtual Object..
 
 		[[nodiscard]]
 		static Data Make();
@@ -557,14 +558,14 @@ namespace claujson {
 	private:
 		virtual void Link(Ptr<Json> j);
 
-		virtual void add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2);
+		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx);
 
-		virtual void add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id);
+		virtual void add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t val_token_idx);
 
-		virtual void add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
-			uint8_t* string_buf, int type, uint64_t id);
+		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+			uint8_t* string_buf, int ut_type, uint64_t key_token_idx);
 
 		virtual void add_user_type(int type);
 
@@ -633,14 +634,14 @@ namespace claujson {
 		virtual void Link(Ptr<Json> j);
 
 
-		virtual void add_item_type(int64_t idx11, int64_t idx12, int64_t len1, int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id, uint64_t id2);
+		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx);
 
-		virtual void add_item_type(int64_t idx21, int64_t idx22, int64_t len2,
-			char* buf, uint8_t* string_buf, uint64_t id);
+		virtual void add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx, 
+			char* buf, uint8_t* string_buf, uint64_t val_token_idx);
 
-		virtual void add_user_type(int64_t idx, int64_t idx2, int64_t len, char* buf,
-			uint8_t* string_buf, int type, uint64_t id);
+		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+			uint8_t* string_buf, int ut_type, uint64_t key_token_idx);
 
 		virtual void add_user_type(int type);
 
@@ -654,6 +655,7 @@ namespace claujson {
 
 	// parse json file.
 	std::pair<bool, size_t> parse(const std::string& fileName, Data& ut, size_t thr_num);
+
 	// parse json str.
 	std::pair<bool, size_t> parse_str(std::string_view str, Data& ut, size_t thr_num);
 
