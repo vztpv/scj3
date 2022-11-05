@@ -501,6 +501,8 @@ namespace claujson {
 
 	class Object : public Json {
 		friend class Data;
+		friend class PartialJson;
+		friend class Array;
 	protected:
 		std::vector<Data> obj_key_vec;
 		std::vector<Data> obj_val_vec;

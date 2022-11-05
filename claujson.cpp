@@ -1609,6 +1609,10 @@ namespace claujson {
 			else if (j->is_partial_json()) {
 				auto* x = dynamic_cast<PartialJson*>(j);
 
+				if (x->arr_vec.empty() == false) { // not object?
+					ERROR("partial json is not object");
+				}
+
 				size_t len = j->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
 					if (j->get_value_list(i).is_ptr()) {
@@ -1891,6 +1895,10 @@ namespace claujson {
 			}
 			else if (j->is_partial_json()) {
 				auto* x = dynamic_cast<PartialJson*>(j);
+
+				if (x->obj_key_vec.empty() == false) { // not object?
+					ERROR("partial json is not array");
+				}
 
 				size_t len = j->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
@@ -2944,6 +2952,7 @@ offset[i] = len / n;
 
 				int start_offset = 0;
 				if (_ut->get_data_size() > 0 && _ut->get_value_list(0).is_ptr() && _ut->get_value_list(0).ptr_val()->is_virtual()) {
+					clean(_ut->get_value_list(0));
 					++start_offset;
 				}
 
