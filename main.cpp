@@ -193,6 +193,26 @@ void json_pointer_test() {
 
 int main(int argc, char* argv[])
 {
+	{
+		claujson::init();
+		claujson::Data ut;
+
+		claujson::parse_str("[1, 2, 3, 4]", ut, 1);
+
+		int sum = 0;
+		int a = clock();
+
+		for (int i = 0; i < 102400000; ++i) {
+			sum += ut.as_array().get_data_size();
+		}
+		int b = clock();
+		std::cout << b - a << "ms\n";
+		std::cout << sum << "\n";
+	}
+
+
+	//return 0;
+
 
 	{
 		auto str = R"("A" : 3 )"sv;
@@ -224,7 +244,8 @@ int main(int argc, char* argv[])
 
 	//claujson::log.no_print();
 
-	try {
+	//try 
+	{
 		claujson::init();
 		claujson::log.console();
 		//utf_8_test();
@@ -256,6 +277,9 @@ int main(int argc, char* argv[])
 				int b = clock();
 				std::cout << "total " << b - a << "ms\n";
 
+				//claujson::clean(j);
+				//return 0;
+
 				//claujson::LoadData::save(std::cout, ut);
 				//claujson::LoadData::save("output14.json", j);
 
@@ -278,7 +302,7 @@ int main(int argc, char* argv[])
 				if (true && ok) {
 					int chk = 0;
 					for (int i = 0; i < 1; ++i) {
-						if (j.is_ptr()) {
+						if (j.is_structured()) {
 							auto& features = j.as_object()[1]; // j[1];
 							for (auto& feature : features.as_array()) {
 								auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
@@ -329,7 +353,7 @@ int main(int argc, char* argv[])
 						auto& features = j.as_object()[1]; // j[1];
 						for (auto& feature : features.as_array()) {
 							auto& geometry = feature.as_object().at(X.str_val()); // as_array()[t].as_object()["geometry"];
-							if (geometry.is_ptr()) { // is_obj or arr?  -> is_structured
+							if (geometry.is_structured()) { // is_obj or arr?  -> is_structured
 								auto& coordinates = geometry.as_object().at(Y.str_val()); // todo - add? at(const Data& data) ?
 								auto& coordinate = coordinates.as_array()[0];
 								for (auto& coordinate_ : coordinate.as_array()) {
@@ -388,10 +412,10 @@ int main(int argc, char* argv[])
 			claujson::clean(j);
 		}
 	}
-	catch (...) {
-		std::cout << "chk..\n";
-		return 1;
-	}
+	//catch (...) {
+	//	std::cout << "chk..\n";
+		//return 1;
+	//}
 	//std::cout << (claujson::error.has_error() ? ( "has error" ) : ( "no error" )) << "\n";
 	//std::cout << claujson::error.msg() << "\n";
 

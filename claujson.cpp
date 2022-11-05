@@ -31,6 +31,8 @@ namespace claujson {
 	private:
 		friend class LoadData;
 		friend class LoadData2;
+		friend class Object;
+		friend class Array;
 
 		PartialJson();
 
@@ -78,6 +80,9 @@ namespace claujson {
 
 
 	private:
+
+		virtual void MergeWith(PtrWeak<Json> j, int start_offset);
+
 		virtual void Link(Ptr<Json> j);
 
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
@@ -338,7 +343,7 @@ namespace claujson {
 		return _bool_val;
 	}
 
-	void* Data::ptr_val() const {
+	Json* Data::ptr_val() const {
 		if (!is_ptr()) {
 			return nullptr;
 		}
@@ -1578,6 +1583,51 @@ namespace claujson {
 			obj_val_vec.erase(obj_val_vec.begin() + idx);
 		}
 
+
+		void Object::MergeWith(PtrWeak<Json> j, int start_offset) {
+			if (!is_valid()) {
+				return;
+			}
+
+			if (j->is_object()) {
+				auto* x = dynamic_cast<Object*>(j);
+
+				size_t len = j->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
+					if (j->get_value_list(i).is_ptr()) {
+						j->get_value_list(i).as_json_ptr()->set_parent(this);
+					}
+				}
+
+				if (x->obj_key_vec.empty() == false) {
+					obj_key_vec.insert(obj_key_vec.end(), std::make_move_iterator(x->obj_key_vec.begin()) + start_offset,
+						std::make_move_iterator(x->obj_key_vec.end()));
+					obj_val_vec.insert(obj_val_vec.end(), std::make_move_iterator(x->obj_val_vec.begin()) + start_offset,
+						std::make_move_iterator(x->obj_val_vec.end()));
+				}
+			}
+			else if (j->is_partial_json()) {
+				auto* x = dynamic_cast<PartialJson*>(j);
+
+				size_t len = j->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
+					if (j->get_value_list(i).is_ptr()) {
+						j->get_value_list(i).as_json_ptr()->set_parent(this);
+					}
+				}
+
+				if (x->obj_key_vec.empty() == false) {
+					obj_key_vec.insert(obj_key_vec.end(), std::make_move_iterator(x->obj_key_vec.begin()) + start_offset,
+						std::make_move_iterator(x->obj_key_vec.end()));
+					obj_val_vec.insert(obj_val_vec.end(), std::make_move_iterator(x->obj_val_vec.begin()) + start_offset,
+						std::make_move_iterator(x->obj_val_vec.end()));
+				}
+			}
+			else {
+				ERROR("Object::MergeWith Error");
+			}
+		}
+
 		void Object::Link(Ptr<Json> j) {
 			if (!is_valid()) {
 				return;
@@ -1820,6 +1870,44 @@ namespace claujson {
 			arr_vec.erase(arr_vec.begin() + idx);
 		}
 		
+		void Array::MergeWith(PtrWeak<Json> j, int start_offset) {
+			if (!is_valid()) {
+				return;
+			}
+
+			if (j->is_array()) {
+				auto* x = dynamic_cast<Array*>(j);
+
+				size_t len = j->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
+					if (j->get_value_list(i).is_ptr()) {
+						j->get_value_list(i).as_json_ptr()->set_parent(this);
+					}
+				}
+				if (x->arr_vec.empty() == false) {
+					arr_vec.insert(arr_vec.end(), std::make_move_iterator(x->arr_vec.begin()) + start_offset,
+						std::make_move_iterator(x->arr_vec.end()));
+				}
+			}
+			else if (j->is_partial_json()) {
+				auto* x = dynamic_cast<PartialJson*>(j);
+
+				size_t len = j->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
+					if (j->get_value_list(i).is_ptr()) {
+						j->get_value_list(i).as_json_ptr()->set_parent(this);
+					}
+				}
+				if (x->arr_vec.empty() == false) {
+					arr_vec.insert(arr_vec.end(), std::make_move_iterator(x->arr_vec.begin()) + start_offset,
+						std::make_move_iterator(x->arr_vec.end()));
+				}
+			}
+			else {
+				ERROR("Array::MergeWith Error");
+			}
+		}
+
 		void Array::Link(Ptr<Json> j) {
 			if (!is_valid()) {
 				return;
@@ -2106,6 +2194,45 @@ namespace claujson {
 			ERROR("NOT USED");
 		}
 
+		void PartialJson::MergeWith(PtrWeak<Json> j, int start_offset) {
+			if (!is_valid()) {
+				return;
+			}
+
+			if (j->is_array()) {
+				auto* x = dynamic_cast<Array*>(j);
+
+				size_t len = j->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
+					if (j->get_value_list(i).is_ptr()) {
+						j->get_value_list(i).as_json_ptr()->set_parent(this);
+					}
+				}
+				if (x->arr_vec.empty() == false) {
+					arr_vec.insert(arr_vec.end(), std::make_move_iterator(x->arr_vec.begin()) + start_offset,
+						std::make_move_iterator(x->arr_vec.end()));
+				}
+			}
+			else if (j->is_partial_json()) {
+				auto* x = dynamic_cast<PartialJson*>(j);
+
+				size_t len = j->get_data_size();
+				for (size_t i = 0; i < len; ++i) {
+					if (j->get_value_list(i).is_ptr()) {
+						j->get_value_list(i).as_json_ptr()->set_parent(this);
+					}
+				}
+
+				if (x->arr_vec.empty() == false) {
+					arr_vec.insert(arr_vec.end(), std::make_move_iterator(x->arr_vec.begin()) + start_offset,
+						std::make_move_iterator(x->arr_vec.end()));
+				}
+			}
+			else {
+				ERROR("PartialJson::MergeWith Error");
+			}
+		}
+
 		void PartialJson::Link(Ptr<Json> j) { // use carefully...
 
 			j->set_parent(this);
@@ -2359,7 +2486,7 @@ namespace claujson {
 	}
 
 	Array& Data::as_array() {
-		if (is_valid() && is_ptr() && as_json_ptr()->is_array() && as_json_ptr()->is_valid()) {
+		if (is_ptr() && as_json_ptr()->is_array()) {
 			return *static_cast<Array*>(_ptr_val);
 		}
 		static Array empty_arr{ false };
@@ -2367,7 +2494,7 @@ namespace claujson {
 	}
 
 	Object& Data::as_object() {
-		if (is_valid() && is_ptr() && as_json_ptr()->is_object() && as_json_ptr()->is_valid()) {
+		if (is_ptr() && as_json_ptr()->is_object()) {
 			return *static_cast<Object*>(_ptr_val);
 		}
 		static Object empty_obj{ false };
@@ -2376,7 +2503,7 @@ namespace claujson {
 
 
 	const Array& Data::as_array() const {
-		if (is_valid() && is_ptr() && as_json_ptr()->is_array() && as_json_ptr()->is_valid()) {
+		if (is_ptr() && as_json_ptr()->is_array()) {
 			return *static_cast<Array*>(_ptr_val);
 		}
 		static const Array empty_arr{ false };
@@ -2384,7 +2511,7 @@ namespace claujson {
 	}
 
 	const Object& Data::as_object() const {
-		if (is_valid() && is_ptr() && as_json_ptr()->is_object() && as_json_ptr()->is_valid()) {
+		if (is_ptr() && as_json_ptr()->is_object()) {
 			return *static_cast<Object*>(_ptr_val);
 		}
 		static const Object empty_obj{ false };
@@ -2710,14 +2837,14 @@ namespace claujson {
 			std::vector<size_t> offset(n - 1, 0);
 
 			for (size_t i = 0; i < offset.size(); ++i) {
-				offset[i] = len / n;
+offset[i] = len / n;
 			}
 			offset.back() = len - len / n * (n - 1);
 
 			hint = std::vector<int>(n - 1, 0);
 
 			std::vector<claujson::Json*> out(n, nullptr);
-			
+
 			{
 				size_t idx = 0;
 				auto offset2 = offset;
@@ -2798,7 +2925,7 @@ namespace claujson {
 					*ut_next = _next;
 					chk_ut_next = true;
 
-					log << info  << "chked in merge...\n";
+					log << info << "chked in merge...\n";
 				}
 
 				if (_next->is_array() && _ut->is_object()) {
@@ -2808,17 +2935,27 @@ namespace claujson {
 					ERROR("Error in Merge, next is object but child? is array");
 				}
 
+				if (_next->get_parent() == nullptr && _ut->get_data_size() > 0 && _ut->get_key_list(0).is_str()) {
+					ERROR("Error in Merge, root must have not key");
+				}
+				if (_next->get_parent() == nullptr && _ut->get_data_size() > 1) {
+					ERROR("Error in Merge, root must have one element");
+				}
 
+				int start_offset = 0;
+				if (_ut->get_data_size() > 0 && _ut->get_value_list(0).is_ptr() && _ut->get_value_list(0).ptr_val()->is_virtual()) {
+					++start_offset;
+				}
 
+				_next->MergeWith(_ut, start_offset);
+
+				/*
 				size_t _size = _ut->get_data_size();
 
 				for (size_t i = 0; i < _size; ++i) {
 
 					if (_ut->get_value_list(i).is_ptr()) { // partial json, array, object
-						if (((Json*)(_ut->get_value_list(i).ptr_val()))->is_virtual()) {
-							//
-						}
-						else {
+						if (((Json*)(_ut->get_value_list(i).ptr_val()))->is_virtual() == false) {
 							// root
 							if (_next->get_parent() == nullptr && _ut->get_key_list(i).is_str()) {
 								ERROR("Error in Merge, root must have not key");
@@ -2844,7 +2981,7 @@ namespace claujson {
 						_ut->clear(i);
 					}
 				}
-
+				*/
 				_ut->clear();
 
 				ut = ut->get_parent();
@@ -3659,12 +3796,12 @@ namespace claujson {
 
 				return false;
 			}
-			catch (...) {
+			//catch (...) {
 
-				log << warn  << "internal error\n";
+			//	log << warn  << "internal error\n";
 				//ERROR("Internal Error"sv);
-				return false;
-			}
+			//	return false;
+			//}
 
 		}
 		static bool parse(Data& global, char* buf, size_t buf_len,

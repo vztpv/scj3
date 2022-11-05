@@ -316,7 +316,7 @@ namespace claujson {
 
 		bool bool_val() const;
 
-		void* ptr_val() const;
+		Json* ptr_val() const;
 
 		Data& json_pointer(std::string_view route);
 
@@ -478,6 +478,8 @@ namespace claujson {
 
 
 	private:
+		virtual void MergeWith(PtrWeak<Json> j, int start_offset) = 0; // start_offset is 0 or 1.
+
 		virtual void Link(Ptr<Json> j) = 0;
 
 		// need rename param....!
@@ -556,6 +558,8 @@ namespace claujson {
 
 
 	private:
+		virtual void MergeWith(PtrWeak<Json> j, int start_offset);
+
 		virtual void Link(Ptr<Json> j);
 
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
@@ -574,6 +578,8 @@ namespace claujson {
 
 	class Array : public Json {
 		friend class Data;
+		friend class Array;
+		friend class PartialJson;
 	protected:
 		std::vector<Data> arr_vec;
 	protected:
@@ -631,6 +637,11 @@ namespace claujson {
 		virtual void erase(size_t idx, bool real = false);
 
 	private:
+
+
+		virtual void MergeWith(PtrWeak<Json> j, int start_offset);
+
+
 		virtual void Link(Ptr<Json> j);
 
 
