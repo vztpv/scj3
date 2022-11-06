@@ -1605,6 +1605,9 @@ namespace claujson {
 					obj_val_vec.insert(obj_val_vec.end(), std::make_move_iterator(x->obj_val_vec.begin()) + start_offset,
 						std::make_move_iterator(x->obj_val_vec.end()));
 				}
+				else {
+					log << info << "test1";
+				}
 			}
 			else if (j->is_partial_json()) {
 				auto* x = dynamic_cast<PartialJson*>(j);
@@ -1620,11 +1623,18 @@ namespace claujson {
 					}
 				}
 
+				if (x->virtualJson.is_ptr()) {
+					start_offset = 0;
+				}
+
 				if (x->obj_key_vec.empty() == false) {
 					obj_key_vec.insert(obj_key_vec.end(), std::make_move_iterator(x->obj_key_vec.begin()) + start_offset,
 						std::make_move_iterator(x->obj_key_vec.end()));
 					obj_val_vec.insert(obj_val_vec.end(), std::make_move_iterator(x->obj_val_vec.begin()) + start_offset,
 						std::make_move_iterator(x->obj_val_vec.end()));
+				}
+				else {
+					log << info << "test2";
 				}
 			}
 			else {
@@ -1888,9 +1898,14 @@ namespace claujson {
 						j->get_value_list(i).as_json_ptr()->set_parent(this);
 					}
 				}
+
 				if (x->arr_vec.empty() == false) {
 					arr_vec.insert(arr_vec.end(), std::make_move_iterator(x->arr_vec.begin()) + start_offset,
 						std::make_move_iterator(x->arr_vec.end()));
+				}
+				else {
+
+					log << info << "test3";
 				}
 			}
 			else if (j->is_partial_json()) {
@@ -1906,9 +1921,19 @@ namespace claujson {
 						j->get_value_list(i).as_json_ptr()->set_parent(this);
 					}
 				}
+
+
+				if (x->virtualJson.is_ptr()) {
+					start_offset = 0;
+				}
+
 				if (x->arr_vec.empty() == false) {
 					arr_vec.insert(arr_vec.end(), std::make_move_iterator(x->arr_vec.begin()) + start_offset,
 						std::make_move_iterator(x->arr_vec.end()));
+				}
+				else {
+
+					log << info << "test4";
 				}
 			}
 			else {
@@ -2220,6 +2245,10 @@ namespace claujson {
 					arr_vec.insert(arr_vec.end(), std::make_move_iterator(x->arr_vec.begin()) + start_offset,
 						std::make_move_iterator(x->arr_vec.end()));
 				}
+				else {
+
+					log << info << "test5";
+				}
 			}
 			else if (j->is_partial_json()) {
 				auto* x = dynamic_cast<PartialJson*>(j);
@@ -2231,9 +2260,17 @@ namespace claujson {
 					}
 				}
 
+				if (x->virtualJson.is_ptr()) {
+					start_offset = 0;
+				}
+
 				if (x->arr_vec.empty() == false) {
 					arr_vec.insert(arr_vec.end(), std::make_move_iterator(x->arr_vec.begin()) + start_offset,
 						std::make_move_iterator(x->arr_vec.end()));
+				}
+				else {
+
+					log << info << "test6";
 				}
 			}
 			else {
@@ -2952,11 +2989,14 @@ offset[i] = len / n;
 
 				int start_offset = 0;
 				if (_ut->get_data_size() > 0 && _ut->get_value_list(0).is_ptr() && _ut->get_value_list(0).ptr_val()->is_virtual()) {
-					clean(_ut->get_value_list(0));
 					++start_offset;
 				}
 
 				_next->MergeWith(_ut, start_offset);
+
+				if (_ut->get_data_size() > 0 && _ut->get_value_list(0).is_ptr() && _ut->get_value_list(0).ptr_val()->is_virtual()) {
+					clean(_ut->get_value_list(0));
+				}
 
 				/*
 				size_t _size = _ut->get_data_size();
