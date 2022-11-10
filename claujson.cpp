@@ -1718,13 +1718,13 @@ namespace claujson {
 				j->set_parent(this);
 
 				obj_key_vec.push_back(Data());
-				obj_val_vec.push_back(Data(j.release()));
+				obj_val_vec.emplace_back(j.release());
 			}
 			else if (j->has_key()) {
 				j->set_parent(this);
 
 				obj_key_vec.push_back(j->get_key().clone());
-				obj_val_vec.push_back(Data(j.release()));
+				obj_val_vec.emplace_back(j.release());
 			}
 			else {
 				log << warn  << "chk..";
@@ -2003,11 +2003,11 @@ namespace claujson {
 
 			if (j->is_virtual()) {
 				j->set_parent(this);
-				arr_vec.push_back(Data(j.release()));
+				arr_vec.emplace_back(j.release());
 			}
 			else if (j->has_key() == false) {
 				j->set_parent(this);
-				arr_vec.push_back(Data(j.release()));
+				arr_vec.emplace_back(j.release());
 			}
 			else {
 				// error..
@@ -2361,7 +2361,7 @@ namespace claujson {
 					return false; //ERROR("partialJson is array or object.");
 				}
 
-				arr_vec.push_back(Data(j.release()));
+				arr_vec.emplace_back(j.release());
 			}
 			else {
 				
@@ -2371,7 +2371,7 @@ namespace claujson {
 
 				if (j->has_key()) {
 					obj_key_vec.push_back(j->get_key().clone());
-					obj_val_vec.push_back(Data(j.release()));
+					obj_val_vec.emplace_back(j.release());
 				}
 				else {
 					log << warn  << "ERROR";
@@ -3089,38 +3089,23 @@ offset[i] = len / n;
 					log << info  << "chked in merge...\n";
 				}
 
-				size_t _size = _ut->get_data_size();
 
-				for (size_t i = 0; i < _size; ++i) {
-					if (_ut->get_value_list(i).is_ptr()) { // partial json, array, object
-						if (((Json*)(_ut->get_value_list(i).ptr_val()))->is_virtual()) {
-							//
-						}
-						else {
-							// root
-							if (_next->get_parent() == nullptr && _ut->get_key_list(i)) {
-								ERROR("Error in Merge, root must have not key");
-							}
+				if (_next->get_parent() == nullptr && _ut->get_data_size() > 0 && _ut->get_key_list(0).is_str()) {
+					ERROR("Error in Merge, root must have not key");
+				}
+				if (_next->get_parent() == nullptr && _ut->get_data_size() > 1) {
+					ERROR("Error in Merge, root must have one element");
+				}
 
+				int start_offset = 0;
+				if (_ut->get_data_size() > 0 && _ut->get_value_list(0).is_ptr() && _ut->get_value_list(0).ptr_val()->is_virtual()) {
+					++start_offset;
+				}
 
-							_next->Link(Ptr<Json>(((Json*)(_ut->get_value_list(i).ptr_val()))));
-							_ut->clear(i);
-						}
-					}
-					else { // item type.
-						// root
-						if (_next->get_parent() == nullptr && _ut->get_key_list(i)) {
-							ERROR("Error in Merge, root must have not key");
-						}
+				_next->MergeWith(_ut, start_offset);
 
-						if (_next->is_array() || _next->is_partial_json()) {
-							_next->add_array_element(std::move(_ut->get_value_list(i)));
-						}
-						else {
-							_next->add_object_element(std::move(_ut->get_key_list(i)), std::move(_ut->get_value_list(i)));
-						}
-						_ut->clear(i);
-					}
+				if (_ut->get_data_size() > 0 && _ut->get_value_list(0).is_ptr() && _ut->get_value_list(0).ptr_val()->is_virtual()) {
+					clean(_ut->get_value_list(0));
 				}
 
 				_ut->clear();
