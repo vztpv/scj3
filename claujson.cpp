@@ -4888,6 +4888,154 @@ offset[i] = len / n;
 		}
 	}
 
+	bool is_valid(_simdjson::dom::parser_for_claujson& dom_parser) {
+
+		const auto& buf = dom_parser.raw_buf();
+		const auto& string_buf = dom_parser.raw_string_buf();
+		const auto buf_len = dom_parser.raw_len();
+
+		auto* simdjson_imple = dom_parser.raw_implementation().get();
+		size_t idx = 0;
+		size_t depth = 0;
+		std::vector<int> is_array;
+
+		is_array.reserve(1024);
+		
+		//
+// Start the document
+//
+		///if (at_eof()) { return EMPTY; }
+
+		if (simdjson_imple->n_structural_indexes == 0) {
+			return true; // chk?
+		}
+
+		//log_start_value("document");
+		//SIMDJSON_TRY(visitor.visit_document_start(*this));
+
+		//
+		// Read first value
+		//
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx++]]; //advance();
+
+			// Make sure the outer object or array is closed before continuing; otherwise, there are ways we
+			// could get into memory corruption. See https://github.com/simdjson/simdjson/issues/906
+			//if (!STREAMING) {
+				switch (value) {
+				case '{': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != '}') {
+					log << warn << ("starting brace unmatched"); return false;
+				} 
+				break;
+				case '[': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != ']') { 
+					log << warn << ("starting bracket unmatched"); return false; }
+				break;
+				}
+		//	}
+
+			switch (value) {
+			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') {
+				++idx; log << warn << ("empty object"); } goto object_begin;
+			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { 
+				++idx; log << warn << ("empty array"); } goto array_begin;
+			default: break;
+			}
+		}
+		goto document_end;
+
+		//
+		// Object parser states
+		//
+	object_begin:
+		//log_start_value("object");
+		depth++;
+		if (is_array.size() < depth) {
+			is_array.push_back(0);
+		}
+		if (depth >= dom_parser.max_depth()) { log << warn << ("Exceeded max depth!"); return false; }
+		//dom_parser.is_array[depth] = false;
+		is_array[depth - 1] = 0;
+		//SIMDJSON_TRY(visitor.visit_object_start(*this));
+
+		{
+			auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
+			if (key != '"') { log << warn << ("Object does not start with a key"); return false; }
+			//SIMDJSON_TRY(visitor.increment_count(*this));
+			//SIMDJSON_TRY(visitor.visit_key(*this, key));
+		}
+
+	object_field:
+		if (simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx++]] != ':')) { log << warn << ("Missing colon after key in object"); return false; }
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx++]];
+			switch (value) {
+			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
+			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
+			default: //SIMDJSON_TRY(visitor.visit_primitive(*this, value)); 
+				break;
+			}
+		}
+
+	object_continue:
+		switch (buf[simdjson_imple->structural_indexes[idx++]]) {
+		case ',':
+			//SIMDJSON_TRY(visitor.increment_count(*this));
+			{
+				auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
+				if (simdjson_unlikely(key != '"')) { log << warn << ("Key string missing at beginning of field in object"); return false; }
+				//SIMDJSON_TRY(visitor.visit_key(*this, key));
+			}
+			goto object_field;
+		case '}': goto scope_end;
+		default: log << warn << ("No comma between object fields"); return false;
+		}
+
+	scope_end:
+		depth--;
+		if (depth == 0) { goto document_end; }
+		if (is_array[depth - 1]) { goto array_continue; }
+		goto object_continue;
+
+		//
+		// Array parser states
+		//
+	array_begin:
+		//log_start_value("array");
+		depth++;
+		if (depth >= dom_parser.max_depth()) { log << warn << ("Exceeded max depth!"); return false; }
+		if (is_array.size() < depth) { is_array.push_back(1); }
+		is_array[depth - 1] = 1;
+		//SIMDJSON_TRY(visitor.visit_array_start(*this));
+	//	SIMDJSON_TRY(visitor.increment_count(*this));
+
+	array_value:
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx++]];
+			switch (value) {
+			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
+			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
+			default: break;
+			}
+		}
+
+	array_continue:
+		switch (buf[simdjson_imple->structural_indexes[idx++]]) {
+		case ',': goto array_value;
+		case ']': goto scope_end;
+		default: log << warn << ("Missing comma between array values"); return false;
+		}
+
+	document_end:
+		// If we didn't make it to the end, it's an error
+		if (idx != simdjson_imple->n_structural_indexes) {
+			log << warn << ("More than one JSON value at the root of the document, or extra characters at the end of the JSON!");
+			return false;
+		}
+
+		log << info << "test end\n";
+		return true;
+	}
+
 	std::pair<bool, size_t> parse(const std::string& fileName, Data& ut, size_t thr_num)
 	{
 		if (thr_num <= 0) {
@@ -4947,7 +5095,17 @@ offset[i] = len / n;
 
 			int b = clock();
 
-			log << info  << b - a << "ms\n";
+			log << info  << "valid1 " << b - a << "ms\n";
+
+			b = clock();
+
+			if (!is_valid(test)) {
+				return { false, 0 };
+			}
+
+			log << info << clock() - b << "ms\n";
+			
+			b = clock();
 
 			start[thr_num] = length;
 			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), simdjson_imple, length, start, thr_num)) // 0 : use all thread..

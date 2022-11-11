@@ -277,8 +277,8 @@ int main(int argc, char* argv[])
 				int b = clock();
 				std::cout << "total " << b - a << "ms\n";
 
-				//claujson::clean(j);
-				//return 0;
+				claujson::clean(j);
+				return 0;
 
 				//claujson::LoadData::save(std::cout, ut);
 				//claujson::LoadData::save("output14.json", j);
