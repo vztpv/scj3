@@ -5181,6 +5181,15 @@ offset[i] = len / n;
 			int b = clock();
 
 			log << info << b - a << "ms\n";
+			b = clock();
+
+			if (!is_valid(test)) {
+				return { false, 0 };
+			}
+
+			log << info << clock() - b << "ms\n";
+
+			b = clock();
 
 			start[thr_num] = length;
 

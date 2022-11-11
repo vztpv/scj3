@@ -195,6 +195,8 @@ int main(int argc, char* argv[])
 {
 	{
 		claujson::init();
+		claujson::log.console();
+
 		claujson::Data ut;
 
 		claujson::parse_str("[1, 2, 3, 4]", ut, 1);
