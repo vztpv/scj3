@@ -1375,9 +1375,12 @@ namespace claujson {
 				if (idx == -1) {
 					return false;
 				}
-				auto val = std::move(get_value_list(idx));
-				erase(idx);
-				add_object_element(key.clone(), std::move(val));
+
+				get_key_list(idx) = new_key.clone();
+
+				//auto val = std::move(get_value_list(idx));
+				//erase(idx);
+				//add_object_element(new_key.clone(), std::move(val));
 				return true;
 			}
 			return false;

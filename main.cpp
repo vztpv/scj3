@@ -193,28 +193,6 @@ void json_pointer_test() {
 
 int main(int argc, char* argv[])
 {
-	{
-		claujson::init();
-		claujson::log.console();
-
-		claujson::Data ut;
-
-		claujson::parse_str("[1, 2, 3, 4]", ut, 1);
-
-		int sum = 0;
-		int a = clock();
-
-		for (int i = 0; i < 102400000; ++i) {
-			sum += ut.as_array().get_data_size();
-		}
-		int b = clock();
-		std::cout << b - a << "ms\n";
-		std::cout << sum << "\n";
-	}
-
-
-	//return 0;
-
 
 	{
 		auto str = R"("A" : 3 )"sv;
