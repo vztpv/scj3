@@ -3172,87 +3172,90 @@ offset[i] = len / n;
 
 				int64_t count = 0;
 
-				TokenTemp key; bool is_before_comma = false;
-				bool is_now_comma = false;
-				bool is_next_comma = false;
+				TokenTemp key; //bool is_before_comma = false;
+				//bool is_now_comma = false;
+				//bool is_next_comma = false;
 
-				if (token_arr_start > 0) {
-					const _simdjson::internal::tape_type before_type =
-						get_type(buf[imple->structural_indexes[token_arr_start - 1]]);
+				//if (token_arr_start > 0) {
+				//	const _simdjson::internal::tape_type before_type =
+					//	get_type(buf[imple->structural_indexes[token_arr_start - 1]]);
 
-					is_before_comma = before_type == _simdjson::internal::tape_type::COMMA;
-				}
+				//	is_before_comma = before_type == _simdjson::internal::tape_type::COMMA;
+			//	}
 
 
 				for (uint64_t i = 0; i < token_arr_len; ++i) {
 
-					is_now_comma = is_next_comma;
+					//is_now_comma = is_next_comma;
 
 					const _simdjson::internal::tape_type type = get_type(buf[imple->structural_indexes[token_arr_start + i]]);
 
-
-					if (is_before_comma && type == _simdjson::internal::tape_type::COMMA) {
-						log << warn  << "before is comma\n";
-
-						ERROR("Error in __Load... and case : , ,");
-						//
-					}
-
-
-					if (token_arr_start + i > 0) {
-						const _simdjson::internal::tape_type before_type =
-							get_type(buf[imple->structural_indexes[token_arr_start + i - 1]]);
-
-						if (before_type == _simdjson::internal::tape_type::START_ARRAY || before_type == _simdjson::internal::tape_type::START_OBJECT) {
-							is_now_comma = false; //log << warn  << "2-i " << i << "\n";
-						}
-					}
-
-					if (is_before_comma) {
-						is_now_comma = false;
-					}
-
-					if (!is_now_comma && type == _simdjson::internal::tape_type::COMMA) {
-						log << warn  << "now is not comma\n";
-
-						ERROR("Error in __Load.., now is comma but, no expect.");							//
-					}
-					if (is_now_comma && type != _simdjson::internal::tape_type::COMMA) {
-						log << warn  << "is now comma... but not..\n";
-
-						ERROR("Error in __Load..., comma is expected but, is not");
-					}
-
-
-					is_before_comma = type == _simdjson::internal::tape_type::COMMA;
-
 					if (type == _simdjson::internal::tape_type::COMMA) {
-						if (token_arr_start + i + 1 < imple->n_structural_indexes) {
-							const _simdjson::internal::tape_type _type = // next_type
-								get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
-
-							if (_type == _simdjson::internal::tape_type::END_ARRAY || _type == _simdjson::internal::tape_type::END_OBJECT) {
-								ERROR("Error in __Load..,  case : , } or , ]");
-								//
-							}
-							else if (_type == _simdjson::internal::tape_type::COLON) {
-								ERROR("Error in __Load... case :    , : ");
-							}
-
-							continue;
-						}
-						else {
-							ERROR("Error in __Load..., last valid char? is , ");
-						}
+						continue;
 					}
 
-					if (type == _simdjson::internal::tape_type::COLON) {
-						ERROR("Error in __Load..., checked colon..");
+				//	if (is_before_comma && type == _simdjson::internal::tape_type::COMMA) {
+					//	log << warn  << "before is comma\n";
+
+					//	ERROR("Error in __Load... and case : , ,");
 						//
-					}
+					//}
 
 
-					is_next_comma = __comma_chk_table[(int)is_now_comma][(unsigned char)type]; // comma_chk_table
+					//if (token_arr_start + i > 0) {
+					//	const _simdjson::internal::tape_type before_type =
+					//		get_type(buf[imple->structural_indexes[token_arr_start + i - 1]]);
+					//
+					//	if (before_type == _simdjson::internal::tape_type::START_ARRAY || before_type == _simdjson::internal::tape_type::START_OBJECT) {
+					//		is_now_comma = false; //log << warn  << "2-i " << i << "\n";
+					//	}
+					//}
+
+					//if (is_before_comma) {
+					//	is_now_comma = false;
+				//	}
+				//
+					//if (!is_now_comma && type == _simdjson::internal::tape_type::COMMA) {
+					//	log << warn  << "now is not comma\n";
+
+					//	ERROR("Error in __Load.., now is comma but, no expect.");							//
+					//}
+					//if (is_now_comma && type != _simdjson::internal::tape_type::COMMA) {
+					//	log << warn  << "is now comma... but not..\n";
+
+					//	ERROR("Error in __Load..., comma is expected but, is not");
+					//}
+
+
+					//is_before_comma = type == _simdjson::internal::tape_type::COMMA;
+
+					//if (type == _simdjson::internal::tape_type::COMMA) {
+					//	if (token_arr_start + i + 1 < imple->n_structural_indexes) {
+					//		const _simdjson::internal::tape_type _type = // next_type
+					//			get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
+
+					//		if (_type == _simdjson::internal::tape_type::END_ARRAY || _type == _simdjson::internal::tape_type::END_OBJECT) {
+					//			ERROR("Error in __Load..,  case : , } or , ]");
+					//			//
+					//		}
+					/////		else if (_type == _simdjson::internal::tape_type::COLON) {
+					//			ERROR("Error in __Load... case :    , : ");
+					//		}
+
+					//		continue;
+					//	}
+					//	else {
+					//		ERROR("Error in __Load..., last valid char? is , ");
+					//	}
+				//	}
+
+				//	if (type == _simdjson::internal::tape_type::COLON) {
+				//		ERROR("Error in __Load..., checked colon..");
+				//		//
+				//	}
+
+
+					//is_next_comma = __comma_chk_table[(int)is_now_comma][(unsigned char)type]; // comma_chk_table
 					/*switch (type) {
 					case _simdjson::internal::tape_type::END_ARRAY:
 					case _simdjson::internal::tape_type::END_OBJECT:
@@ -3268,17 +3271,17 @@ offset[i] = len / n;
 						break;
 					} */
 
-					if (token_arr_start + i + 1 < imple->n_structural_indexes) {
-						const _simdjson::internal::tape_type _type = // next_type
-							get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
+					//if (token_arr_start + i + 1 < imple->n_structural_indexes) {
+					//	const _simdjson::internal::tape_type _type = // next_type
+					//		get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
 
-						if (_type == _simdjson::internal::tape_type::END_ARRAY || _type == _simdjson::internal::tape_type::END_OBJECT) {
-							is_next_comma = false;
-						}
-					}
-					else {
-						is_next_comma = false;
-					}
+					////	if (_type == _simdjson::internal::tape_type::END_ARRAY || _type == _simdjson::internal::tape_type::END_OBJECT) {
+					//		is_next_comma = false;
+					//	}
+					//}
+					//else {
+					//	is_next_comma = false;
+					//}
 
 					// Left 1
 					if (type == _simdjson::internal::tape_type::START_OBJECT ||
@@ -3289,20 +3292,20 @@ offset[i] = len / n;
 							if (Vec[0].is_key) {
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size() / 2);
 
-								if (Vec.size() % 2 == 1) {
-									log << warn  << "Vec.size()%2==1\n";
-									ERROR("Error in __Load..., key : value  error");
-								}
+								//if (Vec.size() % 2 == 1) {
+								//	log << warn  << "Vec.size()%2==1\n";
+								//	ERROR("Error in __Load..., key : value  error");
+								//}
 
 								for (size_t x = 0; x < Vec.size(); x += 2) {
-									if (!Vec[x].is_key) {
-										log << warn  << "vec[x].is not key\n";
-										ERROR("Error in __Load..., key : value  error");
-									}
-									if (Vec[x + 1].is_key) {
-										log << warn  << "vec[x].is key\n";
-										ERROR("Error in __Load..., key : value  error");
-									}
+									//if (!Vec[x].is_key) {
+									//	log << warn  << "vec[x].is not key\n";
+									//	ERROR("Error in __Load..., key : value  error");
+									//}
+									//if (Vec[x + 1].is_key) {
+									//	log << warn  << "vec[x].is key\n";
+									//	ERROR("Error in __Load..., key : value  error");
+									//}
 									nestedUT[braceNum]->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx, 
 										(Vec[x + 1].buf_idx), Vec[x + 1].next_buf_idx, 
 										buf, string_buf, Vec[x].token_idx, Vec[x + 1].token_idx);
@@ -3312,11 +3315,11 @@ offset[i] = len / n;
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size());
 
 								for (size_t x = 0; x < Vec.size(); x += 1) {
-									if (Vec[x].is_key) {
-										log << warn  << "Vec[x].iskey\n";
+									//if (Vec[x].is_key) {
+									//	log << warn  << "Vec[x].iskey\n";
 
-										ERROR("Error in __Load..., key : value  error");
-									}
+									//	ERROR("Error in __Load..., key : value  error");
+									//}
 									nestedUT[braceNum]->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx, buf, string_buf, Vec[x].token_idx);
 								}
 							}
@@ -3354,17 +3357,17 @@ offset[i] = len / n;
 					else if (type == _simdjson::internal::tape_type::END_OBJECT ||
 						type == _simdjson::internal::tape_type::END_ARRAY) {
 
-						if (type == _simdjson::internal::tape_type::END_ARRAY && nestedUT[braceNum]->is_object()) {
-							log << warn  << "{]";
-							ERROR("Error in __Load.., case : {]?");
-						}
+						//if (type == _simdjson::internal::tape_type::END_ARRAY && nestedUT[braceNum]->is_object()) {
+						////	log << warn  << "{]";
+						//	ERROR("Error in __Load.., case : {]?");
+						//}
 
-						if (type == _simdjson::internal::tape_type::END_OBJECT && nestedUT[braceNum]->is_array()) {
-							log << warn  << "[}";
+						//if (type == _simdjson::internal::tape_type::END_OBJECT && nestedUT[braceNum]->is_array()) {
+						//	log << warn  << "[}";
 
 
-							ERROR("Error in __Load.., case : [}?");
-						}
+						//	ERROR("Error in __Load.., case : [}?");
+						//}
 
 						state = 0;
 
@@ -3373,21 +3376,21 @@ offset[i] = len / n;
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size() / 2);
 
 
-								if (Vec.size() % 2 == 1) {
-									log << warn  << "Vec.size() is odd\n";
-									ERROR("Error in __Load..., key : value  error");
-								}
+							//	if (Vec.size() % 2 == 1) {
+							//		log << warn  << "Vec.size() is odd\n";
+							//		ERROR("Error in __Load..., key : value  error");
+							//	}
 
 
 								for (size_t x = 0; x < Vec.size(); x += 2) {
-									if (!Vec[x].is_key) {
-										log << warn  << "is not key\n";
-										ERROR("Error in __Load..., key : value  error");
-									}
-									if (Vec[x + 1].is_key) {
-										log << warn  << "is key\n";
-										ERROR("Error in __Load..., key : value  error");
-									}
+							//		if (!Vec[x].is_key) {
+							//			log << warn  << "is not key\n";
+							//			ERROR("Error in __Load..., key : value  error");
+							//		}
+							//		if (Vec[x + 1].is_key) {
+							//			log << warn  << "is key\n";
+							//			ERROR("Error in __Load..., key : value  error");
+							//		}
 
 									nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx,
 										Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx, buf, string_buf, Vec[x].token_idx, Vec[x + 1].token_idx);
@@ -3397,9 +3400,9 @@ offset[i] = len / n;
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size());
 
 								for (auto& x : Vec) {
-									if (x.is_key) {
-										ERROR("Error in __Load.., expect no key but has key...");
-									}
+									//if (x.is_key) {
+								//		ERROR("Error in __Load.., expect no key but has key...");
+									//}
 
 									nestedUT[braceNum]->add_item_type((x.buf_idx), x.next_buf_idx, buf, string_buf, x.token_idx);
 								}
@@ -3489,8 +3492,8 @@ offset[i] = len / n;
 								}
 								++i;
 
-								is_next_comma = false;
-								is_before_comma = false;
+							//	is_next_comma = false;
+							//	is_before_comma = false;
 							}
 							else {
 								Vec.push_back(std::move(data));
@@ -3510,18 +3513,18 @@ offset[i] = len / n;
 				if (Vec.empty() == false) {
 					if (Vec[0].is_key) {
 						for (size_t x = 0; x < Vec.size(); x += 2) {
-							if (!Vec[x].is_key) {
-								ERROR("Error in __Load..., key : value  error");
-							}
+							//if (!Vec[x].is_key) {
+							//	ERROR("Error in __Load..., key : value  error");
+							//}
 
-							if (Vec.size() % 2 == 1) {
-								ERROR("Error in __Load..., key : value  error");
-							}
+							//if (Vec.size() % 2 == 1) {
+							//	ERROR("Error in __Load..., key : value  error");
+							//}
 
 
-							if (Vec[x + 1].is_key) {
-								ERROR("Error in __Load..., key : value  error");
-							}
+							//if (Vec[x + 1].is_key) {
+							//	ERROR("Error in __Load..., key : value  error");
+							//}
 
 							nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx, 
 								buf, string_buf, Vec[x].token_idx, Vec[x + 1].token_idx);
@@ -3529,9 +3532,9 @@ offset[i] = len / n;
 					}
 					else {
 						for (size_t x = 0; x < Vec.size(); x += 1) {
-							if (Vec[x].is_key) {
-								ERROR("Error in __Load..., array element has key..");
-							}
+							//if (Vec[x].is_key) {
+							//	ERROR("Error in __Load..., array element has key..");
+							//}
 
 							nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, buf, string_buf, Vec[x].token_idx);
 						}
@@ -3727,14 +3730,14 @@ offset[i] = len / n;
 							uint64_t start = 0;
 							uint64_t last = pivots.size() - 1 - 1;
 
-							for (int i = 0; i < pivots.size() - 1; ++i) {
+							for (int64_t i = 0; i < pivots.size() - 1; ++i) {
 								if (chk[i] == 0) {
 									start = i;
 									break;
 								}
 							}
 
-							for (uint64_t i = pivots.size() - 1 - 1; i >= 0; --i) {
+							for (int64_t i = pivots.size() - 1 - 1; i >= 0; --i) {
 								if (chk[i] == 0) {
 									last = i;
 									break;
@@ -3781,7 +3784,7 @@ offset[i] = len / n;
 									throw 4;
 								}
 								else if (i == last && 1 == err) {
-									log << warn  << "not valid file5\n";
+									log << warn  << "n]ot valid file5\n";
 									throw 5;
 								}
 							}
@@ -4925,23 +4928,36 @@ offset[i] = len / n;
 			// Make sure the outer object or array is closed before continuing; otherwise, there are ways we
 			// could get into memory corruption. See https://github.com/simdjson/simdjson/issues/906
 			//if (!STREAMING) {
-				switch (value) {
-				case '{': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != '}') {
-					log << warn << ("starting brace unmatched"); return false;
-				} 
-				break;
-				case '[': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != ']') { 
-					log << warn << ("starting bracket unmatched"); return false; }
-				break;
-				}
-		//	}
+			switch (value) {
+			case '{': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != '}') {
+				log << warn << ("starting brace unmatched"); return false;
+			}
+					break;
+			case '[': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != ']') {
+				log << warn << ("starting bracket unmatched"); return false;
+			}
+					break;
+			}
+			//	}
 
 			switch (value) {
-			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') {
-				++idx; log << warn << ("empty object"); } goto object_begin;
-			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { 
-				++idx; log << warn << ("empty array"); } goto array_begin;
+			case '{': { if (buf[simdjson_imple->structural_indexes[idx]] == '}') {
+				++idx; log << warn << ("empty object"); break;
+			} goto object_begin; }
+			case '[': { if (buf[simdjson_imple->structural_indexes[idx]] == ']') {
+				++idx; log << warn << ("empty array"); break;
+			} goto array_begin; }
+
 			default: break;
+			}
+
+
+			switch (value) {
+			case ':':
+			case ',':
+			case '}':
+			case ']':
+			{ log << warn << "not primitive"; return false; } break;
 			}
 		}
 		goto document_end;
@@ -4974,6 +4990,10 @@ offset[i] = len / n;
 			switch (value) {
 			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
 			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
+			case ',': { log << warn << "wrong comma.";  return false; }
+			case ':': { log << warn << "wrong colon.";  return false; }
+			case '}': { log << warn << "wrong }.";  return false; }
+			case ']': { log << warn << "wrong ].";  return false; }
 			default: //SIMDJSON_TRY(visitor.visit_primitive(*this, value)); 
 				break;
 			}
@@ -4990,12 +5010,15 @@ offset[i] = len / n;
 			}
 			goto object_field;
 		case '}': goto scope_end;
+		case ':': { log << warn << "wrong colon.";  return false; }
 		default: log << warn << ("No comma between object fields"); return false;
 		}
 
 	scope_end:
 		depth--;
-		if (depth == 0) { goto document_end; }
+		if (depth == 0) { 
+			goto document_end; 
+		}
 		if (is_array[depth - 1]) { goto array_continue; }
 		goto object_continue;
 
@@ -5017,6 +5040,10 @@ offset[i] = len / n;
 			switch (value) {
 			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
 			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
+			case ',': { log << warn << "wrong comma.";  return false; }
+			case ':': { log << warn << "wrong colon.";  return false; }
+			case '}': { log << warn << "wrong }.";  return false; }
+			case ']': { log << warn << "wrong ].";  return false; }
 			default: break;
 			}
 		}
@@ -5025,10 +5052,12 @@ offset[i] = len / n;
 		switch (buf[simdjson_imple->structural_indexes[idx++]]) {
 		case ',': goto array_value;
 		case ']': goto scope_end;
+		case ':': { log << warn << "wrong colon.";  return false; }
 		default: log << warn << ("Missing comma between array values"); return false;
 		}
 
 	document_end:
+
 		// If we didn't make it to the end, it's an error
 		if (idx != simdjson_imple->n_structural_indexes) {
 			log << warn << ("More than one JSON value at the root of the document, or extra characters at the end of the JSON!");

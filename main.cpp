@@ -214,12 +214,14 @@ int main(int argc, char* argv[])
 
 	{
 		
+		/*
 		int a = clock();
 		_simdjson::dom::parser x;
 		auto y = x.load("citylots.json");
 		int b = clock();
 		std::cout << y.error() << " ";
 		std::cout << b - a << "ms\n";
+		*/
 	}
 
 	//claujson::log.no_print();
