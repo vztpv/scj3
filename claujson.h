@@ -19,8 +19,20 @@ namespace claujson {
 
 	class Log {
 	public:
-		class Info { };
-		class Warning { };
+		class Info {
+		public:
+			friend std::ostream& operator<<(std::ostream& stream, const Info&) {
+				stream << "[INFO]";
+				return stream;
+			}
+		};
+		class Warning { 
+		public:
+			friend std::ostream& operator<<(std::ostream& stream, const Warning&) {
+				stream << "[WARN]";
+				return stream;
+			}
+		};
 
 		enum class Option { CONSOLE, FILE, CONSOLE_AND_FILE, NO_PRINT };
 		class Option2 {
@@ -43,10 +55,11 @@ namespace claujson {
 		Log& operator<<(const T& val) {
 			if (opt == Option::CONSOLE || opt == Option::CONSOLE_AND_FILE) {
 
-				if (state == 1 && (opt2 & Option2::INFO)) {
-					std::cout << val;
-				}
-				if (state == 2 && (opt2 & Option2::WARN)) {
+				int count = 0;
+				count += opt2 & Option2::INFO;
+				count += opt2 & Option2::WARN;
+
+				if (count) {
 					std::cout << val;
 				}
 			}
@@ -55,36 +68,15 @@ namespace claujson {
 				std::ofstream outFile;
 				outFile.open(fileName, std::ios::app);
 				if (outFile) {
-					if (state == 1 && (opt2 & Option2::INFO)) {
-						outFile << val;
-					}
-					if (state == 2 && (opt2 & Option2::WARN)) {
+					int count = 0;
+					count += opt2 & Option2::INFO;
+					count += opt2 & Option2::WARN;
+
+					if (count) {
 						outFile << val;
 					}
 					outFile.close();
 				}
-			}
-
-			return *this;
-		}
-
-		template <>
-		Log& operator<<(const Info&) {
-			state = 1;
-			
-			if (opt2 & Option2::INFO) {
-				*this << "[Info] : ";
-			}
-
-			return *this;
-		}
-
-		template <>
-		Log& operator<<(const Warning&) {
-			state = 2;
-			
-			if (opt2 & Option2::WARN) {
-				*this << "[Warn] : ";
 			}
 
 			return *this;
@@ -193,7 +185,6 @@ namespace claujson {
 
 
 	void init(); // call first, before use claujson..
-
 
 
 	template <class T>

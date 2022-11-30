@@ -3962,7 +3962,7 @@ offset[i] = len / n;
 						if (code > 0 && (code < 0x20 || code == 0x7F))
 						{
 							char buf[] = "\\uDDDD";
-							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+							snprintf(buf + 2, 5, "%04X", code);
 							stream << buf;
 						}
 						else {
@@ -4028,13 +4028,12 @@ offset[i] = len / n;
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+									snprintf(buf + 2, 5, "%04X", code); // check..
 									stream << buf;
 								}
 								else {
 									stream << (x.str_val())[j];
 								}
-
 							}
 						}stream << "\"";
 
@@ -4090,7 +4089,7 @@ offset[i] = len / n;
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+									snprintf(buf + 2, 5, "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -4132,7 +4131,7 @@ offset[i] = len / n;
 									if (code > 0 && (code < 0x20 || code == 0x7F))
 									{
 										char buf[] = "\\uDDDD";
-										sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+										snprintf(buf + 2, 5, "%04X", code);
 										stream << buf;
 									}
 									else {
@@ -4223,7 +4222,7 @@ offset[i] = len / n;
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+									snprintf(buf + 2, 5, "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -4283,7 +4282,7 @@ offset[i] = len / n;
 						if (code > 0 && (code < 0x20 || code == 0x7F))
 						{
 							char buf[] = "\\uDDDD";
-							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+							snprintf(buf + 2, 5, "%04X", code);
 							stream << buf;
 						}
 						else {
@@ -4349,7 +4348,7 @@ offset[i] = len / n;
 								if (code > 0 && (code < 0x20 || code == 0x7F)) // chk this... with validate_string function. from simdjson..
 								{
 									char buf[] = "\\uDDDD";
-									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+									snprintf(buf + 2, 5, "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -4411,7 +4410,7 @@ offset[i] = len / n;
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+									snprintf(buf + 2, 5, "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -4453,7 +4452,7 @@ offset[i] = len / n;
 									if (code > 0 && (code < 0x20 || code == 0x7F))
 									{
 										char buf[] = "\\uDDDD";
-										sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+										snprintf(buf + 2, 5, "%04X", code);
 										stream << buf;
 									}
 									else {
@@ -4544,7 +4543,7 @@ offset[i] = len / n;
 								if (code > 0 && (code < 0x20 || code == 0x7F))
 								{
 									char buf[] = "\\uDDDD";
-									sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+									snprintf(buf + 2, 5, "%04X", code);
 									stream << buf;
 								}
 								else {
@@ -4604,7 +4603,7 @@ offset[i] = len / n;
 						if (code > 0 && (code < 0x20 || code == 0x7F))
 						{
 							char buf[] = "\\uDDDD";
-							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+							snprintf(buf + 2, 5, "%04X", code);
 							stream << buf;
 						}
 						else {
@@ -4688,7 +4687,7 @@ offset[i] = len / n;
 						if (code > 0 && (code < 0x20 || code == 0x7F))
 						{
 							char buf[] = "\\uDDDD";
-							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+							snprintf(buf + 2, 5, "%04X", code);
 							stream << buf;
 						}
 						else {
@@ -4790,7 +4789,7 @@ offset[i] = len / n;
 						if (code > 0 && (code < 0x20 || code == 0x7F))
 						{
 							char buf[] = "\\uDDDD";
-							sprintf_s(buf + 2, sizeof(buf), "%04X", code);
+							snprintf(buf + 2, 5, "%04X", code);
 							stream << buf;
 						}
 						else {
