@@ -2,7 +2,9 @@
 // now, test only haswell..
 // need C++17, 64bit..
 
+
 #include "mimalloc-new-delete.h"
+
 
 #include <iostream>
 #include <string>
@@ -193,6 +195,16 @@ void json_pointer_test() {
 
 int main(int argc, char* argv[])
 {
+	std::cout << sizeof(claujson::Data) << "\n";
+
+	{
+		auto str = R"()"sv;
+
+		claujson::init();
+
+		claujson::Data ut;
+		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
+	}
 
 	{
 		auto str = R"("A" : 3 )"sv;

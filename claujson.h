@@ -199,7 +199,7 @@ namespace claujson {
 	class Array;
 	class Object;
 
-	enum DataType : int64_t {
+	enum DataType : int8_t {
 		NONE = 1,
 		ARRAY_OR_OBJECT, // todo - ARRAY, OBJECT ?
 		INT, UINT,
@@ -351,7 +351,7 @@ namespace claujson {
 		void set_type(DataType type);
 
 	public:
-		virtual ~Data();
+		~Data();
 
 		Data(const Data& other) = delete;
 
@@ -571,7 +571,7 @@ namespace claujson {
 
 	class Array : public Json {
 		friend class Data;
-		friend class Array;
+		friend class Object;
 		friend class PartialJson;
 	protected:
 		std::vector<Data> arr_vec;
