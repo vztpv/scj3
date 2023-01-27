@@ -21,10 +21,10 @@ using namespace std::literals::string_view_literals;
 // using namespace std::literals::u8string_view_literals; // ?? 
 
 void utf_8_test() {
-	using claujson::Data;
+	using claujson::Value;
 
 	// C++17 - stringview, C++20~ - u8string_view
-	Data x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
+	Value x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
 	if (x) {
 		auto& y = x.str_val();
 		std::cout << y << "\n";
@@ -33,15 +33,15 @@ void utf_8_test() {
 
 void key_dup_test() {
 	using claujson::Object;
-	using claujson::Data;
+	using claujson::Value;
 	using claujson::Ptr;
 
 	Ptr<Object> x = Ptr<Object>(new Object());
 
-	x->add_object_element(Data("456"sv), Data(123));
-	x->add_object_element(Data("123"sv), Data(234));
-	x->add_object_element(Data("567"sv), Data(345));
-	x->add_object_element(Data("456"sv), Data(456));
+	x->add_object_element(Value("456"sv), Value(123));
+	x->add_object_element(Value("123"sv), Value(234));
+	x->add_object_element(Value("567"sv), Value(345));
+	x->add_object_element(Value("456"sv), Value(456));
 
 	size_t idx = 0;
 	bool found = false;
@@ -95,22 +95,22 @@ void json_pointer_test() {
 //		"/k\"l"      6
 //		"/ "         7
 //		"/m~0n"      8
-	using claujson::Data;
+	using claujson::Value;
 
-	Data x;
+	Value x;
 	if (!claujson::parse_str(test, x, 1).first) {
 		std::cout << "fail\n";
 
-		claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean(x.as_json_ptr());
 
 		return;
 	}
 
-	Data y;
+	Value y;
 	if (!claujson::parse_str(test2, y, 1).first) {
 		std::cout << "fail\n";
 
-		claujson::Ptr<claujson::Json> clean(y.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean(y.as_json_ptr());
 
 		return;
 	}
@@ -119,58 +119,58 @@ void json_pointer_test() {
 	std::cout << x << "\n";
 
 	{
-		Data& y = x.json_pointer(""sv); // whole document...
+		Value& y = x.json_pointer(""sv); // whole document...
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer("/foo"sv);
+		Value& y = x.json_pointer("/foo"sv);
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer("/foo/0"sv);
+		Value& y = x.json_pointer("/foo/0"sv);
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer("/"sv);
+		Value& y = x.json_pointer("/"sv);
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer("/a~1b"sv);
+		Value& y = x.json_pointer("/a~1b"sv);
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer("/c%d"sv);
+		Value& y = x.json_pointer("/c%d"sv);
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer("/e^f"sv);
+		Value& y = x.json_pointer("/e^f"sv);
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer("/g|h"sv);
+		Value& y = x.json_pointer("/g|h"sv);
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer(R"(/i\\\\j)"sv); // chk R
+		Value& y = x.json_pointer(R"(/i\\\\j)"sv); // chk R
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer(R"(/k\"l)"sv); // chk R
+		Value& y = x.json_pointer(R"(/k\"l)"sv); // chk R
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer("/ "sv);
+		Value& y = x.json_pointer("/ "sv);
 		std::cout << y << " ";
 	}
 	{
-		Data& y = x.json_pointer("/m~0n"sv);
+		Value& y = x.json_pointer("/m~0n"sv);
 		std::cout << y << " ";
 	}
 
-	claujson::Data diff = claujson::diff(x, y);
+	claujson::Value diff = claujson::diff(x, y);
 	std::cout << diff << "\n";
 
-	claujson::Data result = claujson::patch(x, diff);
+	claujson::Value result = claujson::patch(x, diff);
 
 	std::cout << result << "\n";
 
@@ -179,30 +179,31 @@ void json_pointer_test() {
 	}
 
 	{
-		claujson::Ptr<claujson::Json> clean(x.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean(x.as_json_ptr());
 	}
 	{
-		claujson::Ptr<claujson::Json> clean2(y.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean2(y.as_json_ptr());
 	}
 	{
-		claujson::Ptr<claujson::Json> clean3(diff.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean3(diff.as_json_ptr());
 	}
 	{
-		claujson::Ptr<claujson::Json> clean4(result.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean4(result.as_json_ptr());
 	}
 }
 
 
 int main(int argc, char* argv[])
 {
-	std::cout << sizeof(claujson::Data) << "\n";
-
+	std::cout << sizeof(claujson::Value) << "\n";
+	std::cout << sizeof(claujson::Array) << "\n";
+	std::cout << sizeof(claujson::Object) << "\n";
 	{
 		auto str = R"()"sv;
 
 		claujson::init();
 
-		claujson::Data ut;
+		claujson::Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
 	}
 
@@ -211,7 +212,7 @@ int main(int argc, char* argv[])
 
 		claujson::init();
 
-		claujson::Data ut;
+		claujson::Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
 	}
 
@@ -220,20 +221,20 @@ int main(int argc, char* argv[])
 
 		claujson::init();
 
-		claujson::Data ut;
+		claujson::Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
 	}
 
 	{
 		
-		/*
+		
 		int a = clock();
 		_simdjson::dom::parser x;
 		auto y = x.load("citylots.json");
 		int b = clock();
 		std::cout << y.error() << " ";
 		std::cout << b - a << "ms\n";
-		*/
+		
 	}
 
 	//claujson::log.no_print();
@@ -250,7 +251,7 @@ int main(int argc, char* argv[])
 
 
 		for (int i = 0; i < 3; ++i) {
-			claujson::Data j;
+			claujson::Value j;
 			bool ok;
 			//try
 			{
@@ -258,7 +259,7 @@ int main(int argc, char* argv[])
 				int a = clock();
 
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, 64); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, 64, true); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
@@ -270,7 +271,7 @@ int main(int argc, char* argv[])
 
 				int b = clock();
 				std::cout << "total " << b - a << "ms\n";
-				//claujson::save_parallel("test33.json", j, 64);
+				claujson::save_parallel("test34.json", j, 64);
 				claujson::clean(j);
 				return 0;
 
@@ -283,11 +284,11 @@ int main(int argc, char* argv[])
 				int counter = 0;
 				ok = x.first;
 
-				std::vector<claujson::Data> vec;
+				std::vector<claujson::Value> vec;
 
 				// json_pointer, json_pointerA <- u8string_view?
 
-				if (false == claujson::Data::json_pointerA("/geometry/coordinates"sv, vec)) {
+				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
 					std::cout << "json pointer error.\n";
 					return 1;
 				}
@@ -337,8 +338,8 @@ int main(int argc, char* argv[])
 				int c2 = clock();
 				std::cout << "\nwrite " << c2 - c1 << "ms\n";
 
-				claujson::Data X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
-				claujson::Data Y("coordinates"sv); // use claujson::Data.
+				claujson::Value X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
+				claujson::Value Y("coordinates"sv); // use claujson::Data.
 
 				sum = 0; counter = 0;
 				if (true && ok) {
@@ -371,7 +372,7 @@ int main(int argc, char* argv[])
 				std::cout << clock() - c2 << "ms\n";
 				std::cout << "Re.. " << sum << " " << counter << "\n";
 
-				claujson::Ptr<claujson::Json> clean(j.as_json_ptr());
+				claujson::Ptr<claujson::Structured> clean(j.as_json_ptr());
 
 				//std::cout << (claujson::error.has_error() ? ("has error") : ("no error")) << "\n";
 				//std::cout << claujson::error.msg() << "\n";
@@ -391,7 +392,7 @@ int main(int argc, char* argv[])
 		}
 
 		{
-			claujson::Data j;
+			claujson::Value j;
 			auto x = claujson::parse("total_end.json", j, 64); // argv[1], j, 64 ??
 			if (!x.first) {
 				std::cout << "fail\n";

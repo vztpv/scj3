@@ -194,8 +194,8 @@ namespace claujson {
 	using Ptr = std::unique_ptr<T>;
 	// Ptr - use std::move
 
-	class Data;
-	class Json;
+	class Value;
+	class Structured;
 	class Array;
 	class Object;
 
@@ -209,7 +209,7 @@ namespace claujson {
 		STRING
 	};
 
-	class Data {
+	class Value {
 
 	public:
 		// todo - check type of Data....
@@ -220,9 +220,9 @@ namespace claujson {
 		// using BOOL_t = bool;
 		
 	public:
-		friend std::ostream& operator<<(std::ostream& stream, const Data& data);
+		friend std::ostream& operator<<(std::ostream& stream, const Value& data);
 
-		friend claujson::Data& Convert(Data& data, uint64_t idx, uint64_t idx2, bool key,
+		friend claujson::Value& Convert(Value& data, uint64_t idx, uint64_t idx2, bool key,
 			char* buf, uint8_t* string_buf, uint64_t id, bool& err);
 	private:
 		union { // 64bit.. DO NOT build 32bit! //
@@ -230,7 +230,7 @@ namespace claujson {
 			uint64_t _uint_val;
 			double _float_val;
 			std::string* _str_val;
-			Json* _ptr_val; // ARRAY_OR_OBJECT -> todo : Array, or Object?
+			Structured* _ptr_val; // ARRAY_OR_OBJECT -> todo : Array, or Object?
 
 			// cf) Array* _arr_val; , Object* _obj_val; 
 
@@ -242,20 +242,20 @@ namespace claujson {
 
 	public:
 
-		Data clone() const;
+		Value clone() const;
 
 		explicit operator bool() const;
 
-		explicit Data(Json* x);
-		explicit Data(int x);
+		explicit Value(Structured* x);
+		explicit Value(int x);
 
-		explicit Data(unsigned int x);
+		explicit Value(unsigned int x);
 
-		explicit Data(int64_t x);
-		explicit Data(uint64_t x);
-		explicit Data(double x);
+		explicit Value(int64_t x);
+		explicit Value(uint64_t x);
+		explicit Value(double x);
 
-		explicit Data(std::string_view x); // C++17
+		explicit Value(std::string_view x); // C++17
 
 		// C++20~
 		// todo - 
@@ -265,10 +265,10 @@ namespace claujson {
 
 
 
-		explicit Data(bool x);
-		explicit Data(nullptr_t x);
+		explicit Value(bool x);
+		explicit Value(nullptr_t x);
 
-		explicit Data(nullptr_t, bool valid);
+		explicit Value(nullptr_t, bool valid);
 
 	public:
 		DataType type() const;
@@ -307,24 +307,24 @@ namespace claujson {
 
 		bool bool_val() const;
 
-		Json* ptr_val() const;
+		Structured* ptr_val() const;
 
-		Data& json_pointer(std::string_view route);
+		Value& json_pointer(std::string_view route);
 
-		const Data& json_pointer(std::string_view route) const;
+		const Value& json_pointer(std::string_view route) const;
 
 
-		static bool json_pointerA(std::string_view route, std::vector<Data>& vec);
+		static bool json_pointerA(std::string_view route, std::vector<Value>& vec);
 
-		Data& json_pointerB(const std::vector<Data>& routeDataVec);
+		Value& json_pointerB(const std::vector<Value>& routeDataVec);
 
 		Array& as_array();
 		Object& as_object();
-		Json* as_json_ptr();
+		Structured* as_json_ptr();
 
 		const Array& as_array()const;
 		const Object& as_object()const;
-		const Json* as_json_ptr()const;
+		const Structured* as_json_ptr()const;
 	public:
 		void clear();
 
@@ -332,7 +332,7 @@ namespace claujson {
 
 		const std::string& str_val() const;
 
-		void set_ptr(Json* x);
+		void set_ptr(Structured* x);
 		void set_int(long long x);
 
 		void set_uint(unsigned long long x);
@@ -351,24 +351,24 @@ namespace claujson {
 		void set_type(DataType type);
 
 	public:
-		~Data();
+		~Value();
 
-		Data(const Data& other) = delete;
+		Value(const Value& other) = delete;
 
-		Data(Data&& other) noexcept;
+		Value(Value&& other) noexcept;
 
-		Data();
+		Value();
 
-		bool operator==(const Data& other) const;
+		bool operator==(const Value& other) const;
 
-		bool operator!=(const Data& other) const;
+		bool operator!=(const Value& other) const;
 
-		bool operator<(const Data& other) const;
+		bool operator<(const Value& other) const;
 
-		Data& operator=(const Data& other) = delete;
+		Value& operator=(const Value& other) = delete;
 
 
-		Data& operator=(Data&& other) noexcept;
+		Value& operator=(Value&& other) noexcept;
 	};
 }
 
@@ -378,59 +378,59 @@ namespace claujson {
 
 	class Array;
 	class Object;
-	class PartialJson;
+	class PartialJson; // rename?
 
-	class Json {
+	class Structured {
 		friend class LoadData2;
 		friend class LoadData;
-		friend class Data;
+		friend class Value;
 		friend class Array;
 		friend class Object;
 		friend class PartialJson;
 	protected:
-		Data key;
-		PtrWeak<Json> parent = nullptr;
+		Value key;
+		PtrWeak<Structured> parent = nullptr;
 		bool valid = true; //
 	protected:
-		static inline Data data_null{ nullptr, false }; // valid is false..
+		static inline Value data_null{ nullptr, false }; // valid is false..
 	public:
 		inline static size_t npos = -1; // 
 
 		bool is_valid() const;
 	protected:
-		explicit Json(bool valid);
+		explicit Structured(bool valid);
 	public:
-		Json(const Json& other) = delete;
-		Json& operator=(const Json& other) = delete;
+		Structured(const Structured& other) = delete;
+		Structured& operator=(const Structured& other) = delete;
 
-		Json* clone() const;
+		Structured* clone() const;
 
-		explicit Json();
+		explicit Structured();
 
-		virtual ~Json();
+		virtual ~Structured();
 
-		const Data& at(std::string_view key) const;
+		const Value& at(std::string_view key) const;
 
-		Data& at(std::string_view key);
+		Value& at(std::string_view key);
 
 		size_t find(std::string_view key) const;
 
 
-		Data& operator[](size_t idx);
+		Value& operator[](size_t idx);
 
-		const Data& operator[](size_t idx) const;
+		const Value& operator[](size_t idx) const;
 
 		bool has_key() const;
 
-		PtrWeak<Json> get_parent() const;
+		PtrWeak<Structured> get_parent() const;
 
-		const Data& get_key() const;
+		const Value& get_key() const;
 	protected:
-		bool set_key(Data key);
+		bool set_key(Value key);
 	public:
-		bool change_key(const Data& key, const Data& new_key);
+		bool change_key(const Value& key, const Value& new_key);
 
-		virtual Data& get_value();
+		virtual Value& get_value();
 
 		virtual void reserve_data_list(size_t len) = 0; // if object, reserve key_list and value_list, if array, reserve value_list.
 
@@ -442,11 +442,11 @@ namespace claujson {
 
 		// for valid with object or array or root.
 		virtual size_t get_data_size() const = 0; // data_size == key_list_size (if object), and data_size == value_list_size.
-		virtual Data& get_value_list(size_t idx) = 0;
-		virtual Data& get_key_list(size_t idx) = 0;
+		virtual Value& get_value_list(size_t idx) = 0;
+		virtual Value& get_key_list(size_t idx) = 0;
 
-		virtual const Data& get_value_list(size_t idx) const = 0;
-		virtual const Data& get_key_list(size_t idx) const = 0;
+		virtual const Value& get_value_list(size_t idx) const = 0;
+		virtual const Value& get_key_list(size_t idx) const = 0;
 
 		virtual void clear(size_t idx) = 0;
 		virtual void clear() = 0;
@@ -454,24 +454,24 @@ namespace claujson {
 		virtual bool is_virtual() const = 0;
 
 		// todo return type void -> bool.
-		virtual bool add_object_element(Data key, Data val) = 0;
-		virtual bool add_array_element(Data val) = 0;
-		virtual bool add_array(Ptr<Json> arr) = 0; // 
-		virtual bool add_object(Ptr<Json> obj) = 0;
+		virtual bool add_object_element(Value key, Value val) = 0;
+		virtual bool add_array_element(Value val) = 0;
+		virtual bool add_array(Ptr<Structured> arr) = 0; // 
+		virtual bool add_object(Ptr<Structured> obj) = 0;
 
-		virtual bool insert_array_element(size_t idx, Data val) = 0;
+		virtual bool insert_array_element(size_t idx, Value val) = 0;
 
 		virtual void erase(std::string_view key, bool real = false) = 0;
 		virtual void erase(size_t idx, bool real = false) = 0;
 
 	private:
-		void set_parent(PtrWeak<Json> j);
+		void set_parent(PtrWeak<Structured> j);
 
 
 	private:
-		virtual void MergeWith(PtrWeak<Json> j, int start_offset) = 0; // start_offset is 0 or 1.
+		virtual void MergeWith(PtrWeak<Structured> j, int start_offset) = 0; // start_offset is 0 or 1.
 
-		virtual void Link(Ptr<Json> j) = 0;
+		virtual void Link(Ptr<Structured> j) = 0;
 
 		// need rename param....!
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
@@ -487,26 +487,26 @@ namespace claujson {
 
 		virtual void add_user_type(int type) = 0; // int type -> enum?
 
-		virtual bool add_user_type(Ptr<Json> j) = 0;
+		virtual bool add_user_type(Ptr<Structured> j) = 0;
 	};
 
-	class Object : public Json {
-		friend class Data;
+	class Object : public Structured {
+		friend class Value;
 		friend class PartialJson;
 		friend class Array;
 	protected:
-		std::vector<Data> obj_key_vec;
-		std::vector<Data> obj_val_vec;
+		std::vector<Value> obj_key_vec;
+		std::vector<Value> obj_val_vec;
 	protected:
 		explicit Object(bool valid);
 	public:
 
-		Json* clone() const;
+		Structured* clone() const;
 
 		bool chk_key_dup(size_t* idx) const;  // chk dupplication of key. only Object, Virtual Object..
 
 		[[nodiscard]]
-		static Data Make();
+		static Value Make();
 
 		explicit Object();
 
@@ -517,14 +517,14 @@ namespace claujson {
 
 		virtual size_t get_data_size() const;
 
-		virtual Data& get_value_list(size_t idx);
+		virtual Value& get_value_list(size_t idx);
 
-		virtual Data& get_key_list(size_t idx);
+		virtual Value& get_key_list(size_t idx);
 
 
-		virtual const Data& get_value_list(size_t idx) const;
+		virtual const Value& get_value_list(size_t idx) const;
 
-		virtual const Data& get_key_list(size_t idx) const;
+		virtual const Value& get_key_list(size_t idx) const;
 
 
 		virtual void clear(size_t idx);
@@ -537,12 +537,12 @@ namespace claujson {
 		virtual void reserve_data_list(size_t len);
 
 
-		virtual bool add_object_element(Data key, Data val);
-		virtual bool add_array_element(Data val);
-		virtual bool add_array(Ptr<Json> arr);
-		virtual bool add_object(Ptr<Json> obj);
+		virtual bool add_object_element(Value key, Value val);
+		virtual bool add_array_element(Value val);
+		virtual bool add_array(Ptr<Structured> arr);
+		virtual bool add_object(Ptr<Structured> obj);
 
-		virtual bool insert_array_element(size_t idx, Data val);
+		virtual bool insert_array_element(size_t idx, Value val);
 
 		virtual void erase(std::string_view key, bool real = false);
 
@@ -551,9 +551,9 @@ namespace claujson {
 
 
 	private:
-		virtual void MergeWith(PtrWeak<Json> j, int start_offset);
+		virtual void MergeWith(PtrWeak<Structured> j, int start_offset);
 
-		virtual void Link(Ptr<Json> j);
+		virtual void Link(Ptr<Structured> j);
 
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx);
@@ -566,23 +566,23 @@ namespace claujson {
 
 		virtual void add_user_type(int type);
 
-		virtual bool add_user_type(Ptr<Json> j);
+		virtual bool add_user_type(Ptr<Structured> j);
 	};
 
-	class Array : public Json {
-		friend class Data;
+	class Array : public Structured {
+		friend class Value;
 		friend class Object;
 		friend class PartialJson;
 	protected:
-		std::vector<Data> arr_vec;
+		std::vector<Value> arr_vec;
 	protected:
 		explicit Array(bool valid);
 	public:
 
-		Json* clone() const;
+		Structured* clone() const;
 
 		[[nodiscard]]
-		static Data Make();
+		static Value Make();
 
 		explicit Array();
 
@@ -593,13 +593,13 @@ namespace claujson {
 
 		virtual size_t get_data_size() const;
 
-		virtual Data& get_value_list(size_t idx);
+		virtual Value& get_value_list(size_t idx);
 
-		virtual Data& get_key_list(size_t idx);
+		virtual Value& get_key_list(size_t idx);
 
-		virtual const Data& get_value_list(size_t idx) const;
+		virtual const Value& get_value_list(size_t idx) const;
 
-		virtual const Data& get_key_list(size_t idx) const;
+		virtual const Value& get_key_list(size_t idx) const;
 
 		virtual void clear(size_t idx);
 
@@ -610,20 +610,20 @@ namespace claujson {
 		virtual void reserve_data_list(size_t len);
 
 
-		std::vector<Data>::iterator begin();
+		std::vector<Value>::iterator begin();
 
-		std::vector<Data>::iterator end();
+		std::vector<Value>::iterator end();
 
 
-		virtual bool add_object_element(Data key, Data val);
+		virtual bool add_object_element(Value key, Value val);
 
-		virtual bool add_array_element(Data val);
+		virtual bool add_array_element(Value val);
 
-		virtual bool add_array(Ptr<Json> arr);
+		virtual bool add_array(Ptr<Structured> arr);
 
-		virtual bool add_object(Ptr<Json> obj);
+		virtual bool add_object(Ptr<Structured> obj);
 
-		virtual bool insert_array_element(size_t idx, Data val);
+		virtual bool insert_array_element(size_t idx, Value val);
 
 		virtual void erase(std::string_view key, bool real = false);
 
@@ -632,10 +632,10 @@ namespace claujson {
 	private:
 
 
-		virtual void MergeWith(PtrWeak<Json> j, int start_offset);
+		virtual void MergeWith(PtrWeak<Structured> j, int start_offset);
 
 
-		virtual void Link(Ptr<Json> j);
+		virtual void Link(Ptr<Structured> j);
 
 
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
@@ -649,7 +649,7 @@ namespace claujson {
 
 		virtual void add_user_type(int type);
 
-		virtual bool add_user_type(Ptr<Json> j);
+		virtual bool add_user_type(Ptr<Structured> j);
 
 	};
 
@@ -658,10 +658,10 @@ namespace claujson {
 namespace claujson {
 
 	// parse json file.
-	std::pair<bool, size_t> parse(const std::string& fileName, Data& ut, size_t thr_num);
+	std::pair<bool, size_t> parse(const std::string& fileName, Value& ut, size_t thr_num, bool use_all_function = false);
 
 	// parse json str.
-	std::pair<bool, size_t> parse_str(std::string_view str, Data& ut, size_t thr_num);
+	std::pair<bool, size_t> parse_str(std::string_view str, Value& ut, size_t thr_num);
 
 	// todo - c++20~
 	//inline std::pair<bool, size_t> ParseStr(std::u8string_view str, int thr_num, Data& ut) {
@@ -669,18 +669,18 @@ namespace claujson {
 	//	return { false , 0 };
 	//}
 
-	std::string save_to_str(const Data& global);
+	std::string save_to_str(const Value& global);
 	
-	void save(const std::string& fileName, const Data& global);
+	void save(const std::string& fileName, const Value& global);
 
-	void save_parallel(const std::string& fileName, Data& j, size_t thr_num);
-
-	[[nodiscard]]
-	Data diff(const Data& x, const Data& y);
+	void save_parallel(const std::string& fileName, Value& j, size_t thr_num);
 
 	[[nodiscard]]
-	Data patch(const Data& x, const Data& diff);
+	Value diff(const Value& x, const Value& y);
 
-	void clean(Data& x);
+	[[nodiscard]]
+	Value patch(const Value& x, const Value& diff);
+
+	void clean(Value& x);
 }
 

@@ -8,6 +8,8 @@
 #include "fmt/compile.h"
 
 #include <string_view>
+#include <future>
+
 using namespace std::string_view_literals;
 
 
@@ -17,14 +19,14 @@ namespace claujson {
 	inline static _simdjson::internal::dom_parser_implementation* simdjson_imple = nullptr;
 	
 	// class PartialJson, only used in class LoadData.
-	class PartialJson : public Json {
+	class PartialJson : public Structured {
 	protected:
-		std::vector<Data> arr_vec; 
+		std::vector<Value> arr_vec; 
 		//
-		std::vector<Data> obj_key_vec;
-		std::vector<Data> obj_val_vec;
+		std::vector<Value> obj_key_vec;
+		std::vector<Value> obj_val_vec;
 
-		Data virtualJson;
+		Value virtualJson;
 	public:
 		virtual ~PartialJson();
 
@@ -45,16 +47,16 @@ namespace claujson {
 
 		virtual size_t get_data_size() const;
 
-		virtual Data& get_value_list(size_t idx);
+		virtual Value& get_value_list(size_t idx);
 
 
-		virtual Data& get_key_list(size_t idx);
+		virtual Value& get_key_list(size_t idx);
 
 
-		virtual const Data& get_value_list(size_t idx) const;
+		virtual const Value& get_value_list(size_t idx) const;
 
 
-		virtual const Data& get_key_list(size_t idx) const;
+		virtual const Value& get_key_list(size_t idx) const;
 
 		virtual void clear(size_t idx);
 
@@ -66,13 +68,13 @@ namespace claujson {
 
 
 
-		virtual bool add_object_element(Data key, Data val);
-		virtual bool add_array_element(Data val);
+		virtual bool add_object_element(Value key, Value val);
+		virtual bool add_array_element(Value val);
 
-		virtual bool add_array(Ptr<Json> arr);
-		virtual bool add_object(Ptr<Json> obj);
+		virtual bool add_array(Ptr<Structured> arr);
+		virtual bool add_object(Ptr<Structured> obj);
 
-		virtual bool insert_array_element(size_t idx, Data val);
+		virtual bool insert_array_element(size_t idx, Value val);
 
 		virtual void erase(std::string_view key, bool real = false);
 
@@ -81,9 +83,9 @@ namespace claujson {
 
 	private:
 
-		virtual void MergeWith(PtrWeak<Json> j, int start_offset);
+		virtual void MergeWith(PtrWeak<Structured> j, int start_offset);
 
-		virtual void Link(Ptr<Json> j);
+		virtual void Link(Ptr<Structured> j);
 
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx);
@@ -96,7 +98,7 @@ namespace claujson {
 
 		virtual void add_user_type(int type);
 
-		virtual bool add_user_type(Ptr<Json> j);
+		virtual bool add_user_type(Ptr<Structured> j);
 
 
 	};
@@ -119,7 +121,7 @@ namespace claujson {
 
 
 
-	std::ostream& operator<<(std::ostream& stream, const claujson::Data& data) {
+	std::ostream& operator<<(std::ostream& stream, const claujson::Value& data) {
 
 		if (false == data.is_valid()) {
 			stream << "--not valid\n";
@@ -183,12 +185,12 @@ namespace claujson {
 namespace claujson {
 
 
-	Data Data::clone() const {
+	Value Value::clone() const {
 		if (!is_valid()) {
-			return Data(nullptr, false);
+			return Value(nullptr, false);
 		}
 
-		Data x;
+		Value x;
 		
 		x._type = this->_type; 
 
@@ -206,7 +208,7 @@ namespace claujson {
 
 		return x;
 	}
-	Data::operator bool() const {
+	Value::operator bool() const {
 		return this->_valid;
 	}
 
@@ -224,27 +226,27 @@ namespace claujson {
 	}
 	*/
 
-	Data::Data(Json* x) {
+	Value::Value(Structured* x) {
 		set_ptr(x);
 	}
-	Data::Data(int x) {
+	Value::Value(int x) {
 		set_int(x);
 	}
 
-	Data::Data(unsigned int x) {
+	Value::Value(unsigned int x) {
 		set_uint(x);
 	}
 
-	Data::Data(int64_t x) {
+	Value::Value(int64_t x) {
 		set_int(x);
 	}
-	Data::Data(uint64_t x) {
+	Value::Value(uint64_t x) {
 		set_uint(x);
 	}
-	Data::Data(double x) {
+	Value::Value(double x) {
 		set_float(x);
 	}
-	Data::Data(std::string_view x) {
+	Value::Value(std::string_view x) {
 		if (!set_str(x.data(), x.size())) {
 			this->_valid = false;
 		}
@@ -256,94 +258,94 @@ namespace claujson {
 	//explicit Data(const char8_t* x) {
 	//	set_str((const char*)x, strlen((const char*)x));
 	//}
-	Data::Data(bool x) {
+	Value::Value(bool x) {
 		set_bool(x);
 	}
-	Data::Data(nullptr_t x) {
+	Value::Value(nullptr_t x) {
 		set_type(DataType::NULL_);
 	}
 
-	Data::Data(nullptr_t, bool valid) {
+	Value::Value(nullptr_t, bool valid) {
 		set_type(DataType::NULL_);
 		this->_valid = valid;
 	}
 
-	DataType Data::type() const {
+	DataType Value::type() const {
 		return _type;
 	}
 
-	bool Data::is_valid() const {
+	bool Value::is_valid() const {
 		return this->_valid;
 	}
 
-	bool Data::is_null() const {
+	bool Value::is_null() const {
 		return is_valid() && type() == DataType::NULL_;
 	}
 
-	bool Data::is_primitive() const {
+	bool Value::is_primitive() const {
 		return is_valid() && !is_ptr();
 	}
 
-	bool Data::is_structured() const {
+	bool Value::is_structured() const {
 		return is_valid() && is_ptr();
 	}
 
-	bool Data::is_int() const {
+	bool Value::is_int() const {
 		return is_valid() && type() == DataType::INT;
 	}
 
-	bool Data::is_uint() const {
+	bool Value::is_uint() const {
 		return is_valid() && type() == DataType::UINT;
 	}
 
-	bool Data::is_float() const {
+	bool Value::is_float() const {
 		return is_valid() && type() == DataType::FLOAT;
 	}
 
-	bool Data::is_bool() const {
+	bool Value::is_bool() const {
 		return is_valid() && (type() == DataType::BOOL);
 	}
 
-	bool Data::is_str() const {
+	bool Value::is_str() const {
 		return is_valid() && type() == DataType::STRING;
 	}
 
-	bool Data::is_ptr() const {
+	bool Value::is_ptr() const {
 		return is_valid() && (type() == DataType::ARRAY_OR_OBJECT);
 	}
 
-	int64_t Data::int_val() const {
+	int64_t Value::int_val() const {
 		return _int_val;
 	}
 
-	uint64_t Data::uint_val() const {
+	uint64_t Value::uint_val() const {
 		return _uint_val;
 	}
 
-	double Data::float_val() const {
+	double Value::float_val() const {
 		return _float_val;
 	}
 
-	int64_t& Data::int_val() {
+	int64_t& Value::int_val() {
 		return _int_val;
 	}
 
-	uint64_t& Data::uint_val() {
+	uint64_t& Value::uint_val() {
 		return _uint_val;
 	}
 
-	double& Data::float_val() {
+	double& Value::float_val() {
 		return _float_val;
 	}
 
-	bool Data::bool_val() const {
+	bool Value::bool_val() const {
 		if (!is_bool()) {
 			return false;
 		}
 		return _bool_val;
 	}
 
-	Json* Data::ptr_val() const {
+	Structured* Value::ptr_val() const {
 		if (!is_ptr()) {
 			return nullptr;
 		}
@@ -418,9 +420,9 @@ namespace claujson {
 		return false;
 	}
 
-	bool Data::json_pointerA(std::string_view route, std::vector<Data>& vec) {
+	bool Value::json_pointerA(std::string_view route, std::vector<Value>& vec) {
 		std::vector<std::string_view> routeVec;
-		std::vector<Data> routeDataVec;
+		std::vector<Value> routeDataVec;
 
 			
 		if (route.empty()) {
@@ -455,7 +457,7 @@ namespace claujson {
 		// 3. using simdjson util, check valid for string in routeVec.
 
 		for (auto& x : routeVec) {
-			Data temp(x); // do 2, 3.
+			Value temp(x); // do 2, 3.
 
 			if (temp.is_valid()) {
 				routeDataVec.push_back(std::move(temp));
@@ -470,8 +472,8 @@ namespace claujson {
 		return true;
 	}
 
-	Data& Data::json_pointerB(const std::vector<Data>& routeDataVec) { // option-> std::string_view route?
-		static Data unvalid_data(nullptr, false);
+	Value& Value::json_pointerB(const std::vector<Value>& routeDataVec) { // option-> std::string_view route?
+		static Value unvalid_data(nullptr, false);
 
 		if (is_structured() == false) {
 			return unvalid_data;
@@ -483,10 +485,10 @@ namespace claujson {
 		}
 
 		// 4. find Data with route. and return
-		Data* data = this;
+		Value* data = this;
 
 		for (size_t i = 0; i < routeDataVec.size(); ++i) {
-			const Data& x = routeDataVec[i];
+			const Value& x = routeDataVec[i];
 
 			if (data->is_primitive()) {
 				if (i == routeDataVec.size() - 1) {
@@ -497,7 +499,7 @@ namespace claujson {
 				}
 			}
 
-			Json* j = data->as_json_ptr();
+			Structured* j = data->as_json_ptr();
 
 			if (j->is_array()) { // array -> with idx
 				size_t idx = 0;
@@ -559,8 +561,8 @@ namespace claujson {
 
 	// think.. Data vs Data& vs Data* ? 
 	// race condition..? not support multi-thread  access...
-	Data& Data::json_pointer(std::string_view route) {
-		static Data unvalid_data(nullptr, false);
+	Value& Value::json_pointer(std::string_view route) {
+		static Value unvalid_data(nullptr, false);
 
 		if (is_structured() == false) {
 			return unvalid_data;
@@ -572,7 +574,7 @@ namespace claujson {
 		}
 
 		std::vector<std::string_view> routeVec;
-		std::vector<Data> routeDataVec;
+		std::vector<Value> routeDataVec;
 
 		routeVec.reserve(route.size());
 		routeDataVec.reserve(route.size());
@@ -601,7 +603,7 @@ namespace claujson {
 		// 3. using simdjson util, check valid for string in routeVec.
 
 		for (auto& x : routeVec) {
-			Data temp(x); 
+			Value temp(x); 
 			
 			if (temp.is_valid()) {
 				routeDataVec.push_back(std::move(temp));
@@ -612,10 +614,10 @@ namespace claujson {
 		}
 
 		// 4. find Data with route. and return
-		Data* data = this;
+		Value* data = this;
 
 		for (size_t i = 0; i < routeDataVec.size(); ++i) {
-			Data& x = routeDataVec[i];
+			Value& x = routeDataVec[i];
 
 			if (data->is_primitive()) {
 				if (i == routeDataVec.size() - 1) {
@@ -626,7 +628,7 @@ namespace claujson {
 				}
 			}
 
-			Json* j = data->as_json_ptr();
+			Structured* j = data->as_json_ptr();
 
 			if (j->is_array()) { // array -> with idx
 				size_t idx = 0;
@@ -678,8 +680,8 @@ namespace claujson {
 
 		return *data;
 	}
-	const Data& Data::json_pointer(std::string_view route) const {
-		static const Data unvalid_data(nullptr, false);
+	const Value& Value::json_pointer(std::string_view route) const {
+		static const Value unvalid_data(nullptr, false);
 
 		if (is_structured() == false) {
 			return unvalid_data;
@@ -691,7 +693,7 @@ namespace claujson {
 		}
 
 		std::vector<std::string_view> routeVec;
-		std::vector<Data> routeDataVec;
+		std::vector<Value> routeDataVec;
 
 		routeVec.reserve(route.size());
 		routeDataVec.reserve(route.size());
@@ -720,7 +722,7 @@ namespace claujson {
 		// 3. using simdjson util, check valid for string in routeVec.
 
 		for (auto& x : routeVec) {
-			Data temp(x);
+			Value temp(x);
 
 			if (temp.is_valid()) {
 				routeDataVec.push_back(std::move(temp));
@@ -731,10 +733,10 @@ namespace claujson {
 		}
 
 		// 4. find Data with route. and return
-		const Data* data = this;
+		const Value* data = this;
 
 		for (size_t i = 0; i < routeDataVec.size(); ++i) {
-			Data& x = routeDataVec[i];
+			Value& x = routeDataVec[i];
 
 			if (data->is_primitive()) {
 				if (i == routeDataVec.size() - 1) {
@@ -745,7 +747,7 @@ namespace claujson {
 				}
 			}
 
-			const Json* j = data->as_json_ptr();
+			const Structured* j = data->as_json_ptr();
 
 			if (j->is_array()) { // array -> with idx
 				size_t idx = 0;
@@ -800,7 +802,7 @@ namespace claujson {
 
 
 
-	void Data::clear() {
+	void Value::clear() {
 
 		if (_type == DataType::STRING) {
 			delete _str_val; _str_val = nullptr;
@@ -814,17 +816,17 @@ namespace claujson {
 		_type = DataType::NONE;
 	}
 
-	std::string& Data::str_val() {
+	std::string& Value::str_val() {
 		// type check...
 		return *_str_val;
 	}
 
-	const std::string& Data::str_val() const {
+	const std::string& Value::str_val() const {
 		// type check...
 		return *_str_val;
 	}
 
-	void Data::set_ptr(Json* x) {
+	void Value::set_ptr(Structured* x) {
 		if (!is_valid()) {
 			return;
 		}
@@ -837,7 +839,7 @@ namespace claujson {
 
 		_type = DataType::ARRAY_OR_OBJECT; // chk change DataType:: ~~ -> DataType:: ~~
 	}
-	void Data::set_int(long long x) {
+	void Value::set_int(long long x) {
 		if (!is_valid()) {
 			return;
 		}
@@ -849,7 +851,7 @@ namespace claujson {
 		_type = DataType::INT;
 	}
 
-	void Data::set_uint(unsigned long long x) {
+	void Value::set_uint(unsigned long long x) {
 		if (!is_valid()) {
 			return;
 		}
@@ -860,7 +862,7 @@ namespace claujson {
 		_type = DataType::UINT;
 	}
 
-	void Data::set_float(double x) {
+	void Value::set_float(double x) {
 		if (!is_valid()) {
 			return;
 		}
@@ -872,7 +874,7 @@ namespace claujson {
 		_type = DataType::FLOAT;
 	}
 
-	bool Data::set_str(const char* str, size_t len) {
+	bool Value::set_str(const char* str, size_t len) {
 		if (!is_valid()) {
 			return false;
 		}
@@ -974,7 +976,7 @@ namespace claujson {
 		return true;
 	}
 
-	void Data::set_str_in_parse(const char* str, size_t len) {
+	void Value::set_str_in_parse(const char* str, size_t len) {
 		if (_type != DataType::STRING) {
 			_str_val = new std::string(str, len);
 		}
@@ -984,7 +986,7 @@ namespace claujson {
 		_type = DataType::STRING;
 	}
 
-	void Data::set_bool(bool x) {
+	void Value::set_bool(bool x) {
 		if (!is_valid()) {
 			return;
 		}
@@ -999,7 +1001,7 @@ namespace claujson {
 		}
 	}
 
-	void Data::set_null() {
+	void Value::set_null() {
 		if (!is_valid()) {
 			return;
 		}
@@ -1010,11 +1012,11 @@ namespace claujson {
 		set_type(DataType::NULL_);
 	}
 
-	void Data::set_type(DataType type) {
+	void Value::set_type(DataType type) {
 		this->_type = type;
 	}
 		
-	Data::~Data() {
+	Value::~Value() {
 		if (_type == DataType::STRING && _str_val) {
 			//log << warn  << "chk";
 			delete _str_val;
@@ -1022,7 +1024,7 @@ namespace claujson {
 		}
 	}
 
-	Data::Data(Data&& other) noexcept
+	Value::Value(Value&& other) noexcept
 		: _type(other._type), _valid(other._valid)
 	{
 		if (!other.is_valid()) {
@@ -1041,9 +1043,9 @@ namespace claujson {
 		clean(other);
 	}
 
-	Data::Data() : _int_val(0), _valid(true), _type(DataType::NONE) { }
+	Value::Value() : _int_val(0), _valid(true), _type(DataType::NONE) { }
 
-	bool Data::operator==(const Data& other) const { // chk array or object?
+	bool Value::operator==(const Value& other) const { // chk array or object?
 		if (this->_type == other._type) {
 			switch (this->_type) {
 			case DataType::STRING:
@@ -1063,8 +1065,8 @@ namespace claujson {
 				break;
 			case DataType::ARRAY_OR_OBJECT:
 			{
-				const Json* j = this->as_json_ptr();
-				const Json* k = other.as_json_ptr();
+				const Structured* j = this->as_json_ptr();
+				const Structured* k = other.as_json_ptr();
 
 				const size_t sz_j = j->get_data_size();
 				const size_t sz_k = k->get_data_size();
@@ -1101,11 +1103,11 @@ namespace claujson {
 		return false;
 	} 
 
-	bool Data::operator!=(const Data& other) const {
+	bool Value::operator!=(const Value& other) const {
 		return !((*this) == other);
 	}
 
-	bool Data::operator<(const Data& other) const {
+	bool Value::operator<(const Value& other) const {
 		if (this->_type == other._type) {
 			switch (this->_type) {
 			case DataType::STRING:
@@ -1130,7 +1132,7 @@ namespace claujson {
 	}
 
 
-	Data& Data::operator=(Data&& other) noexcept {
+	Value& Value::operator=(Value&& other) noexcept {
 		if (this == &other) {
 			return *this;
 		}
@@ -1148,7 +1150,7 @@ namespace claujson {
 	}
 
 
-	inline claujson::Data& Convert(claujson::Data& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
+	inline claujson::Value& Convert(claujson::Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
 		char* buf, uint8_t* string_buf, uint64_t token_idx, bool& err) {
 
 		try {
@@ -1260,12 +1262,12 @@ namespace claujson {
 		}
 	}
 
-	bool Json::is_valid() const {
+	bool Structured::is_valid() const {
 		return valid;
 	}
 
 
-	Json* Json::clone() const {
+	Structured* Structured::clone() const {
 		if (this->is_array()) {
 			return ((Array*)this)->clone();
 		}
@@ -1277,18 +1279,18 @@ namespace claujson {
 		}
 	}
 
-	Json::Json(bool valid) : valid(valid) { }
+	Structured::Structured(bool valid) : valid(valid) { }
 
-	Json::Json() { }
+	Structured::Structured() { }
 
 
-		Json::~Json() {
+		Structured::~Structured() {
 
 		}
 
 
 
-		const Data& Json::at(std::string_view key) const {
+		const Value& Structured::at(std::string_view key) const {
 			if (!is_object() || !is_valid()) {
 				return data_null;
 			}
@@ -1303,7 +1305,7 @@ namespace claujson {
 			return data_null;
 		}
 
-		Data& Json::at(std::string_view key) {
+		Value& Structured::at(std::string_view key) {
 			if (!is_object() || !is_valid()) {
 				return data_null;
 			}
@@ -1318,7 +1320,7 @@ namespace claujson {
 			return data_null;
 		}
 
-		size_t Json::find(std::string_view key) const { // chk (uint64_t)-1 == (maximum)....-> eof?
+		size_t Structured::find(std::string_view key) const { // chk (uint64_t)-1 == (maximum)....-> eof?
 			if (!is_object() || !is_valid()) {
 				return -1;
 			}
@@ -1334,34 +1336,34 @@ namespace claujson {
 		}
 
 
-		Data& Json::operator[](size_t idx) {
+		Value& Structured::operator[](size_t idx) {
 			if (idx >= get_data_size() || !is_valid()) {
 				return data_null;
 			}
 			return get_value_list(idx);
 		}
 
-		const Data& Json::operator[](size_t idx) const {
+		const Value& Structured::operator[](size_t idx) const {
 			if (idx >= get_data_size() || !is_valid()) {
 				return data_null;
 			}
 			return get_value_list(idx);
 		}
 
-		bool Json::has_key() const {
+		bool Structured::has_key() const {
 			return key.is_str();
 		}
 
-		PtrWeak<Json> Json::get_parent() const {
+		PtrWeak<Structured> Structured::get_parent() const {
 			return parent;
 		}
 
 
-		const Data& Json::get_key() const {
+		const Value& Structured::get_key() const {
 			return key;
 		}
 
-		bool Json::set_key(Data key) {
+		bool Structured::set_key(Value key) {
 			if (key.is_str()) {
 				this->key = std::move(key);
 				return true;
@@ -1369,7 +1371,7 @@ namespace claujson {
 			return false; // no change..
 		}
 
-		bool Json::change_key(const Data& key, const Data& new_key) { // chk test...
+		bool Structured::change_key(const Value& key, const Value& new_key) { // chk test...
 			if (this->is_object() && key.is_str() && new_key.is_str()) {
 				auto idx = find(key.str_val());
 				if (idx == -1) {
@@ -1386,30 +1388,30 @@ namespace claujson {
 			return false;
 		}
 
-		Data& Json::get_value() {
+		Value& Structured::get_value() {
 			return data_null;
 		}
 
-		bool Json::is_partial_json() const { return false; }
+		bool Structured::is_partial_json() const { return false; }
 
-		bool Json::is_user_type() const {
+		bool Structured::is_user_type() const {
 			return is_object() || is_array() || is_partial_json();
 		}
 
-		void Json::set_parent(PtrWeak<Json> j) {
+		void Structured::set_parent(PtrWeak<Structured> j) {
 			parent = j;
 		}
 
 
-		Object::Object(bool valid) : Json(valid) { }
+		Object::Object(bool valid) : Structured(valid) { }
 
 
 		class CompKey {
 		private:
-			const std::vector<Data>* vec;
+			const std::vector<Value>* vec;
 		public:
 
-			CompKey(const std::vector<Data>* vec) : vec(vec) {
+			CompKey(const std::vector<Value>* vec) : vec(vec) {
 				//
 			}
 
@@ -1418,8 +1420,8 @@ namespace claujson {
 			}
 		};
 
-		Json* Object::clone() const {
-			Json* result = new Object();
+		Structured* Object::clone() const {
+			Structured* result = new Object();
 
 			size_t sz = this->get_data_size();
 
@@ -1457,8 +1459,8 @@ namespace claujson {
 			return has_dup;
 		}
 
-		Data Object::Make() {
-			return Data(new Object());
+		Value Object::Make() {
+			return Value(new Object());
 		}
 
 		Object::Object() { }
@@ -1466,7 +1468,7 @@ namespace claujson {
 		Object::~Object() {
 			for (auto& x : obj_val_vec) {
 				if (x.is_ptr()) {
-					delete ((Json*)x.ptr_val());
+					delete ((Structured*)x.ptr_val());
 				}
 			}
 		}
@@ -1482,20 +1484,20 @@ namespace claujson {
 			return obj_val_vec.size();
 		}
 
-		Data& Object::get_value_list(size_t idx) {
+		Value& Object::get_value_list(size_t idx) {
 			return obj_val_vec[idx];
 		}
 
-		Data& Object::get_key_list(size_t idx) { // if key change then also obj_val_vec[idx].key? change??
+		Value& Object::get_key_list(size_t idx) { // if key change then also obj_val_vec[idx].key? change??
 			return obj_key_vec[idx];
 		}
 
 
-		const Data& Object::get_value_list(size_t idx) const {
+		const Value& Object::get_value_list(size_t idx) const {
 			return obj_val_vec[idx];
 		}
 
-		const Data& Object::get_key_list(size_t idx) const {
+		const Value& Object::get_key_list(size_t idx) const {
 			return obj_key_vec[idx];
 		}
 
@@ -1517,13 +1519,13 @@ namespace claujson {
 			obj_key_vec.reserve(len);
 		}
 
-		bool Object::add_object_element(Data key, Data val) {
+		bool Object::add_object_element(Value key, Value val) {
 			if (!is_valid() || !key.is_str()) {
 				return false;
 			}
 
 			if (val.is_ptr()) {
-				auto* x = (Json*)val.ptr_val();
+				auto* x = (Structured*)val.ptr_val();
 				x->set_key(key.clone()); // no need?
 			}
 			obj_key_vec.push_back(std::move(key));
@@ -1532,15 +1534,15 @@ namespace claujson {
 			return true;
 		}
 
-		bool Object::add_array_element(Data val) { return false; }
-		bool Object::add_array(Ptr<Json> arr) {
+		bool Object::add_array_element(Value val) { return false; }
+		bool Object::add_array(Ptr<Structured> arr) {
 			if (!is_valid()) {
 				return false;
 			}
 
 			if (arr->has_key()) {
 				obj_key_vec.push_back(arr->get_key().clone());
-				obj_val_vec.push_back(Data(arr.release()));
+				obj_val_vec.push_back(Value(arr.release()));
 			}
 			else {
 				return false;
@@ -1549,14 +1551,14 @@ namespace claujson {
 			return true;
 		}
 
-		bool Object::add_object(Ptr<Json> obj) {
+		bool Object::add_object(Ptr<Structured> obj) {
 			if (!is_valid()) {
 				return false;
 			}
 
 			if (obj->has_key()) {
 				obj_key_vec.push_back(obj->get_key().clone());
-				obj_val_vec.push_back(Data(obj.release()));
+				obj_val_vec.push_back(Value(obj.release()));
 			}
 			else {
 				return false;
@@ -1565,7 +1567,7 @@ namespace claujson {
 			return true;
 		}
 
-		bool Object::insert_array_element(size_t idx, Data val) { return false; }
+		bool Object::insert_array_element(size_t idx, Value val) { return false; }
 
 		void Object::erase(std::string_view key, bool real) {
 			size_t idx = this->find(key);
@@ -1587,7 +1589,7 @@ namespace claujson {
 		}
 
 
-		void Object::MergeWith(PtrWeak<Json> j, int start_offset) {
+		void Object::MergeWith(PtrWeak<Structured> j, int start_offset) {
 			if (!is_valid()) {
 				return;
 			}
@@ -1645,7 +1647,7 @@ namespace claujson {
 			}
 		}
 
-		void Object::Link(Ptr<Json> j) {
+		void Object::Link(Ptr<Structured> j) {
 			if (!is_valid()) {
 				return;
 			}
@@ -1663,7 +1665,7 @@ namespace claujson {
 			j->set_parent(this);
 
 			obj_key_vec.push_back(j->get_key().clone());
-			obj_val_vec.push_back(Data(j.release()));
+			obj_val_vec.push_back(Value(j.release()));
 		}
 
 		void Object::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
@@ -1672,8 +1674,8 @@ namespace claujson {
 				return;
 			}
 			{
-				Data temp;// key
-				Data temp2;
+				Value temp;// key
+				Value temp2;
 
 				bool e = false;
 
@@ -1712,7 +1714,7 @@ namespace claujson {
 			return;
 		}
 
-		bool Object::add_user_type(Ptr<Json> j) {
+		bool Object::add_user_type(Ptr<Structured> j) {
 			if (!is_valid()) {
 				return false;
 			} 
@@ -1720,7 +1722,7 @@ namespace claujson {
 			if (j->is_virtual()) {
 				j->set_parent(this);
 
-				obj_key_vec.push_back(Data());
+				obj_key_vec.push_back(Value());
 				obj_val_vec.emplace_back(j.release());
 			}
 			else if (j->has_key()) {
@@ -1737,11 +1739,11 @@ namespace claujson {
 			return true;
 		}
 
-		 Array::Array(bool valid) : Json(valid) { }
+		 Array::Array(bool valid) : Structured(valid) { }
 
 
-		 Json* Array::clone() const {
-			 Json* result = new Array();
+		 Structured* Array::clone() const {
+			 Structured* result = new Array();
 
 			 size_t sz = this->get_data_size();
 			 for (size_t i = 0; i < sz; ++i) {
@@ -1753,8 +1755,8 @@ namespace claujson {
 			 return result;
 		 }
 
-		Data Array::Make() {
-			return Data(new Array());
+		Value Array::Make() {
+			return Value(new Array());
 		}
 
 		Array::Array() { }
@@ -1762,7 +1764,7 @@ namespace claujson {
 		Array::~Array() {
 			for (auto& x : arr_vec) {
 				if (x.is_ptr()) {
-					delete ((Json*)x.ptr_val());
+					delete ((Structured*)x.ptr_val());
 				}
 			}
 		}
@@ -1778,19 +1780,19 @@ namespace claujson {
 			return arr_vec.size();
 		}
 
-		Data& Array::get_value_list(size_t idx) {
+		Value& Array::get_value_list(size_t idx) {
 			return arr_vec[idx];
 		}
 
-		Data& Array::get_key_list(size_t idx) {
+		Value& Array::get_key_list(size_t idx) {
 			return data_null;
 		}
 
-		const Data& Array::get_value_list(size_t idx) const {
+		const Value& Array::get_value_list(size_t idx) const {
 			return arr_vec[idx];
 		}
 
-		const Data& Array::get_key_list(size_t idx) const {
+		const Value& Array::get_key_list(size_t idx) const {
 			return data_null;
 		}
 
@@ -1810,19 +1812,19 @@ namespace claujson {
 		}
 
 
-		std::vector<Data>::iterator Array::begin() {
+		std::vector<Value>::iterator Array::begin() {
 			return arr_vec.begin();
 		}
 
-		std::vector<Data>::iterator Array::end() {
+		std::vector<Value>::iterator Array::end() {
 			return arr_vec.end();
 		}
 
-		bool Array::add_object_element(Data key, Data val) {
+		bool Array::add_object_element(Value key, Value val) {
 			return false;
 		}
 
-		bool Array::add_array_element(Data val) {
+		bool Array::add_array_element(Value val) {
 			if (!is_valid()) {
 				return false;
 			}
@@ -1832,13 +1834,13 @@ namespace claujson {
 			return true;
 		}
 		
-		bool Array::add_array(Ptr<Json> arr) {
+		bool Array::add_array(Ptr<Structured> arr) {
 			if (!is_valid()) {
 				return false;
 			}
 
 			if (!arr->has_key()) {
-				arr_vec.push_back(Data(arr.release()));
+				arr_vec.push_back(Value(arr.release()));
 			}
 			else {
 				return false;
@@ -1846,13 +1848,13 @@ namespace claujson {
 			return true;
 		}
 		
-		bool Array::add_object(Ptr<Json> obj) {
+		bool Array::add_object(Ptr<Structured> obj) {
 			if (!is_valid()) {
 				return false;
 			}
 
 			if (!obj->has_key()) {
-				arr_vec.push_back(Data(obj.release()));
+				arr_vec.push_back(Value(obj.release()));
 			}
 			else {
 				return false;
@@ -1860,7 +1862,7 @@ namespace claujson {
 			return true;
 		}
 
-		bool Array::insert_array_element(size_t idx, Data val) {
+		bool Array::insert_array_element(size_t idx, Value val) {
 			if (!is_valid()) {
 				return false;
 			}
@@ -1887,7 +1889,7 @@ namespace claujson {
 			arr_vec.erase(arr_vec.begin() + idx);
 		}
 		
-		void Array::MergeWith(PtrWeak<Json> j, int start_offset) {
+		void Array::MergeWith(PtrWeak<Structured> j, int start_offset) {
 			if (!is_valid()) {
 				return;
 			}
@@ -1944,7 +1946,7 @@ namespace claujson {
 			}
 		}
 
-		void Array::Link(Ptr<Json> j) {
+		void Array::Link(Ptr<Structured> j) {
 			if (!is_valid()) {
 				return;
 			}
@@ -1962,7 +1964,7 @@ namespace claujson {
 
 			j->set_parent(this);
 
-			arr_vec.push_back(Data(j.release()));
+			arr_vec.push_back(Value(j.release()));
 		}
 
 		void Array::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
@@ -1981,9 +1983,9 @@ namespace claujson {
 
 
 			{
-				Data temp2;
+				Value temp2;
 				bool e = false;
-				claujson::Convert(temp2, val_buf_idx, val_next_buf_idx, true, buf, string_buf, val_token_idx, e);
+				claujson::Convert(temp2, val_buf_idx, val_next_buf_idx, false, buf, string_buf, val_token_idx, e);
 				if (e) {
 
 					ERROR("Error in add_item_type");
@@ -1998,7 +2000,7 @@ namespace claujson {
 			ERROR("Array::add_user_type1");
 		}
 
-		bool Array::add_user_type(Ptr<Json> j) {
+		bool Array::add_user_type(Ptr<Structured> j) {
 			if (!is_valid()) {
 				return false;
 			}
@@ -2027,18 +2029,18 @@ namespace claujson {
 		PartialJson::~PartialJson() {
 			for (auto& x : obj_val_vec) {
 				if (x.is_ptr()) {
-					delete ((Json*)x.ptr_val());
+					delete ((Structured*)x.ptr_val());
 				}
 			}
 
 			for (auto& x : arr_vec) {
 				if (x.is_ptr()) {
-					delete ((Json*)x.ptr_val());
+					delete ((Structured*)x.ptr_val());
 				}
 			}
 
 			if (virtualJson.is_ptr()) {
-				delete ((Json*)virtualJson.ptr_val());
+				delete ((Structured*)virtualJson.ptr_val());
 			}
 		}
 
@@ -2065,7 +2067,7 @@ namespace claujson {
 			return arr_vec.size() + obj_val_vec.size() + count;
 		}
 
-		Data& PartialJson::get_value_list(size_t idx) {
+		Value& PartialJson::get_value_list(size_t idx) {
 
 			if (virtualJson.is_ptr() && idx == 0) {
 				return virtualJson;
@@ -2083,7 +2085,7 @@ namespace claujson {
 		}
 
 
-		Data& PartialJson::get_key_list(size_t idx) {
+		Value& PartialJson::get_key_list(size_t idx) {
 			if (virtualJson.is_ptr() && idx == 0) {
 				return data_null;
 			}
@@ -2100,7 +2102,7 @@ namespace claujson {
 		}
 
 
-		const Data& PartialJson::get_value_list(size_t idx) const {
+		const Value& PartialJson::get_value_list(size_t idx) const {
 			if (virtualJson.is_ptr() && idx == 0) {
 				return virtualJson;
 			}
@@ -2117,7 +2119,7 @@ namespace claujson {
 		}
 
 
-		const Data& PartialJson::get_key_list(size_t idx) const {
+		const Value& PartialJson::get_key_list(size_t idx) const {
 			if (virtualJson.is_ptr() && idx == 0) {
 				return data_null;
 			}
@@ -2173,7 +2175,7 @@ namespace claujson {
 
 
 
-		bool PartialJson::add_object_element(Data key, Data val) {
+		bool PartialJson::add_object_element(Value key, Value val) {
 			if (!is_valid() || !key.is_str()) {
 				return false;
 			}
@@ -2183,7 +2185,7 @@ namespace claujson {
 			}
 
 			if (val.is_ptr()) {
-				auto* x = (Json*)val.ptr_val();
+				auto* x = (Structured*)val.ptr_val();
 				x->set_key(key.clone()); // no need?
 			}
 
@@ -2192,7 +2194,7 @@ namespace claujson {
 
 			return true;
 		}
-		bool PartialJson::add_array_element(Data val) {
+		bool PartialJson::add_array_element(Value val) {
 			if (!obj_key_vec.empty()) {
 				ERROR("partialJson is array or object.");
 				return false;
@@ -2204,17 +2206,17 @@ namespace claujson {
 		}
 
 
-		bool PartialJson::add_array(Ptr<Json> arr) {
+		bool PartialJson::add_array(Ptr<Structured> arr) {
 			log << warn  << "not used..";
 			ERROR("NOT USED");
 			return false;
 		}
-		bool PartialJson::add_object(Ptr<Json> obj) {
+		bool PartialJson::add_object(Ptr<Structured> obj) {
 			log << warn  << "not used..";
 			ERROR("NOT USED");
 			return false;
 		}
-		bool PartialJson::insert_array_element(size_t idx, Data val) {
+		bool PartialJson::insert_array_element(size_t idx, Value val) {
 			log << warn  << "not used.."; 
 			ERROR("NOT USED");
 			return false;
@@ -2230,7 +2232,7 @@ namespace claujson {
 			ERROR("NOT USED");
 		}
 
-		void PartialJson::MergeWith(PtrWeak<Json> j, int start_offset) {
+		void PartialJson::MergeWith(PtrWeak<Structured> j, int start_offset) {
 			if (!is_valid()) {
 				return;
 			}
@@ -2281,16 +2283,16 @@ namespace claujson {
 			}
 		}
 
-		void PartialJson::Link(Ptr<Json> j) { // use carefully...
+		void PartialJson::Link(Ptr<Structured> j) { // use carefully...
 
 			j->set_parent(this);
 
 			if (!j->has_key()) {
-				arr_vec.push_back(Data(j.release()));
+				arr_vec.push_back(Value(j.release()));
 			}
 			else {
 				obj_key_vec.push_back(j->get_key().clone());
-				obj_val_vec.push_back(Data(j.release()));
+				obj_val_vec.push_back(Value(j.release()));
 			}
 		}
 
@@ -2299,8 +2301,8 @@ namespace claujson {
 			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx) {
 
 				{
-					Data temp;
-					Data temp2;
+					Value temp;
+					Value temp2;
 
 					bool e = false;
 
@@ -2334,10 +2336,10 @@ namespace claujson {
 			char* buf, uint8_t* string_buf, uint64_t val_token_idx) {
 
 				{
-					Data temp2;
+					Value temp2;
 					bool e = false;
 
-					claujson::Convert(temp2, val_buf_idx, val_next_buf_idx, true, buf, string_buf, val_token_idx, e);
+					claujson::Convert(temp2, val_buf_idx, val_next_buf_idx, false, buf, string_buf, val_token_idx, e);
 
 					if (e) {
 
@@ -2352,12 +2354,12 @@ namespace claujson {
 				}
 		}
 
-		bool PartialJson::add_user_type(Ptr<Json> j) {
+		bool PartialJson::add_user_type(Ptr<Structured> j) {
 
 			j->set_parent(this);
 
 			if (j->is_virtual()) {
-				virtualJson = Data(j.release());
+				virtualJson = Value(j.release());
 			}
 			else if (j->has_key() == false) {
 				if (!obj_key_vec.empty()) {
@@ -2410,7 +2412,7 @@ namespace claujson {
 		}
 
 		{
-			Data temp;
+			Value temp;
 			bool e = false;
 
 			claujson::Convert(temp, key_buf_idx, key_next_buf_idx, true, buf, string_buf, key_token_idx, e);
@@ -2422,7 +2424,7 @@ namespace claujson {
 				ERROR("Error in add_item_type, key is not string");
 			}
 
-			Json* json = nullptr;
+			Structured* json = nullptr;
 
 			if (type == 0) {
 				json = new Object();
@@ -2432,7 +2434,7 @@ namespace claujson {
 			}
 
 			obj_key_vec.push_back(temp.clone());
-			obj_val_vec.push_back(Data(json));
+			obj_val_vec.push_back(Value(json));
 
 			json->set_key(std::move(temp));
 			json->set_parent(this);
@@ -2444,7 +2446,7 @@ namespace claujson {
 		}
 
 		{
-			Json* json = nullptr;
+			Structured* json = nullptr;
 
 			if (type == 0) {
 				json = new Object();
@@ -2455,10 +2457,10 @@ namespace claujson {
 
 
 			if (type == 0) {
-				arr_vec.push_back(Data(json));
+				arr_vec.push_back(Value(json));
 			}
 			else if (type == 1) {
-				arr_vec.push_back(Data(json));
+				arr_vec.push_back(Value(json));
 			}
 
 			json->set_parent(this);
@@ -2472,7 +2474,7 @@ namespace claujson {
 					ERROR("partialJson is array or object.");
 				}
 
-				Data temp;
+				Value temp;
 				bool e = false;
 
 				claujson::Convert(temp, key_buf_idx, key_next_buf_idx, true, buf, string_buf, key_token_idx, e);
@@ -2486,7 +2488,7 @@ namespace claujson {
 				}
 
 
-				Json* json = nullptr;
+				Structured* json = nullptr;
 
 				if (type == 0) {
 					json = new Object();
@@ -2498,7 +2500,7 @@ namespace claujson {
 
 
 				obj_key_vec.push_back(temp.clone());
-				obj_val_vec.push_back(Data(json));
+				obj_val_vec.push_back(Value(json));
 				
 
 				json->set_key(std::move(temp));
@@ -2511,7 +2513,7 @@ namespace claujson {
 				ERROR("PartialJson is array or object.");
 			}
 
-			Json* json = nullptr;
+			Structured* json = nullptr;
 
 			if (type == 0) {
 				json = new Object();
@@ -2522,10 +2524,10 @@ namespace claujson {
 
 
 			if (type == 0) {
-				arr_vec.push_back(Data(json));
+				arr_vec.push_back(Value(json));
 			}
 			else if (type == 1) {
-				arr_vec.push_back(Data(json));
+				arr_vec.push_back(Value(json));
 			}
 
 
@@ -2533,7 +2535,7 @@ namespace claujson {
 		}
 	}
 
-	Array& Data::as_array() {
+	Array& Value::as_array() {
 		if (is_ptr() && as_json_ptr()->is_array()) {
 			return *static_cast<Array*>(_ptr_val);
 		}
@@ -2541,7 +2543,7 @@ namespace claujson {
 		return empty_arr;
 	}
 
-	Object& Data::as_object() {
+	Object& Value::as_object() {
 		if (is_ptr() && as_json_ptr()->is_object()) {
 			return *static_cast<Object*>(_ptr_val);
 		}
@@ -2550,7 +2552,7 @@ namespace claujson {
 	}
 
 
-	const Array& Data::as_array() const {
+	const Array& Value::as_array() const {
 		if (is_ptr() && as_json_ptr()->is_array()) {
 			return *static_cast<Array*>(_ptr_val);
 		}
@@ -2558,7 +2560,7 @@ namespace claujson {
 		return empty_arr;
 	}
 
-	const Object& Data::as_object() const {
+	const Object& Value::as_object() const {
 		if (is_ptr() && as_json_ptr()->is_object()) {
 			return *static_cast<Object*>(_ptr_val);
 		}
@@ -2566,14 +2568,14 @@ namespace claujson {
 		return empty_obj;
 	}
 
-	Json* Data::as_json_ptr() {
+	Structured* Value::as_json_ptr() {
 		if (!is_ptr()) {
 			return nullptr;
 		}
 		return (_ptr_val);
 	}
 
-	const Json* Data::as_json_ptr() const {
+	const Structured* Value::as_json_ptr() const {
 		if (!is_ptr()) {
 			return nullptr;
 		}
@@ -2704,11 +2706,11 @@ namespace claujson {
 
 		friend class LoadData;
 
-		static size_t Size(Json* root) {
+		static size_t Size(Structured* root) {
 			return _Size(root) + 1;
 		}
 
-		 static size_t _Size(Json* root) {
+		 static size_t _Size(Structured* root) {
 			 if (root == nullptr) {
 				return 0;
 			}
@@ -2727,7 +2729,7 @@ namespace claujson {
 		}
 
 		 // find n node.. 
-		 static void Find2(Json* root, const size_t n, size_t& idx, bool chk_hint, size_t& _len, std::vector<size_t>& offset, std::vector<size_t>& offset2, std::vector<Json*>& out, std::vector<int>& hint) {
+		 static void Find2(Structured* root, const size_t n, size_t& idx, bool chk_hint, size_t& _len, std::vector<size_t>& offset, std::vector<size_t>& offset2, std::vector<Structured*>& out, std::vector<int>& hint) {
 			 if (idx >= n) {
 				 return;
 			 }
@@ -2787,16 +2789,16 @@ namespace claujson {
 		 }
 
 
-		 static void Divide(Json* pos, Json*& result) { // after pos.. -> to result.
+		 static void Divide(Structured* pos, Structured*& result) { // after pos.. -> to result.
 			if (pos == nullptr) {
 				return;
 			}
 
 
-			Json* pos_ = pos;
-			Json* parent = pos_->get_parent();
+			Structured* pos_ = pos;
+			Structured* parent = pos_->get_parent();
 
-			Json* out = new PartialJson(); //
+			Structured* out = new PartialJson(); //
 
 
 			while (parent && parent->is_partial_json() == false) {
@@ -2811,7 +2813,7 @@ namespace claujson {
 
 				for (size_t i = idx + 1; i < len; ++i) {
 					if (parent->get_value_list(i).is_ptr()) {
-						out->add_user_type(Ptr<Json>((Json*)parent->get_value_list(i).ptr_val()));
+						out->add_user_type(Ptr<Structured>((Structured*)parent->get_value_list(i).ptr_val()));
 					}
 					else {
 						if (parent->get_key_list(i).is_str() == false) {
@@ -2824,7 +2826,7 @@ namespace claujson {
 				}
 
 				{
-					Json* temp = nullptr;
+					Structured* temp = nullptr;
 					if (parent->is_object()) {
 						temp = new VirtualObject();
 					}
@@ -2839,7 +2841,7 @@ namespace claujson {
 
 					for (size_t i = 0; i < len; ++i) {
 						if (out->get_value_list(i).is_ptr()) {
-							temp->add_user_type(Ptr<Json>((Json*)out->get_value_list(i).ptr_val()));
+							temp->add_user_type(Ptr<Structured>((Structured*)out->get_value_list(i).ptr_val()));
 						}
 						else {
 							if (temp->is_object()) {
@@ -2853,7 +2855,7 @@ namespace claujson {
 					}
 
 					out->clear();
-					out->add_user_type(Ptr<Json>(temp));
+					out->add_user_type(Ptr<Structured>(temp));
 				}
 
 				for (long long i = (long long)parent->get_data_size() - 1; i > idx; --i) {
@@ -2867,7 +2869,7 @@ namespace claujson {
 			result = out;
 		}
 
-		static std::vector<claujson::Json*> Divide2(size_t n, claujson::Data& j, std::vector<claujson::Json*>& result, std::vector<int>& hint) {
+		static std::vector<claujson::Structured*> Divide2(size_t n, claujson::Value& j, std::vector<claujson::Structured*>& result, std::vector<int>& hint) {
 			if (j.is_ptr() == false) {
 				return { nullptr };
 			}
@@ -2891,7 +2893,7 @@ offset[i] = len / n;
 
 			hint = std::vector<int>(n - 1, 0);
 
-			std::vector<claujson::Json*> out(n, nullptr);
+			std::vector<claujson::Structured*> out(n, nullptr);
 
 			{
 				size_t idx = 0;
@@ -2907,7 +2909,7 @@ offset[i] = len / n;
 			}
 
 
-			std::vector<Json*> temp_parent(n, nullptr);
+			std::vector<Structured*> temp_parent(n, nullptr);
 			{
 				size_t i = 0;
 				for (; i < n - 1; ++i) {
@@ -2918,7 +2920,7 @@ offset[i] = len / n;
 							int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 
 							for (size_t i = 1; i < result.size(); ++i) {
-								claujson::Ptr<claujson::Json> clean2(result[i]);
+								claujson::Ptr<claujson::Structured> clean2(result[i]);
 							}
 						}
 
@@ -2937,7 +2939,7 @@ offset[i] = len / n;
 						int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 
 						for (size_t i = 1; i < result.size(); ++i) {
-							claujson::Ptr<claujson::Json> clean2(result[i]);
+							claujson::Ptr<claujson::Structured> clean2(result[i]);
 						}
 					}
 
@@ -2949,14 +2951,14 @@ offset[i] = len / n;
 			return out;
 		}
 
-		static int Merge(Json* next, Json* ut, Json** ut_next)
+		static int Merge(Structured* next, Structured* ut, Structured** ut_next)
 		{
 
 			// check!!
 			while (ut->get_data_size() >= 1
-				&& ut->get_value_list(0).is_ptr() && ((Json*)ut->get_value_list(0).ptr_val())->is_virtual())
+				&& ut->get_value_list(0).is_ptr() && ((Structured*)ut->get_value_list(0).ptr_val())->is_virtual())
 			{
-				ut = (Json*)ut->get_value_list(0).ptr_val();
+				ut = (Structured*)ut->get_value_list(0).ptr_val();
 			}
 
 			bool chk_ut_next = false;
@@ -2965,8 +2967,8 @@ offset[i] = len / n;
 
 			while (true) {
 
-				class Json* _ut = ut;
-				class Json* _next = next;
+				class Structured* _ut = ut;
+				class Structured* _next = next;
 
 				//log << warn  << "chk\n";
 				if (ut_next && _ut == *ut_next) {
@@ -3057,7 +3059,7 @@ offset[i] = len / n;
 			}
 		}
 
-		static int Merge2(Json* next, Json* ut, Json** ut_next, int& op)
+		static int Merge2(Structured* next, Structured* ut, Structured** ut_next, int& op)
 		{
 
 			if (!ut) {
@@ -3067,17 +3069,17 @@ offset[i] = len / n;
 
 			// check!!
 			while (ut->get_data_size() >= 1
-				&& ut->get_value_list(0).is_ptr() && ((Json*)ut->get_value_list(0).ptr_val())->is_virtual())
+				&& ut->get_value_list(0).is_ptr() && ((Structured*)ut->get_value_list(0).ptr_val())->is_virtual())
 			{
-				ut = (Json*)ut->get_value_list(0).ptr_val();
+				ut = (Structured*)ut->get_value_list(0).ptr_val();
 			}
 
 
 			while (true) {
 				//log << warn  << "chk\n";
 
-				class Json* _ut = ut;
-				class Json* _next = next;
+				class Structured* _ut = ut;
+				class Structured* _next = next;
 
 				if (_next->is_array() && _ut->is_object()) {
 					ERROR("Error in Merge, next is array but child? is object");
@@ -3148,8 +3150,8 @@ offset[i] = len / n;
 		static bool __LoadData(char* buf, size_t buf_len,
 			uint8_t* string_buf,
 			_simdjson::internal::dom_parser_implementation* imple,
-			int64_t token_arr_start, size_t token_arr_len, Ptr<Json>& _global,
-			int start_state, int last_state, class Json** next, int* err, uint64_t no)
+			int64_t token_arr_start, size_t token_arr_len, Ptr<Structured>& _global,
+			int start_state, int last_state, class Structured** next, int* err, uint64_t no)
 		{
 			try {
 				int a = clock();
@@ -3161,11 +3163,11 @@ offset[i] = len / n;
 					return false;
 				}
 
-				class Json* global = _global.get();
+				class Structured* global = _global.get();
 
 				int state = start_state;
 				size_t braceNum = 0;
-				std::vector< class Json* > nestedUT;
+				std::vector< class Structured* > nestedUT;
 
 				nestedUT.reserve(10);
 				nestedUT.push_back(global);
@@ -3338,7 +3340,7 @@ offset[i] = len / n;
 						}
 
 
-						class Json* pTemp = (Json*)nestedUT[braceNum]->get_value_list(nestedUT[braceNum]->get_data_size() - 1).ptr_val();
+						class Structured* pTemp = (Structured*)nestedUT[braceNum]->get_value_list(nestedUT[braceNum]->get_data_size() - 1).ptr_val();
 
 						braceNum++;
 
@@ -3414,13 +3416,13 @@ offset[i] = len / n;
 
 						if (braceNum == 0) {
 
-							Ptr<Json> ut; // is v_array or v_object.
+							Ptr<Structured> ut; // is v_array or v_object.
 
 							if (type == _simdjson::internal::tape_type::END_OBJECT) {
-								ut = Ptr<Json>(new VirtualObject());
+								ut = Ptr<Structured>(new VirtualObject());
 							}
 							else {
-								ut = Ptr<Json>(new VirtualArray());
+								ut = Ptr<Structured>(new VirtualArray());
 							}
 
 							bool chk = false;
@@ -3428,7 +3430,7 @@ offset[i] = len / n;
 
 							for (size_t i = 0; i < len; ++i) {
 								if (nestedUT[braceNum]->get_value_list(i).is_ptr()) {
-									ut->add_user_type(Ptr<Json>((Json*)nestedUT[braceNum]->get_value_list(i).ptr_val()));
+									ut->add_user_type(Ptr<Structured>((Structured*)nestedUT[braceNum]->get_value_list(i).ptr_val()));
 								}
 								else {
 									if (ut->is_object()) { 
@@ -3585,13 +3587,13 @@ offset[i] = len / n;
 			return -1;
 		}
 
-		static bool _LoadData(Data& global, char* buf, size_t buf_len,
+		static bool _LoadData(Value& global, char* buf, size_t buf_len,
 			uint8_t* string_buf,
 			_simdjson::internal::dom_parser_implementation* imple, int64_t& length,
 			std::vector<int64_t>& start, size_t parse_num) // first, strVec.empty() must be true!!
 		{
-			Ptr<Json> _global = Ptr<Json>(new PartialJson());
-			std::vector<Ptr<Json>> __global;
+			Ptr<Structured> _global = Ptr<Structured>(new PartialJson());
+			std::vector<Ptr<Structured>> __global;
 
 			try {
 				int a__ = clock();
@@ -3639,12 +3641,12 @@ offset[i] = len / n;
 					}
 					int b_ = clock();
 					//log << warn  << "pivots.. " << b_ - a_ << "ms\n";
-					std::vector<class Json*> next(pivots.size() - 1, nullptr);
+					std::vector<class Structured*> next(pivots.size() - 1, nullptr);
 					{
 
-						__global = std::vector<Ptr<Json>>(pivots.size() - 1);
+						__global = std::vector<Ptr<Structured>>(pivots.size() - 1);
 						for (size_t i = 0; i < __global.size(); ++i) {
-							__global[i] = Ptr<Json>(new PartialJson());
+							__global[i] = Ptr<Structured>(new PartialJson());
 						}
 
 						std::vector<std::thread> thr(pivots.size() - 1);
@@ -3745,7 +3747,7 @@ offset[i] = len / n;
 							}
 
 							if (__global[start]->get_data_size() > 0 && __global[start]->get_value_list(0).is_ptr()
-								&& ((Json*)__global[start]->get_value_list(0).ptr_val())->is_virtual()) {
+								&& ((Structured*)__global[start]->get_value_list(0).ptr_val())->is_virtual()) {
 								log << warn  << "not valid file1\n";
 								throw 1;
 							}
@@ -3844,7 +3846,7 @@ offset[i] = len / n;
 			//}
 
 		}
-		static bool parse(Data& global, char* buf, size_t buf_len,
+		static bool parse(Value& global, char* buf, size_t buf_len,
 			uint8_t* string_buf,
 			_simdjson::internal::dom_parser_implementation* imple,
 			int64_t length, std::vector<int64_t>& start, size_t thr_num) {
@@ -3897,25 +3899,25 @@ offset[i] = len / n;
 	{
 	private:
 		//                         
-		static void _save(StrStream& stream, const Data& data, std::vector<Json*>& chk_list, const int depth);
-		static void _save(StrStream& stream, const Data& data, const int depth);
+		static void _save(StrStream& stream, const Value& data, std::vector<Structured*>& chk_list, const int depth);
+		static void _save(StrStream& stream, const Value& data, const int depth);
 
-		static void save_(StrStream& stream, const Data& global, Json* temp, bool hint);
+		static void save_(StrStream& stream, const Value& global, Structured* temp, bool hint);
 
 	public:
 		// test?... just Data has one element 
-		static void save(const std::string& fileName, const Data& global, bool hint = false);
+		static void save(const std::string& fileName, const Value& global, bool hint = false);
 
-		static void save(std::ostream& stream, const Data& data);
+		static void save(std::ostream& stream, const Value& data);
 
-		static std::string save_to_str(const Data& data);
+		static std::string save_to_str(const Value& data);
 
-		static void save_parallel(const std::string& fileName, Data& j, size_t thr_num);
+		static void save_parallel(const std::string& fileName, Value& j, size_t thr_num);
 
 	};
 
 
-	std::string LoadData::save_to_str(const Data& global) {
+	std::string LoadData::save_to_str(const Value& global) {
 		StrStream stream;
 
 		if (global.is_ptr()) {
@@ -3993,8 +3995,8 @@ offset[i] = len / n;
 	}
 
 	//                            todo - change Json* ut to Data& data ?
-	void LoadData::_save(StrStream& stream, const Data& data, std::vector<Json*>& chk_list, const int depth) {
-		const Json* ut = nullptr;
+	void LoadData::_save(StrStream& stream, const Value& data, std::vector<Structured*>& chk_list, const int depth) {
+		const Structured* ut = nullptr;
 
 		if (data.is_ptr()) {
 			ut = data.as_json_ptr();
@@ -4046,7 +4048,7 @@ offset[i] = len / n;
 					}
 					stream << " ";
 
-					auto* y = ((Json*)(ut->get_value_list(i).ptr_val()));
+					auto* y = ((Structured*)(ut->get_value_list(i).ptr_val()));
 
 					if (y->is_object() && y->is_virtual() == false) {
 						stream << " { \n";
@@ -4172,7 +4174,7 @@ offset[i] = len / n;
 				if (ut->get_value_list(i).is_ptr()) {
 
 
-					auto* y = ((Json*)(ut->get_value_list(i).ptr_val()));
+					auto* y = ((Structured*)(ut->get_value_list(i).ptr_val()));
 
 					if (y->is_object() && y->is_virtual() == false) {
 						stream << " { \n";
@@ -4185,7 +4187,7 @@ offset[i] = len / n;
 
 					_save(stream, ut->get_value_list(i), chk_list, depth + 1);
 
-					y = ((Json*)(ut->get_value_list(i).ptr_val()));
+					y = ((Structured*)(ut->get_value_list(i).ptr_val()));
 
 
 					if (y->is_object() && find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
@@ -4312,8 +4314,8 @@ offset[i] = len / n;
 		}
 	}
 	
-	void LoadData::_save(StrStream& stream, const Data& data, const int depth) {
-		const Json* ut = nullptr;
+	void LoadData::_save(StrStream& stream, const Value& data, const int depth) {
+		const Structured* ut = nullptr;
 
 		if (data.is_ptr()) {
 			ut = data.as_json_ptr();
@@ -4367,7 +4369,7 @@ offset[i] = len / n;
 					}
 					stream << " ";
 
-					auto* y = ((Json*)(ut->get_value_list(i).ptr_val()));
+					auto* y = ((Structured*)(ut->get_value_list(i).ptr_val()));
 
 					if (y->is_object() && y->is_virtual() == false) {
 						stream << " { \n";
@@ -4493,7 +4495,7 @@ offset[i] = len / n;
 				if (ut->get_value_list(i).is_ptr()) {
 
 
-					auto* y = ((Json*)(ut->get_value_list(i).ptr_val()));
+					auto* y = ((Structured*)(ut->get_value_list(i).ptr_val()));
 
 					if (y->is_object() && y->is_virtual() == false) {
 						stream << " { \n";
@@ -4506,7 +4508,7 @@ offset[i] = len / n;
 
 					_save(stream, ut->get_value_list(i), depth + 1);
 
-					y = ((Json*)(ut->get_value_list(i).ptr_val()));
+					y = ((Structured*)(ut->get_value_list(i).ptr_val()));
 
 
 					if (y->is_object()) {
@@ -4634,7 +4636,7 @@ offset[i] = len / n;
 	}
 
 	// todo... just Data has one element 
-	void LoadData::save(const std::string& fileName, const Data& global, bool hint) {
+	void LoadData::save(const std::string& fileName, const Value& global, bool hint) {
 		StrStream stream;
 
 		if (global.is_ptr()) {
@@ -4720,15 +4722,15 @@ offset[i] = len / n;
 		outFile.close();
 	}
 
-	void LoadData::save(std::ostream& stream, const Data& data) {
+	void LoadData::save(std::ostream& stream, const Value& data) {
 		StrStream str_stream;
 		_save(str_stream, data, 0);
 		stream << std::string_view(str_stream.buf(), str_stream.buf_size());
 	}
 
-	void LoadData::save_(StrStream& stream, const Data& global, Json* temp, bool hint) {
+	void LoadData::save_(StrStream& stream, const Value& global, Structured* temp, bool hint) {
 
-		std::vector<Json*> chk_list; // point for division?, virtual nodes? }}}?
+		std::vector<Structured*> chk_list; // point for division?, virtual nodes? }}}?
 
 		{
 			while (temp) {
@@ -4818,7 +4820,7 @@ offset[i] = len / n;
 	}
 
 
-	void LoadData::save_parallel(const std::string& fileName, Data& j, size_t thr_num) {
+	void LoadData::save_parallel(const std::string& fileName, Value& j, size_t thr_num) {
 
 		if (!j.is_ptr()) {
 			save(fileName, j, false);
@@ -4837,10 +4839,10 @@ offset[i] = len / n;
 			return;
 		}
 		
-		std::vector<claujson::Json*> temp(thr_num, nullptr); //
-		std::vector<claujson::Json*> temp_parent(thr_num, nullptr);
+		std::vector<claujson::Structured*> temp(thr_num, nullptr); //
+		std::vector<claujson::Structured*> temp_parent(thr_num, nullptr);
 		{
-			std::vector<claujson::Json*> result(temp.size() - 1, nullptr);
+			std::vector<claujson::Structured*> result(temp.size() - 1, nullptr);
 
 			std::vector<int> hint(temp.size() - 1, false);
 
@@ -4888,12 +4890,12 @@ offset[i] = len / n;
 
 
 			for (size_t i = 1; i < result.size(); ++i) {
-				claujson::Ptr<claujson::Json> clean2(result[i]);
+				claujson::Ptr<claujson::Structured> clean2(result[i]);
 			}
 		}
 	}
 
-	bool is_valid(_simdjson::dom::parser_for_claujson& dom_parser) {
+	bool is_valid(_simdjson::dom::parser_for_claujson& dom_parser, size_t middle, std::vector<int>* _is_array = nullptr, volatile int* err = nullptr) {
 
 		const auto& buf = dom_parser.raw_buf();
 		const auto& string_buf = dom_parser.raw_string_buf();
@@ -4929,11 +4931,21 @@ offset[i] = len / n;
 			//if (!STREAMING) {
 			switch (value) {
 			case '{': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != '}') {
-				log << warn << ("starting brace unmatched"); return false;
+				log << warn << ("starting brace unmatched"); 
+				
+				if (err) {
+					*err = 1;
+				}
+				
+				return false;
 			}
 					break;
 			case '[': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != ']') {
-				log << warn << ("starting bracket unmatched"); return false;
+				log << warn << ("starting bracket unmatched");
+				if (err) {
+					*err = 1;
+				}
+				return false;
 			}
 					break;
 			}
@@ -4956,7 +4968,7 @@ offset[i] = len / n;
 			case ',':
 			case '}':
 			case ']':
-			{ log << warn << "not primitive"; return false; } break;
+				{ log << warn << "not primitive"; return false; } break;
 			}
 		}
 		goto document_end;
@@ -4970,51 +4982,113 @@ offset[i] = len / n;
 		if (is_array.size() < depth) {
 			is_array.push_back(0);
 		}
-		if (depth >= dom_parser.max_depth()) { log << warn << ("Exceeded max depth!"); return false; }
+		if (depth >= dom_parser.max_depth()) { log << warn << ("Exceeded max depth!");
+		if (err) {
+			*err = 1;
+		}
+		return false; }
+
 		//dom_parser.is_array[depth] = false;
 		is_array[depth - 1] = 0;
 		//SIMDJSON_TRY(visitor.visit_object_start(*this));
 
 		{
+			if (idx > middle) {
+				goto document_end;
+			}
+			if (err && *err)  {
+				return false;
+			}
+		}
+
+
+		{
 			auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
-			if (key != '"') { log << warn << ("Object does not start with a key"); return false; }
+			if (key != '"') { log << warn << ("Object does not start with a key");
+			if (err) {
+				*err = 1;
+			}
+			return false; }
 			//SIMDJSON_TRY(visitor.increment_count(*this));
 			//SIMDJSON_TRY(visitor.visit_key(*this, key));
 		}
 
 	object_field:
+
+		{
+			if (idx > middle) {
+				goto document_end;
+			}
+			if (err && *err)  {
+				return false;
+			}
+		}
+
 		if (simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx++]] != ':')) { log << warn << ("Missing colon after key in object"); return false; }
 		{
 			auto value = buf[simdjson_imple->structural_indexes[idx++]];
 			switch (value) {
 			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
 			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
-			case ',': { log << warn << "wrong comma.";  return false; }
-			case ':': { log << warn << "wrong colon.";  return false; }
-			case '}': { log << warn << "wrong }.";  return false; }
-			case ']': { log << warn << "wrong ].";  return false; }
+			case ',': { log << warn << "wrong comma.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ':': { log << warn << "wrong colon.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case '}': { log << warn << "wrong }.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ']': { log << warn << "wrong ].";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
 			default: //SIMDJSON_TRY(visitor.visit_primitive(*this, value)); 
 				break;
 			}
 		}
 
 	object_continue:
+		{
+			if (idx > middle) {
+				goto document_end;
+			}
+			if (err && *err)  {
+				return false;
+			}
+		}
+
 		switch (buf[simdjson_imple->structural_indexes[idx++]]) {
 		case ',':
 			//SIMDJSON_TRY(visitor.increment_count(*this));
 			{
 				auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
-				if (simdjson_unlikely(key != '"')) { log << warn << ("Key string missing at beginning of field in object"); return false; }
+				if (simdjson_unlikely(key != '"')) { log << warn << ("Key string missing at beginning of field in object");
+				if (err) {
+					*err = 1;
+				}
+				return false; }
 				//SIMDJSON_TRY(visitor.visit_key(*this, key));
 			}
 			goto object_field;
 		case '}': goto scope_end;
-		case ':': { log << warn << "wrong colon.";  return false; }
+		case ':': { log << warn << "wrong colon.";
+			if (err) {
+				*err = 1;
+			}
+			return false; }
 		default: log << warn << ("No comma between object fields"); return false;
 		}
 
 	scope_end:
-		depth--;
+		depth--; is_array.pop_back();
 		if (depth == 0) { 
 			goto document_end; 
 		}
@@ -5030,44 +5104,477 @@ offset[i] = len / n;
 		if (depth >= dom_parser.max_depth()) { log << warn << ("Exceeded max depth!"); return false; }
 		if (is_array.size() < depth) { is_array.push_back(1); }
 		is_array[depth - 1] = 1;
+
+		{
+			if (idx > middle) {
+				goto document_end;
+			}
+			if (err && *err)  {
+				return false;
+			}
+		}
+
 		//SIMDJSON_TRY(visitor.visit_array_start(*this));
 	//	SIMDJSON_TRY(visitor.increment_count(*this));
 
 	array_value:
 		{
+			if (idx > middle) {
+				goto document_end;
+			}
+			if (err && *err)  {
+				return false;
+			}
+		}
+
+		{
 			auto value = buf[simdjson_imple->structural_indexes[idx++]];
 			switch (value) {
 			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
 			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
-			case ',': { log << warn << "wrong comma.";  return false; }
-			case ':': { log << warn << "wrong colon.";  return false; }
-			case '}': { log << warn << "wrong }.";  return false; }
-			case ']': { log << warn << "wrong ].";  return false; }
+			case ',': { log << warn << "wrong comma.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ':': { log << warn << "wrong colon.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case '}': { log << warn << "wrong }.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ']': { log << warn << "wrong ].";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
 			default: break;
 			}
 		}
 
 	array_continue:
+		{
+			if (idx > middle) {
+				goto document_end;
+			}
+			if (err && *err)  {
+				return false;
+			}
+		}
+
 		switch (buf[simdjson_imple->structural_indexes[idx++]]) {
 		case ',': goto array_value;
 		case ']': goto scope_end;
-		case ':': { log << warn << "wrong colon.";  return false; }
-		default: log << warn << ("Missing comma between array values"); return false;
+		case ':': { log << warn << "wrong colon.";
+			if (err) {
+				*err = 1;
+			}
+			return false; }
+		default: log << warn << ("Missing comma between array values");
+			if (err) {
+				*err = 1;
+			}
+			return false;
 		}
 
 	document_end:
 
 		// If we didn't make it to the end, it's an error
-		if (idx != simdjson_imple->n_structural_indexes) {
-			log << warn << ("More than one JSON value at the root of the document, or extra characters at the end of the JSON!");
+		if (idx < middle) {
+			log << warn << ("More than one JSON value at the root of the document, or extra characters at the end of the JSON!"); // chk...
+
+			if (err) {
+				*err = 1;
+			}
+			return false;
+		}
+
+		if (_is_array) {
+			*_is_array = std::move(is_array);
+		}
+
+		return true;
+	}
+	bool is_valid_reverse(_simdjson::dom::parser_for_claujson& dom_parser, int64_t middle, std::vector<int>* _is_array = nullptr, volatile int* err = nullptr) { // str[middle] == ','
+
+		const auto& buf = dom_parser.raw_buf();
+		const auto& string_buf = dom_parser.raw_string_buf();
+		const auto buf_len = dom_parser.raw_len();
+
+		auto* simdjson_imple = dom_parser.raw_implementation().get();
+		int64_t idx = simdjson_imple->n_structural_indexes - 1;
+		size_t depth = 0;
+		std::vector<int> is_array;
+
+		is_array.reserve(1024);
+
+		//
+// Start the document
+//
+		///if (at_eof()) { return EMPTY; }
+
+		//if (idx == middle) { // , (nothing) <- error
+		//	return false; 
+		//}
+		//else 
+		if (idx < middle) {
+			return true; // chk?
+		}
+
+		//log_start_value("document");
+		//SIMDJSON_TRY(visitor.visit_document_start(*this));
+
+		//
+		// Read first value
+		//
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx--]]; //advance();
+
+			// Make sure the outer object or array is closed before continuing; otherwise, there are ways we
+			// could get into memory corruption. See https://github.com/simdjson/simdjson/issues/906
+			//if (!STREAMING) {
+			switch (value) {
+			case '{': if (buf[simdjson_imple->structural_indexes[0]] != '}') {
+				log << warn << ("starting brace unmatched");
+				if (err) {
+					*err = 1;
+				}
+				return false;
+			}
+					break;
+			case '[': if (buf[simdjson_imple->structural_indexes[0]] != ']') {
+				log << warn << ("starting bracket unmatched");
+				if (err) {
+					*err = 1;
+				}
+				return false;
+			}
+					break;
+			}
+			//	}
+
+			switch (value) {
+			case '}': { if (idx >= 0 && buf[simdjson_imple->structural_indexes[idx]] == '{') {
+				--idx; log << warn << ("empty object"); break;
+			} goto scope_end; }
+			case ']': { if (idx >= 0 && buf[simdjson_imple->structural_indexes[idx]] == '[') {
+				--idx; log << warn << ("empty array"); break;
+			} goto scope_end; }
+
+			default: break;
+			}
+
+
+			switch (value) {
+			case ':':
+			case ',':
+			case '{':
+			case '[':
+			{ log << warn << "not primitive";
+			if (err) {
+				*err = 1;
+			}
+			return false; } break;
+			}
+		}
+		if (idx < middle) {
+			goto document_end;
+		}
+		goto scope_end;
+
+		//
+		// Object parser states
+		//
+	object_begin:
+		depth--; is_array.pop_back();
+		if (depth == 0) {
+			goto document_end;
+		} 
+		
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx + 1]];
+
+			if (is_array[depth - 1]) {
+				goto array_continue;
+			}
+			goto object_key;
+
+		}
+
+
+
+	object_value:
+		{
+			if (idx < middle) {
+				goto document_end;
+			}
+			if (err && *err)  {
+				return false;
+			}
+
+			auto value = buf[simdjson_imple->structural_indexes[idx--]];
+
+			switch (value) {
+			case '}': 
+				if (idx >= 0 && buf[simdjson_imple->structural_indexes[idx]] == '{') { --idx; break; } goto scope_end;
+			case ']':
+				if (idx >= 0 && buf[simdjson_imple->structural_indexes[idx]] == '[') { --idx; break; } goto scope_end;
+			case ',': { log << warn << "wrong comma.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ':': { log << warn << "wrong colon.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case '{': { log << warn << "wrong {.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case '[': { log << warn << "wrong [.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			default: //SIMDJSON_TRY(visitor.visit_primitive(*this, value)); 
+				break;
+			}
+		}
+
+	object_key:
+		if (idx < middle) {
+			goto document_end;
+		}
+		if (err && *err)  {
+			return false;
+		}
+
+
+		if (simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx--]] != ':')) { log << warn << ("Missing colon after key in object");
+		if (err) {
+			*err = 1;
+		}
+		return false; }
+
+		//log_start_value("object");
+		{
+			if (idx < middle) {
+				goto document_end;
+			}
+			if (err && *err)  {
+				return false;
+			}
+
+
+			auto key = buf[simdjson_imple->structural_indexes[idx--]]; // advance();
+			if (key != '"') { log << warn << ("Object does not start with a key");
+			if (err) {
+				*err = 1;
+			}
+			return false; }
+			//SIMDJSON_TRY(visitor.increment_count(*this));
+			//SIMDJSON_TRY(visitor.visit_key(*this, key));
+
+			if (idx < middle) {
+				goto document_end;
+			}
+			if (err && *err)  {
+				return false;
+			}
+
+		}
+
+	object_continue:
+		if (idx < middle) {
+			goto document_end;
+		}
+		if (err && *err)  {
+			return false;
+		}
+
+
+		switch (buf[simdjson_imple->structural_indexes[idx--]]) {
+		case ',': goto object_value;
+		case '{': goto object_begin;
+		case ':': { log << warn << "wrong colon.";
+			if (err) {
+				*err = 1;
+			}
+			return false; }
+		default: log << warn << ("No comma between object fields");
+			if (err) {
+				*err = 1;
+			}
+			return false;
+		}
+
+	scope_end:
+		{
+			depth++;
+			if (is_array.size() < depth) {
+				is_array.push_back(0);
+			}
+			if (depth >= dom_parser.max_depth()) {
+				log << warn << ("Exceeded max depth!");
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+
+			if (idx < middle) {
+				goto document_end;
+			}
+
+			if (err && *err)  {
+				return false;
+			}
+
+			auto value = buf[simdjson_imple->structural_indexes[idx + 1]];
+
+			switch (value) {
+			case '}':
+				is_array[depth - 1] = 0;
+				goto object_value;
+			case ']':
+				is_array[depth - 1] = 1;
+				goto array_value;
+			}
+
+			log << warn << "not } or ]";
+			if (err) {
+				*err = 1;
+			}
+
+			return false;
+		}
+		//depth--;
+		//if (depth == 0) {
+		//	goto document_end;
+		//}
+		//if (is_array[depth - 1]) { goto array_continue; }
+		//goto object_continue;
+
+		//
+		// Array parser states
+		//
+	array_begin:
+		//log_start_value("array");
+		depth--; is_array.pop_back();
+		if (depth == 0) {
+			goto document_end;
+		}
+
+		if (idx < middle) {
+			goto document_end;
+		}
+
+		if (err && *err)  {
+			return false;
+		}
+
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx + 1]];
+
+			if (is_array[depth - 1]) {
+				goto array_continue;
+			}
+			goto object_key;
+		}
+
+		//SIMDJSON_TRY(visitor.visit_array_start(*this));
+		//SIMDJSON_TRY(visitor.increment_count(*this));
+
+	array_value:
+
+		if (idx < middle) {
+			goto document_end;
+		}
+		if (err && *err)  {
+			return false;
+		}
+
+
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx--]];
+			switch (value) {
+			case '}': if (idx >= 0 && buf[simdjson_imple->structural_indexes[idx]] == '{') { --idx; break; } goto scope_end;
+			case ']': if (idx >= 0 && buf[simdjson_imple->structural_indexes[idx]] == '[') { --idx; break; } goto scope_end;
+			case ',': { log << warn << "wrong comma.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ':': { log << warn << "wrong colon.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case '{': { log << warn << "wrong {.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case '[': { log << warn << "wrong [.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			default: break;
+			}
+		}
+
+	array_continue:
+		if (idx < middle) {
+			goto document_end;
+		}
+		if (err && *err)  {
+			return false;
+		}
+
+
+		switch (buf[simdjson_imple->structural_indexes[idx--]]) {
+		case ',': goto array_value;
+		case '[': goto array_begin;
+		case ':': { log << warn << "wrong colon.";
+			if (err) {
+				*err = 1;
+			}
+			return false; }
+		default: log << warn << ("Missing comma between array values");
+			if (err) {
+				*err = 1;
+			}
+			return false;
+		}
+
+	document_end:
+
+		if (idx >= middle) {
+			log << warn << ("json is not valid");
+			if (err) {
+				*err = 1;
+			}
+
 			return false;
 		}
 
 		log << info << "test end\n";
+		
+		if (_is_array) {
+			*_is_array = std::move(is_array);
+		}
+
 		return true;
 	}
 
-	std::pair<bool, size_t> parse(const std::string& fileName, Data& ut, size_t thr_num)
+	std::pair<bool, size_t> parse(const std::string& fileName, Value& ut, size_t thr_num, bool use_all_function)
 	{
 		if (thr_num <= 0) {
 			thr_num = std::thread::hardware_concurrency();
@@ -5099,7 +5606,7 @@ offset[i] = len / n;
 			const auto& string_buf = test.raw_string_buf();
 			const auto buf_len = test.raw_len();
 
-			auto* simdjson_imple = test.raw_implementation().get();
+			auto* simdjson_imple_ = test.raw_implementation().get();
 
 			std::vector<int64_t> start(thr_num + 1, 0);
 			//std::vector<int> key;
@@ -5110,7 +5617,7 @@ offset[i] = len / n;
 
 
 			{
-				size_t how_many = simdjson_imple->n_structural_indexes;
+				size_t how_many = simdjson_imple_->n_structural_indexes;
 				length = how_many;
 
 				start[0] = 0;
@@ -5130,8 +5637,52 @@ offset[i] = len / n;
 
 			b = clock();
 
-			if (!is_valid(test)) {
-				return { false, 0 };
+			//if (!is_valid(test, length - 1)) {
+			//	return { false, 0 };
+			//}
+			// find ,
+			{
+
+				int a = clock();
+
+				if (use_all_function) {
+					size_t middle = length / 2;
+					for (size_t i = middle; i < length; ++i) {
+						if (buf[simdjson_imple_->structural_indexes[i]] == ',') {
+							middle = i; break;
+						}
+						if (i == length - 1) {
+							middle = length;
+						}
+					}
+
+					std::vector<int> vec[2];
+					volatile int err = 0;
+
+					auto x = async(is_valid, std::ref(test), middle, &vec[0], &err);
+					auto y = async(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
+
+					x.wait();
+					y.wait();
+
+					if (!x.get() || !y.get()) {
+						return { false, 0 };
+					}
+
+					if (vec[0].size() != vec[1].size()) { return { false, 0 }; }
+					for (size_t i = 0; i < vec[0].size(); ++i) {
+						if (vec[0][i] != vec[1][i]) {
+							return { false, 0 };
+						}
+					}
+				}
+				else {
+					if (!is_valid(test, length)) {
+						return { false, 0 };
+					}
+				}
+
+				log << info << "test time " << clock() - a << "ms\n";
 			}
 
 			log << info << clock() - b << "ms\n";
@@ -5139,7 +5690,7 @@ offset[i] = len / n;
 			b = clock();
 
 			start[thr_num] = length;
-			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), simdjson_imple, length, start, thr_num)) // 0 : use all thread..
+			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, string_buf.get(), simdjson_imple_, length, start, thr_num)) // 0 : use all thread..
 			{
 				return { false, 0 };
 			}
@@ -5152,7 +5703,7 @@ offset[i] = len / n;
 
 		return  { true, length };
 	}
-	std::pair<bool, size_t> parse_str(std::string_view str, Data& ut, size_t thr_num)
+	std::pair<bool, size_t> parse_str(std::string_view str, Value& ut, size_t thr_num)
 	{
 
 		
@@ -5214,7 +5765,7 @@ offset[i] = len / n;
 			log << info << b - a << "ms\n";
 			b = clock();
 
-			if (!is_valid(test)) {
+			if (!is_valid(test, length)) {
 				return { false, 0 };
 			}
 
@@ -5239,16 +5790,16 @@ offset[i] = len / n;
 	}
 	
 
-	std::string save_to_str(const Data& global) {
+	std::string save_to_str(const Value& global) {
 		return LoadData::save_to_str(global);
 	}
 
 
-	void save(const std::string& fileName, const Data& global) {
+	void save(const std::string& fileName, const Value& global) {
 		LoadData::save(fileName, global, false);
 	}
 
-	void save_parallel(const std::string& fileName, Data& j, size_t thr_num) {
+	void save_parallel(const std::string& fileName, Value& j, size_t thr_num) {
 		LoadData::save_parallel(fileName, j, thr_num);
 	}
 
@@ -5279,9 +5830,9 @@ offset[i] = len / n;
 
 
 	// cf) /- -> / in array.
-	static Data _diff(const Data& x, const Data& y, std::string route) {
-		Data result(new Array());
-		Json* j = result.as_json_ptr();
+	static Value _diff(const Value& x, const Value& y, std::string route) {
+		Value result(new Array());
+		Structured* j = result.as_json_ptr();
 
 		if (x == y) {
 			return result;
@@ -5290,19 +5841,19 @@ offset[i] = len / n;
 		if (x.type() != y.type()) {
 			Object* obj = new Object();
 
-			obj->add_object_element(Data("op"sv), Data("replace"sv));
-			obj->add_object_element(Data("path"sv), Data(route));
-			obj->add_object_element(Data("value"sv), Data(y.clone()));
+			obj->add_object_element(Value("op"sv), Value("replace"sv));
+			obj->add_object_element(Value("path"sv), Value(route));
+			obj->add_object_element(Value("value"sv), Value(y.clone()));
 
-			j->add_object(Ptr<Json>(obj));
+			j->add_object(Ptr<Structured>(obj));
 			return result;
 		}
 
 		switch (x.type()) {
 		case DataType::ARRAY_OR_OBJECT:
 		{
-			const Json* jx = x.as_json_ptr();
-			const Json* jy = y.as_json_ptr();
+			const Structured* jx = x.as_json_ptr();
+			const Structured* jy = y.as_json_ptr();
 
 			if (jx->is_array()) {
 				size_t i = 0;
@@ -5314,18 +5865,18 @@ offset[i] = len / n;
 					new_route += '/';
 					new_route += fmt::to_string(i);
 
-					Data inner_diff = _diff(jx->get_value_list(i), jy->get_value_list(i), std::move(new_route));
+					Value inner_diff = _diff(jx->get_value_list(i), jy->get_value_list(i), std::move(new_route));
 
 					{
-						Json* w = inner_diff.as_json_ptr();
+						Structured* w = inner_diff.as_json_ptr();
 						size_t sz_w = w->get_data_size();
 
 						for (size_t t = 0; t < sz_w; ++t) {
-							Data temp = std::move(w->get_value_list(t));
-							j->add_object(Ptr<Json>(temp.as_json_ptr()));
+							Value temp = std::move(w->get_value_list(t));
+							j->add_object(Ptr<Structured>(temp.as_json_ptr()));
 						}
 
-						Ptr<Json> clean(inner_diff.as_json_ptr());
+						Ptr<Structured> clean(inner_diff.as_json_ptr());
 					}
 				}
 
@@ -5333,25 +5884,25 @@ offset[i] = len / n;
 					for (size_t _i = sz_x; _i > i; --i) {
 						Object* obj = new Object();
 
-						obj->add_object_element(Data("op"sv), Data("remove"sv));
+						obj->add_object_element(Value("op"sv), Value("remove"sv));
 
-						obj->add_object_element(Data("path"sv), Data(route));
-						obj->add_object_element(Data("last_idx"sv), Data(_i - 1));
+						obj->add_object_element(Value("path"sv), Value(route));
+						obj->add_object_element(Value("last_idx"sv), Value(_i - 1));
 
-						j->add_object(Ptr<Json>(obj));
+						j->add_object(Ptr<Structured>(obj));
 					}
 				}
 				else {
 					for (; i < sz_y; ++i) {
 						Object* obj = new Object();
 
-						obj->add_object_element(Data("op"sv), Data("add"sv));
+						obj->add_object_element(Value("op"sv), Value("add"sv));
 
-						obj->add_object_element(Data("path"sv), Data(route));
+						obj->add_object_element(Value("path"sv), Value(route));
 
-						obj->add_object_element(Data("value"sv), Data(jy->get_value_list(i).clone()));
+						obj->add_object_element(Value("value"sv), Value(jy->get_value_list(i).clone()));
 
-						j->add_object(Ptr<Json>(obj));
+						j->add_object(Ptr<Structured>(obj));
 					}
 				}
 			}
@@ -5365,44 +5916,44 @@ offset[i] = len / n;
 					new_route += '/';
 					new_route += escape_for_json_pointer(key);
 
-					if (size_t idx = jy->find(key); idx != Json::npos) {
-						Data inner_diff = _diff((jx->get_value_list(i - 1)), jy->get_value_list(idx), new_route);
+					if (size_t idx = jy->find(key); idx != Structured::npos) {
+						Value inner_diff = _diff((jx->get_value_list(i - 1)), jy->get_value_list(idx), new_route);
 
 						{
-							Json* w = inner_diff.as_json_ptr();
+							Structured* w = inner_diff.as_json_ptr();
 							size_t sz_w = w->get_data_size();
 
 							for (size_t t = 0; t < sz_w; ++t) {
-								Data temp = std::move(w->get_value_list(t));
-								j->add_object(Ptr<Json>(temp.as_json_ptr()));
+								Value temp = std::move(w->get_value_list(t));
+								j->add_object(Ptr<Structured>(temp.as_json_ptr()));
 							}
 
-							Ptr<Json> clean(inner_diff.as_json_ptr());
+							Ptr<Structured> clean(inner_diff.as_json_ptr());
 						}
 					}
 					else {
 						Object* obj = new Object();
 
-						obj->add_object_element(Data("op"sv), Data("remove"sv));
-						obj->add_object_element(Data("path"sv), Data(route));
-						obj->add_object_element(Data("last_key"sv), Data(key));
+						obj->add_object_element(Value("op"sv), Value("remove"sv));
+						obj->add_object_element(Value("path"sv), Value(route));
+						obj->add_object_element(Value("last_key"sv), Value(key));
 
-						j->add_object(Ptr<Json>(obj));
+						j->add_object(Ptr<Structured>(obj));
 					}
 				}
 
 				for (size_t i = 0; i < sz_y; ++i) {
 					std::string key = jy->get_key_list(i).str_val();
 
-					if (size_t idx = jx->find(key); idx == Json::npos) {
+					if (size_t idx = jx->find(key); idx == Structured::npos) {
 						Object* obj = new Object();
 
-						obj->add_object_element(Data("op"sv), Data("add"sv));
-						obj->add_object_element(Data("path"sv), Data(route));
-						obj->add_object_element(Data("key"sv), Data(jy->get_key_list(i).clone()));
-						obj->add_object_element(Data("value"sv), Data(jy->get_value_list(i).clone()));
+						obj->add_object_element(Value("op"sv), Value("add"sv));
+						obj->add_object_element(Value("path"sv), Value(route));
+						obj->add_object_element(Value("key"sv), Value(jy->get_key_list(i).clone()));
+						obj->add_object_element(Value("value"sv), Value(jy->get_value_list(i).clone()));
 
-						j->add_object(Ptr<Json>(obj));
+						j->add_object(Ptr<Structured>(obj));
 					}
 				}
 			}
@@ -5418,11 +5969,11 @@ offset[i] = len / n;
 		{
 			Object* obj = new Object();
 
-			obj->add_object_element(Data("op"sv), Data("replace"sv));
-			obj->add_object_element(Data("path"sv), Data(route));
-			obj->add_object_element(Data("value"sv), Data(y.clone()));
+			obj->add_object_element(Value("op"sv), Value("replace"sv));
+			obj->add_object_element(Value("path"sv), Value(route));
+			obj->add_object_element(Value("value"sv), Value(y.clone()));
 
-			j->add_object(Ptr<Json>(obj));
+			j->add_object(Ptr<Structured>(obj));
 			break;
 		}
 		}
@@ -5431,20 +5982,20 @@ offset[i] = len / n;
 	}
 
 
-	Data diff(const Data& x, const Data& y) {
+	Value diff(const Value& x, const Value& y) {
 		return _diff(x, y, "");
 	}
 
-	Data patch(const Data& x, const Data& diff) {
-		Data unvalid_data(nullptr, false);
+	Value patch(const Value& x, const Value& diff) {
+		Value unvalid_data(nullptr, false);
 
-		const Json* j_diff = diff.as_json_ptr();
+		const Structured* j_diff = diff.as_json_ptr();
 		
 		if (!j_diff->is_array()) {
 			return unvalid_data;
 		}
 
-		Data result = x.clone();
+		Value result = x.clone();
 
 		size_t sz_diff = j_diff->get_data_size();
 
@@ -5455,45 +6006,45 @@ offset[i] = len / n;
 			size_t value_idx = obj->find("value"sv);
 			size_t key_idx = obj->find("key"sv);
 
-			if (op_idx == Json::npos) {
-				Ptr<Json> clean(result.as_json_ptr());
+			if (op_idx == Structured::npos) {
+				Ptr<Structured> clean(result.as_json_ptr());
 				return unvalid_data;
 			}
 
-			if (path_idx == Json::npos) {
-				Ptr<Json> clean(result.as_json_ptr());
+			if (path_idx == Structured::npos) {
+				Ptr<Structured> clean(result.as_json_ptr());
 				return unvalid_data;
 			}
 
 			if (obj->get_value_list(op_idx).str_val() == "replace"sv) {
-				if (value_idx == Json::npos) {
-					Ptr<Json> clean(result.as_json_ptr());
+				if (value_idx == Structured::npos) {
+					Ptr<Structured> clean(result.as_json_ptr());
 					return unvalid_data;
 				}
 
-				Data& value = result.json_pointer(obj->get_value_list(path_idx).str_val());
+				Value& value = result.json_pointer(obj->get_value_list(path_idx).str_val());
 				{
 					if (value.is_ptr()) {
-						Ptr<Json> clean(value.as_json_ptr());
+						Ptr<Structured> clean(value.as_json_ptr());
 						value.clear();
 					}
 				}
 				value = obj->get_value_list(value_idx).clone();
 			}
 			else if (obj->get_value_list(op_idx).str_val() == "remove"sv) {
-				Json* parent = result.json_pointer(obj->get_value_list(path_idx).str_val()).as_json_ptr();
+				Structured* parent = result.json_pointer(obj->get_value_list(path_idx).str_val()).as_json_ptr();
 				
 				// case : result.json_pointer returns root?
 				if (!parent) {
 					if (result.is_ptr()) {
-						Ptr<Json> clean(result.as_json_ptr());
+						Ptr<Structured> clean(result.as_json_ptr());
 					}
 					result.clear();
 				}
 				else if (parent->is_array()) {
 					size_t last_idx_idx = obj->find("last_idx"sv);
-					if (last_idx_idx == Json::npos) {
-						Ptr<Json> clean(result.as_json_ptr());
+					if (last_idx_idx == Structured::npos) {
+						Ptr<Structured> clean(result.as_json_ptr());
 						return unvalid_data;
 					}
 
@@ -5504,8 +6055,8 @@ offset[i] = len / n;
 				}
 				else {
 					size_t last_key_idx = obj->find("last_key"sv);
-					if (last_key_idx == Json::npos) {
-						Ptr<Json> clean(result.as_json_ptr());
+					if (last_key_idx == Structured::npos) {
+						Ptr<Structured> clean(result.as_json_ptr());
 						return unvalid_data;
 					}
 
@@ -5516,14 +6067,14 @@ offset[i] = len / n;
 				}
 			}
 			else if (obj->get_value_list(op_idx).str_val() == "add"sv) {
-				if (value_idx == Json::npos) {
-					Ptr<Json> clean(result.as_json_ptr());
+				if (value_idx == Structured::npos) {
+					Ptr<Structured> clean(result.as_json_ptr());
 					return unvalid_data;
 				}
 
-				Data& _ = result.json_pointer(obj->get_value_list(path_idx).str_val());
+				Value& _ = result.json_pointer(obj->get_value_list(path_idx).str_val());
 
-				Json* parent = _.as_json_ptr();
+				Structured* parent = _.as_json_ptr();
 
 				// case : result.json_pointer returns root?
 				if (!parent) {
@@ -5533,8 +6084,8 @@ offset[i] = len / n;
 					parent->add_array_element(obj->get_value_list(value_idx).clone());
 				}
 				else if (parent->is_object()) {
-					if (key_idx == Json::npos) {
-						Ptr<Json> clean(result.as_json_ptr());
+					if (key_idx == Structured::npos) {
+						Ptr<Structured> clean(result.as_json_ptr());
 						return unvalid_data;
 					}
 					parent->add_object_element(obj->get_value_list(key_idx).clone(), obj->get_value_list(value_idx).clone());
@@ -5545,8 +6096,8 @@ offset[i] = len / n;
 		return result;
 	}
 
-	void clean(Data& x) {
-		Ptr<Json> _(x.as_json_ptr());
+	void clean(Value& x) {
+		Ptr<Structured> _(x.as_json_ptr());
 		x.set_null(); //
 	}
 
@@ -5555,7 +6106,7 @@ offset[i] = len / n;
 		if (!simdjson_imple) {
 			log.no_print();
 
-			Data ut; 
+			Value ut; 
 			std::string_view str = "{}"sv;
 
 			auto x = test_.parse(str.data(), str.length());
