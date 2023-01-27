@@ -30,7 +30,7 @@ class BBB {
 public:
 
 	union {
-		claujson::Json* json;
+		claujson::Structured* json;
 		uint64_t x;
 	};
 	int type;
@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
 	claujson::init();
 	//claujson::log.console();
 
-	claujson::Data ut;
+	claujson::Value ut;
 	claujson::parse_str("{}", ut, 0);
 	
 	clean(ut);
@@ -319,10 +319,10 @@ int main(int argc, char* argv[])
 		auto test = new_json_str(i);
 
 		//std::cout << "test size : " << test.size() << "\n";
-		//std::vector<std::string> test = { std::string("  [ \" test \" ,  \" test \" : null, null  ] ") }; // internal error..
+		//std::vector<std::string> test = { std::string("{ \" test \" : null , \" test \" : \" test \", \" test \" : null }") }; // internal error..
 
 		for (auto& _str : test) {
-			std::string str = "{ \" test \" : null , " + _str + ", \" test \" : null }";
+			std::string str =  "{ \" test \" : null , " + _str + ", \" test \" : null }";
 
 			int b = clock();
 
@@ -335,7 +335,7 @@ int main(int argc, char* argv[])
 				//std::cout << str << "\n";
 				
 				for (int j = 0; j < 2; ++j) {
-					claujson::Data ut;
+					claujson::Value ut;
 
 					int first_count = VLDGetLeaksCount();
 
