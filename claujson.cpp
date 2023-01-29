@@ -2985,13 +2985,6 @@ offset[i] = len / n;
 					ERROR("Error in Merge, next is object but child? is array");
 				}
 
-				if (_next->get_parent() == nullptr && _ut->get_data_size() > 0 && _ut->get_key_list(0).is_str()) {
-					ERROR("Error in Merge, root must have not key");
-				}
-				if (_next->get_parent() == nullptr && _ut->get_data_size() > 1) {
-					ERROR("Error in Merge, root must have one element");
-				}
-
 				int start_offset = 0;
 				if (_ut->get_data_size() > 0 && _ut->get_value_list(0).is_ptr() && _ut->get_value_list(0).ptr_val()->is_virtual()) {
 					++start_offset;
