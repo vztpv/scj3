@@ -16,7 +16,7 @@ jobs:
       - checkout
       - run:
           name: "build"
-          command: "echo ls"
+          command: "ls"
       - run:
           name: "execute"
           command: "ehco ls | cd linux | ./scj ../citylots.json"
