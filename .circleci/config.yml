@@ -16,7 +16,7 @@ jobs:
       - checkout
       - run:
           name: "build"
-          command: "cd linux | make -scj"
+          command: "cd linux | make ."
       - run:
           name: "execute"
           command: "./scj ../citylots.json"
