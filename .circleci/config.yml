@@ -15,7 +15,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Test"
+          name: "test"
           command: "cd linux"
           command: "make"
           command: "./scj ../citylots.json"
