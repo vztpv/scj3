@@ -15,8 +15,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Say hello"
-          commands: [ "cd linux", "make", "./scj ../citylots.json" ]
+          name: "build"
+          command: "cd linux | make"
+      - run:
+          name: "execute"
+          command: "./scj ../citylots.json"
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
