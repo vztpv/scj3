@@ -5,7 +5,7 @@ version: 2.1
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  say-hello:
+  say-hello:https://github.com/vztpv/scj3/blob/main/.circleci/config.yml
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
@@ -15,10 +15,8 @@ jobs:
     steps:
       - checkout
       - run:
-            name: "Say hello"
-            command: "cd linux"
-            command: "make"
-            command: "./scj ../citylots.json"
+          name: "Say hello"
+          command: "cd linux"
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
