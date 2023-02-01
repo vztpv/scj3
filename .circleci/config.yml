@@ -18,8 +18,11 @@ jobs:
           name: "build"
           command: "cd linux && make"
       - run:
+          name: "unzip"
+          command: "cd linux && unzip citylots.zip"
+      - run:
           name: "execute"
-          command: "ls && cd linux && chmod +x ./scj ../citylots.json"
+          command: "cd linux && chmod +x ./scj citylots.json"
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
