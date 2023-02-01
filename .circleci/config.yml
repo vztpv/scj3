@@ -16,10 +16,10 @@ jobs:
       - checkout
       - run:
           name: "build"
-          command: "cd linux | make"
+          command: "cd linux && make"
       - run:
           name: "execute"
-          command: "ls | cd linux | ./scj ../citylots.json"
+          command: "cd linux && ./scj ../citylots.json"
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
