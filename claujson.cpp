@@ -3860,6 +3860,7 @@ offset[i] = len / n;
 		StrStream& operator<<(double x) {
 			if (x == 0.0) {
 				fmt::format_to(std::back_inserter(out), "0.0"); 
+				return *this;
 			}
 			fmt::format_to(std::back_inserter(out), "{}", x); // FMT_COMPILE("{:.10f}"), x);
 			return *this;
