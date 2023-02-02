@@ -3081,7 +3081,6 @@ offset[i] = len / n;
 					ERROR("Error in Merge, next is object but child? is array");
 				}
 
-
 				if (ut_next && _ut == (*ut_next)) {
 					*ut_next = _next;
 					log << info  << "chked in merge...\n";
@@ -3859,6 +3858,9 @@ offset[i] = len / n;
 		}
 
 		StrStream& operator<<(double x) {
+			if (x == 0.0) {
+				fmt::format_to(std::back_inserter(out), "0.0"); 
+			}
 			fmt::format_to(std::back_inserter(out), "{}", x); // FMT_COMPILE("{:.10f}"), x);
 			return *this;
 		}
@@ -4880,7 +4882,7 @@ offset[i] = len / n;
 		}
 	}
 
-	bool is_valid(_simdjson::dom::parser_for_claujson& dom_parser, size_t middle, std::vector<int>* _is_array = nullptr, volatile int* err = nullptr) {
+	bool is_valid(_simdjson::dom::parser_for_claujson& dom_parser, size_t middle, std::vector<int>* _is_array = nullptr, int* err = nullptr) {
 
 		const auto& buf = dom_parser.raw_buf();
 		const auto& string_buf = dom_parser.raw_string_buf();
@@ -5184,7 +5186,7 @@ offset[i] = len / n;
 
 		return true;
 	}
-	bool is_valid_reverse(_simdjson::dom::parser_for_claujson& dom_parser, int64_t middle, std::vector<int>* _is_array = nullptr, volatile int* err = nullptr) { // str[middle] == ','
+	bool is_valid_reverse(_simdjson::dom::parser_for_claujson& dom_parser, int64_t middle, std::vector<int>* _is_array = nullptr, int* err = nullptr) { // str[middle] == ','
 
 		const auto& buf = dom_parser.raw_buf();
 		const auto& string_buf = dom_parser.raw_string_buf();
@@ -5642,7 +5644,7 @@ offset[i] = len / n;
 					}
 
 					std::vector<int> vec[2];
-					volatile int err = 0;
+					int err = 0;
 
 					auto x = async(is_valid, std::ref(test), middle, &vec[0], &err);
 					auto y = async(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
