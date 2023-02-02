@@ -195,6 +195,7 @@ void json_pointer_test() {
 
 int main(int argc, char* argv[])
 {
+	/*
 	std::cout << sizeof(claujson::Value) << "\n";
 	std::cout << sizeof(claujson::Array) << "\n";
 	std::cout << sizeof(claujson::Object) << "\n";
@@ -235,7 +236,7 @@ int main(int argc, char* argv[])
 		std::cout << y.error() << " ";
 		std::cout << b - a << "ms\n";
 		
-	}
+	}*/
 
 	//claujson::log.no_print();
 
@@ -271,8 +272,12 @@ int main(int argc, char* argv[])
 
 				int b = clock();
 				std::cout << "total " << b - a << "ms\n";
+				
 				claujson::save_parallel("test34.json", j, 64);
+				std::cout << "save_parallel" << clock() - b << "ms\n";
+
 				claujson::clean(j);
+
 				return 0;
 
 				//claujson::LoadData::save(std::cout, ut);
