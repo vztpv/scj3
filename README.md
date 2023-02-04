@@ -11,7 +11,7 @@ save - multi-thread
 
 (mimalloc, fmt)
 
-# Use claujson.h, claujson.lib, mimalloc.
+# Use claujson.h, claujson.cpp, simdjson.h, simdjson.cpp, fmt, mimalloc.
 
 
 # Using simdjson/simdjson (https://github.com/simdjson/simdjson) Apache-2.0 License
