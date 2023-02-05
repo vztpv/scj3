@@ -3,15 +3,12 @@
 
 #include "simdjson.h" // modified simdjson // using simdjson 2.2.2 
 
-// for fast save
-#include "fmt/format.h"
-#include "fmt/compile.h"
-
 #include <string_view>
 #include <future>
 
 using namespace std::string_view_literals;
 
+#include "fmt/format.h"
 
 namespace claujson {
 	
@@ -2887,23 +2884,23 @@ namespace claujson {
 			std::vector<size_t> offset(n - 1, 0);
 
 			for (size_t i = 0; i < offset.size(); ++i) {
-offset[i] = len / n;
+				offset[i] = len / n;
 			}
 			offset.back() = len - len / n * (n - 1);
 
 			hint = std::vector<int>(n - 1, 0);
 
-			std::vector<claujson::Structured*> out(n, nullptr);
+			std::vector<claujson::Structured*> pos(n, nullptr);
 
 			{
 				size_t idx = 0;
 				auto offset2 = offset;
 
-				claujson::LoadData2::Find2(j.as_json_ptr(), n - 1, idx, false, len, offset, offset2, out, hint);
+				claujson::LoadData2::Find2(j.as_json_ptr(), n - 1, idx, false, len, offset, offset2, pos, hint);
 			}
 
 			for (size_t i = 0; i < n - 1; ++i) {
-				if (!out[i]) {
+				if (!pos[i]) {
 					return { nullptr };
 				}
 			}
@@ -2919,7 +2916,7 @@ offset[i] = len / n;
 							int op = 0;
 							int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 
-							for (size_t i = 1; i < result.size(); ++i) {
+							for (size_t i = 0; i < result.size(); ++i) {
 								claujson::Ptr<claujson::Structured> clean2(result[i]);
 							}
 						}
@@ -2927,9 +2924,9 @@ offset[i] = len / n;
 						return { nullptr };
 					}
 
-					claujson::LoadData2::Divide(out[i], result[i]);
+					claujson::LoadData2::Divide(pos[i], result[i]);
 
-					temp_parent[i] = out[i]->get_parent();
+					temp_parent[i] = pos[i]->get_parent();
 
 				}
 
@@ -2938,7 +2935,7 @@ offset[i] = len / n;
 						int op = 0;
 						int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 
-						for (size_t i = 1; i < result.size(); ++i) {
+						for (size_t i = 0; i < result.size(); ++i) {
 							claujson::Ptr<claujson::Structured> clean2(result[i]);
 						}
 					}
@@ -2948,7 +2945,7 @@ offset[i] = len / n;
 			}
 
 
-			return out;
+			return pos;
 		}
 
 		static int Merge(Structured* next, Structured* ut, Structured** ut_next)
@@ -3860,7 +3857,6 @@ offset[i] = len / n;
 		StrStream& operator<<(double x) {
 			if (x == 0.0) {
 				fmt::format_to(std::back_inserter(out), "0.0"); 
-				return *this;
 			}
 			fmt::format_to(std::back_inserter(out), "{}", x); // FMT_COMPILE("{:.10f}"), x);
 			return *this;
@@ -4877,7 +4873,7 @@ offset[i] = len / n;
 			}
 
 
-			for (size_t i = 1; i < result.size(); ++i) {
+			for (size_t i = 0; i < result.size(); ++i) {
 				claujson::Ptr<claujson::Structured> clean2(result[i]);
 			}
 		}

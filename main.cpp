@@ -3,6 +3,8 @@
 // need C++17, 64bit..
 
 
+#include <vld.h>
+
 #include "mimalloc-new-delete.h"
 
 
