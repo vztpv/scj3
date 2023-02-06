@@ -2613,7 +2613,7 @@ namespace claujson {
 , 59  , 59  , 59  , 59  , 59  , 59
 	};
 
-	inline unsigned char __comma_chk_table[2][256] = { { 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
+	/*inline unsigned char __comma_chk_table[2][256] = {{0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
  , 0  , 0  , 0  , 0  , 1  , 0  , 0  , 0  , 0  , 0
@@ -2664,7 +2664,7 @@ namespace claujson {
  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1
  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1
  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1  , 1
- , 1  , 1  , 1  , 1  , 1  , 1  } };
+ , 1  , 1  , 1  , 1  , 1  , 1  } }; */
 
 	// not exact type! for int, uint, float. ( int, uint, float -> float )
 	inline _simdjson::internal::tape_type get_type(unsigned char x) {
@@ -2725,7 +2725,7 @@ namespace claujson {
 
 		}
 
-		 // find n node.. 
+		 // find n node.. , need rename..
 		 static void Find2(Structured* root, const size_t n, size_t& idx, bool chk_hint, size_t& _len, std::vector<size_t>& offset, std::vector<size_t>& offset2, std::vector<Structured*>& out, std::vector<int>& hint) {
 			 if (idx >= n) {
 				 return;
@@ -2916,9 +2916,10 @@ namespace claujson {
 							int op = 0;
 							int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 
-							for (size_t i = 0; i < result.size(); ++i) {
-								claujson::Ptr<claujson::Structured> clean2(result[i]);
-							}
+						}
+
+						for (size_t j = 0; j < result.size(); ++j) {
+							claujson::Ptr<claujson::Structured> clean2(result[i]);
 						}
 
 						return { nullptr };
@@ -2934,10 +2935,10 @@ namespace claujson {
 					for (size_t j = 0; j < i; ++j) {
 						int op = 0;
 						int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
-
-						for (size_t i = 0; i < result.size(); ++i) {
-							claujson::Ptr<claujson::Structured> clean2(result[i]);
-						}
+					}
+					
+					for (size_t j = 0; j < result.size(); ++j) {
+						claujson::Ptr<claujson::Structured> clean2(result[i]);
 					}
 
 					return { nullptr };
@@ -3080,7 +3081,7 @@ namespace claujson {
 
 				if (ut_next && _ut == (*ut_next)) {
 					*ut_next = _next;
-					log << info  << "chked in merge...\n";
+					log << info  << "chked in merge2...\n";
 				}
 
 				int start_offset = 0;
