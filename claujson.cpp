@@ -884,16 +884,16 @@ namespace claujson {
 
 
 		if (len >= block_size) {
-			uint8_t* buf_src = (uint8_t*)calloc(len + _simdjson::_SIMDJSON_PADDING, sizeof(uint8_t));
-			uint8_t* buf_dest = (uint8_t*)calloc(len + _simdjson::_SIMDJSON_PADDING, sizeof(uint8_t));
+			uint8_t* buf_src = (uint8_t*)calloc(len + 1 + _simdjson::_SIMDJSON_PADDING, sizeof(uint8_t));
+			uint8_t* buf_dest = (uint8_t*)calloc(len + 1 +  _simdjson::_SIMDJSON_PADDING, sizeof(uint8_t));
 			if (!buf_src || !buf_dest) {
 				if (buf_src) { free(buf_src); }
 				if (buf_dest) { free(buf_dest); }
 
 				return false;
 			}
-			memset(buf_src, '"', len + _simdjson::_SIMDJSON_PADDING);
-			memset(buf_dest, '"', len + _simdjson::_SIMDJSON_PADDING);
+			memset(buf_src, '"', len + 1  + _simdjson::_SIMDJSON_PADDING);
+			memset(buf_dest, '"', len + 1 + _simdjson::_SIMDJSON_PADDING);
 
 			memcpy(buf_src, str, len);
 			buf_src[len] = '"';
