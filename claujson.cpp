@@ -126,25 +126,26 @@ namespace claujson {
 		}
 
 		switch (data._type) {
-		case claujson::DataType::INT:
+		case claujson::ValueType::INT:
 			stream << data._int_val;
 			break;
-		case claujson::DataType::UINT:
+		case claujson::ValueType::UINT:
 			stream << data._uint_val;
 			break;
-		case claujson::DataType::FLOAT:
+		case claujson::ValueType::FLOAT:
 			stream << data._float_val;
 			break;
-		case claujson::DataType::STRING:
+		case claujson::ValueType::STRING:
 			stream << "\"" << (*data._str_val) << "\"";
 			break;
-		case claujson::DataType::BOOL:
+		case claujson::ValueType::BOOL:
 			stream << data._bool_val;
 			break;
-		case claujson::DataType::NULL_:
+		case claujson::ValueType::NULL_:
 			stream << "null";
 			break;
-		case claujson::DataType::ARRAY_OR_OBJECT:
+		case claujson::ValueType::ARRAY:
+		case claujson::ValueType::OBJECT:
 		{
 		//	stream << "array_or_object";
 			auto* x = data.as_json_ptr();
@@ -191,7 +192,7 @@ namespace claujson {
 		
 		x._type = this->_type; 
 
-		if (x._type == DataType::STRING) {
+		if (x._type == ValueType::STRING) {
 			x._str_val = new std::string(this->_str_val->data(), this->_str_val->size());
 
 		}
@@ -259,15 +260,15 @@ namespace claujson {
 		set_bool(x);
 	}
 	Value::Value(nullptr_t x) {
-		set_type(DataType::NULL_);
+		set_type(ValueType::NULL_);
 	}
 
 	Value::Value(nullptr_t, bool valid) {
-		set_type(DataType::NULL_);
+		set_type(ValueType::NULL_);
 		this->_valid = valid;
 	}
 
-	DataType Value::type() const {
+	ValueType Value::type() const {
 		return _type;
 	}
 
@@ -276,7 +277,7 @@ namespace claujson {
 	}
 
 	bool Value::is_null() const {
-		return is_valid() && type() == DataType::NULL_;
+		return is_valid() && type() == ValueType::NULL_;
 	}
 
 	bool Value::is_primitive() const {
@@ -288,27 +289,27 @@ namespace claujson {
 	}
 
 	bool Value::is_int() const {
-		return is_valid() && type() == DataType::INT;
+		return is_valid() && type() == ValueType::INT;
 	}
 
 	bool Value::is_uint() const {
-		return is_valid() && type() == DataType::UINT;
+		return is_valid() && type() == ValueType::UINT;
 	}
 
 	bool Value::is_float() const {
-		return is_valid() && type() == DataType::FLOAT;
+		return is_valid() && type() == ValueType::FLOAT;
 	}
 
 	bool Value::is_bool() const {
-		return is_valid() && (type() == DataType::BOOL);
+		return is_valid() && (type() == ValueType::BOOL);
 	}
 
 	bool Value::is_str() const {
-		return is_valid() && type() == DataType::STRING;
+		return is_valid() && type() == ValueType::STRING;
 	}
 
 	bool Value::is_ptr() const {
-		return is_valid() && (type() == DataType::ARRAY_OR_OBJECT);
+		return is_valid() && (type() == ValueType::ARRAY || type() == ValueType::OBJECT);
 	}
 
 	int64_t Value::int_val() const {
@@ -801,7 +802,7 @@ namespace claujson {
 
 	void Value::clear() {
 
-		if (_type == DataType::STRING) {
+		if (_type == ValueType::STRING) {
 			delete _str_val; _str_val = nullptr;
 		}
 		else {
@@ -810,7 +811,7 @@ namespace claujson {
 
 		//valid = true;
 
-		_type = DataType::NONE;
+		_type = ValueType::NONE;
 	}
 
 	std::string& Value::str_val() {
@@ -828,47 +829,47 @@ namespace claujson {
 			return;
 		}
 
-		if (_type == DataType::STRING) {
+		if (_type == ValueType::STRING) {
 			delete _str_val;
 		}
 
 		_ptr_val = x;
 
-		_type = DataType::ARRAY_OR_OBJECT; // chk change DataType:: ~~ -> DataType:: ~~
+		_type = x->is_array()? ValueType::ARRAY : (x->is_object()? ValueType::OBJECT : ValueType::ERROR); // chk change DataType:: ~~ -> DataType:: ~~
 	}
 	void Value::set_int(long long x) {
 		if (!is_valid()) {
 			return;
 		}
 
-		if (_type == DataType::STRING) {
+		if (_type == ValueType::STRING) {
 			delete _str_val;
 		}
 		_int_val = x;
-		_type = DataType::INT;
+		_type = ValueType::INT;
 	}
 
 	void Value::set_uint(unsigned long long x) {
 		if (!is_valid()) {
 			return;
 		}
-		if (_type == DataType::STRING) {
+		if (_type == ValueType::STRING) {
 			delete _str_val;
 		}
 		_uint_val = x;
-		_type = DataType::UINT;
+		_type = ValueType::UINT;
 	}
 
 	void Value::set_float(double x) {
 		if (!is_valid()) {
 			return;
 		}
-		if (_type == DataType::STRING) {
+		if (_type == ValueType::STRING) {
 			delete _str_val;
 		}
 		_float_val = x;
 
-		_type = DataType::FLOAT;
+		_type = ValueType::FLOAT;
 	}
 
 	bool Value::set_str(const char* str, size_t len) {
@@ -923,7 +924,7 @@ namespace claujson {
 				*x = '\0';
 				size_t string_length = uint32_t(x - buf_dest);
 
-				if (_type != DataType::STRING) {
+				if (_type != ValueType::STRING) {
 					_str_val = new std::string((char*)buf_dest, string_length);
 				}
 				else {
@@ -959,7 +960,7 @@ namespace claujson {
 				*x = '\0';
 				size_t string_length = uint32_t(x - buf_dest);
 
-				if (_type != DataType::STRING) {
+				if (_type != ValueType::STRING) {
 					_str_val = new std::string((char*)buf_dest, string_length);
 				}
 				else {
@@ -968,33 +969,33 @@ namespace claujson {
 			}
 		}
 
-		_type = DataType::STRING;
+		_type = ValueType::STRING;
 
 		return true;
 	}
 
 	void Value::set_str_in_parse(const char* str, size_t len) {
-		if (_type != DataType::STRING) {
+		if (_type != ValueType::STRING) {
 			_str_val = new std::string(str, len);
 		}
 		else {
 			_str_val->assign(str, len);
 		}
-		_type = DataType::STRING;
+		_type = ValueType::STRING;
 	}
 
 	void Value::set_bool(bool x) {
 		if (!is_valid()) {
 			return;
 		}
-		if (_type == DataType::STRING) {
+		if (_type == ValueType::STRING) {
 			delete _str_val;
 		}
 
 		_bool_val = x;
 
 		{
-			set_type(DataType::BOOL);
+			set_type(ValueType::BOOL);
 		}
 	}
 
@@ -1002,19 +1003,19 @@ namespace claujson {
 		if (!is_valid()) {
 			return;
 		}
-		if (_type == DataType::STRING) {
+		if (_type == ValueType::STRING) {
 			delete _str_val;
 		}
 
-		set_type(DataType::NULL_);
+		set_type(ValueType::NULL_);
 	}
 
-	void Value::set_type(DataType type) {
+	void Value::set_type(ValueType type) {
 		this->_type = type;
 	}
 		
 	Value::~Value() {
-		if (_type == DataType::STRING && _str_val) {
+		if (_type == ValueType::STRING && _str_val) {
 			//log << warn  << "chk";
 			delete _str_val;
 			_str_val = nullptr;
@@ -1028,10 +1029,10 @@ namespace claujson {
 			return;
 		}
 
-		if (_type == DataType::STRING) {
+		if (_type == ValueType::STRING) {
 			_str_val = other._str_val;
 			other._str_val = nullptr;
-			other._type = DataType::NONE;
+			other._type = ValueType::NONE;
 		}
 		else {
 			std::swap(_int_val, other._int_val);
@@ -1040,27 +1041,28 @@ namespace claujson {
 		clean(other);
 	}
 
-	Value::Value() : _int_val(0), _valid(true), _type(DataType::NONE) { }
+	Value::Value() : _int_val(0), _valid(true), _type(ValueType::NONE) { }
 
 	bool Value::operator==(const Value& other) const { // chk array or object?
 		if (this->_type == other._type) {
 			switch (this->_type) {
-			case DataType::STRING:
+			case ValueType::STRING:
 				return (*this->_str_val) == (*other._str_val);
 				break;
-			case DataType::INT:
+			case ValueType::INT:
 				return this->_int_val == other._int_val;
 				break;
-			case DataType::UINT:
+			case ValueType::UINT:
 				return this->_uint_val == other._uint_val;
 				break;
-			case DataType::FLOAT:
+			case ValueType::FLOAT:
 				return this->_float_val == other._float_val;
 				break;
-			case DataType::BOOL:
+			case ValueType::BOOL:
 				return this->_bool_val == other._bool_val;
 				break;
-			case DataType::ARRAY_OR_OBJECT:
+			case ValueType::ARRAY:
+			case ValueType::OBJECT:
 			{
 				const Structured* j = this->as_json_ptr();
 				const Structured* k = other.as_json_ptr();
@@ -1107,19 +1109,19 @@ namespace claujson {
 	bool Value::operator<(const Value& other) const {
 		if (this->_type == other._type) {
 			switch (this->_type) {
-			case DataType::STRING:
+			case ValueType::STRING:
 				return (*this->_str_val) < (*other._str_val);
 				break;
-			case DataType::INT:
+			case ValueType::INT:
 				return this->_int_val < other._int_val;
 				break;
-			case DataType::UINT:
+			case ValueType::UINT:
 				return this->_uint_val < other._uint_val;
 				break;
-			case DataType::FLOAT:
+			case ValueType::FLOAT:
 				return this->_float_val < other._float_val;
 				break;
-			case DataType::BOOL:
+			case ValueType::BOOL:
 				return this->_bool_val < other._bool_val;
 				break;
 			}
@@ -1686,7 +1688,7 @@ namespace claujson {
 					ERROR("Error in add_item_type");
 				}
 
-				if (temp.type() != DataType::STRING) {
+				if (temp.type() != ValueType::STRING) {
 					ERROR("Error in add_item_type, key is not string");
 				}
 
@@ -2315,7 +2317,7 @@ namespace claujson {
 						ERROR("Error in add_item_type");
 					}
 
-					if (temp.type() != DataType::STRING) {
+					if (temp.type() != ValueType::STRING) {
 						ERROR("Error in add_item_type, key is not string");
 					}
 
@@ -2417,7 +2419,7 @@ namespace claujson {
 				ERROR("Error in add_user_type");
 			}
 
-			if (temp.type() != DataType::STRING) {
+			if (temp.type() != ValueType::STRING) {
 				ERROR("Error in add_item_type, key is not string");
 			}
 
@@ -2480,7 +2482,7 @@ namespace claujson {
 					ERROR("Error in add_user_type");
 				}
 
-				if (temp.type() != DataType::STRING) {
+				if (temp.type() != ValueType::STRING) {
 					ERROR("Error in add_item_type, key is not string");
 				}
 
@@ -3927,7 +3929,7 @@ namespace claujson {
 		}
 		else {
 			auto& x = global;
-			if (x.type() == DataType::STRING) {
+			if (x.type() == ValueType::STRING) {
 				stream << "\"";
 
 				size_t len = x.str_val().size();
@@ -3959,19 +3961,19 @@ namespace claujson {
 					}
 				}stream << "\"";
 			}
-			else if (x.type() == DataType::BOOL) {
+			else if (x.type() == ValueType::BOOL) {
 				stream << (x.bool_val() ? "true" : "false");
 			}
-			else if (x.type() == DataType::FLOAT) {
+			else if (x.type() == ValueType::FLOAT) {
 				stream << (x.float_val());
 			}
-			else if (x.type() == DataType::INT) {
+			else if (x.type() == ValueType::INT) {
 				stream << x.int_val();
 			}
-			else if (x.type() == DataType::UINT) {
+			else if (x.type() == ValueType::UINT) {
 				stream << x.uint_val();
 			}
-			else if (x.type() == DataType::NULL_) {
+			else if (x.type() == ValueType::NULL_) {
 				stream << "null";
 			}
 		}
@@ -3993,7 +3995,7 @@ namespace claujson {
 				if (ut->get_value_list(i).is_ptr()) {
 					auto& x = ut->get_key_list(i);
 
-					if (x.type() == DataType::STRING) {
+					if (x.type() == ValueType::STRING) {
 						stream << "\"";
 
 						size_t len = x.str_val().size();
@@ -4054,7 +4056,7 @@ namespace claujson {
 				else {
 					auto& x = ut->get_key_list(i);
 
-					if (x.type() == DataType::STRING) {
+					if (x.type() == ValueType::STRING) {
 						stream << "\"";
 
 						size_t len = x.str_val().size();
@@ -4096,7 +4098,7 @@ namespace claujson {
 					{
 						auto& x = ut->get_value_list(i);
 
-						if (x.type() == DataType::STRING) {
+						if (x.type() == ValueType::STRING) {
 							stream << "\"";
 
 							size_t len = x.str_val().size();
@@ -4130,19 +4132,19 @@ namespace claujson {
 							stream << "\"";
 
 						}
-						else if (x.type() == DataType::BOOL) {
+						else if (x.type() == ValueType::BOOL) {
 							stream << (x.bool_val() ? "true" : "false");
 						}
-						else if (x.type() == DataType::FLOAT) {
+						else if (x.type() == ValueType::FLOAT) {
 							stream << (x.float_val());
 						}
-						else if (x.type() == DataType::INT) {
+						else if (x.type() == ValueType::INT) {
 							stream << x.int_val();
 						}
-						else if (x.type() == DataType::UINT) {
+						else if (x.type() == ValueType::UINT) {
 							stream << x.uint_val();
 						}
-						else if (x.type() == DataType::NULL_) {
+						else if (x.type() == ValueType::NULL_) {
 							stream << "null";
 						}
 					}
@@ -4187,7 +4189,7 @@ namespace claujson {
 
 					auto& x = ut->get_value_list(i);
 
-					if (x.type() == DataType::STRING) {
+					if (x.type() == ValueType::STRING) {
 						stream << "\"";
 
 						size_t len = x.str_val().size();
@@ -4219,19 +4221,19 @@ namespace claujson {
 							}
 						}stream << "\"";
 					}
-					else if (x.type() == DataType::BOOL) {
+					else if (x.type() == ValueType::BOOL) {
 						stream << (x.bool_val() ? "true" : "false");
 					}
-					else if (x.type() == DataType::FLOAT) {
+					else if (x.type() == ValueType::FLOAT) {
 						stream << (x.float_val());
 					}
-					else if (x.type() == DataType::INT) {
+					else if (x.type() == ValueType::INT) {
 						stream << x.int_val();
 					}
-					else if (x.type() == DataType::UINT) {
+					else if (x.type() == ValueType::UINT) {
 						stream << x.uint_val();
 					}
-					else if (x.type() == DataType::NULL_) {
+					else if (x.type() == ValueType::NULL_) {
 						stream << "null";
 					}
 
@@ -4247,7 +4249,7 @@ namespace claujson {
 		else if (data) { // valid
 			auto& x = data;
 
-			if (x.type() == DataType::STRING) {
+			if (x.type() == ValueType::STRING) {
 				stream << "\"";
 
 				size_t len = x.str_val().size();
@@ -4281,19 +4283,19 @@ namespace claujson {
 				stream << "\"";
 
 			}
-			else if (x.type() == DataType::BOOL) {
+			else if (x.type() == ValueType::BOOL) {
 				stream << (x.bool_val() ? "true" : "false");
 			}
-			else if (x.type() == DataType::FLOAT) {
+			else if (x.type() == ValueType::FLOAT) {
 				stream << (x.float_val());
 			}
-			else if (x.type() == DataType::INT) {
+			else if (x.type() == ValueType::INT) {
 				stream << x.int_val();
 			}
-			else if (x.type() == DataType::UINT) {
+			else if (x.type() == ValueType::UINT) {
 				stream << x.uint_val();
 			}
-			else if (x.type() == DataType::NULL_) {
+			else if (x.type() == ValueType::NULL_) {
 				stream << "null";
 			}
 		}
@@ -4313,7 +4315,7 @@ namespace claujson {
 				if (ut->get_value_list(i).is_ptr()) {
 					auto& x = ut->get_key_list(i);
 
-					if (x.type() == DataType::STRING) {
+					if (x.type() == ValueType::STRING) {
 						stream << "\"";
 
 						size_t len = x.str_val().size();
@@ -4375,7 +4377,7 @@ namespace claujson {
 				else {
 					auto& x = ut->get_key_list(i);
 
-					if (x.type() == DataType::STRING) {
+					if (x.type() == ValueType::STRING) {
 						stream << "\"";
 
 						size_t len = x.str_val().size();
@@ -4417,7 +4419,7 @@ namespace claujson {
 					{
 						auto& x = ut->get_value_list(i);
 
-						if (x.type() == DataType::STRING) {
+						if (x.type() == ValueType::STRING) {
 							stream << "\"";
 
 							size_t len = x.str_val().size();
@@ -4451,19 +4453,19 @@ namespace claujson {
 							stream << "\"";
 
 						}
-						else if (x.type() == DataType::BOOL) {
+						else if (x.type() == ValueType::BOOL) {
 							stream << (x.bool_val() ? "true" : "false");
 						}
-						else if (x.type() == DataType::FLOAT) {
+						else if (x.type() == ValueType::FLOAT) {
 							stream << (x.float_val());
 						}
-						else if (x.type() == DataType::INT) {
+						else if (x.type() == ValueType::INT) {
 							stream << x.int_val();
 						}
-						else if (x.type() == DataType::UINT) {
+						else if (x.type() == ValueType::UINT) {
 							stream << x.uint_val();
 						}
-						else if (x.type() == DataType::NULL_) {
+						else if (x.type() == ValueType::NULL_) {
 							stream << "null";
 						}
 					}
@@ -4508,7 +4510,7 @@ namespace claujson {
 
 					auto& x = ut->get_value_list(i);
 
-					if (x.type() == DataType::STRING) {
+					if (x.type() == ValueType::STRING) {
 						stream << "\"";
 
 						size_t len = x.str_val().size();
@@ -4540,19 +4542,19 @@ namespace claujson {
 							}
 						}stream << "\"";
 					}
-					else if (x.type() == DataType::BOOL) {
+					else if (x.type() == ValueType::BOOL) {
 						stream << (x.bool_val() ? "true" : "false");
 					}
-					else if (x.type() == DataType::FLOAT) {
+					else if (x.type() == ValueType::FLOAT) {
 						stream << (x.float_val());
 					}
-					else if (x.type() == DataType::INT) {
+					else if (x.type() == ValueType::INT) {
 						stream << x.int_val();
 					}
-					else if (x.type() == DataType::UINT) {
+					else if (x.type() == ValueType::UINT) {
 						stream << x.uint_val();
 					}
-					else if (x.type() == DataType::NULL_) {
+					else if (x.type() == ValueType::NULL_) {
 						stream << "null";
 					}
 
@@ -4568,7 +4570,7 @@ namespace claujson {
 		else if (data) { // valid
 			auto& x = data;
 
-			if (x.type() == DataType::STRING) {
+			if (x.type() == ValueType::STRING) {
 				stream << "\"";
 
 				size_t len = x.str_val().size();
@@ -4602,19 +4604,19 @@ namespace claujson {
 				stream << "\"";
 
 			}
-			else if (x.type() == DataType::BOOL) {
+			else if (x.type() == ValueType::BOOL) {
 				stream << (x.bool_val() ? "true" : "false");
 			}
-			else if (x.type() == DataType::FLOAT) {
+			else if (x.type() == ValueType::FLOAT) {
 				stream << (x.float_val());
 			}
-			else if (x.type() == DataType::INT) {
+			else if (x.type() == ValueType::INT) {
 				stream << x.int_val();
 			}
-			else if (x.type() == DataType::UINT) {
+			else if (x.type() == ValueType::UINT) {
 				stream << x.uint_val();
 			}
-			else if (x.type() == DataType::NULL_) {
+			else if (x.type() == ValueType::NULL_) {
 				stream << "null";
 			}
 		}
@@ -4652,7 +4654,7 @@ namespace claujson {
 				stream << " , ";
 			}
 			auto& x = global;
-			if (x.type() == DataType::STRING) {
+			if (x.type() == ValueType::STRING) {
 				stream << "\"";
 
 				size_t len = x.str_val().size();
@@ -4684,19 +4686,19 @@ namespace claujson {
 					}
 				}stream << "\"";
 			}
-			else if (x.type() == DataType::BOOL) {
+			else if (x.type() == ValueType::BOOL) {
 				stream << (x.bool_val() ? "true" : "false");
 			}
-			else if (x.type() == DataType::FLOAT) {
+			else if (x.type() == ValueType::FLOAT) {
 				stream << (x.float_val());
 			}
-			else if (x.type() == DataType::INT) {
+			else if (x.type() == ValueType::INT) {
 				stream << x.int_val();
 			}
-			else if (x.type() == DataType::UINT) {
+			else if (x.type() == ValueType::UINT) {
 				stream << x.uint_val();
 			}
-			else if (x.type() == DataType::NULL_) {
+			else if (x.type() == ValueType::NULL_) {
 				stream << "null";
 			}
 		}
@@ -4754,7 +4756,7 @@ namespace claujson {
 			}
 
 			auto& x = global;
-			if (x.type() == DataType::STRING) {
+			if (x.type() == ValueType::STRING) {
 				stream << "\"";
 
 				size_t len = x.str_val().size();
@@ -4786,19 +4788,19 @@ namespace claujson {
 					}
 				}stream << "\"";
 			}
-			else if (x.type() == DataType::BOOL) {
+			else if (x.type() == ValueType::BOOL) {
 				stream << (x.bool_val() ? "true" : "false");
 			}
-			else if (x.type() == DataType::FLOAT) {
+			else if (x.type() == ValueType::FLOAT) {
 				stream << (x.float_val());
 			}
-			else if (x.type() == DataType::INT) {
+			else if (x.type() == ValueType::INT) {
 				stream << x.int_val();
 			}
-			else if (x.type() == DataType::UINT) {
+			else if (x.type() == ValueType::UINT) {
 				stream << x.uint_val();
 			}
-			else if (x.type() == DataType::NULL_) {
+			else if (x.type() == ValueType::NULL_) {
 				stream << "null";
 			}
 		}
@@ -5835,7 +5837,8 @@ namespace claujson {
 		}
 
 		switch (x.type()) {
-		case DataType::ARRAY_OR_OBJECT:
+		case ValueType::ARRAY:
+		case ValueType::OBJECT:
 		{
 			const Structured* jx = x.as_json_ptr();
 			const Structured* jy = y.as_json_ptr();
@@ -5945,12 +5948,12 @@ namespace claujson {
 		}
 		break;
 
-		case DataType::BOOL:
-		case DataType::NULL_:
-		case DataType::FLOAT:
-		case DataType::INT:
-		case DataType::UINT:
-		case DataType::STRING:
+		case ValueType::BOOL:
+		case ValueType::NULL_:
+		case ValueType::FLOAT:
+		case ValueType::INT:
+		case ValueType::UINT:
+		case ValueType::STRING:
 		{
 			Object* obj = new Object();
 

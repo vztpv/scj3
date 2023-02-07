@@ -199,14 +199,16 @@ namespace claujson {
 	class Array;
 	class Object;
 
-	enum DataType : int8_t {
+	enum ValueType : int8_t {
 		NONE = 1,
-		ARRAY_OR_OBJECT, // todo - ARRAY, OBJECT ?
+		ARRAY, // ARRAY_OBJECT -> ARRAY, OBJECT
+		OBJECT, 
 		INT, UINT,
 		FLOAT,
 		BOOL,
 		NULL_,
-		STRING
+		STRING,
+		ERROR // private class?
 	};
 
 	class Value {
@@ -237,7 +239,7 @@ namespace claujson {
 			bool _bool_val;
 		};
 
-		DataType _type = DataType::NONE; 
+		ValueType _type = ValueType::NONE; 
 		bool _valid = true;
 
 	public:
@@ -271,7 +273,7 @@ namespace claujson {
 		explicit Value(nullptr_t, bool valid);
 
 	public:
-		DataType type() const;
+		ValueType type() const;
 
 		bool is_valid() const;
 
@@ -348,7 +350,7 @@ namespace claujson {
 		void set_null();
 
 	private:
-		void set_type(DataType type);
+		void set_type(ValueType type);
 
 	public:
 		~Value();
