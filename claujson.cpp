@@ -1,7 +1,7 @@
 
 #include "claujson.h"
 
-#include "simdjson.h" // modified simdjson // using simdjson 2.2.2 
+#include "simdjson.h" // modified simdjson // using simdjson 3.1.1
 
 #include <string_view>
 #include <future>
@@ -375,10 +375,10 @@ namespace claujson {
 				const uint8_t* value = reinterpret_cast<const uint8_t*>(buf + idx);
 
 				{ // chk code...
-					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + _simdjson::SIMDJSON_PADDING]); // x.size() + padding
+					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[idx2 - idx + _simdjson::_SIMDJSON_PADDING]); // x.size() + padding
 					if (copy.get() == nullptr) { return false; } // cf) new Json?
 					std::memcpy(copy.get(), &buf[idx], idx2 - idx);
-					std::memset(copy.get() + idx2 - idx, ' ', _simdjson::SIMDJSON_PADDING);
+					std::memset(copy.get() + idx2 - idx, ' ', _simdjson::_SIMDJSON_PADDING);
 					value = copy.get();
 				}
 
@@ -879,21 +879,21 @@ namespace claujson {
 		const size_t block_size = 1024;
 
 
-		uint8_t buf_src[block_size + _simdjson::SIMDJSON_PADDING];
-		uint8_t buf_dest[block_size + _simdjson::SIMDJSON_PADDING];
+		uint8_t buf_src[block_size + _simdjson::_SIMDJSON_PADDING];
+		uint8_t buf_dest[block_size + _simdjson::_SIMDJSON_PADDING];
 
 
 		if (len >= block_size) {
-			uint8_t* buf_src = (uint8_t*)calloc(len + _simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
-			uint8_t* buf_dest = (uint8_t*)calloc(len + _simdjson::SIMDJSON_PADDING, sizeof(uint8_t));
+			uint8_t* buf_src = (uint8_t*)calloc(len + _simdjson::_SIMDJSON_PADDING, sizeof(uint8_t));
+			uint8_t* buf_dest = (uint8_t*)calloc(len + _simdjson::_SIMDJSON_PADDING, sizeof(uint8_t));
 			if (!buf_src || !buf_dest) {
 				if (buf_src) { free(buf_src); }
 				if (buf_dest) { free(buf_dest); }
 
 				return false;
 			}
-			memset(buf_src, '"', len + _simdjson::SIMDJSON_PADDING);
-			memset(buf_dest, '"', len + _simdjson::SIMDJSON_PADDING);
+			memset(buf_src, '"', len + _simdjson::_SIMDJSON_PADDING);
+			memset(buf_dest, '"', len + _simdjson::_SIMDJSON_PADDING);
 
 			memcpy(buf_src, str, len);
 			buf_src[len] = '"';
@@ -935,8 +935,8 @@ namespace claujson {
 			free(buf_dest);
 		}
 		else {
-			memset(buf_src, '"', block_size + _simdjson::SIMDJSON_PADDING);
-			memset(buf_dest, '"', block_size + _simdjson::SIMDJSON_PADDING);
+			memset(buf_src, '"', block_size + _simdjson::_SIMDJSON_PADDING);
+			memset(buf_dest, '"', block_size + _simdjson::_SIMDJSON_PADDING);
 
 			memcpy(buf_src, str, len);
 			buf_src[len] = '"';
@@ -1206,10 +1206,10 @@ namespace claujson {
 				uint8_t* value = reinterpret_cast<uint8_t*>(buf + buf_idx);
 
 				if (token_idx == 0) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
-					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[next_buf_idx - buf_idx + _simdjson::SIMDJSON_PADDING]);
+					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[next_buf_idx - buf_idx + _simdjson::_SIMDJSON_PADDING]);
 					if (copy.get() == nullptr) { ERROR("Error in Convert for new"); } // cf) new Json?
 					std::memcpy(copy.get(), &buf[buf_idx], next_buf_idx - buf_idx);
-					std::memset(copy.get() + next_buf_idx - buf_idx, ' ', _simdjson::SIMDJSON_PADDING);
+					std::memset(copy.get() + next_buf_idx - buf_idx, ' ', _simdjson::_SIMDJSON_PADDING);
 					value = copy.get();
 				}
 

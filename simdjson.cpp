@@ -1,9 +1,9 @@
-/* auto-generated on 2022-07-28 21:45:54 -0400. Do not edit! */
+/* auto-generated on 2023-02-06 18:28:54 -0500. Do not edit! */
 /* begin file src/simdjson.cpp */
 #include "simdjson.h"
 
-SIMDJSON_PUSH_DISABLE_WARNINGS
-SIMDJSON_DISABLE_UNDESIRED_WARNINGS
+_SIMDJSON_PUSH_DISABLE_WARNINGS
+_SIMDJSON_DISABLE_UNDESIRED_WARNINGS
 
 /* begin file src/to_chars.cpp */
 #include <cstring>
@@ -868,9 +868,9 @@ inline char *format_buffer(char *buf, int len, int decimal_exponent,
 
     std::memset(buf + k, '0', static_cast<size_t>(n) - static_cast<size_t>(k));
     // Make it look like a floating-point number (#362, #378)
-    // buf[n + 0] = '.';
-    // buf[n + 1] = '0';
-    return buf + (static_cast<size_t>(n));
+    buf[n + 0] = '.';
+    buf[n + 1] = '0';
+    return buf + (static_cast<size_t>(n)) + 2;
   }
 
   if (0 < n && n <= max_exp) {
@@ -933,10 +933,8 @@ char *to_chars(char *first, const char *last, double value) {
   {
     *first++ = '0';
     // Make it look like a floating-point number (#362, #378)
-    if(negative) {
-      *first++ = '.';
-      *first++ = '0';
-    }
+    *first++ = '.';
+    *first++ = '0';
     return first;
   }
   // Compute v = buffer * 10^decimal_exponent.
@@ -1559,7 +1557,7 @@ double from_chars(const char *first, const char *end) noexcept {
 namespace _simdjson {
 namespace internal {
 
-  SIMDJSON_DLLIMPORTEXPORT const error_code_info error_codes[] {
+  _SIMDJSON_DLLIMPORTEXPORT const error_code_info error_codes[] {
     { SUCCESS, "No error" },
     { CAPACITY, "This parser can't support a document that big" },
     { MEMALLOC, "Error allocating memory, we're most likely out of memory" },
@@ -1586,10 +1584,11 @@ namespace internal {
     { UNEXPECTED_ERROR, "Unexpected error, consider reporting this problem as you may have found a bug in simdjson" },
     { PARSER_IN_USE, "Cannot parse a new document while a document is still in use." },
     { OUT_OF_ORDER_ITERATION, "Objects and arrays can only be iterated when they are first encountered." },
-    { INSUFFICIENT_PADDING, "simdjson requires the input JSON string to have at least SIMDJSON_PADDING extra bytes allocated, beyond the string's length. Consider using the _simdjson::padded_string class if needed." },
+    { INSUFFICIENT_PADDING, "simdjson requires the input JSON string to have at least _SIMDJSON_PADDING extra bytes allocated, beyond the string's length. Consider using the _simdjson::padded_string class if needed." },
     { INCOMPLETE_ARRAY_OR_OBJECT, "JSON document ended early in the middle of an object or array." },
     { SCALAR_DOCUMENT_AS_VALUE, "A JSON document made of a scalar (number, Boolean, null or string) is treated as a value. Use get_bool(), get_double(), etc. on the document instead. "},
-    { OUT_OF_BOUNDS, "Attempted to access location outside of document."}
+    { OUT_OF_BOUNDS, "Attempted to access location outside of document."},
+    { TRAILING_CONTENT, "Unexpected trailing content in the JSON input."}
   }; // error_messages[]
 
 } // namespace internal
@@ -1605,7 +1604,7 @@ namespace internal {
 // we are also interested in the four whitespace characters
 // space 0x20, linefeed 0x0a, horizontal tab 0x09 and carriage return 0x0d
 
-SIMDJSON_DLLIMPORTEXPORT const bool structural_or_whitespace_negated[256] = {
+_SIMDJSON_DLLIMPORTEXPORT const bool structural_or_whitespace_negated[256] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
@@ -1622,7 +1621,7 @@ SIMDJSON_DLLIMPORTEXPORT const bool structural_or_whitespace_negated[256] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
-SIMDJSON_DLLIMPORTEXPORT const bool structural_or_whitespace[256] = {
+_SIMDJSON_DLLIMPORTEXPORT const bool structural_or_whitespace[256] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1635,7 +1634,7 @@ SIMDJSON_DLLIMPORTEXPORT const bool structural_or_whitespace[256] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-SIMDJSON_DLLIMPORTEXPORT const uint32_t digit_to_val32[886] = {
+_SIMDJSON_DLLIMPORTEXPORT const uint32_t digit_to_val32[886] = {
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
@@ -1795,7 +1794,7 @@ namespace internal {
 
 // Precomputed powers of ten from 10^0 to 10^22. These
 // can be represented exactly using the double type.
-SIMDJSON_DLLIMPORTEXPORT const double power_of_ten[] = {
+_SIMDJSON_DLLIMPORTEXPORT const double power_of_ten[] = {
     1e0,  1e1,  1e2,  1e3,  1e4,  1e5,  1e6,  1e7,  1e8,  1e9,  1e10, 1e11,
     1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22};
 
@@ -1814,7 +1813,7 @@ SIMDJSON_DLLIMPORTEXPORT const double power_of_ten[] = {
 // The truncated powers of five from 5^-342 all the way to 5^308
 // The mantissa is truncated to 128 bits, and
 // never rounded up. Uses about 10KB.
-SIMDJSON_DLLIMPORTEXPORT const uint64_t power_of_five_128[]= {
+_SIMDJSON_DLLIMPORTEXPORT const uint64_t power_of_five_128[]= {
         0xeef453d6923bd65a,0x113faa2906a13b3f,
         0x9558b4661b6565f8,0x4ac7ca59a424c507,
         0xbaaee17fa23ebf76,0x5d79bcf00d2df649,
@@ -2471,13 +2470,13 @@ SIMDJSON_DLLIMPORTEXPORT const uint64_t power_of_five_128[]= {
 } // namespace _simdjson
 /* end file src/internal/numberparsing_tables.cpp */
 /* begin file src/internal/simdprune_tables.cpp */
-#if SIMDJSON_IMPLEMENTATION_ARM64 || SIMDJSON_IMPLEMENTATION_ICELAKE || SIMDJSON_IMPLEMENTATION_HASWELL || SIMDJSON_IMPLEMENTATION_WESTMERE || SIMDJSON_IMPLEMENTATION_PPC64
+#if _SIMDJSON_IMPLEMENTATION_ARM64 || _SIMDJSON_IMPLEMENTATION_ICELAKE || _SIMDJSON_IMPLEMENTATION_HASWELL || _SIMDJSON_IMPLEMENTATION_WESTMERE || _SIMDJSON_IMPLEMENTATION_PPC64
 
 #include <cstdint>
 
 namespace _simdjson { // table modified and copied from
 namespace internal { // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetTable
-SIMDJSON_DLLIMPORTEXPORT  const unsigned char BitsSetTable256mul2[256] = {
+_SIMDJSON_DLLIMPORTEXPORT  const unsigned char BitsSetTable256mul2[256] = {
     0,  2,  2,  4,  2,  4,  4,  6,  2,  4,  4,  6,  4,  6,  6,  8,  2,  4,  4,
     6,  4,  6,  6,  8,  4,  6,  6,  8,  6,  8,  8,  10, 2,  4,  4,  6,  4,  6,
     6,  8,  4,  6,  6,  8,  6,  8,  8,  10, 4,  6,  6,  8,  6,  8,  8,  10, 6,
@@ -2493,7 +2492,7 @@ SIMDJSON_DLLIMPORTEXPORT  const unsigned char BitsSetTable256mul2[256] = {
     8,  10, 10, 12, 8,  10, 10, 12, 10, 12, 12, 14, 8,  10, 10, 12, 10, 12, 12,
     14, 10, 12, 12, 14, 12, 14, 14, 16};
 
-SIMDJSON_DLLIMPORTEXPORT  const uint8_t pshufb_combine_table[272] = {
+_SIMDJSON_DLLIMPORTEXPORT  const uint8_t pshufb_combine_table[272] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
     0x0c, 0x0d, 0x0e, 0x0f, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08,
     0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0x00, 0x01, 0x02, 0x03,
@@ -2509,7 +2508,7 @@ SIMDJSON_DLLIMPORTEXPORT  const uint8_t pshufb_combine_table[272] = {
 };
 
 // 256 * 8 bytes = 2kB, easily fits in cache.
-SIMDJSON_DLLIMPORTEXPORT  const uint64_t thintable_epi8[256] = {
+_SIMDJSON_DLLIMPORTEXPORT  const uint64_t thintable_epi8[256] = {
     0x0706050403020100, 0x0007060504030201, 0x0007060504030200,
     0x0000070605040302, 0x0007060504030100, 0x0000070605040301,
     0x0000070605040300, 0x0000000706050403, 0x0007060504020100,
@@ -2601,7 +2600,7 @@ SIMDJSON_DLLIMPORTEXPORT  const uint64_t thintable_epi8[256] = {
 } // namespace internal
 } // namespace _simdjson
 
-#endif //  SIMDJSON_IMPLEMENTATION_ARM64 || SIMDJSON_IMPLEMENTATION_ICELAKE || SIMDJSON_IMPLEMENTATION_HASWELL || SIMDJSON_IMPLEMENTATION_WESTMERE || SIMDJSON_IMPLEMENTATION_PPC64
+#endif //  _SIMDJSON_IMPLEMENTATION_ARM64 || _SIMDJSON_IMPLEMENTATION_ICELAKE || _SIMDJSON_IMPLEMENTATION_HASWELL || _SIMDJSON_IMPLEMENTATION_WESTMERE || _SIMDJSON_IMPLEMENTATION_PPC64
 /* end file src/internal/simdprune_tables.cpp */
 /* begin file src/implementation.cpp */
 #include <initializer_list>
@@ -2619,42 +2618,42 @@ namespace internal {
 // Static array of known implementations. We're hoping these get baked into the executable
 // without requiring a static initializer.
 
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
+#if _SIMDJSON_IMPLEMENTATION_ICELAKE
 static const icelake::implementation* get_icelake_singleton() {
   static const icelake::implementation icelake_singleton{};
   return &icelake_singleton;
 }
 #endif
-#if SIMDJSON_IMPLEMENTATION_HASWELL
+#if _SIMDJSON_IMPLEMENTATION_HASWELL
 static const haswell::implementation* get_haswell_singleton() {
   static const haswell::implementation haswell_singleton{};
   return &haswell_singleton;
 }
 #endif
-#if SIMDJSON_IMPLEMENTATION_WESTMERE
+#if _SIMDJSON_IMPLEMENTATION_WESTMERE
 static const westmere::implementation* get_westmere_singleton() {
   static const westmere::implementation westmere_singleton{};
   return &westmere_singleton;
 }
-#endif // SIMDJSON_IMPLEMENTATION_WESTMERE
-#if SIMDJSON_IMPLEMENTATION_ARM64
+#endif // _SIMDJSON_IMPLEMENTATION_WESTMERE
+#if _SIMDJSON_IMPLEMENTATION_ARM64
 static const arm64::implementation* get_arm64_singleton() {
   static const arm64::implementation arm64_singleton{};
   return &arm64_singleton;
 }
-#endif // SIMDJSON_IMPLEMENTATION_ARM64
-#if SIMDJSON_IMPLEMENTATION_PPC64
+#endif // _SIMDJSON_IMPLEMENTATION_ARM64
+#if _SIMDJSON_IMPLEMENTATION_PPC64
 static const ppc64::implementation* get_ppc64_singleton() {
   static const ppc64::implementation ppc64_singleton{};
   return &ppc64_singleton;
 }
-#endif // SIMDJSON_IMPLEMENTATION_PPC64
-#if SIMDJSON_IMPLEMENTATION_FALLBACK
+#endif // _SIMDJSON_IMPLEMENTATION_PPC64
+#if _SIMDJSON_IMPLEMENTATION_FALLBACK
 static const fallback::implementation* get_fallback_singleton() {
   static const fallback::implementation fallback_singleton{};
   return &fallback_singleton;
 }
-#endif // SIMDJSON_IMPLEMENTATION_FALLBACK
+#endif // _SIMDJSON_IMPLEMENTATION_FALLBACK
 
 /**
  * @private Detects best supported implementation on first use, and sets it
@@ -2684,22 +2683,22 @@ private:
 
 static const std::initializer_list<const implementation *>& get_available_implementation_pointers() {
   static const std::initializer_list<const implementation *> available_implementation_pointers {
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
+#if _SIMDJSON_IMPLEMENTATION_ICELAKE
     get_icelake_singleton(),
 #endif
-#if SIMDJSON_IMPLEMENTATION_HASWELL
+#if _SIMDJSON_IMPLEMENTATION_HASWELL
     get_haswell_singleton(),
 #endif
-#if SIMDJSON_IMPLEMENTATION_WESTMERE
+#if _SIMDJSON_IMPLEMENTATION_WESTMERE
     get_westmere_singleton(),
 #endif
-#if SIMDJSON_IMPLEMENTATION_ARM64
+#if _SIMDJSON_IMPLEMENTATION_ARM64
     get_arm64_singleton(),
 #endif
-#if SIMDJSON_IMPLEMENTATION_PPC64
+#if _SIMDJSON_IMPLEMENTATION_PPC64
     get_ppc64_singleton(),
 #endif
-#if SIMDJSON_IMPLEMENTATION_FALLBACK
+#if _SIMDJSON_IMPLEMENTATION_FALLBACK
     get_fallback_singleton(),
 #endif
   }; // available_implementation_pointers
@@ -2757,10 +2756,10 @@ const implementation *available_implementation_list::detect_best_supported() con
 }
 
 const implementation *detect_best_supported_implementation_on_first_use::set_best() const noexcept {
-  SIMDJSON_PUSH_DISABLE_WARNINGS
-  SIMDJSON_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
-  char *force_implementation_name = getenv("SIMDJSON_FORCE_IMPLEMENTATION");
-  SIMDJSON_POP_DISABLE_WARNINGS
+  _SIMDJSON_PUSH_DISABLE_WARNINGS
+  _SIMDJSON_DISABLE_DEPRECATED_WARNING // Disable CRT_SECURE warning on MSVC: manually verified this is safe
+  char *force_implementation_name = getenv("_SIMDJSON_FORCE_IMPLEMENTATION");
+  _SIMDJSON_POP_DISABLE_WARNINGS
 
   if (force_implementation_name) {
     auto force_implementation = get_available_implementations()[force_implementation_name];
@@ -2776,12 +2775,12 @@ const implementation *detect_best_supported_implementation_on_first_use::set_bes
 
 } // namespace internal
 
-SIMDJSON_DLLIMPORTEXPORT const internal::available_implementation_list& get_available_implementations() {
+_SIMDJSON_DLLIMPORTEXPORT const internal::available_implementation_list& get_available_implementations() {
   static const internal::available_implementation_list available_implementations{};
   return available_implementations;
 }
 
-SIMDJSON_DLLIMPORTEXPORT internal::atomic_ptr<const implementation>& get_active_implementation() {
+_SIMDJSON_DLLIMPORTEXPORT internal::atomic_ptr<const implementation>& get_active_implementation() {
     static const internal::detect_best_supported_implementation_on_first_use detect_best_supported_implementation_on_first_use_singleton;
     static internal::atomic_ptr<const implementation> active_implementation{&detect_best_supported_implementation_on_first_use_singleton};
     return active_implementation;
@@ -2794,7 +2793,7 @@ simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
   return get_active_implementation()->validate_utf8(buf, len);
 }
 const implementation * builtin_implementation() {
-  static const implementation * builtin_impl = get_available_implementations()[SIMDJSON_STRINGIFY(SIMDJSON_BUILTIN_IMPLEMENTATION)];
+  static const implementation * builtin_impl = get_available_implementations()[_SIMDJSON_STRINGIFY(_SIMDJSON_BUILTIN_IMPLEMENTATION)];
   assert(builtin_impl);
   return builtin_impl;
 }
@@ -2803,11 +2802,11 @@ const implementation * builtin_implementation() {
 } // namespace _simdjson
 /* end file src/implementation.cpp */
 
-#if SIMDJSON_IMPLEMENTATION_ARM64
+#if _SIMDJSON_IMPLEMENTATION_ARM64
 /* begin file src/arm64/implementation.cpp */
 /* begin file include/simdjson/arm64/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "arm64"
-// #define SIMDJSON_IMPLEMENTATION arm64
+// redefining _SIMDJSON_IMPLEMENTATION to "arm64"
+// #define _SIMDJSON_IMPLEMENTATION arm64
 /* end file include/simdjson/arm64/begin.h */
 
 namespace _simdjson {
@@ -2835,8 +2834,8 @@ simdjson_warn_unused error_code implementation::create_dom_parser_implementation
 /* end file src/arm64/implementation.cpp */
 /* begin file src/arm64/dom_parser_implementation.cpp */
 /* begin file include/simdjson/arm64/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "arm64"
-// #define SIMDJSON_IMPLEMENTATION arm64
+// redefining _SIMDJSON_IMPLEMENTATION to "arm64"
+// #define _SIMDJSON_IMPLEMENTATION arm64
 /* end file include/simdjson/arm64/begin.h */
 
 //
@@ -3054,7 +3053,7 @@ using namespace simd;
   simdjson_inline simd8<uint8_t> is_incomplete(const simd8<uint8_t> input) {
     // If the previous input's last 3 bytes match this, they're too short (they ended at EOF):
     // ... 1111____ 111_____ 11______
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
+#if _SIMDJSON_IMPLEMENTATION_ICELAKE
     static const uint8_t max_array[64] = {
       255, 255, 255, 255, 255, 255, 255, 255,
       255, 255, 255, 255, 255, 255, 255, 255,
@@ -3105,6 +3104,14 @@ using namespace simd;
       this->error |= this->prev_incomplete;
     }
 
+#ifndef _SIMDJSON_IF_CONSTEXPR
+#if _SIMDJSON_CPLUSPLUS17
+#define _SIMDJSON_IF_CONSTEXPR if constexpr
+#else
+#define _SIMDJSON_IF_CONSTEXPR if
+#endif
+#endif
+
     simdjson_inline void check_next_input(const simd8x64<uint8_t>& input) {
       if(simdjson_likely(is_ascii(input))) {
         this->error |= this->prev_incomplete;
@@ -3114,12 +3121,12 @@ using namespace simd;
                 ||(simd8x64<uint8_t>::NUM_CHUNKS == 2)
                 || (simd8x64<uint8_t>::NUM_CHUNKS == 4),
                 "We support one, two or four chunks per 64-byte block.");
-        if(simd8x64<uint8_t>::NUM_CHUNKS == 1) {
+        _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 1) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
-        } if(simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-        } else if(simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
           this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
@@ -3497,7 +3504,7 @@ private:
  */
 class json_scanner {
 public:
-  json_scanner() {}
+  json_scanner() = default;
   simdjson_inline json_block next(const simd::simd8x64<uint8_t>& in);
   // Returns either UNCLOSED_STRING or SUCCESS
   simdjson_inline error_code finish();
@@ -3765,9 +3772,9 @@ public:
   // will potentially store extra values beyond end of valid bits, so base_ptr
   // needs to be large enough to handle this
   //
-  // If the kernel sets SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
+  // If the kernel sets _SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
   // version of the code.
-#ifdef SIMDJSON_CUSTOM_BIT_INDEXER
+#ifdef _SIMDJSON_CUSTOM_BIT_INDEXER
   simdjson_inline void write(uint32_t idx, uint64_t bits);
 #else
   simdjson_inline void write(uint32_t idx, uint64_t bits) {
@@ -3776,7 +3783,7 @@ public:
     // it helps tremendously.
     if (bits == 0)
         return;
-#if defined(SIMDJSON_PREFER_REVERSE_BITS)
+#if _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * ARM lacks a fast trailing zero instruction, but it has a fast
      * bit reversal instruction and a fast leading zero instruction.
@@ -3824,7 +3831,7 @@ public:
       }
     }
     this->tail += cnt;
-#else // SIMDJSON_PREFER_REVERSE_BITS
+#else // _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * Under recent x64 systems, we often have both a fast trailing zero
      * instruction and a fast 'clear-lower-bit' instruction so the following
@@ -3862,7 +3869,7 @@ public:
     this->tail += cnt;
 #endif
   }
-#endif // SIMDJSON_CUSTOM_BIT_INDEXER
+#endif // _SIMDJSON_CUSTOM_BIT_INDEXER
 
 };
 
@@ -4189,22 +4196,25 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
   // outside the Basic
   // Multilingual Plane.
   if (code_point >= 0xd800 && code_point < 0xdc00) {
-    if (((*src_ptr)[0] != '\\') || (*src_ptr)[1] != 'u') {
+    const uint8_t *src_data = *src_ptr;
+    /* Compiler optimizations convert this to a single 16-bit load and compare on most platforms */
+    if (((src_data[0] << 8) | src_data[1]) != ((static_cast<uint8_t> ('\\') << 8) | static_cast<uint8_t> ('u'))) {
       return false;
     }
-    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(*src_ptr + 2);
+    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(src_data + 2);
 
-    // if the first code point is invalid we will get here, as we will go past
-    // the check for being outside the Basic Multilingual plane. If we don't
-    // find a \u immediately afterwards we fail out anyhow, but if we do,
-    // this check catches both the case of the first code point being invalid
-    // or the second code point being invalid.
-    if ((code_point | code_point_2) >> 16) {
+    // We have already checked that the high surrogate is valid and
+    // (code_point - 0xd800) < 1024.
+    //
+    // Check that code_point_2 is in the range 0xdc00..0xdfff
+    // and that code_point_2 was parsed from valid hex.
+    uint32_t low_bit = code_point_2 - 0xdc00;
+    if (low_bit >> 10) {
       return false;
     }
 
     code_point =
-        (((code_point - 0xd800) << 10) | (code_point_2 - 0xdc00)) + 0x10000;
+        (((code_point - 0xd800) << 10) | low_bit) + 0x10000;
     *src_ptr += 6;
   } else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
       // If we encounter a low surrogate (not preceded by a high surrogate)
@@ -4222,7 +4232,7 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
  * position as pointer. In case of error (e.g., the string has bad escaped codes),
  * then null_nullptrptr is returned. It is assumed that the output buffer is large
  * enough. E.g., if src points at 'joe"', then dst needs to have four free bytes +
- * SIMDJSON_PADDING bytes.
+ * _SIMDJSON_PADDING bytes.
  */
 simdjson_warn_unused simdjson_inline uint8_t *parse_string(const uint8_t *src, uint8_t *dst) {
   while (1) {
@@ -4287,7 +4297,7 @@ namespace logger {
 
   static constexpr const char * DASHES = "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
 
-#if SIMDJSON_VERBOSE_LOGGING
+#if _SIMDJSON_VERBOSE_LOGGING
   static constexpr const bool LOG_ENABLED = true;
 #else
   static constexpr const bool LOG_ENABLED = false;
@@ -4485,7 +4495,7 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
   //
   if (at_eof()) { return EMPTY; }
   log_start_value("document");
-  SIMDJSON_TRY( visitor.visit_document_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_start(*this) );
 
   //
   // Read first value
@@ -4503,9 +4513,9 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
     }
 
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
     }
   }
   goto document_end;
@@ -4518,13 +4528,13 @@ object_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = false;
-  SIMDJSON_TRY( visitor.visit_object_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_object_start(*this) );
 
   {
     auto key = advance();
     if (*key != '"') { log_error("Object does not start with a key"); return TAPE_ERROR; }
-    SIMDJSON_TRY( visitor.increment_count(*this) );
-    SIMDJSON_TRY( visitor.visit_key(*this, key) );
+    _SIMDJSON_TRY( visitor.increment_count(*this) );
+    _SIMDJSON_TRY( visitor.visit_key(*this, key) );
   }
 
 object_field:
@@ -4532,23 +4542,23 @@ object_field:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 object_continue:
   switch (*advance()) {
     case ',':
-      SIMDJSON_TRY( visitor.increment_count(*this) );
+      _SIMDJSON_TRY( visitor.increment_count(*this) );
       {
         auto key = advance();
         if (simdjson_unlikely( *key != '"' )) { log_error("Key string missing at beginning of field in object"); return TAPE_ERROR; }
-        SIMDJSON_TRY( visitor.visit_key(*this, key) );
+        _SIMDJSON_TRY( visitor.visit_key(*this, key) );
       }
       goto object_field;
-    case '}': log_end_value("object"); SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
+    case '}': log_end_value("object"); _SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
     default: log_error("No comma between object fields"); return TAPE_ERROR;
   }
 
@@ -4566,29 +4576,29 @@ array_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = true;
-  SIMDJSON_TRY( visitor.visit_array_start(*this) );
-  SIMDJSON_TRY( visitor.increment_count(*this) );
+  _SIMDJSON_TRY( visitor.visit_array_start(*this) );
+  _SIMDJSON_TRY( visitor.increment_count(*this) );
 
 array_value:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 array_continue:
   switch (*advance()) {
-    case ',': SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
-    case ']': log_end_value("array"); SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
+    case ',': _SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
+    case ']': log_end_value("array"); _SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
     default: log_error("Missing comma between array values"); return TAPE_ERROR;
   }
 
 document_end:
   log_end_value("document");
-  SIMDJSON_TRY( visitor.visit_document_end(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_end(*this) );
 
   dom_parser.next_structural_index = uint32_t(next_structural - &dom_parser.structural_indexes[0]);
 
@@ -4786,9 +4796,6 @@ simdjson_inline void tape_writer::write(uint64_t &tape_loc, uint64_t val, intern
   tape_loc = val | ((uint64_t(char(t))) << 56);
 }
 
-
-
-
 } // namespace stage2
 } // unnamed namespace
 
@@ -4797,6 +4804,7 @@ simdjson_warn_unused _simdjson::error_code dom_parser_implementation::parse_numb
 
     return arm64::numberparsing::parse_number(src, writer);
 }
+
 } // namespace arm64
 } // namespace _simdjson
 /* end file src/generic/stage2/tape_writer.h */
@@ -4967,7 +4975,7 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   //
   // We need to make a copy to make sure that the string is space terminated.
   // This is not about padding the input, which should already padded up
-  // to len + SIMDJSON_PADDING. However, we have no control at this stage
+  // to len + _SIMDJSON_PADDING. However, we have no control at this stage
   // on how the padding was done. What if the input string was padded with nulls?
   // It is quite common for an input string to have an extra null character (C string).
   // We do not want to allow 9\0 (where \0 is the null character) inside a JSON
@@ -4977,10 +4985,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   // practice unless you are in the strange scenario where you have many JSON
   // documents made of single atoms.
   //
-  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + SIMDJSON_PADDING]);
+  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + _SIMDJSON_PADDING]);
   if (copy.get() == nullptr) { return MEMALLOC; }
   std::memcpy(copy.get(), value, iter.remaining_len());
-  std::memset(copy.get() + iter.remaining_len(), ' ', SIMDJSON_PADDING);
+  std::memset(copy.get() + iter.remaining_len(), ' ', _SIMDJSON_PADDING);
   error_code error = visit_number(iter, copy.get());
   return error;
 }
@@ -5126,6 +5134,7 @@ simdjson_warn_unused error_code dom_parser_implementation::stage2_next(dom::docu
 simdjson_warn_unused uint8_t *dom_parser_implementation::parse_string(const uint8_t *src, uint8_t *dst) const noexcept {
   return arm64::stringparsing::parse_string(src, dst);
 }
+
 simdjson_warn_unused bool dom_parser_implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
     return arm64::atomparsing::is_valid_true_atom(src, len);
 }
@@ -5144,6 +5153,7 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
   return stage2(_doc);
 }
 
+
 } // namespace arm64
 } // namespace _simdjson
 
@@ -5151,13 +5161,12 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 /* end file include/simdjson/arm64/end.h */
 /* end file src/arm64/dom_parser_implementation.cpp */
 #endif
-#if SIMDJSON_IMPLEMENTATION_FALLBACK
+#if _SIMDJSON_IMPLEMENTATION_FALLBACK
 /* begin file src/fallback/implementation.cpp */
 /* begin file include/simdjson/fallback/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "fallback"
-// #define SIMDJSON_IMPLEMENTATION fallback
+// redefining _SIMDJSON_IMPLEMENTATION to "fallback"
+// #define _SIMDJSON_IMPLEMENTATION fallback
 /* end file include/simdjson/fallback/begin.h */
-
 namespace _simdjson {
 namespace fallback {
 
@@ -5183,8 +5192,8 @@ simdjson_warn_unused error_code implementation::create_dom_parser_implementation
 /* end file src/fallback/implementation.cpp */
 /* begin file src/fallback/dom_parser_implementation.cpp */
 /* begin file include/simdjson/fallback/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "fallback"
-// #define SIMDJSON_IMPLEMENTATION fallback
+// redefining _SIMDJSON_IMPLEMENTATION to "fallback"
+// #define _SIMDJSON_IMPLEMENTATION fallback
 /* end file include/simdjson/fallback/begin.h */
 
 //
@@ -5683,22 +5692,25 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
   // outside the Basic
   // Multilingual Plane.
   if (code_point >= 0xd800 && code_point < 0xdc00) {
-    if (((*src_ptr)[0] != '\\') || (*src_ptr)[1] != 'u') {
+    const uint8_t *src_data = *src_ptr;
+    /* Compiler optimizations convert this to a single 16-bit load and compare on most platforms */
+    if (((src_data[0] << 8) | src_data[1]) != ((static_cast<uint8_t> ('\\') << 8) | static_cast<uint8_t> ('u'))) {
       return false;
     }
-    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(*src_ptr + 2);
+    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(src_data + 2);
 
-    // if the first code point is invalid we will get here, as we will go past
-    // the check for being outside the Basic Multilingual plane. If we don't
-    // find a \u immediately afterwards we fail out anyhow, but if we do,
-    // this check catches both the case of the first code point being invalid
-    // or the second code point being invalid.
-    if ((code_point | code_point_2) >> 16) {
+    // We have already checked that the high surrogate is valid and
+    // (code_point - 0xd800) < 1024.
+    //
+    // Check that code_point_2 is in the range 0xdc00..0xdfff
+    // and that code_point_2 was parsed from valid hex.
+    uint32_t low_bit = code_point_2 - 0xdc00;
+    if (low_bit >> 10) {
       return false;
     }
 
     code_point =
-        (((code_point - 0xd800) << 10) | (code_point_2 - 0xdc00)) + 0x10000;
+        (((code_point - 0xd800) << 10) | low_bit) + 0x10000;
     *src_ptr += 6;
   } else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
       // If we encounter a low surrogate (not preceded by a high surrogate)
@@ -5716,7 +5728,7 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
  * position as pointer. In case of error (e.g., the string has bad escaped codes),
  * then null_nullptrptr is returned. It is assumed that the output buffer is large
  * enough. E.g., if src points at 'joe"', then dst needs to have four free bytes +
- * SIMDJSON_PADDING bytes.
+ * _SIMDJSON_PADDING bytes.
  */
 simdjson_warn_unused simdjson_inline uint8_t *parse_string(const uint8_t *src, uint8_t *dst) {
   while (1) {
@@ -5781,7 +5793,7 @@ namespace logger {
 
   static constexpr const char * DASHES = "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
 
-#if SIMDJSON_VERBOSE_LOGGING
+#if _SIMDJSON_VERBOSE_LOGGING
   static constexpr const bool LOG_ENABLED = true;
 #else
   static constexpr const bool LOG_ENABLED = false;
@@ -5979,7 +5991,7 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
   //
   if (at_eof()) { return EMPTY; }
   log_start_value("document");
-  SIMDJSON_TRY( visitor.visit_document_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_start(*this) );
 
   //
   // Read first value
@@ -5997,9 +6009,9 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
     }
 
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
     }
   }
   goto document_end;
@@ -6012,13 +6024,13 @@ object_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = false;
-  SIMDJSON_TRY( visitor.visit_object_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_object_start(*this) );
 
   {
     auto key = advance();
     if (*key != '"') { log_error("Object does not start with a key"); return TAPE_ERROR; }
-    SIMDJSON_TRY( visitor.increment_count(*this) );
-    SIMDJSON_TRY( visitor.visit_key(*this, key) );
+    _SIMDJSON_TRY( visitor.increment_count(*this) );
+    _SIMDJSON_TRY( visitor.visit_key(*this, key) );
   }
 
 object_field:
@@ -6026,23 +6038,23 @@ object_field:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 object_continue:
   switch (*advance()) {
     case ',':
-      SIMDJSON_TRY( visitor.increment_count(*this) );
+      _SIMDJSON_TRY( visitor.increment_count(*this) );
       {
         auto key = advance();
         if (simdjson_unlikely( *key != '"' )) { log_error("Key string missing at beginning of field in object"); return TAPE_ERROR; }
-        SIMDJSON_TRY( visitor.visit_key(*this, key) );
+        _SIMDJSON_TRY( visitor.visit_key(*this, key) );
       }
       goto object_field;
-    case '}': log_end_value("object"); SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
+    case '}': log_end_value("object"); _SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
     default: log_error("No comma between object fields"); return TAPE_ERROR;
   }
 
@@ -6060,29 +6072,29 @@ array_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = true;
-  SIMDJSON_TRY( visitor.visit_array_start(*this) );
-  SIMDJSON_TRY( visitor.increment_count(*this) );
+  _SIMDJSON_TRY( visitor.visit_array_start(*this) );
+  _SIMDJSON_TRY( visitor.increment_count(*this) );
 
 array_value:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 array_continue:
   switch (*advance()) {
-    case ',': SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
-    case ']': log_end_value("array"); SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
+    case ',': _SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
+    case ']': log_end_value("array"); _SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
     default: log_error("Missing comma between array values"); return TAPE_ERROR;
   }
 
 document_end:
   log_end_value("document");
-  SIMDJSON_TRY( visitor.visit_document_end(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_end(*this) );
 
   dom_parser.next_structural_index = uint32_t(next_structural - &dom_parser.structural_indexes[0]);
 
@@ -6280,9 +6292,6 @@ simdjson_inline void tape_writer::write(uint64_t &tape_loc, uint64_t val, intern
   tape_loc = val | ((uint64_t(char(t))) << 56);
 }
 
-
-
-
 } // namespace stage2
 } // unnamed namespace
 
@@ -6291,6 +6300,7 @@ simdjson_warn_unused _simdjson::error_code dom_parser_implementation::parse_numb
 
     return fallback::numberparsing::parse_number(src, writer);
 }
+
 
 } // namespace fallback
 } // namespace _simdjson
@@ -6462,7 +6472,7 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   //
   // We need to make a copy to make sure that the string is space terminated.
   // This is not about padding the input, which should already padded up
-  // to len + SIMDJSON_PADDING. However, we have no control at this stage
+  // to len + _SIMDJSON_PADDING. However, we have no control at this stage
   // on how the padding was done. What if the input string was padded with nulls?
   // It is quite common for an input string to have an extra null character (C string).
   // We do not want to allow 9\0 (where \0 is the null character) inside a JSON
@@ -6472,10 +6482,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   // practice unless you are in the strange scenario where you have many JSON
   // documents made of single atoms.
   //
-  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + SIMDJSON_PADDING]);
+  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + _SIMDJSON_PADDING]);
   if (copy.get() == nullptr) { return MEMALLOC; }
   std::memcpy(copy.get(), value, iter.remaining_len());
-  std::memset(copy.get() + iter.remaining_len(), ' ', SIMDJSON_PADDING);
+  std::memset(copy.get() + iter.remaining_len(), ' ', _SIMDJSON_PADDING);
   error_code error = visit_number(iter, copy.get());
   return error;
 }
@@ -6593,6 +6603,7 @@ simdjson_warn_unused uint8_t *dom_parser_implementation::parse_string(const uint
   return fallback::stringparsing::parse_string(src, dst);
 }
 
+
 simdjson_warn_unused bool dom_parser_implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
     return fallback::atomparsing::is_valid_true_atom(src, len);
 }
@@ -6618,12 +6629,12 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 /* end file include/simdjson/fallback/end.h */
 /* end file src/fallback/dom_parser_implementation.cpp */
 #endif
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
+#if _SIMDJSON_IMPLEMENTATION_ICELAKE
 /* begin file src/icelake/implementation.cpp */
 /* begin file include/simdjson/icelake/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "icelake"
-// #define SIMDJSON_IMPLEMENTATION icelake
-SIMDJSON_TARGET_ICELAKE
+// redefining _SIMDJSON_IMPLEMENTATION to "icelake"
+// #define _SIMDJSON_IMPLEMENTATION icelake
+_SIMDJSON_TARGET_ICELAKE
 /* end file include/simdjson/icelake/begin.h */
 
 namespace _simdjson {
@@ -6647,15 +6658,15 @@ simdjson_warn_unused error_code implementation::create_dom_parser_implementation
 } // namespace _simdjson
 
 /* begin file include/simdjson/icelake/end.h */
-SIMDJSON_UNTARGET_ICELAKE
+_SIMDJSON_UNTARGET_ICELAKE
 /* end file include/simdjson/icelake/end.h */
 
 /* end file src/icelake/implementation.cpp */
 /* begin file src/icelake/dom_parser_implementation.cpp */
 /* begin file include/simdjson/icelake/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "icelake"
-// #define SIMDJSON_IMPLEMENTATION icelake
-SIMDJSON_TARGET_ICELAKE
+// redefining _SIMDJSON_IMPLEMENTATION to "icelake"
+// #define _SIMDJSON_IMPLEMENTATION icelake
+_SIMDJSON_TARGET_ICELAKE
 /* end file include/simdjson/icelake/begin.h */
 
 //
@@ -6874,7 +6885,7 @@ using namespace simd;
   simdjson_inline simd8<uint8_t> is_incomplete(const simd8<uint8_t> input) {
     // If the previous input's last 3 bytes match this, they're too short (they ended at EOF):
     // ... 1111____ 111_____ 11______
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
+#if _SIMDJSON_IMPLEMENTATION_ICELAKE
     static const uint8_t max_array[64] = {
       255, 255, 255, 255, 255, 255, 255, 255,
       255, 255, 255, 255, 255, 255, 255, 255,
@@ -6925,6 +6936,14 @@ using namespace simd;
       this->error |= this->prev_incomplete;
     }
 
+#ifndef _SIMDJSON_IF_CONSTEXPR
+#if _SIMDJSON_CPLUSPLUS17
+#define _SIMDJSON_IF_CONSTEXPR if constexpr
+#else
+#define _SIMDJSON_IF_CONSTEXPR if
+#endif
+#endif
+
     simdjson_inline void check_next_input(const simd8x64<uint8_t>& input) {
       if(simdjson_likely(is_ascii(input))) {
         this->error |= this->prev_incomplete;
@@ -6934,12 +6953,12 @@ using namespace simd;
                 ||(simd8x64<uint8_t>::NUM_CHUNKS == 2)
                 || (simd8x64<uint8_t>::NUM_CHUNKS == 4),
                 "We support one, two or four chunks per 64-byte block.");
-        if(simd8x64<uint8_t>::NUM_CHUNKS == 1) {
+        _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 1) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
-        } if(simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-        } else if(simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
           this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
@@ -6963,8 +6982,8 @@ using utf8_validation::utf8_checker;
 } // namespace icelake
 } // namespace _simdjson
 /* end file src/generic/stage1/utf8_lookup4_algorithm.h */
-// defining SIMDJSON_CUSTOM_BIT_INDEXER allows us to provide our own bit_indexer::write
-#define SIMDJSON_CUSTOM_BIT_INDEXER
+// defining _SIMDJSON_CUSTOM_BIT_INDEXER allows us to provide our own bit_indexer::write
+#define _SIMDJSON_CUSTOM_BIT_INDEXER
 /* begin file src/generic/stage1/json_structural_indexer.h */
 // This file contains the common code every implementation uses in stage1
 // It is intended to be included multiple times and compiled multiple times
@@ -7319,7 +7338,7 @@ private:
  */
 class json_scanner {
 public:
-  json_scanner() {}
+  json_scanner() = default;
   simdjson_inline json_block next(const simd::simd8x64<uint8_t>& in);
   // Returns either UNCLOSED_STRING or SUCCESS
   simdjson_inline error_code finish();
@@ -7587,9 +7606,9 @@ public:
   // will potentially store extra values beyond end of valid bits, so base_ptr
   // needs to be large enough to handle this
   //
-  // If the kernel sets SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
+  // If the kernel sets _SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
   // version of the code.
-#ifdef SIMDJSON_CUSTOM_BIT_INDEXER
+#ifdef _SIMDJSON_CUSTOM_BIT_INDEXER
   simdjson_inline void write(uint32_t idx, uint64_t bits);
 #else
   simdjson_inline void write(uint32_t idx, uint64_t bits) {
@@ -7598,7 +7617,7 @@ public:
     // it helps tremendously.
     if (bits == 0)
         return;
-#if defined(SIMDJSON_PREFER_REVERSE_BITS)
+#if _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * ARM lacks a fast trailing zero instruction, but it has a fast
      * bit reversal instruction and a fast leading zero instruction.
@@ -7646,7 +7665,7 @@ public:
       }
     }
     this->tail += cnt;
-#else // SIMDJSON_PREFER_REVERSE_BITS
+#else // _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * Under recent x64 systems, we often have both a fast trailing zero
      * instruction and a fast 'clear-lower-bit' instruction so the following
@@ -7684,7 +7703,7 @@ public:
     this->tail += cnt;
 #endif
   }
-#endif // SIMDJSON_CUSTOM_BIT_INDEXER
+#endif // _SIMDJSON_CUSTOM_BIT_INDEXER
 
 };
 
@@ -7915,7 +7934,7 @@ simdjson_inline error_code json_structural_indexer::finish(dom_parser_implementa
 } // namespace _simdjson
 /* end file src/generic/stage1/json_structural_indexer.h */
 // We must not forget to undefine it now:
-#undef SIMDJSON_CUSTOM_BIT_INDEXER
+#undef _SIMDJSON_CUSTOM_BIT_INDEXER
 
 /**
  * We provide a custom version of bit_indexer::write using
@@ -7924,7 +7943,7 @@ simdjson_inline error_code json_structural_indexer::finish(dom_parser_implementa
  */
 // Under GCC 12, the intrinsic _mm512_extracti32x4_epi32 may generate 'maybe uninitialized'.
 // as a workaround, we disable warnings within the following function.
-SIMDJSON_PUSH_DISABLE_ALL_WARNINGS
+_SIMDJSON_PUSH_DISABLE_ALL_WARNINGS
 namespace _simdjson { namespace icelake { namespace { namespace stage1 {
 simdjson_inline void bit_indexer::write(uint32_t idx, uint64_t bits) {
     // In some instances, the next branch is expensive because it is mispredicted.
@@ -7959,7 +7978,7 @@ simdjson_inline void bit_indexer::write(uint32_t idx, uint64_t bits) {
     this->tail += count;
 }
 }}}}
-SIMDJSON_POP_DISABLE_WARNINGS
+_SIMDJSON_POP_DISABLE_WARNINGS
 
 /* begin file src/generic/stage1/utf8_validator.h */
 namespace _simdjson {
@@ -8057,22 +8076,25 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
   // outside the Basic
   // Multilingual Plane.
   if (code_point >= 0xd800 && code_point < 0xdc00) {
-    if (((*src_ptr)[0] != '\\') || (*src_ptr)[1] != 'u') {
+    const uint8_t *src_data = *src_ptr;
+    /* Compiler optimizations convert this to a single 16-bit load and compare on most platforms */
+    if (((src_data[0] << 8) | src_data[1]) != ((static_cast<uint8_t> ('\\') << 8) | static_cast<uint8_t> ('u'))) {
       return false;
     }
-    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(*src_ptr + 2);
+    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(src_data + 2);
 
-    // if the first code point is invalid we will get here, as we will go past
-    // the check for being outside the Basic Multilingual plane. If we don't
-    // find a \u immediately afterwards we fail out anyhow, but if we do,
-    // this check catches both the case of the first code point being invalid
-    // or the second code point being invalid.
-    if ((code_point | code_point_2) >> 16) {
+    // We have already checked that the high surrogate is valid and
+    // (code_point - 0xd800) < 1024.
+    //
+    // Check that code_point_2 is in the range 0xdc00..0xdfff
+    // and that code_point_2 was parsed from valid hex.
+    uint32_t low_bit = code_point_2 - 0xdc00;
+    if (low_bit >> 10) {
       return false;
     }
 
     code_point =
-        (((code_point - 0xd800) << 10) | (code_point_2 - 0xdc00)) + 0x10000;
+        (((code_point - 0xd800) << 10) | low_bit) + 0x10000;
     *src_ptr += 6;
   } else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
       // If we encounter a low surrogate (not preceded by a high surrogate)
@@ -8090,7 +8112,7 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
  * position as pointer. In case of error (e.g., the string has bad escaped codes),
  * then null_nullptrptr is returned. It is assumed that the output buffer is large
  * enough. E.g., if src points at 'joe"', then dst needs to have four free bytes +
- * SIMDJSON_PADDING bytes.
+ * _SIMDJSON_PADDING bytes.
  */
 simdjson_warn_unused simdjson_inline uint8_t *parse_string(const uint8_t *src, uint8_t *dst) {
   while (1) {
@@ -8155,7 +8177,7 @@ namespace logger {
 
   static constexpr const char * DASHES = "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
 
-#if SIMDJSON_VERBOSE_LOGGING
+#if _SIMDJSON_VERBOSE_LOGGING
   static constexpr const bool LOG_ENABLED = true;
 #else
   static constexpr const bool LOG_ENABLED = false;
@@ -8353,7 +8375,7 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
   //
   if (at_eof()) { return EMPTY; }
   log_start_value("document");
-  SIMDJSON_TRY( visitor.visit_document_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_start(*this) );
 
   //
   // Read first value
@@ -8371,9 +8393,9 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
     }
 
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
     }
   }
   goto document_end;
@@ -8386,13 +8408,13 @@ object_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = false;
-  SIMDJSON_TRY( visitor.visit_object_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_object_start(*this) );
 
   {
     auto key = advance();
     if (*key != '"') { log_error("Object does not start with a key"); return TAPE_ERROR; }
-    SIMDJSON_TRY( visitor.increment_count(*this) );
-    SIMDJSON_TRY( visitor.visit_key(*this, key) );
+    _SIMDJSON_TRY( visitor.increment_count(*this) );
+    _SIMDJSON_TRY( visitor.visit_key(*this, key) );
   }
 
 object_field:
@@ -8400,23 +8422,23 @@ object_field:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 object_continue:
   switch (*advance()) {
     case ',':
-      SIMDJSON_TRY( visitor.increment_count(*this) );
+      _SIMDJSON_TRY( visitor.increment_count(*this) );
       {
         auto key = advance();
         if (simdjson_unlikely( *key != '"' )) { log_error("Key string missing at beginning of field in object"); return TAPE_ERROR; }
-        SIMDJSON_TRY( visitor.visit_key(*this, key) );
+        _SIMDJSON_TRY( visitor.visit_key(*this, key) );
       }
       goto object_field;
-    case '}': log_end_value("object"); SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
+    case '}': log_end_value("object"); _SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
     default: log_error("No comma between object fields"); return TAPE_ERROR;
   }
 
@@ -8434,29 +8456,29 @@ array_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = true;
-  SIMDJSON_TRY( visitor.visit_array_start(*this) );
-  SIMDJSON_TRY( visitor.increment_count(*this) );
+  _SIMDJSON_TRY( visitor.visit_array_start(*this) );
+  _SIMDJSON_TRY( visitor.increment_count(*this) );
 
 array_value:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 array_continue:
   switch (*advance()) {
-    case ',': SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
-    case ']': log_end_value("array"); SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
+    case ',': _SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
+    case ']': log_end_value("array"); _SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
     default: log_error("Missing comma between array values"); return TAPE_ERROR;
   }
 
 document_end:
   log_end_value("document");
-  SIMDJSON_TRY( visitor.visit_document_end(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_end(*this) );
 
   dom_parser.next_structural_index = uint32_t(next_structural - &dom_parser.structural_indexes[0]);
 
@@ -8833,7 +8855,7 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   //
   // We need to make a copy to make sure that the string is space terminated.
   // This is not about padding the input, which should already padded up
-  // to len + SIMDJSON_PADDING. However, we have no control at this stage
+  // to len + _SIMDJSON_PADDING. However, we have no control at this stage
   // on how the padding was done. What if the input string was padded with nulls?
   // It is quite common for an input string to have an extra null character (C string).
   // We do not want to allow 9\0 (where \0 is the null character) inside a JSON
@@ -8843,10 +8865,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   // practice unless you are in the strange scenario where you have many JSON
   // documents made of single atoms.
   //
-  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + SIMDJSON_PADDING]);
+  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + _SIMDJSON_PADDING]);
   if (copy.get() == nullptr) { return MEMALLOC; }
   std::memcpy(copy.get(), value, iter.remaining_len());
-  std::memset(copy.get() + iter.remaining_len(), ' ', SIMDJSON_PADDING);
+  std::memset(copy.get() + iter.remaining_len(), ' ', _SIMDJSON_PADDING);
   error_code error = visit_number(iter, copy.get());
   return error;
 }
@@ -8990,6 +9012,7 @@ simdjson_warn_unused error_code dom_parser_implementation::stage2_next(dom::docu
 simdjson_warn_unused uint8_t *dom_parser_implementation::parse_string(const uint8_t *src, uint8_t *dst) const noexcept {
   return icelake::stringparsing::parse_string(src, dst);
 }
+
 simdjson_warn_unused bool dom_parser_implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
     return icelake::atomparsing::is_valid_true_atom(src, len);
 }
@@ -9013,16 +9036,16 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 } // namespace _simdjson
 
 /* begin file include/simdjson/icelake/end.h */
-SIMDJSON_UNTARGET_ICELAKE
+_SIMDJSON_UNTARGET_ICELAKE
 /* end file include/simdjson/icelake/end.h */
 /* end file src/icelake/dom_parser_implementation.cpp */
 #endif
-#if SIMDJSON_IMPLEMENTATION_HASWELL
+#if _SIMDJSON_IMPLEMENTATION_HASWELL
 /* begin file src/haswell/implementation.cpp */
 /* begin file include/simdjson/haswell/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "haswell"
-// #define SIMDJSON_IMPLEMENTATION haswell
-SIMDJSON_TARGET_HASWELL
+// redefining _SIMDJSON_IMPLEMENTATION to "haswell"
+// #define _SIMDJSON_IMPLEMENTATION haswell
+_SIMDJSON_TARGET_HASWELL
 /* end file include/simdjson/haswell/begin.h */
 
 namespace _simdjson {
@@ -9046,15 +9069,15 @@ simdjson_warn_unused error_code implementation::create_dom_parser_implementation
 } // namespace _simdjson
 
 /* begin file include/simdjson/haswell/end.h */
-SIMDJSON_UNTARGET_HASWELL
+_SIMDJSON_UNTARGET_HASWELL
 /* end file include/simdjson/haswell/end.h */
 
 /* end file src/haswell/implementation.cpp */
 /* begin file src/haswell/dom_parser_implementation.cpp */
 /* begin file include/simdjson/haswell/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "haswell"
-// #define SIMDJSON_IMPLEMENTATION haswell
-SIMDJSON_TARGET_HASWELL
+// redefining _SIMDJSON_IMPLEMENTATION to "haswell"
+// #define _SIMDJSON_IMPLEMENTATION haswell
+_SIMDJSON_TARGET_HASWELL
 /* end file include/simdjson/haswell/begin.h */
 
 //
@@ -9276,7 +9299,7 @@ using namespace simd;
   simdjson_inline simd8<uint8_t> is_incomplete(const simd8<uint8_t> input) {
     // If the previous input's last 3 bytes match this, they're too short (they ended at EOF):
     // ... 1111____ 111_____ 11______
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
+#if _SIMDJSON_IMPLEMENTATION_ICELAKE
     static const uint8_t max_array[64] = {
       255, 255, 255, 255, 255, 255, 255, 255,
       255, 255, 255, 255, 255, 255, 255, 255,
@@ -9327,6 +9350,14 @@ using namespace simd;
       this->error |= this->prev_incomplete;
     }
 
+#ifndef _SIMDJSON_IF_CONSTEXPR
+#if _SIMDJSON_CPLUSPLUS17
+#define _SIMDJSON_IF_CONSTEXPR if constexpr
+#else
+#define _SIMDJSON_IF_CONSTEXPR if
+#endif
+#endif
+
     simdjson_inline void check_next_input(const simd8x64<uint8_t>& input) {
       if(simdjson_likely(is_ascii(input))) {
         this->error |= this->prev_incomplete;
@@ -9336,12 +9367,12 @@ using namespace simd;
                 ||(simd8x64<uint8_t>::NUM_CHUNKS == 2)
                 || (simd8x64<uint8_t>::NUM_CHUNKS == 4),
                 "We support one, two or four chunks per 64-byte block.");
-        if(simd8x64<uint8_t>::NUM_CHUNKS == 1) {
+        _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 1) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
-        } if(simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-        } else if(simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
           this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
@@ -9719,7 +9750,7 @@ private:
  */
 class json_scanner {
 public:
-  json_scanner() {}
+  json_scanner() = default;
   simdjson_inline json_block next(const simd::simd8x64<uint8_t>& in);
   // Returns either UNCLOSED_STRING or SUCCESS
   simdjson_inline error_code finish();
@@ -9987,9 +10018,9 @@ public:
   // will potentially store extra values beyond end of valid bits, so base_ptr
   // needs to be large enough to handle this
   //
-  // If the kernel sets SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
+  // If the kernel sets _SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
   // version of the code.
-#ifdef SIMDJSON_CUSTOM_BIT_INDEXER
+#ifdef _SIMDJSON_CUSTOM_BIT_INDEXER
   simdjson_inline void write(uint32_t idx, uint64_t bits);
 #else
   simdjson_inline void write(uint32_t idx, uint64_t bits) {
@@ -9998,7 +10029,7 @@ public:
     // it helps tremendously.
     if (bits == 0)
         return;
-#if defined(SIMDJSON_PREFER_REVERSE_BITS)
+#if _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * ARM lacks a fast trailing zero instruction, but it has a fast
      * bit reversal instruction and a fast leading zero instruction.
@@ -10046,7 +10077,7 @@ public:
       }
     }
     this->tail += cnt;
-#else // SIMDJSON_PREFER_REVERSE_BITS
+#else // _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * Under recent x64 systems, we often have both a fast trailing zero
      * instruction and a fast 'clear-lower-bit' instruction so the following
@@ -10084,7 +10115,7 @@ public:
     this->tail += cnt;
 #endif
   }
-#endif // SIMDJSON_CUSTOM_BIT_INDEXER
+#endif // _SIMDJSON_CUSTOM_BIT_INDEXER
 
 };
 
@@ -10410,22 +10441,25 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
   // outside the Basic
   // Multilingual Plane.
   if (code_point >= 0xd800 && code_point < 0xdc00) {
-    if (((*src_ptr)[0] != '\\') || (*src_ptr)[1] != 'u') {
+    const uint8_t *src_data = *src_ptr;
+    /* Compiler optimizations convert this to a single 16-bit load and compare on most platforms */
+    if (((src_data[0] << 8) | src_data[1]) != ((static_cast<uint8_t> ('\\') << 8) | static_cast<uint8_t> ('u'))) {
       return false;
     }
-    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(*src_ptr + 2);
+    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(src_data + 2);
 
-    // if the first code point is invalid we will get here, as we will go past
-    // the check for being outside the Basic Multilingual plane. If we don't
-    // find a \u immediately afterwards we fail out anyhow, but if we do,
-    // this check catches both the case of the first code point being invalid
-    // or the second code point being invalid.
-    if ((code_point | code_point_2) >> 16) {
+    // We have already checked that the high surrogate is valid and
+    // (code_point - 0xd800) < 1024.
+    //
+    // Check that code_point_2 is in the range 0xdc00..0xdfff
+    // and that code_point_2 was parsed from valid hex.
+    uint32_t low_bit = code_point_2 - 0xdc00;
+    if (low_bit >> 10) {
       return false;
     }
 
     code_point =
-        (((code_point - 0xd800) << 10) | (code_point_2 - 0xdc00)) + 0x10000;
+        (((code_point - 0xd800) << 10) | low_bit) + 0x10000;
     *src_ptr += 6;
   } else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
       // If we encounter a low surrogate (not preceded by a high surrogate)
@@ -10443,7 +10477,7 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
  * position as pointer. In case of error (e.g., the string has bad escaped codes),
  * then null_nullptrptr is returned. It is assumed that the output buffer is large
  * enough. E.g., if src points at 'joe"', then dst needs to have four free bytes +
- * SIMDJSON_PADDING bytes.
+ * _SIMDJSON_PADDING bytes.
  */
 simdjson_warn_unused simdjson_inline uint8_t *parse_string(const uint8_t *src, uint8_t *dst) {
   while (1) {
@@ -10508,7 +10542,7 @@ namespace logger {
 
   static constexpr const char * DASHES = "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
 
-#if SIMDJSON_VERBOSE_LOGGING
+#if _SIMDJSON_VERBOSE_LOGGING
   static constexpr const bool LOG_ENABLED = true;
 #else
   static constexpr const bool LOG_ENABLED = false;
@@ -10706,7 +10740,7 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
   //
   if (at_eof()) { return EMPTY; }
   log_start_value("document");
-  SIMDJSON_TRY( visitor.visit_document_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_start(*this) );
 
   //
   // Read first value
@@ -10724,9 +10758,9 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
     }
 
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
     }
   }
   goto document_end;
@@ -10739,13 +10773,13 @@ object_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = false;
-  SIMDJSON_TRY( visitor.visit_object_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_object_start(*this) );
 
   {
     auto key = advance();
     if (*key != '"') { log_error("Object does not start with a key"); return TAPE_ERROR; }
-    SIMDJSON_TRY( visitor.increment_count(*this) );
-    SIMDJSON_TRY( visitor.visit_key(*this, key) );
+    _SIMDJSON_TRY( visitor.increment_count(*this) );
+    _SIMDJSON_TRY( visitor.visit_key(*this, key) );
   }
 
 object_field:
@@ -10753,23 +10787,23 @@ object_field:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 object_continue:
   switch (*advance()) {
     case ',':
-      SIMDJSON_TRY( visitor.increment_count(*this) );
+      _SIMDJSON_TRY( visitor.increment_count(*this) );
       {
         auto key = advance();
         if (simdjson_unlikely( *key != '"' )) { log_error("Key string missing at beginning of field in object"); return TAPE_ERROR; }
-        SIMDJSON_TRY( visitor.visit_key(*this, key) );
+        _SIMDJSON_TRY( visitor.visit_key(*this, key) );
       }
       goto object_field;
-    case '}': log_end_value("object"); SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
+    case '}': log_end_value("object"); _SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
     default: log_error("No comma between object fields"); return TAPE_ERROR;
   }
 
@@ -10787,29 +10821,29 @@ array_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = true;
-  SIMDJSON_TRY( visitor.visit_array_start(*this) );
-  SIMDJSON_TRY( visitor.increment_count(*this) );
+  _SIMDJSON_TRY( visitor.visit_array_start(*this) );
+  _SIMDJSON_TRY( visitor.increment_count(*this) );
 
 array_value:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 array_continue:
   switch (*advance()) {
-    case ',': SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
-    case ']': log_end_value("array"); SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
+    case ',': _SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
+    case ']': log_end_value("array"); _SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
     default: log_error("Missing comma between array values"); return TAPE_ERROR;
   }
 
 document_end:
   log_end_value("document");
-  SIMDJSON_TRY( visitor.visit_document_end(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_end(*this) );
 
   dom_parser.next_structural_index = uint32_t(next_structural - &dom_parser.structural_indexes[0]);
 
@@ -11009,11 +11043,13 @@ simdjson_inline void tape_writer::write(uint64_t &tape_loc, uint64_t val, intern
 
 } // namespace stage2
 } // unnamed namespace
+
 simdjson_warn_unused _simdjson::error_code dom_parser_implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
     stage2::tape_writer writer{ buf };
 
     return haswell::numberparsing::parse_number(src, writer);
 }
+
 } // namespace haswell
 } // namespace _simdjson
 /* end file src/generic/stage2/tape_writer.h */
@@ -11184,7 +11220,7 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   //
   // We need to make a copy to make sure that the string is space terminated.
   // This is not about padding the input, which should already padded up
-  // to len + SIMDJSON_PADDING. However, we have no control at this stage
+  // to len + _SIMDJSON_PADDING. However, we have no control at this stage
   // on how the padding was done. What if the input string was padded with nulls?
   // It is quite common for an input string to have an extra null character (C string).
   // We do not want to allow 9\0 (where \0 is the null character) inside a JSON
@@ -11194,10 +11230,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   // practice unless you are in the strange scenario where you have many JSON
   // documents made of single atoms.
   //
-  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + SIMDJSON_PADDING]);
+  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + _SIMDJSON_PADDING]);
   if (copy.get() == nullptr) { return MEMALLOC; }
   std::memcpy(copy.get(), value, iter.remaining_len());
-  std::memset(copy.get() + iter.remaining_len(), ' ', SIMDJSON_PADDING);
+  std::memset(copy.get() + iter.remaining_len(), ' ', _SIMDJSON_PADDING);
   error_code error = visit_number(iter, copy.get());
   return error;
 }
@@ -11341,6 +11377,8 @@ simdjson_warn_unused error_code dom_parser_implementation::stage2_next(dom::docu
 simdjson_warn_unused uint8_t *dom_parser_implementation::parse_string(const uint8_t *src, uint8_t *dst) const noexcept {
   return haswell::stringparsing::parse_string(src, dst);
 }
+
+
 simdjson_warn_unused bool dom_parser_implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
     return haswell::atomparsing::is_valid_true_atom(src, len);
 }
@@ -11359,19 +11397,20 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
   return stage2(_doc);
 }
 
+
 } // namespace haswell
 } // namespace _simdjson
 
 /* begin file include/simdjson/haswell/end.h */
-SIMDJSON_UNTARGET_HASWELL
+_SIMDJSON_UNTARGET_HASWELL
 /* end file include/simdjson/haswell/end.h */
 /* end file src/haswell/dom_parser_implementation.cpp */
 #endif
-#if SIMDJSON_IMPLEMENTATION_PPC64
+#if _SIMDJSON_IMPLEMENTATION_PPC64
 /* begin file src/ppc64/implementation.cpp */
 /* begin file include/simdjson/ppc64/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "ppc64"
-// #define SIMDJSON_IMPLEMENTATION ppc64
+// redefining _SIMDJSON_IMPLEMENTATION to "ppc64"
+// #define _SIMDJSON_IMPLEMENTATION ppc64
 /* end file include/simdjson/ppc64/begin.h */
 
 namespace _simdjson {
@@ -11399,8 +11438,8 @@ simdjson_warn_unused error_code implementation::create_dom_parser_implementation
 /* end file src/ppc64/implementation.cpp */
 /* begin file src/ppc64/dom_parser_implementation.cpp */
 /* begin file include/simdjson/ppc64/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "ppc64"
-// #define SIMDJSON_IMPLEMENTATION ppc64
+// redefining _SIMDJSON_IMPLEMENTATION to "ppc64"
+// #define _SIMDJSON_IMPLEMENTATION ppc64
 /* end file include/simdjson/ppc64/begin.h */
 
 //
@@ -11589,7 +11628,7 @@ using namespace simd;
   simdjson_inline simd8<uint8_t> is_incomplete(const simd8<uint8_t> input) {
     // If the previous input's last 3 bytes match this, they're too short (they ended at EOF):
     // ... 1111____ 111_____ 11______
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
+#if _SIMDJSON_IMPLEMENTATION_ICELAKE
     static const uint8_t max_array[64] = {
       255, 255, 255, 255, 255, 255, 255, 255,
       255, 255, 255, 255, 255, 255, 255, 255,
@@ -11640,6 +11679,14 @@ using namespace simd;
       this->error |= this->prev_incomplete;
     }
 
+#ifndef _SIMDJSON_IF_CONSTEXPR
+#if _SIMDJSON_CPLUSPLUS17
+#define _SIMDJSON_IF_CONSTEXPR if constexpr
+#else
+#define _SIMDJSON_IF_CONSTEXPR if
+#endif
+#endif
+
     simdjson_inline void check_next_input(const simd8x64<uint8_t>& input) {
       if(simdjson_likely(is_ascii(input))) {
         this->error |= this->prev_incomplete;
@@ -11649,12 +11696,12 @@ using namespace simd;
                 ||(simd8x64<uint8_t>::NUM_CHUNKS == 2)
                 || (simd8x64<uint8_t>::NUM_CHUNKS == 4),
                 "We support one, two or four chunks per 64-byte block.");
-        if(simd8x64<uint8_t>::NUM_CHUNKS == 1) {
+        _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 1) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
-        } if(simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-        } else if(simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
           this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
@@ -12032,7 +12079,7 @@ private:
  */
 class json_scanner {
 public:
-  json_scanner() {}
+  json_scanner() = default;
   simdjson_inline json_block next(const simd::simd8x64<uint8_t>& in);
   // Returns either UNCLOSED_STRING or SUCCESS
   simdjson_inline error_code finish();
@@ -12300,9 +12347,9 @@ public:
   // will potentially store extra values beyond end of valid bits, so base_ptr
   // needs to be large enough to handle this
   //
-  // If the kernel sets SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
+  // If the kernel sets _SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
   // version of the code.
-#ifdef SIMDJSON_CUSTOM_BIT_INDEXER
+#ifdef _SIMDJSON_CUSTOM_BIT_INDEXER
   simdjson_inline void write(uint32_t idx, uint64_t bits);
 #else
   simdjson_inline void write(uint32_t idx, uint64_t bits) {
@@ -12311,7 +12358,7 @@ public:
     // it helps tremendously.
     if (bits == 0)
         return;
-#if defined(SIMDJSON_PREFER_REVERSE_BITS)
+#if _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * ARM lacks a fast trailing zero instruction, but it has a fast
      * bit reversal instruction and a fast leading zero instruction.
@@ -12359,7 +12406,7 @@ public:
       }
     }
     this->tail += cnt;
-#else // SIMDJSON_PREFER_REVERSE_BITS
+#else // _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * Under recent x64 systems, we often have both a fast trailing zero
      * instruction and a fast 'clear-lower-bit' instruction so the following
@@ -12397,7 +12444,7 @@ public:
     this->tail += cnt;
 #endif
   }
-#endif // SIMDJSON_CUSTOM_BIT_INDEXER
+#endif // _SIMDJSON_CUSTOM_BIT_INDEXER
 
 };
 
@@ -12723,22 +12770,25 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
   // outside the Basic
   // Multilingual Plane.
   if (code_point >= 0xd800 && code_point < 0xdc00) {
-    if (((*src_ptr)[0] != '\\') || (*src_ptr)[1] != 'u') {
+    const uint8_t *src_data = *src_ptr;
+    /* Compiler optimizations convert this to a single 16-bit load and compare on most platforms */
+    if (((src_data[0] << 8) | src_data[1]) != ((static_cast<uint8_t> ('\\') << 8) | static_cast<uint8_t> ('u'))) {
       return false;
     }
-    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(*src_ptr + 2);
+    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(src_data + 2);
 
-    // if the first code point is invalid we will get here, as we will go past
-    // the check for being outside the Basic Multilingual plane. If we don't
-    // find a \u immediately afterwards we fail out anyhow, but if we do,
-    // this check catches both the case of the first code point being invalid
-    // or the second code point being invalid.
-    if ((code_point | code_point_2) >> 16) {
+    // We have already checked that the high surrogate is valid and
+    // (code_point - 0xd800) < 1024.
+    //
+    // Check that code_point_2 is in the range 0xdc00..0xdfff
+    // and that code_point_2 was parsed from valid hex.
+    uint32_t low_bit = code_point_2 - 0xdc00;
+    if (low_bit >> 10) {
       return false;
     }
 
     code_point =
-        (((code_point - 0xd800) << 10) | (code_point_2 - 0xdc00)) + 0x10000;
+        (((code_point - 0xd800) << 10) | low_bit) + 0x10000;
     *src_ptr += 6;
   } else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
       // If we encounter a low surrogate (not preceded by a high surrogate)
@@ -12756,7 +12806,7 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
  * position as pointer. In case of error (e.g., the string has bad escaped codes),
  * then null_nullptrptr is returned. It is assumed that the output buffer is large
  * enough. E.g., if src points at 'joe"', then dst needs to have four free bytes +
- * SIMDJSON_PADDING bytes.
+ * _SIMDJSON_PADDING bytes.
  */
 simdjson_warn_unused simdjson_inline uint8_t *parse_string(const uint8_t *src, uint8_t *dst) {
   while (1) {
@@ -12821,7 +12871,7 @@ namespace logger {
 
   static constexpr const char * DASHES = "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
 
-#if SIMDJSON_VERBOSE_LOGGING
+#if _SIMDJSON_VERBOSE_LOGGING
   static constexpr const bool LOG_ENABLED = true;
 #else
   static constexpr const bool LOG_ENABLED = false;
@@ -13019,7 +13069,7 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
   //
   if (at_eof()) { return EMPTY; }
   log_start_value("document");
-  SIMDJSON_TRY( visitor.visit_document_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_start(*this) );
 
   //
   // Read first value
@@ -13037,9 +13087,9 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
     }
 
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
     }
   }
   goto document_end;
@@ -13052,13 +13102,13 @@ object_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = false;
-  SIMDJSON_TRY( visitor.visit_object_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_object_start(*this) );
 
   {
     auto key = advance();
     if (*key != '"') { log_error("Object does not start with a key"); return TAPE_ERROR; }
-    SIMDJSON_TRY( visitor.increment_count(*this) );
-    SIMDJSON_TRY( visitor.visit_key(*this, key) );
+    _SIMDJSON_TRY( visitor.increment_count(*this) );
+    _SIMDJSON_TRY( visitor.visit_key(*this, key) );
   }
 
 object_field:
@@ -13066,23 +13116,23 @@ object_field:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 object_continue:
   switch (*advance()) {
     case ',':
-      SIMDJSON_TRY( visitor.increment_count(*this) );
+      _SIMDJSON_TRY( visitor.increment_count(*this) );
       {
         auto key = advance();
         if (simdjson_unlikely( *key != '"' )) { log_error("Key string missing at beginning of field in object"); return TAPE_ERROR; }
-        SIMDJSON_TRY( visitor.visit_key(*this, key) );
+        _SIMDJSON_TRY( visitor.visit_key(*this, key) );
       }
       goto object_field;
-    case '}': log_end_value("object"); SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
+    case '}': log_end_value("object"); _SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
     default: log_error("No comma between object fields"); return TAPE_ERROR;
   }
 
@@ -13100,29 +13150,29 @@ array_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = true;
-  SIMDJSON_TRY( visitor.visit_array_start(*this) );
-  SIMDJSON_TRY( visitor.increment_count(*this) );
+  _SIMDJSON_TRY( visitor.visit_array_start(*this) );
+  _SIMDJSON_TRY( visitor.increment_count(*this) );
 
 array_value:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 array_continue:
   switch (*advance()) {
-    case ',': SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
-    case ']': log_end_value("array"); SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
+    case ',': _SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
+    case ']': log_end_value("array"); _SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
     default: log_error("Missing comma between array values"); return TAPE_ERROR;
   }
 
 document_end:
   log_end_value("document");
-  SIMDJSON_TRY( visitor.visit_document_end(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_end(*this) );
 
   dom_parser.next_structural_index = uint32_t(next_structural - &dom_parser.structural_indexes[0]);
 
@@ -13322,11 +13372,13 @@ simdjson_inline void tape_writer::write(uint64_t &tape_loc, uint64_t val, intern
 
 } // namespace stage2
 } // unnamed namespace
+
 simdjson_warn_unused _simdjson::error_code dom_parser_implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
     stage2::tape_writer writer{ buf };
 
     return ppc64::numberparsing::parse_number(src, writer);
 }
+
 } // namespace ppc64
 } // namespace _simdjson
 /* end file src/generic/stage2/tape_writer.h */
@@ -13497,7 +13549,7 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   //
   // We need to make a copy to make sure that the string is space terminated.
   // This is not about padding the input, which should already padded up
-  // to len + SIMDJSON_PADDING. However, we have no control at this stage
+  // to len + _SIMDJSON_PADDING. However, we have no control at this stage
   // on how the padding was done. What if the input string was padded with nulls?
   // It is quite common for an input string to have an extra null character (C string).
   // We do not want to allow 9\0 (where \0 is the null character) inside a JSON
@@ -13507,10 +13559,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   // practice unless you are in the strange scenario where you have many JSON
   // documents made of single atoms.
   //
-  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + SIMDJSON_PADDING]);
+  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + _SIMDJSON_PADDING]);
   if (copy.get() == nullptr) { return MEMALLOC; }
   std::memcpy(copy.get(), value, iter.remaining_len());
-  std::memset(copy.get() + iter.remaining_len(), ' ', SIMDJSON_PADDING);
+  std::memset(copy.get() + iter.remaining_len(), ' ', _SIMDJSON_PADDING);
   error_code error = visit_number(iter, copy.get());
   return error;
 }
@@ -13656,6 +13708,7 @@ simdjson_warn_unused error_code dom_parser_implementation::stage2_next(dom::docu
 simdjson_warn_unused uint8_t *dom_parser_implementation::parse_string(const uint8_t *src, uint8_t *dst) const noexcept {
   return ppc64::stringparsing::parse_string(src, dst);
 }
+
 simdjson_warn_unused bool dom_parser_implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
     return ppc64::atomparsing::is_valid_true_atom(src, len);
 }
@@ -13674,6 +13727,7 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
   return stage2(_doc);
 }
 
+
 } // namespace ppc64
 } // namespace _simdjson
 
@@ -13681,12 +13735,12 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 /* end file include/simdjson/ppc64/end.h */
 /* end file src/ppc64/dom_parser_implementation.cpp */
 #endif
-#if SIMDJSON_IMPLEMENTATION_WESTMERE
+#if _SIMDJSON_IMPLEMENTATION_WESTMERE
 /* begin file src/westmere/implementation.cpp */
 /* begin file include/simdjson/westmere/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "westmere"
-// #define SIMDJSON_IMPLEMENTATION westmere
-SIMDJSON_TARGET_WESTMERE
+// redefining _SIMDJSON_IMPLEMENTATION to "westmere"
+// #define _SIMDJSON_IMPLEMENTATION westmere
+_SIMDJSON_TARGET_WESTMERE
 /* end file include/simdjson/westmere/begin.h */
 
 namespace _simdjson {
@@ -13710,14 +13764,14 @@ simdjson_warn_unused error_code implementation::create_dom_parser_implementation
 } // namespace _simdjson
 
 /* begin file include/simdjson/westmere/end.h */
-SIMDJSON_UNTARGET_WESTMERE
+_SIMDJSON_UNTARGET_WESTMERE
 /* end file include/simdjson/westmere/end.h */
 /* end file src/westmere/implementation.cpp */
 /* begin file src/westmere/dom_parser_implementation.cpp */
 /* begin file include/simdjson/westmere/begin.h */
-// redefining SIMDJSON_IMPLEMENTATION to "westmere"
-// #define SIMDJSON_IMPLEMENTATION westmere
-SIMDJSON_TARGET_WESTMERE
+// redefining _SIMDJSON_IMPLEMENTATION to "westmere"
+// #define _SIMDJSON_IMPLEMENTATION westmere
+_SIMDJSON_TARGET_WESTMERE
 /* end file include/simdjson/westmere/begin.h */
 
 //
@@ -13937,7 +13991,7 @@ using namespace simd;
   simdjson_inline simd8<uint8_t> is_incomplete(const simd8<uint8_t> input) {
     // If the previous input's last 3 bytes match this, they're too short (they ended at EOF):
     // ... 1111____ 111_____ 11______
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
+#if _SIMDJSON_IMPLEMENTATION_ICELAKE
     static const uint8_t max_array[64] = {
       255, 255, 255, 255, 255, 255, 255, 255,
       255, 255, 255, 255, 255, 255, 255, 255,
@@ -13988,6 +14042,14 @@ using namespace simd;
       this->error |= this->prev_incomplete;
     }
 
+#ifndef _SIMDJSON_IF_CONSTEXPR
+#if _SIMDJSON_CPLUSPLUS17
+#define _SIMDJSON_IF_CONSTEXPR if constexpr
+#else
+#define _SIMDJSON_IF_CONSTEXPR if
+#endif
+#endif
+
     simdjson_inline void check_next_input(const simd8x64<uint8_t>& input) {
       if(simdjson_likely(is_ascii(input))) {
         this->error |= this->prev_incomplete;
@@ -13997,12 +14059,12 @@ using namespace simd;
                 ||(simd8x64<uint8_t>::NUM_CHUNKS == 2)
                 || (simd8x64<uint8_t>::NUM_CHUNKS == 4),
                 "We support one, two or four chunks per 64-byte block.");
-        if(simd8x64<uint8_t>::NUM_CHUNKS == 1) {
+        _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 1) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
-        } if(simd8x64<uint8_t>::NUM_CHUNKS == 2) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
-        } else if(simd8x64<uint8_t>::NUM_CHUNKS == 4) {
+        } else _SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
           this->check_utf8_bytes(input.chunks[0], this->prev_input_block);
           this->check_utf8_bytes(input.chunks[1], input.chunks[0]);
           this->check_utf8_bytes(input.chunks[2], input.chunks[1]);
@@ -14380,7 +14442,7 @@ private:
  */
 class json_scanner {
 public:
-  json_scanner() {}
+  json_scanner() = default;
   simdjson_inline json_block next(const simd::simd8x64<uint8_t>& in);
   // Returns either UNCLOSED_STRING or SUCCESS
   simdjson_inline error_code finish();
@@ -14648,9 +14710,9 @@ public:
   // will potentially store extra values beyond end of valid bits, so base_ptr
   // needs to be large enough to handle this
   //
-  // If the kernel sets SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
+  // If the kernel sets _SIMDJSON_CUSTOM_BIT_INDEXER, then it will provide its own
   // version of the code.
-#ifdef SIMDJSON_CUSTOM_BIT_INDEXER
+#ifdef _SIMDJSON_CUSTOM_BIT_INDEXER
   simdjson_inline void write(uint32_t idx, uint64_t bits);
 #else
   simdjson_inline void write(uint32_t idx, uint64_t bits) {
@@ -14659,7 +14721,7 @@ public:
     // it helps tremendously.
     if (bits == 0)
         return;
-#if defined(SIMDJSON_PREFER_REVERSE_BITS)
+#if _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * ARM lacks a fast trailing zero instruction, but it has a fast
      * bit reversal instruction and a fast leading zero instruction.
@@ -14707,7 +14769,7 @@ public:
       }
     }
     this->tail += cnt;
-#else // SIMDJSON_PREFER_REVERSE_BITS
+#else // _SIMDJSON_PREFER_REVERSE_BITS
     /**
      * Under recent x64 systems, we often have both a fast trailing zero
      * instruction and a fast 'clear-lower-bit' instruction so the following
@@ -14745,7 +14807,7 @@ public:
     this->tail += cnt;
 #endif
   }
-#endif // SIMDJSON_CUSTOM_BIT_INDEXER
+#endif // _SIMDJSON_CUSTOM_BIT_INDEXER
 
 };
 
@@ -15071,22 +15133,25 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
   // outside the Basic
   // Multilingual Plane.
   if (code_point >= 0xd800 && code_point < 0xdc00) {
-    if (((*src_ptr)[0] != '\\') || (*src_ptr)[1] != 'u') {
+    const uint8_t *src_data = *src_ptr;
+    /* Compiler optimizations convert this to a single 16-bit load and compare on most platforms */
+    if (((src_data[0] << 8) | src_data[1]) != ((static_cast<uint8_t> ('\\') << 8) | static_cast<uint8_t> ('u'))) {
       return false;
     }
-    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(*src_ptr + 2);
+    uint32_t code_point_2 = jsoncharutils::hex_to_u32_nocheck(src_data + 2);
 
-    // if the first code point is invalid we will get here, as we will go past
-    // the check for being outside the Basic Multilingual plane. If we don't
-    // find a \u immediately afterwards we fail out anyhow, but if we do,
-    // this check catches both the case of the first code point being invalid
-    // or the second code point being invalid.
-    if ((code_point | code_point_2) >> 16) {
+    // We have already checked that the high surrogate is valid and
+    // (code_point - 0xd800) < 1024.
+    //
+    // Check that code_point_2 is in the range 0xdc00..0xdfff
+    // and that code_point_2 was parsed from valid hex.
+    uint32_t low_bit = code_point_2 - 0xdc00;
+    if (low_bit >> 10) {
       return false;
     }
 
     code_point =
-        (((code_point - 0xd800) << 10) | (code_point_2 - 0xdc00)) + 0x10000;
+        (((code_point - 0xd800) << 10) | low_bit) + 0x10000;
     *src_ptr += 6;
   } else if (code_point >= 0xdc00 && code_point <= 0xdfff) {
       // If we encounter a low surrogate (not preceded by a high surrogate)
@@ -15104,7 +15169,7 @@ simdjson_inline bool handle_unicode_codepoint(const uint8_t **src_ptr,
  * position as pointer. In case of error (e.g., the string has bad escaped codes),
  * then null_nullptrptr is returned. It is assumed that the output buffer is large
  * enough. E.g., if src points at 'joe"', then dst needs to have four free bytes +
- * SIMDJSON_PADDING bytes.
+ * _SIMDJSON_PADDING bytes.
  */
 simdjson_warn_unused simdjson_inline uint8_t *parse_string(const uint8_t *src, uint8_t *dst) {
   while (1) {
@@ -15169,7 +15234,7 @@ namespace logger {
 
   static constexpr const char * DASHES = "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
 
-#if SIMDJSON_VERBOSE_LOGGING
+#if _SIMDJSON_VERBOSE_LOGGING
   static constexpr const bool LOG_ENABLED = true;
 #else
   static constexpr const bool LOG_ENABLED = false;
@@ -15367,7 +15432,7 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
   //
   if (at_eof()) { return EMPTY; }
   log_start_value("document");
-  SIMDJSON_TRY( visitor.visit_document_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_start(*this) );
 
   //
   // Read first value
@@ -15385,9 +15450,9 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::walk_document(V &
     }
 
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_root_primitive(*this, value) ); break;
     }
   }
   goto document_end;
@@ -15400,13 +15465,13 @@ object_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = false;
-  SIMDJSON_TRY( visitor.visit_object_start(*this) );
+  _SIMDJSON_TRY( visitor.visit_object_start(*this) );
 
   {
     auto key = advance();
     if (*key != '"') { log_error("Object does not start with a key"); return TAPE_ERROR; }
-    SIMDJSON_TRY( visitor.increment_count(*this) );
-    SIMDJSON_TRY( visitor.visit_key(*this, key) );
+    _SIMDJSON_TRY( visitor.increment_count(*this) );
+    _SIMDJSON_TRY( visitor.visit_key(*this, key) );
   }
 
 object_field:
@@ -15414,23 +15479,23 @@ object_field:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 object_continue:
   switch (*advance()) {
     case ',':
-      SIMDJSON_TRY( visitor.increment_count(*this) );
+      _SIMDJSON_TRY( visitor.increment_count(*this) );
       {
         auto key = advance();
         if (simdjson_unlikely( *key != '"' )) { log_error("Key string missing at beginning of field in object"); return TAPE_ERROR; }
-        SIMDJSON_TRY( visitor.visit_key(*this, key) );
+        _SIMDJSON_TRY( visitor.visit_key(*this, key) );
       }
       goto object_field;
-    case '}': log_end_value("object"); SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
+    case '}': log_end_value("object"); _SIMDJSON_TRY( visitor.visit_object_end(*this) ); goto scope_end;
     default: log_error("No comma between object fields"); return TAPE_ERROR;
   }
 
@@ -15448,29 +15513,29 @@ array_begin:
   depth++;
   if (depth >= dom_parser.max_depth()) { log_error("Exceeded max depth!"); return DEPTH_ERROR; }
   dom_parser.is_array[depth] = true;
-  SIMDJSON_TRY( visitor.visit_array_start(*this) );
-  SIMDJSON_TRY( visitor.increment_count(*this) );
+  _SIMDJSON_TRY( visitor.visit_array_start(*this) );
+  _SIMDJSON_TRY( visitor.increment_count(*this) );
 
 array_value:
   {
     auto value = advance();
     switch (*value) {
-      case '{': if (*peek() == '}') { advance(); log_value("empty object"); SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
-      case '[': if (*peek() == ']') { advance(); log_value("empty array"); SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
-      default: SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
+      case '{': if (*peek() == '}') { advance(); log_value("empty object"); _SIMDJSON_TRY( visitor.visit_empty_object(*this) ); break; } goto object_begin;
+      case '[': if (*peek() == ']') { advance(); log_value("empty array"); _SIMDJSON_TRY( visitor.visit_empty_array(*this) ); break; } goto array_begin;
+      default: _SIMDJSON_TRY( visitor.visit_primitive(*this, value) ); break;
     }
   }
 
 array_continue:
   switch (*advance()) {
-    case ',': SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
-    case ']': log_end_value("array"); SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
+    case ',': _SIMDJSON_TRY( visitor.increment_count(*this) ); goto array_value;
+    case ']': log_end_value("array"); _SIMDJSON_TRY( visitor.visit_array_end(*this) ); goto scope_end;
     default: log_error("Missing comma between array values"); return TAPE_ERROR;
   }
 
 document_end:
   log_end_value("document");
-  SIMDJSON_TRY( visitor.visit_document_end(*this) );
+  _SIMDJSON_TRY( visitor.visit_document_end(*this) );
 
   dom_parser.next_structural_index = uint32_t(next_structural - &dom_parser.structural_indexes[0]);
 
@@ -15670,11 +15735,13 @@ simdjson_inline void tape_writer::write(uint64_t &tape_loc, uint64_t val, intern
 
 } // namespace stage2
 } // unnamed namespace
+
 simdjson_warn_unused _simdjson::error_code dom_parser_implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
     stage2::tape_writer writer{ buf };
 
     return westmere::numberparsing::parse_number(src, writer);
 }
+
 
 } // namespace westmere
 } // namespace _simdjson
@@ -15846,7 +15913,7 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   //
   // We need to make a copy to make sure that the string is space terminated.
   // This is not about padding the input, which should already padded up
-  // to len + SIMDJSON_PADDING. However, we have no control at this stage
+  // to len + _SIMDJSON_PADDING. However, we have no control at this stage
   // on how the padding was done. What if the input string was padded with nulls?
   // It is quite common for an input string to have an extra null character (C string).
   // We do not want to allow 9\0 (where \0 is the null character) inside a JSON
@@ -15856,10 +15923,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_number(
   // practice unless you are in the strange scenario where you have many JSON
   // documents made of single atoms.
   //
-  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + SIMDJSON_PADDING]);
+  std::unique_ptr<uint8_t[]>copy(new (std::nothrow) uint8_t[iter.remaining_len() + _SIMDJSON_PADDING]);
   if (copy.get() == nullptr) { return MEMALLOC; }
   std::memcpy(copy.get(), value, iter.remaining_len());
-  std::memset(copy.get() + iter.remaining_len(), ' ', SIMDJSON_PADDING);
+  std::memset(copy.get() + iter.remaining_len(), ' ', _SIMDJSON_PADDING);
   error_code error = visit_number(iter, copy.get());
   return error;
 }
@@ -16004,6 +16071,7 @@ simdjson_warn_unused error_code dom_parser_implementation::stage2_next(dom::docu
 simdjson_warn_unused uint8_t *dom_parser_implementation::parse_string(const uint8_t *src, uint8_t *dst) const noexcept {
   return westmere::stringparsing::parse_string(src, dst);
 }
+
 simdjson_warn_unused bool dom_parser_implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
     return westmere::atomparsing::is_valid_true_atom(src, len);
 }
@@ -16023,14 +16091,15 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
   return stage2(_doc);
 }
 
+
 } // namespace westmere
 } // namespace _simdjson
 
 /* begin file include/simdjson/westmere/end.h */
-SIMDJSON_UNTARGET_WESTMERE
+_SIMDJSON_UNTARGET_WESTMERE
 /* end file include/simdjson/westmere/end.h */
 /* end file src/westmere/dom_parser_implementation.cpp */
 #endif
 
-SIMDJSON_POP_DISABLE_WARNINGS
+_SIMDJSON_POP_DISABLE_WARNINGS
 /* end file src/simdjson.cpp */

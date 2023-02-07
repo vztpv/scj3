@@ -275,6 +275,7 @@ int main(int argc, char* argv[])
 				int b = clock();
 				std::cout << "total " << b - a << "ms\n";
 				
+				//claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, 64);
 				std::cout << "save_parallel" << clock() - b << "ms\n";
 
