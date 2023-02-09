@@ -7833,21 +7833,17 @@ inline error_code document::allocate(size_t capacity, bool pass_tape) noexcept {
   // a document with only zero-length strings... could have capacity/3 string
   // and we would need capacity/3 * 5 bytes on the string buffer
   size_t string_capacity = _SIMDJSON_ROUNDUP_N(5 * capacity / 3 + _SIMDJSON_PADDING, 64);
-  string_buf.reset( new (std::nothrow) uint8_t[string_capacity]);
+
   if (pass_tape == false) {
-      tape.reset(new (std::nothrow) uint64_t[tape_capacity]);
+      tape.reset(new (std::nothrow) uint64_t[tape_capacity]); 
+      string_buf.reset( new (std::nothrow) uint8_t[string_capacity]);
   }
-  if (!pass_tape && !(string_buf) && tape) {
-    allocated_capacity = 0;
-    string_buf.reset();
-    tape.reset();
-    return MEMALLOC;
-  }
-  if (pass_tape && !(string_buf)) {
+
+  if (pass_tape) {
      allocated_capacity = 0;
      string_buf.reset();
      tape.reset();
-     return MEMALLOC;
+     return SUCCESS;
   }
   // Technically the allocated_capacity might be larger than capacity
   // so the next line is pessimistic.

@@ -835,6 +835,7 @@ namespace claujson {
 
 		_ptr_val = x;
 
+		// ValueType::ERROR -> ValueType::NOT_ARRAY_AND_OBJECT ?
 		_type = x->is_array()? ValueType::ARRAY : (x->is_object()? ValueType::OBJECT : ValueType::ERROR); // chk change DataType:: ~~ -> DataType:: ~~
 	}
 	void Value::set_int(long long x) {
@@ -1150,7 +1151,7 @@ namespace claujson {
 
 
 	inline claujson::Value& Convert(claujson::Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
-		char* buf, uint8_t* string_buf, uint64_t token_idx, bool& err) {
+		char* buf, uint8_t* _string_buf, uint64_t token_idx, bool& err) {
 
 		try {
 			data.clear();
@@ -1160,17 +1161,28 @@ namespace claujson {
 			switch (buf[buf_idx]) {
 			case '"':
 			{
+				uint8_t sbuf[1024 + 1 + _simdjson::_SIMDJSON_PADDING];
+				std::unique_ptr<uint8_t[]> ubuf;
+				uint8_t* string_buf = nullptr;
+
+				if (next_buf_idx - buf_idx <= 1024) {
+					string_buf = sbuf;
+				}
+				else {
+					ubuf = std::make_unique<uint8_t[]>(next_buf_idx - buf_idx + _simdjson::_SIMDJSON_PADDING);
+					string_buf = &ubuf[0];
+				}
+
 				if (auto* x = simdjson_imple->parse_string((uint8_t*)&buf[buf_idx] + 1,
-					&string_buf[buf_idx]); x == nullptr) {
+					string_buf); x == nullptr) {
 					ERROR("Error in Convert for string");
 				}
 				else {
 					*x = '\0';
-					string_length = uint32_t(x - &string_buf[buf_idx]);
+					string_length = uint32_t(x - string_buf);
 				}
 
-				// chk token_arr_start + i + 1 >= imple->n_structural_indexes...
-				data.set_str_in_parse(reinterpret_cast<char*>(&string_buf[buf_idx]), string_length);
+				data.set_str_in_parse(reinterpret_cast<char*>(string_buf), string_length);
 			}
 			break;
 			case 't':
