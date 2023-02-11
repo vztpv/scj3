@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
 				int a = clock();
 
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, 64, true); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
 				std::cout << "total " << b - a << "ms\n";
 				
 				//claujson::save("test12.txt", j);
-				claujson::save_parallel("test34.json", j, 64);
+				claujson::save_parallel("test34.json", j, 0);
 				std::cout << "save_parallel" << clock() - b << "ms\n";
 
 				claujson::clean(j);
@@ -335,7 +335,7 @@ int main(int argc, char* argv[])
 				//claujson::save("total_ends.json", j);
 
 				// not thread-safe.
-				claujson::save_parallel("total_end.json", j, 64);
+				claujson::save_parallel("total_end.json", j, 0);
 
 				//claujson::save("total_ends.json", j);
 
@@ -401,7 +401,7 @@ int main(int argc, char* argv[])
 
 		{
 			claujson::Value j;
-			auto x = claujson::parse("total_end.json", j, 64); // argv[1], j, 64 ??
+			auto x = claujson::parse("total_end.json", j, 0); // argv[1], j, 64 ??
 			if (!x.first) {
 				std::cout << "fail\n";
 
@@ -410,7 +410,7 @@ int main(int argc, char* argv[])
 				return 1;
 			}
 
-			claujson::save_parallel("total_end2.json", j, 64);
+			claujson::save_parallel("total_end2.json", j, 0);
 
 			claujson::clean(j);
 		}

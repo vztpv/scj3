@@ -10,11 +10,15 @@ using namespace std::string_view_literals;
 
 #include "fmt/format.h"
 
+#include "BS_thread_pool.hpp"
+
 namespace claujson {
 	
 	inline static _simdjson::dom::parser_for_claujson test_;
 	inline static _simdjson::internal::dom_parser_implementation* simdjson_imple = nullptr;
 	
+	inline static BS::thread_pool pool;	
+
 	// class PartialJson, only used in class LoadData.
 	class PartialJson : public Structured {
 	protected:
@@ -3645,7 +3649,7 @@ namespace claujson {
 							__global[i] = Ptr<Structured>(new PartialJson());
 						}
 
-						std::vector<std::thread> thr(pivots.size() - 1);
+						//std::vector<std::thread> thr(pivots.size() - 1);
 
 
 						std::vector<int> err(pivots.size() - 1, 0);
@@ -3655,7 +3659,7 @@ namespace claujson {
 							int64_t _token_arr_len = idx;
 
 
-							thr[0] = std::thread(__LoadData, (buf), buf_len, (string_buf), (imple), start[0], _token_arr_len, std::ref(__global[0]), 0, 0,
+							pool.push_task(__LoadData, (buf), buf_len, (string_buf), (imple), start[0], _token_arr_len, std::ref(__global[0]), 0, 0,
 								&next[0], &err[0], 0);
 						}
 
@@ -3664,16 +3668,14 @@ namespace claujson {
 						for (size_t i = 1; i < pivots.size() - 1; ++i) {
 							int64_t _token_arr_len = pivots[i + 1] - pivots[i];
 
-							thr[i] = std::thread(__LoadData, (buf), buf_len, (string_buf), (imple), pivots[i], _token_arr_len, std::ref(__global[i]), 0, 0,
+							pool.push_task(__LoadData, (buf), buf_len, (string_buf), (imple), pivots[i], _token_arr_len, std::ref(__global[i]), 0, 0,
 								&next[i], &err[i], i);
 
 						}
 
 
 						// wait
-						for (size_t i = 0; i < thr.size(); ++i) {
-							thr[i].join();
-						}
+						pool.wait_for_tasks();
 
 						auto b = std::chrono::steady_clock::now();
 						auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
@@ -4858,18 +4860,16 @@ namespace claujson {
 
 			std::vector<claujson::StrStream> stream(thr_num);
 
-			std::vector<std::thread> thr(thr_num);
+			//std::vector<std::thread> thr(thr_num);
 
-			thr[0] = std::thread(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], (false));
+			pool.push_task(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], (false));
 
 
-			for (size_t i = 1; i < thr.size(); ++i) {
-				thr[i] = std::thread(save_, std::ref(stream[i]), std::cref(result[i - 1]->get_value_list(0)), temp_parent[i], (hint[i - 1]));
+			for (size_t i = 1; i < thr_num; ++i) {
+				pool.push_task(save_, std::ref(stream[i]), std::cref(result[i - 1]->get_value_list(0)), temp_parent[i], (hint[i - 1]));
 			}
 
-			for (size_t i = 0; i < thr.size(); ++i) {
-				thr[i].join();
-			}
+			pool.wait_for_tasks();
 
 
 			std::ofstream outFile(fileName, std::ios::binary);
