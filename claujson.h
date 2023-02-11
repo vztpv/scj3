@@ -322,11 +322,11 @@ namespace claujson {
 
 		Array& as_array();
 		Object& as_object();
-		Structured* as_json_ptr();
+		Structured* as_structured_ptr();
 
 		const Array& as_array()const;
 		const Object& as_object()const;
-		const Structured* as_json_ptr()const;
+		const Structured* as_structured_ptr()const;
 	public:
 		void clear();
 

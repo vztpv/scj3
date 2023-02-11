@@ -152,7 +152,7 @@ namespace claujson {
 		case claujson::ValueType::OBJECT:
 		{
 		//	stream << "array_or_object";
-			auto* x = data.as_json_ptr();
+			auto* x = data.as_structured_ptr();
 			if (x->is_array()) {
 				stream << "[ ";
 				size_t sz = x->get_data_size();
@@ -205,7 +205,7 @@ namespace claujson {
 		}
 
 		if (x.is_ptr()) {
-			x._ptr_val = this->as_json_ptr()->clone();
+			x._ptr_val = this->as_structured_ptr()->clone();
 		}
 
 		return x;
@@ -501,7 +501,7 @@ namespace claujson {
 				}
 			}
 
-			Structured* j = data->as_json_ptr();
+			Structured* j = data->as_structured_ptr();
 
 			if (j->is_array()) { // array -> with idx
 				size_t idx = 0;
@@ -630,7 +630,7 @@ namespace claujson {
 				}
 			}
 
-			Structured* j = data->as_json_ptr();
+			Structured* j = data->as_structured_ptr();
 
 			if (j->is_array()) { // array -> with idx
 				size_t idx = 0;
@@ -749,7 +749,7 @@ namespace claujson {
 				}
 			}
 
-			const Structured* j = data->as_json_ptr();
+			const Structured* j = data->as_structured_ptr();
 
 			if (j->is_array()) { // array -> with idx
 				size_t idx = 0;
@@ -1069,8 +1069,8 @@ namespace claujson {
 			case ValueType::ARRAY:
 			case ValueType::OBJECT:
 			{
-				const Structured* j = this->as_json_ptr();
-				const Structured* k = other.as_json_ptr();
+				const Structured* j = this->as_structured_ptr();
+				const Structured* k = other.as_structured_ptr();
 
 				const size_t sz_j = j->get_data_size();
 				const size_t sz_k = k->get_data_size();
@@ -1615,7 +1615,7 @@ namespace claujson {
 				size_t len = j->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
 					if (j->get_value_list(i).is_ptr()) {
-						j->get_value_list(i).as_json_ptr()->set_parent(this);
+						j->get_value_list(i).as_structured_ptr()->set_parent(this);
 					}
 				}
 
@@ -1639,7 +1639,7 @@ namespace claujson {
 				size_t len = j->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
 					if (j->get_value_list(i).is_ptr()) {
-						j->get_value_list(i).as_json_ptr()->set_parent(this);
+						j->get_value_list(i).as_structured_ptr()->set_parent(this);
 					}
 				}
 
@@ -1915,7 +1915,7 @@ namespace claujson {
 				size_t len = j->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
 					if (j->get_value_list(i).is_ptr()) {
-						j->get_value_list(i).as_json_ptr()->set_parent(this);
+						j->get_value_list(i).as_structured_ptr()->set_parent(this);
 					}
 				}
 
@@ -1938,7 +1938,7 @@ namespace claujson {
 				size_t len = j->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
 					if (j->get_value_list(i).is_ptr()) {
-						j->get_value_list(i).as_json_ptr()->set_parent(this);
+						j->get_value_list(i).as_structured_ptr()->set_parent(this);
 					}
 				}
 
@@ -2258,7 +2258,7 @@ namespace claujson {
 				size_t len = j->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
 					if (j->get_value_list(i).is_ptr()) {
-						j->get_value_list(i).as_json_ptr()->set_parent(this);
+						j->get_value_list(i).as_structured_ptr()->set_parent(this);
 					}
 				}
 				if (x->arr_vec.empty() == false) {
@@ -2276,7 +2276,7 @@ namespace claujson {
 				size_t len = j->get_data_size();
 				for (size_t i = 0; i < len; ++i) {
 					if (j->get_value_list(i).is_ptr()) {
-						j->get_value_list(i).as_json_ptr()->set_parent(this);
+						j->get_value_list(i).as_structured_ptr()->set_parent(this);
 					}
 				}
 
@@ -2551,7 +2551,7 @@ namespace claujson {
 	}
 
 	Array& Value::as_array() {
-		if (is_ptr() && as_json_ptr()->is_array()) {
+		if (is_ptr() && as_structured_ptr()->is_array()) {
 			return *static_cast<Array*>(_ptr_val);
 		}
 		static Array empty_arr{ false };
@@ -2559,7 +2559,7 @@ namespace claujson {
 	}
 
 	Object& Value::as_object() {
-		if (is_ptr() && as_json_ptr()->is_object()) {
+		if (is_ptr() && as_structured_ptr()->is_object()) {
 			return *static_cast<Object*>(_ptr_val);
 		}
 		static Object empty_obj{ false };
@@ -2568,7 +2568,7 @@ namespace claujson {
 
 
 	const Array& Value::as_array() const {
-		if (is_ptr() && as_json_ptr()->is_array()) {
+		if (is_ptr() && as_structured_ptr()->is_array()) {
 			return *static_cast<Array*>(_ptr_val);
 		}
 		static const Array empty_arr{ false };
@@ -2576,21 +2576,21 @@ namespace claujson {
 	}
 
 	const Object& Value::as_object() const {
-		if (is_ptr() && as_json_ptr()->is_object()) {
+		if (is_ptr() && as_structured_ptr()->is_object()) {
 			return *static_cast<Object*>(_ptr_val);
 		}
 		static const Object empty_obj{ false };
 		return empty_obj;
 	}
 
-	Structured* Value::as_json_ptr() {
+	Structured* Value::as_structured_ptr() {
 		if (!is_ptr()) {
 			return nullptr;
 		}
 		return (_ptr_val);
 	}
 
-	const Structured* Value::as_json_ptr() const {
+	const Structured* Value::as_structured_ptr() const {
 		if (!is_ptr()) {
 			return nullptr;
 		}
@@ -2735,7 +2735,7 @@ namespace claujson {
 
 			for (size_t i = 0; i < len; ++i) {
 				if (root->get_value_list(i).is_ptr()) {
-					x += Size(root->get_value_list(i).as_json_ptr());
+					x += Size(root->get_value_list(i).as_structured_ptr());
 				}
 			}
 
@@ -2794,7 +2794,7 @@ namespace claujson {
 			 for (size_t i = 0; i < len; ++i) {
 				 if (root->get_value_list(i).is_ptr()) {
 
-					 Find2(root->get_value_list(i).as_json_ptr(), n, idx, i < len - 1, _len, offset, offset2, out, hint);
+					 Find2(root->get_value_list(i).as_structured_ptr(), n, idx, i < len - 1, _len, offset, offset2, out, hint);
 					 
 					 if (idx >= n) {
 						 return;
@@ -2893,7 +2893,7 @@ namespace claujson {
 				return { nullptr };
 			}
 
-			size_t len = claujson::LoadData2::Size(j.as_json_ptr());
+			size_t len = claujson::LoadData2::Size(j.as_structured_ptr());
 
 			if (len / n == 0) {
 				return { nullptr };
@@ -2914,7 +2914,7 @@ namespace claujson {
 				size_t idx = 0;
 				auto offset2 = offset;
 
-				claujson::LoadData2::Find2(j.as_json_ptr(), n - 1, idx, false, len, offset, offset2, pos, hint);
+				claujson::LoadData2::Find2(j.as_structured_ptr(), n - 1, idx, false, len, offset, offset2, pos, hint);
 			}
 
 			for (size_t i = 0; i < n - 1; ++i) {
@@ -3809,7 +3809,7 @@ namespace claujson {
 
 
 					if (_global->get_value_list(0).is_ptr()) {
-						_global->get_value_list(0).as_json_ptr()->set_parent(nullptr);
+						_global->get_value_list(0).as_structured_ptr()->set_parent(nullptr);
 					}
 
 					global = std::move(_global->get_value_list(0));
@@ -3922,7 +3922,7 @@ namespace claujson {
 		StrStream stream;
 
 		if (global.is_ptr()) {
-			bool is_arr = global.as_json_ptr()->is_array();
+			bool is_arr = global.as_structured_ptr()->is_array();
 
 			if (is_arr) {
 				stream << " [ ";
@@ -4000,7 +4000,7 @@ namespace claujson {
 		const Structured* ut = nullptr;
 
 		if (data.is_ptr()) {
-			ut = data.as_json_ptr();
+			ut = data.as_structured_ptr();
 		}
 
 		if (ut && ut->is_object()) {
@@ -4319,7 +4319,7 @@ namespace claujson {
 		const Structured* ut = nullptr;
 
 		if (data.is_ptr()) {
-			ut = data.as_json_ptr();
+			ut = data.as_structured_ptr();
 		}
 
 
@@ -4644,7 +4644,7 @@ namespace claujson {
 			if (hint) {
 				stream << " , ";
 			}
-			bool is_arr = global.as_json_ptr()->is_array();
+			bool is_arr = global.as_structured_ptr()->is_array();
 
 			if (is_arr) {
 				stream << " [ ";
@@ -4745,7 +4745,7 @@ namespace claujson {
 				stream << " , ";
 			}
 
-			auto* j = global.as_json_ptr();
+			auto* j = global.as_structured_ptr();
 
 
 			if (j->is_array() && j->is_virtual() == false) {
@@ -5863,7 +5863,7 @@ namespace claujson {
 	// cf) /- -> / in array.
 	static Value _diff(const Value& x, const Value& y, std::string route) {
 		Value result(new Array());
-		Structured* j = result.as_json_ptr();
+		Structured* j = result.as_structured_ptr();
 
 		if (x == y) {
 			return result;
@@ -5884,8 +5884,8 @@ namespace claujson {
 		case ValueType::ARRAY:
 		case ValueType::OBJECT:
 		{
-			const Structured* jx = x.as_json_ptr();
-			const Structured* jy = y.as_json_ptr();
+			const Structured* jx = x.as_structured_ptr();
+			const Structured* jy = y.as_structured_ptr();
 
 			if (jx->is_array()) {
 				size_t i = 0;
@@ -5900,15 +5900,15 @@ namespace claujson {
 					Value inner_diff = _diff(jx->get_value_list(i), jy->get_value_list(i), std::move(new_route));
 
 					{
-						Structured* w = inner_diff.as_json_ptr();
+						Structured* w = inner_diff.as_structured_ptr();
 						size_t sz_w = w->get_data_size();
 
 						for (size_t t = 0; t < sz_w; ++t) {
 							Value temp = std::move(w->get_value_list(t));
-							j->add_object(Ptr<Structured>(temp.as_json_ptr()));
+							j->add_object(Ptr<Structured>(temp.as_structured_ptr()));
 						}
 
-						Ptr<Structured> clean(inner_diff.as_json_ptr());
+						Ptr<Structured> clean(inner_diff.as_structured_ptr());
 					}
 				}
 
@@ -5952,15 +5952,15 @@ namespace claujson {
 						Value inner_diff = _diff((jx->get_value_list(i - 1)), jy->get_value_list(idx), new_route);
 
 						{
-							Structured* w = inner_diff.as_json_ptr();
+							Structured* w = inner_diff.as_structured_ptr();
 							size_t sz_w = w->get_data_size();
 
 							for (size_t t = 0; t < sz_w; ++t) {
 								Value temp = std::move(w->get_value_list(t));
-								j->add_object(Ptr<Structured>(temp.as_json_ptr()));
+								j->add_object(Ptr<Structured>(temp.as_structured_ptr()));
 							}
 
-							Ptr<Structured> clean(inner_diff.as_json_ptr());
+							Ptr<Structured> clean(inner_diff.as_structured_ptr());
 						}
 					}
 					else {
@@ -6021,7 +6021,7 @@ namespace claujson {
 	Value patch(const Value& x, const Value& diff) {
 		Value unvalid_data(nullptr, false);
 
-		const Structured* j_diff = diff.as_json_ptr();
+		const Structured* j_diff = diff.as_structured_ptr();
 		
 		if (!j_diff->is_array()) {
 			return unvalid_data;
@@ -6032,81 +6032,81 @@ namespace claujson {
 		size_t sz_diff = j_diff->get_data_size();
 
 		for (size_t i = 0; i < sz_diff; ++i) {
-			const Object* obj = (const Object*)j_diff->get_value_list(i).as_json_ptr();
+			const Object* obj = (const Object*)j_diff->get_value_list(i).as_structured_ptr();
 			size_t op_idx = obj->find("op"sv);
 			size_t path_idx = obj->find("path"sv);
 			size_t value_idx = obj->find("value"sv);
 			size_t key_idx = obj->find("key"sv);
 
 			if (op_idx == Structured::npos) {
-				Ptr<Structured> clean(result.as_json_ptr());
+				Ptr<Structured> clean(result.as_structured_ptr());
 				return unvalid_data;
 			}
 
 			if (path_idx == Structured::npos) {
-				Ptr<Structured> clean(result.as_json_ptr());
+				Ptr<Structured> clean(result.as_structured_ptr());
 				return unvalid_data;
 			}
 
 			if (obj->get_value_list(op_idx).str_val() == "replace"sv) {
 				if (value_idx == Structured::npos) {
-					Ptr<Structured> clean(result.as_json_ptr());
+					Ptr<Structured> clean(result.as_structured_ptr());
 					return unvalid_data;
 				}
 
 				Value& value = result.json_pointer(obj->get_value_list(path_idx).str_val());
 				{
 					if (value.is_ptr()) {
-						Ptr<Structured> clean(value.as_json_ptr());
+						Ptr<Structured> clean(value.as_structured_ptr());
 						value.clear();
 					}
 				}
 				value = obj->get_value_list(value_idx).clone();
 			}
 			else if (obj->get_value_list(op_idx).str_val() == "remove"sv) {
-				Structured* parent = result.json_pointer(obj->get_value_list(path_idx).str_val()).as_json_ptr();
+				Structured* parent = result.json_pointer(obj->get_value_list(path_idx).str_val()).as_structured_ptr();
 				
 				// case : result.json_pointer returns root?
 				if (!parent) {
 					if (result.is_ptr()) {
-						Ptr<Structured> clean(result.as_json_ptr());
+						Ptr<Structured> clean(result.as_structured_ptr());
 					}
 					result.clear();
 				}
 				else if (parent->is_array()) {
 					size_t last_idx_idx = obj->find("last_idx"sv);
 					if (last_idx_idx == Structured::npos) {
-						Ptr<Structured> clean(result.as_json_ptr());
+						Ptr<Structured> clean(result.as_structured_ptr());
 						return unvalid_data;
 					}
 
 					size_t last_idx = obj->get_value_list(last_idx_idx).uint_val();
 
-					delete parent->get_value_list(last_idx).as_json_ptr(); // chk!
+					delete parent->get_value_list(last_idx).as_structured_ptr(); // chk!
 					parent->erase(last_idx);
 				}
 				else {
 					size_t last_key_idx = obj->find("last_key"sv);
 					if (last_key_idx == Structured::npos) {
-						Ptr<Structured> clean(result.as_json_ptr());
+						Ptr<Structured> clean(result.as_structured_ptr());
 						return unvalid_data;
 					}
 
 					std::string last_key = obj->get_value_list(last_key_idx).str_val();
 					size_t _idx = parent->find(last_key);
-					delete parent->get_value_list(_idx).as_json_ptr();
+					delete parent->get_value_list(_idx).as_structured_ptr();
 					parent->erase(_idx);
 				}
 			}
 			else if (obj->get_value_list(op_idx).str_val() == "add"sv) {
 				if (value_idx == Structured::npos) {
-					Ptr<Structured> clean(result.as_json_ptr());
+					Ptr<Structured> clean(result.as_structured_ptr());
 					return unvalid_data;
 				}
 
 				Value& _ = result.json_pointer(obj->get_value_list(path_idx).str_val());
 
-				Structured* parent = _.as_json_ptr();
+				Structured* parent = _.as_structured_ptr();
 
 				// case : result.json_pointer returns root?
 				if (!parent) {
@@ -6117,7 +6117,7 @@ namespace claujson {
 				}
 				else if (parent->is_object()) {
 					if (key_idx == Structured::npos) {
-						Ptr<Structured> clean(result.as_json_ptr());
+						Ptr<Structured> clean(result.as_structured_ptr());
 						return unvalid_data;
 					}
 					parent->add_object_element(obj->get_value_list(key_idx).clone(), obj->get_value_list(value_idx).clone());
@@ -6129,8 +6129,10 @@ namespace claujson {
 	}
 
 	void clean(Value& x) {
-		Ptr<Structured> _(x.as_json_ptr());
-		x.set_null(); //
+		if (x.is_structured()) {
+			delete x.as_structured_ptr();
+			x.set_null();
+		}
 	}
 
 

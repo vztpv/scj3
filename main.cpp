@@ -103,7 +103,7 @@ void json_pointer_test() {
 	if (!claujson::parse_str(test, x, 1).first) {
 		std::cout << "fail\n";
 
-		claujson::Ptr<claujson::Structured> clean(x.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean(x.as_structured_ptr());
 
 		return;
 	}
@@ -112,7 +112,7 @@ void json_pointer_test() {
 	if (!claujson::parse_str(test2, y, 1).first) {
 		std::cout << "fail\n";
 
-		claujson::Ptr<claujson::Structured> clean(y.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean(y.as_structured_ptr());
 
 		return;
 	}
@@ -181,16 +181,16 @@ void json_pointer_test() {
 	}
 
 	{
-		claujson::Ptr<claujson::Structured> clean(x.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean(x.as_structured_ptr());
 	}
 	{
-		claujson::Ptr<claujson::Structured> clean2(y.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean2(y.as_structured_ptr());
 	}
 	{
-		claujson::Ptr<claujson::Structured> clean3(diff.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean3(diff.as_structured_ptr());
 	}
 	{
-		claujson::Ptr<claujson::Structured> clean4(result.as_json_ptr());
+		claujson::Ptr<claujson::Structured> clean4(result.as_structured_ptr());
 	}
 }
 
@@ -380,7 +380,7 @@ int main(int argc, char* argv[])
 				std::cout << clock() - c2 << "ms\n";
 				std::cout << "Re.. " << sum << " " << counter << "\n";
 
-				claujson::Ptr<claujson::Structured> clean(j.as_json_ptr());
+				claujson::Ptr<claujson::Structured> clean(j.as_structured_ptr());
 
 				//std::cout << (claujson::error.has_error() ? ("has error") : ("no error")) << "\n";
 				//std::cout << claujson::error.msg() << "\n";
