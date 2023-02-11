@@ -9,9 +9,9 @@ save - multi-thread
   
 (C++17, 64bit, Windows)
 
-(mimalloc, fmt)
+(mimalloc, fmt, bshoshany/thread-pool)
 
-# Use claujson.h, claujson.cpp, simdjson.h, simdjson.cpp, fmt, mimalloc.
+# Use claujson.h, claujson.cpp, simdjson.h, simdjson.cpp, fmt, mimalloc, bshoshany/thread-pool.
 
 
 # Using simdjson/simdjson (https://github.com/simdjson/simdjson) Apache-2.0 License
