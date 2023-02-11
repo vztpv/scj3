@@ -663,7 +663,7 @@ namespace claujson {
 	std::pair<bool, size_t> parse(const std::string& fileName, Value& ut, size_t thr_num, bool use_all_function = false);
 
 	// parse json str.
-	std::pair<bool, size_t> parse_str(std::string_view str, Value& ut, size_t thr_num);
+	std::pair<bool, size_t> parse_str(std::string_view str, Value& ut, size_t thr_num, bool use_all_function = false);
 
 	// todo - c++20~
 	//inline std::pair<bool, size_t> ParseStr(std::u8string_view str, int thr_num, Data& ut) {

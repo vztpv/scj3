@@ -5658,8 +5658,8 @@ namespace claujson {
 					std::vector<int> vec[2];
 					int err = 0;
 
-					auto x = async(is_valid, std::ref(test), middle, &vec[0], &err);
-					auto y = async(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
+					auto x = pool.submit(is_valid, std::ref(test), middle, &vec[0], &err);
+					auto y = pool.submit(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
 
 					x.wait();
 					y.wait();
@@ -5702,7 +5702,7 @@ namespace claujson {
 
 		return  { true, length };
 	}
-	std::pair<bool, size_t> parse_str(std::string_view str, Value& ut, size_t thr_num)
+	std::pair<bool, size_t> parse_str(std::string_view str, Value& ut, size_t thr_num, bool use_all_function)
 	{
 
 		
@@ -5764,10 +5764,42 @@ namespace claujson {
 			log << info << b - a << "ms\n";
 			b = clock();
 
-			if (!is_valid(test, length)) {
-				return { false, 0 };
-			}
+			if (use_all_function) {
+				size_t middle = length / 2;
+				for (size_t i = middle; i < length; ++i) {
+					if (buf[simdjson_imple_->structural_indexes[i]] == ',') {
+						middle = i; break;
+					}
+					if (i == length - 1) {
+						middle = length;
+					}
+				}
 
+				std::vector<int> vec[2];
+				int err = 0;
+
+				auto x = pool.submit(is_valid, std::ref(test), middle, &vec[0], &err);
+				auto y = pool.submit(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
+
+				x.wait();
+				y.wait();
+
+				if (!x.get() || !y.get()) {
+					return { false, 0 };
+				}
+
+				if (vec[0].size() != vec[1].size()) { return { false, 0 }; }
+				for (size_t i = 0; i < vec[0].size(); ++i) {
+					if (vec[0][i] != vec[1][i]) {
+						return { false, 0 };
+					}
+				}
+			}
+			else {
+				if (!is_valid(test, length)) {
+					return { false, 0 };
+				}
+			}
 			log << info << clock() - b << "ms\n";
 
 			b = clock();
