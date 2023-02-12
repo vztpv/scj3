@@ -225,7 +225,7 @@ namespace claujson {
 		friend std::ostream& operator<<(std::ostream& stream, const Value& data);
 
 		friend claujson::Value& Convert(Value& data, uint64_t idx, uint64_t idx2, bool key,
-			char* buf, uint8_t* string_buf, uint64_t id, bool& err);
+			char* buf,  uint64_t id, bool& err);
 	private:
 		union { // 64bit.. DO NOT build 32bit! //
 			int64_t _int_val = 0;
@@ -477,13 +477,13 @@ namespace claujson {
 
 		// need rename param....!
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
-			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx) = 0;
+			char* buf,  uint64_t key_token_idx, uint64_t val_token_idx) = 0;
 
 		virtual void add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
-			char* buf, uint8_t* string_buf, uint64_t val_token_idx) = 0;
+			char* buf,  uint64_t val_token_idx) = 0;
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			uint8_t* string_buf, int ut_type, uint64_t key_token_idx) = 0;
+			 int ut_type, uint64_t key_token_idx) = 0;
 
 		//
 
@@ -558,13 +558,13 @@ namespace claujson {
 		virtual void Link(Ptr<Structured> j);
 
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
-			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx);
+			char* buf,  uint64_t key_token_idx, uint64_t val_token_idx);
 
 		virtual void add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
-			char* buf, uint8_t* string_buf, uint64_t val_token_idx);
+			char* buf,  uint64_t val_token_idx);
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			uint8_t* string_buf, int ut_type, uint64_t key_token_idx);
+			 int ut_type, uint64_t key_token_idx);
 
 		virtual void add_user_type(int type);
 
@@ -641,13 +641,13 @@ namespace claujson {
 
 
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
-			char* buf, uint8_t* string_buf, uint64_t key_token_idx, uint64_t val_token_idx);
+			char* buf,  uint64_t key_token_idx, uint64_t val_token_idx);
 
 		virtual void add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx, 
-			char* buf, uint8_t* string_buf, uint64_t val_token_idx);
+			char* buf,  uint64_t val_token_idx);
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			uint8_t* string_buf, int ut_type, uint64_t key_token_idx);
+			 int ut_type, uint64_t key_token_idx);
 
 		virtual void add_user_type(int type);
 
