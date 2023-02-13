@@ -5906,7 +5906,7 @@ namespace claujson {
 							j->add_object(Ptr<Structured>(temp.as_structured_ptr()));
 						}
 
-						Ptr<Structured> clean(inner_diff.as_structured_ptr());
+						clean(inner_diff);
 					}
 				}
 
@@ -5958,7 +5958,7 @@ namespace claujson {
 								j->add_object(Ptr<Structured>(temp.as_structured_ptr()));
 							}
 
-							Ptr<Structured> clean(inner_diff.as_structured_ptr());
+							clean(inner_diff);
 						}
 					}
 					else {
@@ -6037,25 +6037,25 @@ namespace claujson {
 			size_t key_idx = obj->find("key"sv);
 
 			if (op_idx == Structured::npos) {
-				Ptr<Structured> clean(result.as_structured_ptr());
+				clean(result);
 				return unvalid_data;
 			}
 
 			if (path_idx == Structured::npos) {
-				Ptr<Structured> clean(result.as_structured_ptr());
+				clean(result);
 				return unvalid_data;
 			}
 
 			if (obj->get_value_list(op_idx).str_val() == "replace"sv) {
 				if (value_idx == Structured::npos) {
-					Ptr<Structured> clean(result.as_structured_ptr());
+					clean(result);
 					return unvalid_data;
 				}
 
 				Value& value = result.json_pointer(obj->get_value_list(path_idx).str_val());
 				{
 					if (value.is_ptr()) {
-						Ptr<Structured> clean(value.as_structured_ptr());
+						clean(value);
 						value.clear();
 					}
 				}
@@ -6067,14 +6067,14 @@ namespace claujson {
 				// case : result.json_pointer returns root?
 				if (!parent) {
 					if (result.is_ptr()) {
-						Ptr<Structured> clean(result.as_structured_ptr());
+						clean(result);
 					}
 					result.clear();
 				}
 				else if (parent->is_array()) {
 					size_t last_idx_idx = obj->find("last_idx"sv);
 					if (last_idx_idx == Structured::npos) {
-						Ptr<Structured> clean(result.as_structured_ptr());
+						clean(result);
 						return unvalid_data;
 					}
 
@@ -6086,7 +6086,7 @@ namespace claujson {
 				else {
 					size_t last_key_idx = obj->find("last_key"sv);
 					if (last_key_idx == Structured::npos) {
-						Ptr<Structured> clean(result.as_structured_ptr());
+						clean(result);
 						return unvalid_data;
 					}
 
@@ -6098,7 +6098,7 @@ namespace claujson {
 			}
 			else if (obj->get_value_list(op_idx).str_val() == "add"sv) {
 				if (value_idx == Structured::npos) {
-					Ptr<Structured> clean(result.as_structured_ptr());
+					clean(result);
 					return unvalid_data;
 				}
 
@@ -6115,7 +6115,7 @@ namespace claujson {
 				}
 				else if (parent->is_object()) {
 					if (key_idx == Structured::npos) {
-						Ptr<Structured> clean(result.as_structured_ptr());
+						clean(result);
 						return unvalid_data;
 					}
 					parent->add_object_element(obj->get_value_list(key_idx).clone(), obj->get_value_list(value_idx).clone());

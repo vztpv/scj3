@@ -380,7 +380,7 @@ int main(int argc, char* argv[])
 				std::cout << clock() - c2 << "ms\n";
 				std::cout << "Re.. " << sum << " " << counter << "\n";
 
-				claujson::Ptr<claujson::Structured> clean(j.as_structured_ptr());
+				claujson::clean(j);
 
 				//std::cout << (claujson::error.has_error() ? ("has error") : ("no error")) << "\n";
 				//std::cout << claujson::error.msg() << "\n";
