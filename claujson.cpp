@@ -4897,7 +4897,6 @@ namespace claujson {
 	bool is_valid(_simdjson::dom::parser_for_claujson& dom_parser, size_t middle, std::vector<int>* _is_array = nullptr, int* err = nullptr) {
 
 		const auto& buf = dom_parser.raw_buf();
-		const auto& string_buf = dom_parser.raw_string_buf();
 		const auto buf_len = dom_parser.raw_len();
 
 		auto* simdjson_imple = dom_parser.raw_implementation().get();
@@ -5201,7 +5200,6 @@ namespace claujson {
 	bool is_valid_reverse(_simdjson::dom::parser_for_claujson& dom_parser, int64_t middle, std::vector<int>* _is_array = nullptr, int* err = nullptr) { // str[middle] == ','
 
 		const auto& buf = dom_parser.raw_buf();
-		const auto& string_buf = dom_parser.raw_string_buf();
 		const auto buf_len = dom_parser.raw_len();
 
 		auto* simdjson_imple = dom_parser.raw_implementation().get();
