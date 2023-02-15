@@ -6138,13 +6138,10 @@ namespace claujson {
 		if (!simdjson_imple) {
 			log.no_print();
 
-			Value ut; 
 			std::string_view str = "{}"sv;
 
 			auto x = test_.parse(str.data(), str.length());
 			simdjson_imple = test_.raw_implementation().get();
-
-			clean(ut);
 		}
 	}
 }

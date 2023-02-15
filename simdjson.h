@@ -4970,9 +4970,6 @@ public:
     std::unique_ptr<char[]>& raw_buf() {
         return loaded_bytes;
     }
-    std::unique_ptr<uint8_t[]>& raw_string_buf() {
-        return doc.string_buf;
-    }
     std::unique_ptr<internal::dom_parser_implementation>& raw_implementation() {
         return implementation;
     }
