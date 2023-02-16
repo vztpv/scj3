@@ -244,8 +244,9 @@ int main(int argc, char* argv[])
 
 	//try 
 	{
-		claujson::init();
+		claujson::init(0);
 		claujson::log.console();
+
 		//utf_8_test();
 
 		//key_dup_test();
@@ -347,7 +348,7 @@ int main(int argc, char* argv[])
 				std::cout << "\nwrite " << c2 - c1 << "ms\n";
 
 				claujson::Value X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
-				claujson::Value Y("coordinates"sv); // use claujson::Data.
+				claujson::Value Y("coordinates"sv); // use claujson::Value.
 
 				sum = 0; counter = 0;
 				if (true && ok) {

@@ -183,10 +183,6 @@ namespace claujson {
 	} while (false) 
 
 
-
-	void init(); // call first, before use claujson..
-
-
 	template <class T>
 	using PtrWeak = T*;
 
@@ -682,6 +678,9 @@ namespace claujson {
 
 	[[nodiscard]]
 	Value patch(const Value& x, const Value& diff);
+
+
+	void init(int thr_num); // call first, before use claujson..
 
 	void clean(Value& x);
 }

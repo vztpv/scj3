@@ -2937,7 +2937,10 @@ namespace claujson {
 						}
 
 						for (size_t j = 0; j < result.size(); ++j) {
-							claujson::Ptr<claujson::Structured> clean2(result[i]);
+							if (result[i]) {
+								delete result[i];
+								result[i] = nullptr;
+							}
 						}
 
 						return { nullptr };
@@ -2956,7 +2959,10 @@ namespace claujson {
 					}
 					
 					for (size_t j = 0; j < result.size(); ++j) {
-						claujson::Ptr<claujson::Structured> clean2(result[i]);
+						if (result[i]) {
+							delete result[i];
+							result[i] = nullptr;
+						}
 					}
 
 					return { nullptr };
@@ -4060,10 +4066,10 @@ namespace claujson {
 
 					_save(stream, ut->get_value_list(i), chk_list, depth + 1);
 
-					if (y->is_object() && find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
+					if (y->is_object() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
 						stream << " } \n";
 					}
-					else if (y->is_array() && find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
+					else if (y->is_array() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
 						stream << " ] \n";
 					}
 				}
@@ -4191,10 +4197,10 @@ namespace claujson {
 					y = ((Structured*)(ut->get_value_list(i).ptr_val()));
 
 
-					if (y->is_object() && find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
+					if (y->is_object() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
 						stream << " } \n";
 					}
-					else if (y->is_array() && find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
+					else if (y->is_array() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
 						stream << " ] \n";
 					}
 
@@ -4755,12 +4761,12 @@ namespace claujson {
 				stream << " { ";
 			}
 
-			_save(stream, global, chk_list, 1);
+			_save(stream, global, chk_list, 1); 
 
-			if (j->is_array() && find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
+			if (j->is_array() && std::find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
 				stream << " ] ";
 			}
-			else if (j->is_object() && find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
+			else if (j->is_object() && std::find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
 				stream << " } ";
 			}
 		}
@@ -4889,7 +4895,10 @@ namespace claujson {
 
 
 			for (size_t i = 0; i < result.size(); ++i) {
-				claujson::Ptr<claujson::Structured> clean2(result[i]);
+				if (result[i]) {
+					delete result[i];
+					result[i] = nullptr;
+				}
 			}
 		}
 	}
@@ -6132,7 +6141,7 @@ namespace claujson {
 	}
 
 
-	void init() {
+	void init(int thr_num) {
 		if (!simdjson_imple) {
 			log.no_print();
 
@@ -6140,6 +6149,8 @@ namespace claujson {
 
 			auto x = test_.parse(str.data(), str.length());
 			simdjson_imple = test_.raw_implementation().get();
+
+			pool.reset(thr_num);
 		}
 	}
 }
