@@ -53,9 +53,6 @@ if (UNIX)
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -march=native -pthread  -Wno-narrowing  -O2)
 elseif (MSVC)
 	target_compile_definitions(${PROGRAM_NAME} PRIVATE
-        "$<$<CONFIG:Debug>:"
-            "_DEBUG"
-        ">"
         "$<$<CONFIG:Release>:"
             "NDEBUG"
         ">"
