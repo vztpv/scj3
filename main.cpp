@@ -198,6 +198,11 @@ void json_pointer_test() {
 
 int main(int argc, char* argv[])
 {
+	if (argc <= 1) {
+		std::cout << "[program name] [json file name] \n"; 
+		return 2;
+	}
+	
 	/*
 	std::cout << sizeof(claujson::Value) << "\n";
 	std::cout << sizeof(claujson::Array) << "\n";
