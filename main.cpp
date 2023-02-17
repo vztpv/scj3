@@ -2,8 +2,9 @@
 // now, test only haswell..
 // need C++17, 64bit..
 
-
+#ifdef _WIN32
 #include <vld.h>
+#endif
 
 #include "mimalloc-new-delete.h"
 
@@ -231,10 +232,10 @@ int main(int argc, char* argv[])
 	{
 		
 		
-		int a = clock();
+		int a = std::chrono::steady_clock::now();
 		_simdjson::dom::parser x;
 		auto y = x.load("citylots.json");
-		int b = clock();
+		int b = std::chrono::steady_clock::now();
 		std::cout << y.error() << " ";
 		std::cout << b - a << "ms\n";
 		
@@ -260,7 +261,7 @@ int main(int argc, char* argv[])
 			//try
 			{
 
-				int a = clock();
+				auto a = std::chrono::steady_clock::now();
 
 				// not-thread-safe..
 				auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
@@ -273,12 +274,14 @@ int main(int argc, char* argv[])
 					return 1;
 				}
 
-				int b = clock();
-				std::cout << "total " << b - a << "ms\n";
+				auto b = std::chrono::steady_clock::now();
+				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+				std::cout << "total " << dur.count() << "ms\n";
 				
 				//claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, 0);
-				std::cout << "save_parallel" << clock() - b << "ms\n";
+				std::cout << "save_parallel" << 
+					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
 				claujson::clean(j);
 
@@ -287,8 +290,9 @@ int main(int argc, char* argv[])
 				//claujson::LoadData::save(std::cout, ut);
 				//claujson::LoadData::save("output14.json", j);
 
-				int c = clock();
-				std::cout << "write " << c - b << "ms\n";
+				auto c = std::chrono::steady_clock::now();
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
+				std::cout << "write " << dur.count() << "ms\n";
 
 				int counter = 0;
 				ok = x.first;
@@ -325,13 +329,14 @@ int main(int argc, char* argv[])
 					}
 				}
 
-
-				std::cout << clock() - c << "ms\n";
+				auto d = std::chrono::steady_clock::now();
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(d - c);
+				std::cout << dur.count() << "ms\n";
 				std::cout << sum << " ";
 				std::cout << counter << "  ";
 				//return 0;
 
-				int c1 = clock();
+				auto c1 = std::chrono::steady_clock::now();
 
 				//claujson::save("total_ends.json", j);
 
@@ -344,8 +349,10 @@ int main(int argc, char* argv[])
 				//system("cat total_end.json");
 				//std::cout << "\n";
 
-				int c2 = clock();
-				std::cout << "\nwrite " << c2 - c1 << "ms\n";
+				auto c2 = std::chrono::steady_clock::now();
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c2 - c1);
+
+				std::cout << "\nwrite " << dur.count() << "ms\n";
 
 				claujson::Value X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
 				claujson::Value Y("coordinates"sv); // use claujson::Value.
@@ -378,7 +385,11 @@ int main(int argc, char* argv[])
 						}
 					}
 				}
-				std::cout << clock() - c2 << "ms\n";
+
+				auto c3 = std::chrono::steady_clock::now();
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c3 - c2);
+
+				std::cout << dur.count() << "ms\n";
 				std::cout << "Re.. " << sum << " " << counter << "\n";
 
 				claujson::clean(j);
