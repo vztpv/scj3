@@ -2,9 +2,6 @@
 // now, test only haswell..
 // need C++17, 64bit..
 
-#ifdef _WIN32
-#include <vld.h>
-#endif
 
 #include "mimalloc-new-delete.h"
 
@@ -51,7 +48,7 @@ void key_dup_test() {
 
 	found = x->chk_key_dup(&idx);
 
-	std::cout << found << " " << "idx is " <<  idx << "\n";
+	std::cout << found << " " << "idx is " << idx << "\n";
 }
 
 void json_pointer_test() {
@@ -199,10 +196,10 @@ void json_pointer_test() {
 int main(int argc, char* argv[])
 {
 	if (argc <= 1) {
-		std::cout << "[program name] [json file name] \n"; 
+		std::cout << "[program name] [json file name] \n";
 		return 2;
 	}
-	
+
 	/*
 	std::cout << sizeof(claujson::Value) << "\n";
 	std::cout << sizeof(claujson::Array) << "\n";
@@ -235,15 +232,15 @@ int main(int argc, char* argv[])
 	}
 
 	{
-		
-		
+
+
 		int a = std::chrono::steady_clock::now();
 		_simdjson::dom::parser x;
 		auto y = x.load("citylots.json");
 		int b = std::chrono::steady_clock::now();
 		std::cout << y.error() << " ";
 		std::cout << b - a << "ms\n";
-		
+
 	}*/
 
 	//claujson::log.no_print();
@@ -282,10 +279,10 @@ int main(int argc, char* argv[])
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
-				
+
 				//claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, 0);
-				std::cout << "save_parallel" << 
+				std::cout << "save_parallel" <<
 					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
 				claujson::clean(j);
@@ -404,7 +401,7 @@ int main(int argc, char* argv[])
 
 				//
 			}
-			
+
 			return !ok;
 			/*catch (...) {
 				if (j.is_ptr() && j.ptr_val()) {
