@@ -11,6 +11,7 @@ project(
 project(claujson)
 
 set(CMAKE_CXX_STANDARD 17) # C++17
+set(CMAKE_BUILD_TYPE "Release")
 
 set(PROGRAM_NAME claujson)
 
