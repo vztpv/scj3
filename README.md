@@ -9,11 +9,10 @@ save - multi-thread
   
 (C++17, 64bit, Windows)
 
-(mimalloc, fmt)
+# Use CMake, (msvc -> use Release, 64bit)
 
 # Use claujson.h, claujson.cpp, simdjson.h, simdjson.cpp, fmt, mimalloc
 
-# Use CMake, (msvc -> use Release, 64bit)
 
 # Using simdjson/simdjson (https://github.com/simdjson/simdjson) Apache-2.0 License
                         Apache License
