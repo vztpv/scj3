@@ -12,7 +12,7 @@ project(claujson)
 
 set(CMAKE_CXX_STANDARD 17) # C++17
 
-set(PROGRAM_NAME claujson_test)
+set(PROGRAM_NAME claujson)
 
 set(ROOT .)
 
