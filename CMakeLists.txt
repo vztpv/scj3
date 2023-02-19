@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.11)
 # 프로젝트 정보
 project(
   claujson
-  VERSION 0.11.3
+  VERSION 0.11.x # 
   DESCRIPTION "claujson"
   LANGUAGES CXX)
 
@@ -23,7 +23,7 @@ set(SRC_DIR ${ROOT})
 set(INCLUDE_DIR ${ROOT})
 
 # build setting.
-add_library(${LIB_NAME} STATIC ${INCLUDE_DIR}/claujson.h ${SRC_DIR}/claujson.cpp ${SRC_DIR}/simdjson.cpp) 
+add_library(${LIB_NAME} STATIC ${SRC_DIR}/claujson.cpp ${SRC_DIR}/simdjson.cpp) 
 add_executable(${PROGRAM_NAME} ${SRC_DIR}/main.cpp)
 
 include(FetchContent)
@@ -44,7 +44,7 @@ FetchContent_MakeAvailable(Mimalloc)
 
 
 # header..
-target_include_directories(${PROGRAM_NAME} PUBLIC ${INCLUDE_DIR})
+target_include_directories(${PROGRAM_NAME} private ${INCLUDE_DIR})
 
 if (UNIX) 
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -march=native -pthread  -Wno-narrowing  -O2)
