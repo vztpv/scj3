@@ -1,3 +1,7 @@
+# Deprecated...
+
+
+#
 zemirco/sf-city-lots-json
 License
 Copyright (C) 2012 [Mirco Zeiss](mailto: mirco.zeiss@gmail.com)
