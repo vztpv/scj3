@@ -13,7 +13,8 @@ project(claujson)
 set(CMAKE_CXX_STANDARD 17) # C++17
 set(CMAKE_BUILD_TYPE "Release")
 
-set(PROGRAM_NAME claujson)
+set(PROGRAM_NAME claujson_test)
+set(LIB_NAME claujson) # static lib
 
 set(ROOT .)
 
@@ -27,6 +28,7 @@ set(SOURCE ${SRC_DIR}/main.cpp ${SRC_DIR}/claujson.cpp ${SRC_DIR}/simdjson.cpp)
 
 # build setting.
 add_executable(${PROGRAM_NAME} ${SOURCE})
+add_library(${LIB_NAME} STATIC ${SRC_DIR}/claujson.cpp ${SRC_DIR}/simdjson.cpp) 
 
 include(FetchContent)
 FetchContent_Declare(
@@ -91,7 +93,9 @@ endif()
 if (UNIX)
 
 	target_link_libraries(${PROGRAM_NAME} PRIVATE fmt mimalloc pthread)
+	target_link_libraries(${LIB_NAME} PRIVATE fmt pthread)
 elseif (MSVC)
 
-	target_link_libraries(${PROGRAM_NAME} PRIVATE fmt mimalloc-static "$(CoreLibraryDependencies)")
+	target_link_libraries(${PROGRAM_NAME} PRIVATE fmt mimalloc-static)
+	target_link_libraries(${LIB_NAME} PRIVATE fmt)
 endif()
