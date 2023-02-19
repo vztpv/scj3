@@ -46,7 +46,9 @@ FetchContent_MakeAvailable(Mimalloc)
 
 
 # header..
-target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} fmt mimalloc)
+target_include_directories(${PROGRAM_NAME} PUBLIC claujson.h)
+target_include_directories(${PROGRAM_NAME} PRIVATE simdjson.h)
+target_include_directories(${PROGRAM_NAME} PRIVATE fmt mimalloc)
 
 
 if (UNIX) 
