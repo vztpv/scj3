@@ -8,8 +8,6 @@ project(
   DESCRIPTION "claujson"
   LANGUAGES CXX)
 
-project(claujson)
-
 set(CMAKE_CXX_STANDARD 17) # C++17
 set(CMAKE_BUILD_TYPE "Release")
 
@@ -25,7 +23,7 @@ set(SRC_DIR ${ROOT})
 set(INCLUDE_DIR ${ROOT})
 
 # build setting.
-add_library(${LIB_NAME} STATIC ${SRC_DIR}/claujson.cpp ${SRC_DIR}/simdjson.cpp) 
+add_library(${LIB_NAME} STATIC ${INCLUDE_DIR}/claujson.h ${SRC_DIR}/claujson.cpp ${SRC_DIR}/simdjson.cpp) 
 add_executable(${PROGRAM_NAME} ${SRC_DIR}/main.cpp)
 
 include(FetchContent)
@@ -47,8 +45,6 @@ FetchContent_MakeAvailable(Mimalloc)
 
 # header..
 target_include_directories(${PROGRAM_NAME} PUBLIC ${INCLUDE_DIR})
-target_include_directories(${PROGRAM_NAME} PRIVATE fmt mimalloc)
-
 
 if (UNIX) 
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -march=native -pthread  -Wno-narrowing  -O2)
