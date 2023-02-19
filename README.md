@@ -9,6 +9,22 @@ save - multi-thread
   
 (C++17, 64bit, Windows)
 
+# Use static lib (claujson) with CMake!
+    include(FetchContent)
+    FetchContent_Declare(
+      claujson
+      GIT_REPOSITORY "https://github.com/vztpv/scj3"
+      GIT_TAG "0.11.9"
+      )
+    FetchContent_MakeAvailable(claujson)
+    
+    if (UNIX)
+        target_link_libraries(${PROGRAM_NAME} PRIVATE claujson mimalloc pthread)   
+
+    elseif (MSVC)
+        target_link_libraries(${PROGRAM_NAME} PRIVATE claujson mimalloc-static)
+
+
 # Use CMake, (msvc -> use Release, 64bit)
 
 # Use claujson.h, claujson.cpp, simdjson.h, simdjson.cpp, fmt, mimalloc
