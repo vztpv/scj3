@@ -44,8 +44,8 @@ FetchContent_MakeAvailable(Mimalloc)
 
 
 # header..
-target_include_directories(${PROGRAM_NAME} private ${INCLUDE_DIR})
-target_include_directories(${LIB_NAME} private ${INCLUDE_DIR})
+target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR})
+
 
 if (UNIX) 
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -march=native -pthread  -Wno-narrowing  -O2)
