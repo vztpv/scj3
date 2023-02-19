@@ -90,7 +90,7 @@ endif()
 
 if (UNIX)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt pthread)
-	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc-static pthread)
+	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc pthread)
 	
 elseif (MSVC)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt)
