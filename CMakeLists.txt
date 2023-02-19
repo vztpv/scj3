@@ -24,11 +24,9 @@ set(SRC_DIR ${ROOT})
 
 set(INCLUDE_DIR ${ROOT})
 
-set(SOURCE ${SRC_DIR}/main.cpp ${SRC_DIR}/claujson.cpp ${SRC_DIR}/simdjson.cpp)
-
 # build setting.
-add_executable(${PROGRAM_NAME} ${SOURCE})
 add_library(${LIB_NAME} STATIC ${SRC_DIR}/claujson.cpp ${SRC_DIR}/simdjson.cpp) 
+add_executable(${PROGRAM_NAME} ${SRC_DIR}/main.cpp)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -91,11 +89,11 @@ endif()
 
 
 if (UNIX)
-
-	target_link_libraries(${PROGRAM_NAME} PRIVATE fmt mimalloc pthread)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt pthread)
+	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc-static pthread)
+	
 elseif (MSVC)
-
-	target_link_libraries(${PROGRAM_NAME} PRIVATE fmt mimalloc-static)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt)
+	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc-static)
+	
 endif()
