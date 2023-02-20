@@ -8,11 +8,7 @@ project(
   DESCRIPTION "claujson"
   LANGUAGES CXX)
   
-if (NOT CMAKE_VERSION VERSION_LESS "3.13")
-    # CMP0077: option() honors normal variables
-    # https://cmake.org/cmake/help/latest/policy/CMP0077.html
-    cmake_policy(SET CMP0077 NEW)
-endif()
+set(CMP0077 on)
 
 set(CMAKE_CXX_STANDARD 17) # C++17
 set(CMAKE_BUILD_TYPE "Release")
