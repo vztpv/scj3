@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.11)
 # 프로젝트 정보
 project(
   claujson
-  VERSION 0.11.8 # 
+  VERSION 0.11.10 # 
   DESCRIPTION "claujson"
   LANGUAGES CXX)
 
@@ -42,15 +42,35 @@ FetchContent_Declare(
   )
 FetchContent_MakeAvailable(Mimalloc)
 
+set(gtest_force_shared_crt on)
+
+include(FetchContent)
+FetchContent_Declare(
+  GoogleTest
+  GIT_REPOSITORY "https://github.com/google/googletest"
+  GIT_TAG "v1.13.0"
+  )
+FetchContent_MakeAvailable(GoogleTest)
 
 # header..
 target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${LIB_NAME} PUBLIC ${INCLUDE_DIR})
 
+#google test
+enable_testing()
+
+add_executable(claujson_google_test ${SRC_DIR}/test.cpp)
+#target_link_libraries(claujson_google_test gtest)
+add_test(NAME claujson_google_test COMMAND claujson_google_test)
+
+
 
 if (UNIX) 
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -march=native -pthread  -Wno-narrowing  -O2)
+  target_compile_options(claujson_google_test PRIVATE -m64 -march=native -pthread  -Wno-narrowing  -O2)
 elseif (MSVC)
+
+  # 
 	target_compile_definitions(${PROGRAM_NAME} PRIVATE
         "$<$<CONFIG:Release>:"
             "NDEBUG"
@@ -84,15 +104,17 @@ elseif (MSVC)
             /SUBSYSTEM:CONSOLE
         )
     endif()
+
 endif()
 
 
 if (UNIX)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt pthread)
 	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc pthread)
-	
+	target_link_libraries(claujson_google_test PRIVATE ${LIB_NAME} gtest mimalloc pthread)
 elseif (MSVC)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt)
 	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc-static)
+  target_link_libraries(claujson_google_test PRIVATE ${LIB_NAME} gtest mimalloc-static)
 	
 endif()
