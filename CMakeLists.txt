@@ -104,7 +104,39 @@ elseif (MSVC)
             /SUBSYSTEM:CONSOLE
         )
     endif()
-
+	target_compile_definitions(claujson_google_test PRIVATE
+        "$<$<CONFIG:Release>:"
+            "NDEBUG"
+        ">"
+        "_CONSOLE;"
+        "UNICODE;"
+        "_UNICODE"
+    )
+	
+	if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+        target_compile_options(claujson_google_test PRIVATE
+            $<$<CONFIG:Release>:
+                /std:c++17;
+                /Oi;
+                /Gy
+            >
+            /permissive-;
+            /sdl;
+            /W3;
+            ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
+            ${DEFAULT_CXX_EXCEPTION_HANDLING}
+        )
+    endif()
+    if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+        target_link_options(claujson_google_test PRIVATE
+            $<$<CONFIG:Release>:
+                /OPT:REF;
+                /OPT:ICF
+            >
+            /DEBUG;
+            /SUBSYSTEM:CONSOLE
+        )
+    endif()
 endif()
 
 
