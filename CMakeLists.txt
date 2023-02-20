@@ -1,5 +1,5 @@
 # CMake 프로그램의 최소 버전
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.13)
 
 # 프로젝트 정보
 project(
@@ -7,8 +7,6 @@ project(
   VERSION 0.11.10 # 
   DESCRIPTION "claujson"
   LANGUAGES CXX)
-  
-set(CMP0077 on)
 
 set(CMAKE_CXX_STANDARD 17) # C++17
 set(CMAKE_BUILD_TYPE "Release")
