@@ -8,6 +8,8 @@ project(
   DESCRIPTION "claujson"
   LANGUAGES CXX)
 
+cmake_policy(SET CMP0077 NEW)
+
 set(CMAKE_CXX_STANDARD 17) # C++17
 set(CMAKE_BUILD_TYPE "Release")
 
