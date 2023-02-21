@@ -10,6 +10,8 @@ TEST(ParserTest, EmptyArray)
     claujson::Value j;
 
     EXPECT_EQ(true, claujson::parse_str("[]", j, 1, false).first);
+    
+    claujson::clean(j);
 }
 
 
