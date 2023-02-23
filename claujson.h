@@ -176,13 +176,6 @@ namespace claujson {
 
 	// inline Error error;
 
-#define ERROR(msg) \
-	do { \
-		throw msg; \
-		/* error.make(__LINE__, std::string_view(msg)); */ \
-	} while (false) 
-
-
 	template <class T>
 	using PtrWeak = T*;
 
@@ -261,7 +254,7 @@ namespace claujson {
 		//	//
 		//}
 
-
+		explicit Value(Value*) = delete;
 
 		explicit Value(bool x);
 		explicit Value(nullptr_t x);

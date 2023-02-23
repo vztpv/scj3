@@ -12,6 +12,13 @@ using namespace std::string_view_literals;
 
 //#include "BS_thread_pool.hpp" - now has bug. - deadlock?
 
+#define ERROR(msg) \
+	do { \
+		throw msg; \
+		/* error.make(__LINE__, std::string_view(msg)); */ \
+	} while (false) 
+
+
 namespace claujson {
 
 	inline static _simdjson::dom::parser_for_claujson test_;
