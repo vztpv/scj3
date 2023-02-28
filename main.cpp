@@ -54,7 +54,7 @@ void key_dup_test() {
 void json_pointer_test() {
 	//	For example, given the JSON document
 
-	std::string test = u8R"({
+	auto test = u8R"({
 		   "foo": ["bar", "baz"] ,
 		   "" : 0,
 		   "a/b" : 1,
@@ -67,7 +67,7 @@ void json_pointer_test() {
 		   "m~n" : 8
 		})";
 
-	std::string test2 = u8R"({
+	auto test2 = u8R"({
 		   "foo": ["bar2", "baz"] ,
 		   "" : 0,
 		  
@@ -250,11 +250,11 @@ int main(int argc, char* argv[])
 		claujson::init(0);
 		claujson::log.console();
 
-		//utf_8_test();
+		utf_8_test();
 
-		//key_dup_test();
+		key_dup_test();
 
-		//json_pointer_test();
+		json_pointer_test();
 
 
 		for (int i = 0; i < 3; ++i) {
@@ -285,9 +285,9 @@ int main(int argc, char* argv[])
 				std::cout << "save_parallel" <<
 					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
-				claujson::clean(j);
+				//claujson::clean(j);
 
-				return 0;
+				//return 0;
 
 				//claujson::LoadData::save(std::cout, ut);
 				//claujson::LoadData::save("output14.json", j);
@@ -336,7 +336,9 @@ int main(int argc, char* argv[])
 				std::cout << dur.count() << "ms\n";
 				std::cout << sum << " ";
 				std::cout << counter << "  ";
-				//return 0;
+				
+				claujson::clean(j);
+				return 0;
 
 				auto c1 = std::chrono::steady_clock::now();
 

@@ -248,12 +248,12 @@ namespace claujson {
 
 		explicit Value(std::string_view x); // C++17
 
+#if __cplusplus >= 202002L
 		// C++20~
-		// todo - 
-		//explicit Data(std::u8string_view x) {
-		//	//
-		//}
+		explicit Value(std::u8string_view x);
 
+#endif
+		
 		explicit Value(Value*) = delete;
 
 		explicit Value(bool x);
@@ -374,7 +374,6 @@ namespace claujson {
 	class Structured {
 		friend class LoadData2;
 		friend class LoadData;
-		friend class Value;
 		friend class Array;
 		friend class Object;
 		friend class PartialJson;
@@ -482,15 +481,13 @@ namespace claujson {
 	};
 
 	class Object : public Structured {
-		friend class Value;
-		friend class PartialJson;
-		friend class Array;
 	protected:
 		std::vector<Value> obj_key_vec;
 		std::vector<Value> obj_val_vec;
 	protected:
 		explicit Object(bool valid);
 	public:
+		friend class Value;
 
 		Structured* clone() const;
 
@@ -561,14 +558,13 @@ namespace claujson {
 	};
 
 	class Array : public Structured {
-		friend class Value;
-		friend class Object;
-		friend class PartialJson;
 	protected:
 		std::vector<Value> arr_vec;
 	protected:
 		explicit Array(bool valid);
 	public:
+		friend class Value;
+		friend class PartialJson;
 
 		Structured* clone() const;
 
@@ -654,11 +650,10 @@ namespace claujson {
 	// parse json str.
 	std::pair<bool, size_t> parse_str(std::string_view str, Value& ut, size_t thr_num, bool use_all_function = false);
 
-	// todo - c++20~
-	//inline std::pair<bool, size_t> ParseStr(std::u8string_view str, int thr_num, Data& ut) {
-	//	//
-	//	return { false , 0 };
-	//}
+#if __cplusplus >= 202002L
+	// C++20~
+	std::pair<bool, size_t> parse_str(std::u8string_view str, Value& ut, size_t thr_num, bool use_all_function = false);
+#endif
 
 	std::string save_to_str(const Value& global);
 	

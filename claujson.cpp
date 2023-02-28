@@ -260,6 +260,16 @@ namespace claujson {
 			this->_valid = false;
 		}
 	}
+
+#if __cplusplus >= 202002L
+	// C++20~
+	Value::Value(std::u8string_view x) {
+		if (!set_str(reinterpret_cast<const char*>(x.data()), x.size())) {
+			this->_valid = false;
+		}
+	}
+
+#endif
 	//explicit Data(const char* x) {
 	//	set_str(x, strlen(x));
 	//}
@@ -5855,7 +5865,13 @@ namespace claujson {
 
 		return  { true, length };
 	}
-
+	
+#if __cplusplus >= 202002L
+	// C++20~
+	std::pair<bool, size_t> parse_str(std::u8string_view str, Value& ut, size_t thr_num, bool use_all_function) {
+		return parse_str(std::string_view(reinterpret_cast<const char*>(str.data()), str.size()), ut, thr_num, use_all_function);
+	}
+#endif
 
 	std::string save_to_str(const Value& global) {
 		return LoadData::save_to_str(global);
