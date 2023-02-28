@@ -118,6 +118,7 @@ target_compile_definitions(${LIB_NAME} PRIVATE
                 /Gy
             >
             /permissive-;
+	    /Zc:__cplusplus ;
             /sdl;
             /W3;
             ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
@@ -154,6 +155,7 @@ target_compile_definitions(${LIB_NAME} PRIVATE
             >
             /permissive-;
             /sdl;
+	    /Zc:__cplusplus;
             /W3;
             ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
             ${DEFAULT_CXX_EXCEPTION_HANDLING}
@@ -187,7 +189,7 @@ target_compile_definitions(${LIB_NAME} PRIVATE
                 /Gy
             >
             /permissive-;
-	    /Zc:__cplusplus 
+	    /Zc:__cplusplus ;
             /sdl;
             /W3;
             ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
