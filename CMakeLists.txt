@@ -10,10 +10,11 @@ project(
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
-set(CMAKE_CXX_STANDARD 17) # C++17
+#set(CMAKE_CXX_STANDARD 17) # C++17
 set(CMAKE_BUILD_TYPE "Release")
 
-set(PROGRAM_NAME claujson_test)
+set(PROGRAM_NAME claujson_test) # C++17
+set(PROGRAM_NAME2 claujson_test2) # C++20
 set(LIB_NAME claujson) # static lib
 
 set(ROOT .)
@@ -68,8 +69,9 @@ add_test(NAME claujson_google_test COMMAND claujson_google_test)
 
 
 if (UNIX) 
-	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -march=native -pthread  -Wno-narrowing  -O2)
-  target_compile_options(claujson_google_test PRIVATE -m64 -march=native -pthread  -Wno-narrowing  -O2)
+	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing -O2)
+	target_compile_opitons(${PROGRAM_NAME2} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
+        target_compile_options(claujson_google_test PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing  -O2)
 elseif (MSVC)
 
   # 
