@@ -14,7 +14,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 set(CMAKE_BUILD_TYPE "Release")
 
 set(PROGRAM_NAME claujson_test) # C++17
-set(PROGRAM_NAME2 claujson_test2) # C++20
+set(PROGRAM_NAME2 claujson_test2) # c++20
 set(LIB_NAME claujson) # static lib
 
 set(ROOT .)
@@ -71,11 +71,34 @@ add_test(NAME claujson_google_test COMMAND claujson_google_test)
 
 
 if (UNIX) 
+        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing -O2)
 	target_compile_options(${PROGRAM_NAME2} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
         target_compile_options(claujson_google_test PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing  -O2)
 elseif (MSVC)
 
+target_compile_definitions(${LIB_NAME} PRIVATE
+        "$<$<CONFIG:Release>:"
+            "NDEBUG"
+        ">"
+        "UNICODE;"
+        "_UNICODE"
+    )
+	
+	if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+        target_compile_options(${LIB_NAME} PRIVATE
+            $<$<CONFIG:Release>:
+                /std:c++20;
+                /Oi;
+                /Gy
+            >
+            /permissive-;
+            /sdl;
+            /W3;
+            ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
+            ${DEFAULT_CXX_EXCEPTION_HANDLING}
+        )
+    endif()
   # 
 	target_compile_definitions(${PROGRAM_NAME} PRIVATE
         "$<$<CONFIG:Release>:"
@@ -110,6 +133,8 @@ elseif (MSVC)
             /SUBSYSTEM:CONSOLE
         )
     endif()
+
+    
 	target_compile_definitions(claujson_google_test PRIVATE
         "$<$<CONFIG:Release>:"
             "NDEBUG"
