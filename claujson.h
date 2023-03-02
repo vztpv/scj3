@@ -270,7 +270,11 @@ namespace claujson {
 
 		bool is_primitive() const; // int, uint, float, bool(true, false), string, null
 
-		bool is_structured() const; // array or object (or used in inner )
+		bool is_structured() const; // array or object (or used in inner, partialjson )
+
+		bool is_array() const;
+
+		bool is_object() const;
 
 		bool is_int() const;
 
@@ -284,9 +288,21 @@ namespace claujson {
 
 		bool is_ptr() const; // check is_structured()
 
+		int64_t get_integer() const {
+			return int_val();
+		}
+
 		int64_t int_val() const;
 
+		uint64_t get_unsigned_integer() const {
+			return uint_val();
+		}
+
 		uint64_t uint_val() const;
+
+		double get_floating() const {
+			return float_val();
+		}
 
 		double float_val() const;
 
@@ -296,7 +312,15 @@ namespace claujson {
 
 		double& float_val();
 
+		bool get_boolean() const {
+			return bool_val();
+		}
+
 		bool bool_val() const;
+
+		Structured* get_structured() const {
+			return ptr_val();
+		}
 
 		Structured* ptr_val() const;
 

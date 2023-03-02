@@ -309,6 +309,22 @@ namespace claujson {
 		return is_valid() && is_ptr();
 	}
 
+	bool Value::is_array() const {
+		if (auto* x = this->as_structured_ptr(); x) {
+			return x->is_array();
+		}
+		return false;
+	}
+
+	bool Value::is_object() const {
+		if (auto* x = this->as_structured_ptr(); x) {
+			return x->is_object();
+		}
+		return false;
+	}
+
+
+
 	bool Value::is_int() const {
 		return is_valid() && type() == ValueType::INT;
 	}
