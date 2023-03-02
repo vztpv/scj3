@@ -380,6 +380,11 @@ namespace claujson {
 		return _bool_val;
 	}
 
+
+	bool& Value::bool_val() {
+		return _bool_val;
+	}
+
 	Structured* Value::ptr_val() const {
 		if (!is_ptr()) {
 			return nullptr;

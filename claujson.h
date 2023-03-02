@@ -292,15 +292,27 @@ namespace claujson {
 			return int_val();
 		}
 
+		int64_t& get_integer() {
+			return int_val();
+		}
+		
 		int64_t int_val() const;
 
 		uint64_t get_unsigned_integer() const {
 			return uint_val();
 		}
 
+		uint64_t& get_unsigned_integer() {
+			return uint_val();
+		}
+
 		uint64_t uint_val() const;
 
 		double get_floating() const {
+			return float_val();
+		}
+		
+		double& get_floating() {
 			return float_val();
 		}
 
@@ -316,7 +328,13 @@ namespace claujson {
 			return bool_val();
 		}
 
+		bool& get_boolean() {
+			return bool_val();
+		}
+
 		bool bool_val() const;
+
+		bool& bool_val();
 
 		Structured* get_structured() const {
 			return ptr_val();
@@ -343,7 +361,15 @@ namespace claujson {
 	public:
 		void clear();
 
+		std::string& get_string() {
+			return str_val();
+		}
+
 		std::string& str_val();
+
+		const std::string& get_string() const {
+			return str_val();
+		}
 
 		const std::string& str_val() const;
 
