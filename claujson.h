@@ -188,7 +188,7 @@ namespace claujson {
 	class Array;
 	class Object;
 
-	enum ValueType : int8_t {
+	enum class ValueType : int8_t {
 		NONE = 1,
 		ARRAY, // ARRAY_OBJECT -> ARRAY, OBJECT
 		OBJECT, 
@@ -521,11 +521,11 @@ namespace claujson {
 			char* buf,  uint64_t val_token_idx) = 0;
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			 int ut_type, uint64_t key_token_idx) = 0;
+			 ValueType type, uint64_t key_token_idx) = 0;
 
 		//
 
-		virtual void add_user_type(int type) = 0; // int type -> enum?
+		virtual void add_user_type(ValueType type) = 0; // int type -> enum?
 
 		virtual bool add_user_type(Ptr<Structured> j) = 0;
 	};
@@ -600,9 +600,9 @@ namespace claujson {
 			char* buf,  uint64_t val_token_idx);
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			 int ut_type, uint64_t key_token_idx);
+			 ValueType type, uint64_t key_token_idx);
 
-		virtual void add_user_type(int type);
+		virtual void add_user_type(ValueType type);
 
 		virtual bool add_user_type(Ptr<Structured> j);
 	};
@@ -682,9 +682,9 @@ namespace claujson {
 			char* buf,  uint64_t val_token_idx);
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			 int ut_type, uint64_t key_token_idx);
+			 ValueType type, uint64_t key_token_idx);
 
-		virtual void add_user_type(int type);
+		virtual void add_user_type(ValueType type);
 
 		virtual bool add_user_type(Ptr<Structured> j);
 

@@ -102,9 +102,9 @@ namespace claujson {
 			char* buf, uint64_t val_token_idx);
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			int ut_type, uint64_t key_token_idx);
+			ValueType type, uint64_t key_token_idx);
 
-		virtual void add_user_type(int type);
+		virtual void add_user_type(ValueType type);
 
 		virtual bool add_user_type(Ptr<Structured> j);
 
@@ -1759,7 +1759,7 @@ namespace claujson {
 		ERROR("Error Object::add_item_type");
 	}
 
-	void Object::add_user_type(int type) {
+	void Object::add_user_type(ValueType type) {
 		// error
 
 		log << warn << "errr..";
@@ -2048,7 +2048,7 @@ namespace claujson {
 	}
 
 	void Array::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-		int type, uint64_t key_token_idx) {
+		ValueType type, uint64_t key_token_idx) {
 		log << warn << "error";
 		ERROR("Array::add_user_type1");
 	}
@@ -2459,7 +2459,7 @@ namespace claujson {
 
 
 	inline void Object::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-		int type, uint64_t key_token_idx) {
+		ValueType type, uint64_t key_token_idx) {
 		if (!is_valid()) {
 			return;
 		}
@@ -2479,10 +2479,10 @@ namespace claujson {
 
 			Structured* json = nullptr;
 
-			if (type == 0) {
+			if (type == ValueType::OBJECT) {
 				json = new Object();
 			}
-			else if (type == 1) {
+			else if (type == ValueType::ARRAY) {
 				json = new Array();
 			}
 
@@ -2493,7 +2493,7 @@ namespace claujson {
 			json->set_parent(this);
 		}
 	}
-	inline void Array::add_user_type(int type) {
+	inline void Array::add_user_type(ValueType type) {
 		if (!is_valid()) {
 			return;
 		}
@@ -2501,27 +2501,23 @@ namespace claujson {
 		{
 			Structured* json = nullptr;
 
-			if (type == 0) {
+			if (type == ValueType::OBJECT) {
 				json = new Object();
 			}
-			else if (type == 1) {
+			else if (type == ValueType::ARRAY) {
 				json = new Array();
 			}
 
 
-			if (type == 0) {
-				arr_vec.push_back(Value(json));
-			}
-			else if (type == 1) {
-				arr_vec.push_back(Value(json));
-			}
+			arr_vec.push_back(Value(json));
+			
 
 			json->set_parent(this);
 		}
 	}
 
 	inline void PartialJson::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-		int type, uint64_t key_token_idx) {
+		ValueType type, uint64_t key_token_idx) {
 			{
 				if (!arr_vec.empty()) {
 					ERROR("partialJson is array or object.");
@@ -2543,10 +2539,10 @@ namespace claujson {
 
 				Structured* json = nullptr;
 
-				if (type == 0) {
+				if (type == ValueType::OBJECT) {
 					json = new Object();
 				}
-				else if (type == 1) {
+				else if (type == ValueType::ARRAY) {
 					json = new Array();
 				}
 
@@ -2560,7 +2556,7 @@ namespace claujson {
 				json->set_parent(this);
 			}
 	}
-	inline void PartialJson::add_user_type(int type) {
+	inline void PartialJson::add_user_type(ValueType type) {
 		{
 			if (!obj_key_vec.empty()) {
 				ERROR("PartialJson is array or object.");
@@ -2568,21 +2564,14 @@ namespace claujson {
 
 			Structured* json = nullptr;
 
-			if (type == 0) {
+			if (type == ValueType::OBJECT) {
 				json = new Object();
 			}
-			else if (type == 1) {
+			else if (type == ValueType::ARRAY) {
 				json = new Array();
 			}
 
-
-			if (type == 0) {
-				arr_vec.push_back(Value(json));
-			}
-			else if (type == 1) {
-				arr_vec.push_back(Value(json));
-			}
-
+			arr_vec.push_back(Value(json));
 
 			json->set_parent(this);
 		}
@@ -3218,117 +3207,15 @@ namespace claujson {
 
 				int64_t count = 0;
 
-				TokenTemp key; //bool is_before_comma = false;
-				//bool is_now_comma = false;
-				//bool is_next_comma = false;
-
-				//if (token_arr_start > 0) {
-				//	const _simdjson::internal::tape_type before_type =
-					//	get_type(buf[imple->structural_indexes[token_arr_start - 1]]);
-
-				//	is_before_comma = before_type == _simdjson::internal::tape_type::COMMA;
-			//	}
-
+				TokenTemp key; 
 
 				for (uint64_t i = 0; i < token_arr_len; ++i) {
-
-					//is_now_comma = is_next_comma;
 
 					const _simdjson::internal::tape_type type = get_type(buf[imple->structural_indexes[token_arr_start + i]]);
 
 					if (type == _simdjson::internal::tape_type::COMMA) {
 						continue;
 					}
-
-					//	if (is_before_comma && type == _simdjson::internal::tape_type::COMMA) {
-						//	log << warn  << "before is comma\n";
-
-						//	ERROR("Error in __Load... and case : , ,");
-							//
-						//}
-
-
-						//if (token_arr_start + i > 0) {
-						//	const _simdjson::internal::tape_type before_type =
-						//		get_type(buf[imple->structural_indexes[token_arr_start + i - 1]]);
-						//
-						//	if (before_type == _simdjson::internal::tape_type::START_ARRAY || before_type == _simdjson::internal::tape_type::START_OBJECT) {
-						//		is_now_comma = false; //log << warn  << "2-i " << i << "\n";
-						//	}
-						//}
-
-						//if (is_before_comma) {
-						//	is_now_comma = false;
-					//	}
-					//
-						//if (!is_now_comma && type == _simdjson::internal::tape_type::COMMA) {
-						//	log << warn  << "now is not comma\n";
-
-						//	ERROR("Error in __Load.., now is comma but, no expect.");							//
-						//}
-						//if (is_now_comma && type != _simdjson::internal::tape_type::COMMA) {
-						//	log << warn  << "is now comma... but not..\n";
-
-						//	ERROR("Error in __Load..., comma is expected but, is not");
-						//}
-
-
-						//is_before_comma = type == _simdjson::internal::tape_type::COMMA;
-
-						//if (type == _simdjson::internal::tape_type::COMMA) {
-						//	if (token_arr_start + i + 1 < imple->n_structural_indexes) {
-						//		const _simdjson::internal::tape_type _type = // next_type
-						//			get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
-
-						//		if (_type == _simdjson::internal::tape_type::END_ARRAY || _type == _simdjson::internal::tape_type::END_OBJECT) {
-						//			ERROR("Error in __Load..,  case : , } or , ]");
-						//			//
-						//		}
-						/////		else if (_type == _simdjson::internal::tape_type::COLON) {
-						//			ERROR("Error in __Load... case :    , : ");
-						//		}
-
-						//		continue;
-						//	}
-						//	else {
-						//		ERROR("Error in __Load..., last valid char? is , ");
-						//	}
-					//	}
-
-					//	if (type == _simdjson::internal::tape_type::COLON) {
-					//		ERROR("Error in __Load..., checked colon..");
-					//		//
-					//	}
-
-
-						//is_next_comma = __comma_chk_table[(int)is_now_comma][(unsigned char)type]; // comma_chk_table
-						/*switch (type) {
-						case _simdjson::internal::tape_type::END_ARRAY:
-						case _simdjson::internal::tape_type::END_OBJECT:
-						case _simdjson::internal::tape_type::STRING:
-						case _simdjson::internal::tape_type::INT:
-						case _simdjson::internal::tape_type::UINT:
-						case _simdjson::internal::tape_type::DOUBLE:
-						case _simdjson::internal::tape_type::TRUE_VALUE:
-						case _simdjson::internal::tape_type::FALSE_VALUE:
-						case _simdjson::internal::tape_type::NULL_VALUE:
-						case _simdjson::internal::tape_type::NONE: //
-							is_now_comma = true;
-							break;
-						} */
-
-						//if (token_arr_start + i + 1 < imple->n_structural_indexes) {
-						//	const _simdjson::internal::tape_type _type = // next_type
-						//		get_type(buf[imple->structural_indexes[token_arr_start + i + 1]]);
-
-						////	if (_type == _simdjson::internal::tape_type::END_ARRAY || _type == _simdjson::internal::tape_type::END_OBJECT) {
-						//		is_next_comma = false;
-						//	}
-						//}
-						//else {
-						//	is_next_comma = false;
-						//}
-
 						// Left 1
 					if (type == _simdjson::internal::tape_type::START_OBJECT ||
 						type == _simdjson::internal::tape_type::START_ARRAY) { // object start, array start
@@ -3338,20 +3225,8 @@ namespace claujson {
 							if (Vec[0].is_key) {
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size() / 2);
 
-								//if (Vec.size() % 2 == 1) {
-								//	log << warn  << "Vec.size()%2==1\n";
-								//	ERROR("Error in __Load..., key : value  error");
-								//}
-
 								for (size_t x = 0; x < Vec.size(); x += 2) {
-									//if (!Vec[x].is_key) {
-									//	log << warn  << "vec[x].is not key\n";
-									//	ERROR("Error in __Load..., key : value  error");
-									//}
-									//if (Vec[x + 1].is_key) {
-									//	log << warn  << "vec[x].is key\n";
-									//	ERROR("Error in __Load..., key : value  error");
-									//}
+								
 									nestedUT[braceNum]->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx,
 										(Vec[x + 1].buf_idx), Vec[x + 1].next_buf_idx,
 										buf, Vec[x].token_idx, Vec[x + 1].token_idx);
@@ -3361,11 +3236,7 @@ namespace claujson {
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size());
 
 								for (size_t x = 0; x < Vec.size(); x += 1) {
-									//if (Vec[x].is_key) {
-									//	log << warn  << "Vec[x].iskey\n";
-
-									//	ERROR("Error in __Load..., key : value  error");
-									//}
+								
 									nestedUT[braceNum]->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx, buf, Vec[x].token_idx);
 								}
 							}
@@ -3376,11 +3247,11 @@ namespace claujson {
 
 						if (key.is_key) {
 							nestedUT[braceNum]->add_user_type(key.buf_idx, key.next_buf_idx, buf,
-								type == _simdjson::internal::tape_type::START_OBJECT ? 0 : 1, key.token_idx); // object vs array
+								type == _simdjson::internal::tape_type::START_OBJECT ? ValueType::OBJECT : ValueType::ARRAY, key.token_idx); // object vs array
 							key.is_key = false;
 						}
 						else {
-							nestedUT[braceNum]->add_user_type(type == _simdjson::internal::tape_type::START_OBJECT ? 0 : 1);
+							nestedUT[braceNum]->add_user_type(type == _simdjson::internal::tape_type::START_OBJECT ? ValueType::OBJECT : ValueType::ARRAY);
 						}
 
 
@@ -3403,41 +3274,14 @@ namespace claujson {
 					else if (type == _simdjson::internal::tape_type::END_OBJECT ||
 						type == _simdjson::internal::tape_type::END_ARRAY) {
 
-						//if (type == _simdjson::internal::tape_type::END_ARRAY && nestedUT[braceNum]->is_object()) {
-						////	log << warn  << "{]";
-						//	ERROR("Error in __Load.., case : {]?");
-						//}
-
-						//if (type == _simdjson::internal::tape_type::END_OBJECT && nestedUT[braceNum]->is_array()) {
-						//	log << warn  << "[}";
-
-
-						//	ERROR("Error in __Load.., case : [}?");
-						//}
-
 						state = 0;
 
 						if (!Vec.empty()) {
 							if (type == _simdjson::internal::tape_type::END_OBJECT) {
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size() / 2);
 
-
-								//	if (Vec.size() % 2 == 1) {
-								//		log << warn  << "Vec.size() is odd\n";
-								//		ERROR("Error in __Load..., key : value  error");
-								//	}
-
-
 								for (size_t x = 0; x < Vec.size(); x += 2) {
-									//		if (!Vec[x].is_key) {
-									//			log << warn  << "is not key\n";
-									//			ERROR("Error in __Load..., key : value  error");
-									//		}
-									//		if (Vec[x + 1].is_key) {
-									//			log << warn  << "is key\n";
-									//			ERROR("Error in __Load..., key : value  error");
-									//		}
-
+									
 									nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx,
 										Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx, buf, Vec[x].token_idx, Vec[x + 1].token_idx);
 								}
@@ -3446,9 +3290,6 @@ namespace claujson {
 								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size());
 
 								for (auto& x : Vec) {
-									//if (x.is_key) {
-								//		ERROR("Error in __Load.., expect no key but has key...");
-									//}
 
 									nestedUT[braceNum]->add_item_type((x.buf_idx), x.next_buf_idx, buf, x.token_idx);
 								}
@@ -3559,29 +3400,14 @@ namespace claujson {
 				if (Vec.empty() == false) {
 					if (Vec[0].is_key) {
 						for (size_t x = 0; x < Vec.size(); x += 2) {
-							//if (!Vec[x].is_key) {
-							//	ERROR("Error in __Load..., key : value  error");
-							//}
-
-							//if (Vec.size() % 2 == 1) {
-							//	ERROR("Error in __Load..., key : value  error");
-							//}
-
-
-							//if (Vec[x + 1].is_key) {
-							//	ERROR("Error in __Load..., key : value  error");
-							//}
-
+		
 							nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx,
 								buf, Vec[x].token_idx, Vec[x + 1].token_idx);
 						}
 					}
 					else {
 						for (size_t x = 0; x < Vec.size(); x += 1) {
-							//if (Vec[x].is_key) {
-							//	ERROR("Error in __Load..., array element has key..");
-							//}
-
+						
 							nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, buf, Vec[x].token_idx);
 						}
 					}
