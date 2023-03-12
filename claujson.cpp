@@ -10,7 +10,7 @@ using namespace std::string_view_literals;
 
 #include "fmt/format.h"
 
-//#include "BS_thread_pool.hpp" - now has bug. - deadlock?
+#include "ThreadPool.h"
 
 #define ERROR(msg) \
 	do { \
@@ -23,8 +23,7 @@ namespace claujson {
 
 	inline static _simdjson::dom::parser_for_claujson test_;
 	inline static _simdjson::internal::dom_parser_implementation* simdjson_imple = nullptr;
-
-	//inline static BS::thread_pool pool;	
+	inline static std::unique_ptr<ThreadPool> pool;
 
 	// class PartialJson, only used in class LoadData.
 	class PartialJson : public Structured {
@@ -3519,8 +3518,9 @@ namespace claujson {
 							__global[i] = Ptr<Structured>(new PartialJson());
 						}
 
-						std::vector<std::thread> thr(pivots.size() - 1);
+						//std::vector<std::thread> thr(pivots.size() - 1);
 
+						std::vector<std::future<bool>> result(pivots.size() - 1);
 						std::vector<int> err(pivots.size() - 1, 0);
 
 						{
@@ -3528,7 +3528,7 @@ namespace claujson {
 							int64_t _token_arr_len = idx;
 
 
-							thr[0] = std::thread(__LoadData, (buf), buf_len, (imple), start[0], _token_arr_len, std::ref(__global[0]), 0, 0,
+							result[0] = pool->enqueue(__LoadData, (buf), buf_len, (imple), start[0], _token_arr_len, std::ref(__global[0]), 0, 0,
 								&next[0], &err[0], 0);
 						}
 
@@ -3537,15 +3537,15 @@ namespace claujson {
 						for (size_t i = 1; i < pivots.size() - 1; ++i) {
 							int64_t _token_arr_len = pivots[i + 1] - pivots[i];
 
-							thr[i] = std::thread(__LoadData, (buf), buf_len, (imple), pivots[i], _token_arr_len, std::ref(__global[i]), 0, 0,
+							result[i] = pool->enqueue(__LoadData, (buf), buf_len, (imple), pivots[i], _token_arr_len, std::ref(__global[i]), 0, 0,
 								&next[i], &err[i], i);
 
 						}
 
 
 						// wait
-						for (size_t i = 0; i < thr.size(); ++i) {
-							thr[i].join();
+						for (size_t i = 0; i < result.size(); ++i) {
+							result[i].get();
 						}
 
 						auto b = std::chrono::steady_clock::now();
@@ -4733,17 +4733,17 @@ namespace claujson {
 
 			std::vector<claujson::StrStream> stream(thr_num);
 
-			std::vector<std::thread> thr(thr_num);
-
-			thr[0] = std::thread(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], (false));
+			//std::vector<std::thread> thr(thr_num);
+			std::vector<std::future<void>> thr_result(thr_num);
+			thr_result[0] = pool->enqueue(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], (false));
 
 
 			for (size_t i = 1; i < thr_num; ++i) {
-				thr[i] = std::thread(save_, std::ref(stream[i]), std::cref(result[i - 1]->get_value_list(0)), temp_parent[i], (hint[i - 1]));
+				thr_result[i] = pool->enqueue(save_, std::ref(stream[i]), std::cref(result[i - 1]->get_value_list(0)), temp_parent[i], (hint[i - 1]));
 			}
 
 			for (size_t i = 0; i < thr_num; ++i) {
-				thr[i].join();
+				thr_result[i].get();
 			}
 
 			std::ofstream outFile(fileName, std::ios::binary);
@@ -5541,17 +5541,19 @@ namespace claujson {
 					}
 
 					std::vector<int> vec[2];
+					std::vector<std::future<bool>> thr_result(2);
 					int err = 0;
 
-					auto x = std::async(is_valid, std::ref(test), middle, &vec[0], &err);
-					auto y = std::async(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
+					thr_result[0] = pool->enqueue(is_valid, std::ref(test), middle, &vec[0], &err);
+					thr_result[1] = pool->enqueue(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
 
-					x.wait();
-					y.wait();
+					bool x = thr_result[0].get();
+					bool y = thr_result[1].get();
 
-					if (!x.get() || !y.get()) {
+					if (!x || !y) {
 						return { false, 0 };
 					}
+
 
 					if (vec[0].size() != vec[1].size()) { return { false, 0 }; }
 					for (size_t i = 0; i < vec[0].size(); ++i) {
@@ -5665,15 +5667,16 @@ namespace claujson {
 				}
 
 				std::vector<int> vec[2];
+				std::vector<std::future<bool>> thr_result(2);
 				int err = 0;
 
-				auto x = std::async(is_valid, std::ref(test), middle, &vec[0], &err);
-				auto y = std::async(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
+				thr_result[0] = pool->enqueue(is_valid, std::ref(test), middle, &vec[0], &err);
+				thr_result[1] = pool->enqueue(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
 
-				x.wait();
-				y.wait();
+				bool x = thr_result[0].get();
+				bool y = thr_result[1].get();
 
-				if (!x.get() || !y.get()) {
+				if (!x || !y) {
 					return { false, 0 };
 				}
 
@@ -6043,8 +6046,17 @@ namespace claujson {
 
 			auto x = test_.parse(str.data(), str.length());
 			simdjson_imple = test_.raw_implementation().get();
+		}
 
-			//pool.reset(thr_num);
+		if (!pool) {
+			if (thr_num <= 0) {
+				thr_num = std::thread::hardware_concurrency();
+			}
+			if (thr_num <= 0) {
+				thr_num = 1;
+			}
+
+			pool = std::make_unique<ThreadPool>(thr_num);
 		}
 	}
 }
