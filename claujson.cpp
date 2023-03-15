@@ -220,20 +220,6 @@ namespace claujson {
 		return this->_valid;
 	}
 
-	/*
-	Data::Data(const Data& other)
-		: _type(other._type)
-	{
-		if (_type == DataType::STRING) {
-			_str_val = new std::string(other._str_val->data(), other._str_val->size());
-
-		}
-		else {
-			_int_val = other._int_val;
-		}
-	}
-	*/
-
 	Value::Value(Structured* x) {
 		set_ptr(x);
 	}
@@ -268,14 +254,22 @@ namespace claujson {
 		}
 	}
 
+	Value::Value(const char8_t* x) {
+		std::u8string_view sv(x);
+
+		if (!set_str(reinterpret_cast<const char*>(sv.data()), sv.size())) {
+			this->_valid = false;
+		}
+	}
+
 #endif
-	//explicit Data(const char* x) {
-	//	set_str(x, strlen(x));
-	//}
-	// C++20~
-	//explicit Data(const char8_t* x) {
-	//	set_str((const char*)x, strlen((const char*)x));
-	//}
+	
+	Value::Value(const char* x) {
+		if (!set_str(x, strlen(x))) {
+			this->_valid = false;
+		}
+	}
+
 	Value::Value(bool x) {
 		set_bool(x);
 	}

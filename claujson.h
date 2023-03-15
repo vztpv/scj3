@@ -251,9 +251,11 @@ namespace claujson {
 #if __cplusplus >= 202002L
 		// C++20~
 		explicit Value(std::u8string_view x);
-
+		explicit Value(const char8_t* x);
 #endif
 		
+		explicit Value(const char* x);
+
 		explicit Value(Value*) = delete;
 
 		explicit Value(bool x);

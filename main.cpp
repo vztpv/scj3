@@ -192,6 +192,24 @@ void json_pointer_test() {
 	}
 }
 
+void str_test() {
+	auto x = u8"한글 Test";
+
+	claujson::Value A(x);
+
+	if (!A.is_str()) {
+		std::cout << "ERROR ";
+	}
+
+	auto y = "test";
+
+	claujson::Value B(y);
+
+	if (!B.is_str()) {
+		std::cout << "ERROR2 ";
+	}
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -256,6 +274,7 @@ int main(int argc, char* argv[])
 
 		json_pointer_test();
 
+		str_test();
 
 		for (int i = 0; i < 3; ++i) {
 			claujson::Value j;
