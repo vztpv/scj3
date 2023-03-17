@@ -208,6 +208,14 @@ void str_test() {
 	if (!B.is_str()) {
 		std::cout << "ERROR2 ";
 	}
+
+	std::string z = "test";
+	claujson::Value C(z);
+
+	if (!C.is_str()) {
+		std::cout << "ERROR3 ";
+	}
+	
 }
 
 

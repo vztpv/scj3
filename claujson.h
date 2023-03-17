@@ -350,6 +350,15 @@ namespace claujson {
 
 
 		static bool json_pointerA(std::string_view route, std::vector<Value>& vec);
+#if __cplusplus >= 202002L
+
+		Value& json_pointer(std::u8string_view route);
+
+		const Value& json_pointer(std::u8string_view route) const;
+
+
+		static bool json_pointerA(std::u8string_view route, std::vector<Value>& vec);
+#endif
 
 		Value& json_pointerB(const std::vector<Value>& routeDataVec);
 
@@ -456,7 +465,13 @@ namespace claujson {
 		Value& at(std::string_view key);
 
 		size_t find(std::string_view key) const;
+#if __cplusplus >= 202002L
+		const Value& at(std::u8string_view key) const;
 
+		Value& at(std::u8string_view key);
+
+		size_t find(std::u8string_view key) const;
+#endif
 
 		Value& operator[](size_t idx);
 
@@ -504,6 +519,9 @@ namespace claujson {
 		virtual bool insert_array_element(size_t idx, Value val) = 0;
 
 		virtual void erase(std::string_view key, bool real = false) = 0;
+#if __cplusplus >= 202002L
+		virtual void erase(std::u8string_view key, bool real = false) = 0;
+#endif
 		virtual void erase(size_t idx, bool real = false) = 0;
 
 	private:
@@ -586,6 +604,9 @@ namespace claujson {
 
 		virtual void erase(std::string_view key, bool real = false);
 
+#if __cplusplus >= 202002L
+		virtual void erase(std::u8string_view key, bool real = false);
+#endif
 		virtual void erase(size_t idx, bool real = false);
 
 
@@ -665,7 +686,9 @@ namespace claujson {
 		virtual bool insert_array_element(size_t idx, Value val);
 
 		virtual void erase(std::string_view key, bool real = false);
-
+#if __cplusplus >= 202002L
+		virtual void erase(std::u8string_view key, bool real = false);
+#endif
 		virtual void erase(size_t idx, bool real = false);
 
 	private:
