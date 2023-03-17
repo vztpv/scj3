@@ -3036,6 +3036,65 @@ namespace claujson {
 		return (_ptr_val);
 	}
 
+	Value& Value::operator[](size_t idx) {
+		static Value empty_value(nullptr, false);
+
+		if (is_structured()) {
+			return as_structured_ptr()->operator[](idx);
+		}
+		
+		return empty_value;
+	}
+
+	const Value& Value::operator[](size_t idx) const {
+		static const Value empty_value(nullptr, false);
+
+		if (is_structured()) {
+			return as_structured_ptr()->operator[](idx);
+		}
+
+		return empty_value;
+	}
+
+	Value& Value::at(std::string_view x) {
+		static Value empty_value(nullptr, false);
+
+		if (is_structured()) {
+			return as_structured_ptr()->at(x);
+		}
+
+		return empty_value;
+	}
+	
+	const Value& Value::at(std::string_view x) const {
+		static const Value empty_value(nullptr, false);
+
+		if (is_structured()) {
+			return as_structured_ptr()->at(x);
+		}
+
+		return empty_value;
+	}
+#if __cplusplus >= 202002L
+	Value& Value::at(std::u8string_view x) {
+		static Value empty_value(nullptr, false);
+
+		if (is_structured()) {
+			return as_structured_ptr()->at(x);
+		}
+
+		return empty_value;
+	}
+	const Value& Value::at(std::u8string_view x) const {
+		static const Value empty_value(nullptr, false);
+
+		if (is_structured()) {
+			return as_structured_ptr()->at(x);
+		}
+
+		return empty_value;
+	}
+#endif
 
 	// todo - as_array, as_object.
 // as_array
@@ -6472,6 +6531,97 @@ namespace claujson {
 			pool = std::make_unique<ThreadPool>(thr_num);
 		}
 	}
+
+
+	bool is_valid_utf8_string(std::string_view x) {
+		const char* str = x.data();
+		size_t len = x.size();
+		const size_t block_size = 1024;
+
+
+		uint8_t buf_src[block_size + _simdjson::_SIMDJSON_PADDING];
+		uint8_t buf_dest[block_size + _simdjson::_SIMDJSON_PADDING];
+
+
+		if (len >= block_size) {
+			uint8_t* buf_src = (uint8_t*)calloc(len + 1 + _simdjson::_SIMDJSON_PADDING, sizeof(uint8_t));
+			uint8_t* buf_dest = (uint8_t*)calloc(len + 1 + _simdjson::_SIMDJSON_PADDING, sizeof(uint8_t));
+			if (!buf_src || !buf_dest) {
+				if (buf_src) { free(buf_src); }
+				if (buf_dest) { free(buf_dest); }
+
+				return false;
+			}
+			memset(buf_src, '"', len + 1 + _simdjson::_SIMDJSON_PADDING);
+			memset(buf_dest, '"', len + 1 + _simdjson::_SIMDJSON_PADDING);
+
+			memcpy(buf_src, str, len);
+			buf_src[len] = '"';
+
+			// chk... fallback..
+			{
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+
+				if (!valid) {
+					free(buf_src);
+					free(buf_dest);
+
+					log << warn << "not valid utf8" << "\n";
+					log << warn << "Error in Convert for string, validate...";
+					return false;
+				}
+			}
+
+			if (auto* x = simdjson_imple->parse_string(buf_src, buf_dest); x == nullptr) {
+				free(buf_src);
+				free(buf_dest);
+
+				log << warn << "Error in Convert for string";
+				return false;
+			}
+			else {
+				//
+			}
+
+			free(buf_src);
+			free(buf_dest);
+		}
+		else {
+			memset(buf_src, '"', block_size + _simdjson::_SIMDJSON_PADDING);
+			memset(buf_dest, '"', block_size + _simdjson::_SIMDJSON_PADDING);
+
+			memcpy(buf_src, str, len);
+			buf_src[len] = '"';
+
+			{
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+
+				if (!valid) {
+					log << warn << "not valid utf8" << "\n";
+					log << warn << "Error in Convert for string, validate...";
+					return false;
+				}
+			}
+
+			if (auto* x = simdjson_imple->parse_string(buf_src, buf_dest); x == nullptr) {
+				log << warn << "Error in Convert for string";
+				return false;
+			}
+			else {
+				//
+			}
+		}
+
+		return true;
+	}
+
+
+#if __cplusplus >= 202002L
+	bool is_valid_utf8_string(std::u8string_view x) {
+		return is_valid_utf8_string(std::string_view((const char*)x.data(), x.size()));
+	}
+#endif
+
 }
 
 

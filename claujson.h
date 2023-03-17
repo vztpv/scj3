@@ -369,6 +369,17 @@ namespace claujson {
 		const Array& as_array()const;
 		const Object& as_object()const;
 		const Structured* as_structured_ptr()const;
+
+
+		Value& operator[](size_t idx);
+		const Value& operator[](size_t idx) const;
+
+		Value& at(std::string_view x);
+		const Value& at(std::string_view x) const;
+#if __cplusplus >= 202002L
+		Value& at(std::u8string_view x);
+		const Value& at(std::u8string_view x) const;
+#endif
 	public:
 		void clear();
 
@@ -746,5 +757,11 @@ namespace claujson {
 	void init(int thr_num); // call first, before use claujson..
 
 	void clean(Value& x);
+
+	bool is_valid_utf8_string(std::string_view x);
+
+#if __cplusplus >= 202002L
+	bool is_valid_utf8_string(std::u8string_view x);
+#endif
 }
 
