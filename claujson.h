@@ -758,10 +758,10 @@ namespace claujson {
 
 	void clean(Value& x);
 
-	bool is_valid_string(std::string_view x);
+	bool is_valid_json_string(std::string_view x);
 
 #if __cplusplus >= 202002L
-	bool is_valid_string(std::u8string_view x);
+	bool is_valid_json_string(std::u8string_view x);
 #endif
 }
 
