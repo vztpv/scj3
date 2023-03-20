@@ -12,7 +12,7 @@
 
 #include "claujson.h" // using simdjson 2.2.2
 
-#include "simdjson.h"
+#include "_simdjson.h"
 
 #include <cstring>
 
