@@ -25,6 +25,62 @@ save - multi-thread
         target_link_libraries(${PROGRAM_NAME} PRIVATE claujson mimalloc-static)
 
 
+# Usage... with citylots.json
+
+```c++
+claujson::init(0);
+
+claujson::Value j;
+bool ok;
+  
+auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
+
+if (!x.first) {
+	std::cout << "fail\n";
+	claujson::clean(j);
+	return 1;
+}
+
+//claujson::save("test12.txt", j);
+claujson::save_parallel("test34.json", j, 0);
+
+int counter = 0;
+ok = x.first;
+
+std::vector<claujson::Value> vec;
+if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
+	std::cout << "json pointer error.\n";
+	claujson::clean(j);
+	return 1;
+}
+
+double sum = 0;
+if (true && ok) {
+	for (int i = 0; i < 1; ++i) {
+		if (j.is_structured()) {
+			auto& features = j.as_object()[1]; 
+			for (auto& feature : features.as_array()) {
+				auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
+				for (auto& coordinate_ : coordinate.as_array()) {
+					for (auto& x : coordinate_.as_array()) {
+						if (x.is_float()) {
+							sum += x.float_val();
+							counter++;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+std::cout << sum << " ";
+std::cout << counter << "  ";
+
+claujson::clean(j);
+
+```
+
 # Use CMake, (msvc -> use Release, 64bit)
 
 # Use claujson.h, claujson.cpp, _simdjson.h, _simdjson.cpp, fmt, mimalloc, progschj/ThreadPool (some modified to use C++17)
