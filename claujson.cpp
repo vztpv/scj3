@@ -5983,8 +5983,8 @@ namespace claujson {
 			}
 
 			if (length == 0) {
-				log << warn << "empty json";
-				return { true, 0 };
+				log << warn << "empty string is not valid json";
+				return { false, 0 };
 			}
 
 			auto b = std::chrono::steady_clock::now();
@@ -6117,8 +6117,8 @@ namespace claujson {
 			}
 
 			if (length == 0) {
-				log << warn << "empty json";
-				return { true, 0 };
+				log << warn << "empty string is not valid json";
+				return { false, 0 };
 			}
 
 			auto b = std::chrono::steady_clock::now();
