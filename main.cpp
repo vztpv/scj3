@@ -340,14 +340,13 @@ int main(int argc, char* argv[])
 					int chk = 0;
 					for (int i = 0; i < 1; ++i) {
 						if (j.is_structured()) {
-							auto& features = j.as_object()[1]; // j[1];
-							for (auto& feature : features.as_array()) {
-								auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
-								for (auto& coordinate_ : coordinate.as_array()) {
-									for (auto& x : coordinate_.as_array()) {
+							auto& features = j[1]; 
+							for (auto& feature : features) {
+								auto& coordinate = feature.at("geometry"sv).at("coordinates"sv)[0];  // feature.json_pointerB(vec)[0];  
+								for (auto& coordinate_ : coordinate) {
+									for (auto& x : coordinate_) {
 										if (x.is_float()) {
 											sum += x.float_val();
-
 											counter++;
 											chk++;
 										}

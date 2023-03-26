@@ -348,6 +348,9 @@ namespace claujson {
 
 		const Value& json_pointer(std::string_view route) const;
 
+		std::vector<Value>::iterator begin(); 
+
+		std::vector<Value>::iterator end();
 
 		static bool json_pointerA(std::string_view route, std::vector<Value>& vec);
 #if __cplusplus >= 202002L
@@ -603,8 +606,11 @@ namespace claujson {
 		virtual void clear();
 
 
-		virtual void reserve_data_list(size_t len);
+		std::vector<Value>::iterator begin();
 
+		std::vector<Value>::iterator end();
+
+		virtual void reserve_data_list(size_t len);
 
 		virtual bool add_object_element(Value key, Value val);
 		virtual bool add_array_element(Value val);
@@ -619,8 +625,6 @@ namespace claujson {
 		virtual void erase(std::u8string_view key, bool real = false);
 #endif
 		virtual void erase(size_t idx, bool real = false);
-
-
 
 	private:
 		virtual void MergeWith(PtrWeak<Structured> j, int start_offset);

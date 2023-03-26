@@ -624,6 +624,23 @@ namespace claujson {
 		return true;
 	}
 #endif
+
+
+	std::vector<Value>::iterator Value::begin() {
+		if (is_object()) {
+			return as_object().begin();
+		}
+		return as_array().begin();
+	}
+
+	std::vector<Value>::iterator Value::end() {
+		if (is_object()) {
+			return as_object().end();
+		}
+		return as_array().end();
+	}
+
+
 	Value& Value::json_pointerB(const std::vector<Value>& routeDataVec) { // option-> std::string_view route?
 		static Value unvalid_data(nullptr, false);
 
@@ -709,6 +726,7 @@ namespace claujson {
 
 		return *data;
 	}
+
 
 
 	// think.. Data vs Data& vs Data* ? 
@@ -1823,15 +1841,15 @@ namespace claujson {
 	bool Structured::change_key(const Value& key, const Value& new_key) { // chk test...
 		if (this->is_object() && key.is_str() && new_key.is_str()) {
 			auto idx = find(key.str_val());
-			if (idx == -1) {
+			if (idx == npos) {
 				return false;
 			}
 
 			get_key_list(idx) = new_key.clone();
+			if (get_value_list(idx).is_structured()) {
+				get_value_list(idx).as_structured_ptr()->set_key(new_key.clone());
+			}
 
-			//auto val = std::move(get_value_list(idx));
-			//erase(idx);
-			//add_object_element(new_key.clone(), std::move(val));
 			return true;
 		}
 		return false;
@@ -1961,6 +1979,15 @@ namespace claujson {
 	void Object::clear() {
 		obj_val_vec.clear();
 		obj_key_vec.clear();
+	}
+
+
+	std::vector<Value>::iterator Object::begin() {
+		return obj_val_vec.begin();
+	}
+
+	std::vector<Value>::iterator Object::end() {
+		return obj_val_vec.end();
 	}
 
 	void Object::reserve_data_list(size_t len) {
