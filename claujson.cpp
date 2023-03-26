@@ -4290,6 +4290,34 @@ namespace claujson {
 	};
 
 
+	inline void write_char(StrStream& stream, char ch) {
+		switch (ch) {
+		case '\\':
+			stream << "\\\\";
+			break;
+		case '\"':
+			stream << "\\\"";
+			break;
+		case '\n':
+			stream << "\\n";
+			break;
+
+		default:
+
+			int code = ch;
+			if (code >= 0 && (code < 0x20 || code == 0x7F))
+			{
+				char buf[] = "\\uDDDD";
+				snprintf(buf + 2, 5, "%04X", code);
+				stream << buf;
+			}
+			else {
+				stream << ch;
+			}
+
+		}
+	}
+
 	std::string LoadData::save_to_str(const Value& global) {
 		StrStream stream;
 
@@ -4320,31 +4348,7 @@ namespace claujson {
 
 				size_t len = x.str_val().size();
 				for (uint64_t j = 0; j < len; ++j) {
-					switch ((x.str_val())[j]) {
-					case '\\':
-						stream << "\\\\";
-						break;
-					case '\"':
-						stream << "\\\"";
-						break;
-					case '\n':
-						stream << "\\n";
-						break;
-
-					default:
-
-						int code = (x.str_val())[j];
-						if (code > 0 && (code < 0x20 || code == 0x7F))
-						{
-							char buf[] = "\\uDDDD";
-							snprintf(buf + 2, 5, "%04X", code);
-							stream << buf;
-						}
-						else {
-							stream << (x.str_val())[j];
-						}
-
-					}
+					write_char(stream, x.str_val()[j]);
 				}stream << "\"";
 			}
 			else if (x.type() == ValueType::BOOL) {
@@ -4386,30 +4390,7 @@ namespace claujson {
 
 						size_t len = x.str_val().size();
 						for (uint64_t j = 0; j < len; ++j) {
-							switch ((x.str_val())[j]) {
-							case '\\':
-								stream << "\\\\";
-								break;
-							case '\"':
-								stream << "\\\"";
-								break;
-							case '\n':
-								stream << "\\n";
-								break;
-
-							default:
-
-								int code = (x.str_val())[j];
-								if (code > 0 && (code < 0x20 || code == 0x7F))
-								{
-									char buf[] = "\\uDDDD";
-									snprintf(buf + 2, 5, "%04X", code); // check..
-									stream << buf;
-								}
-								else {
-									stream << (x.str_val())[j];
-								}
-							}
+							write_char(stream, x.str_val()[j]);
 						}stream << "\"";
 
 						{
@@ -4447,31 +4428,7 @@ namespace claujson {
 
 						size_t len = x.str_val().size();
 						for (uint64_t j = 0; j < len; ++j) {
-							switch ((x.str_val())[j]) {
-							case '\\':
-								stream << "\\\\";
-								break;
-							case '\"':
-								stream << "\\\"";
-								break;
-							case '\n':
-								stream << "\\n";
-								break;
-
-							default:
-
-								int code = (x.str_val())[j];
-								if (code > 0 && (code < 0x20 || code == 0x7F))
-								{
-									char buf[] = "\\uDDDD";
-									snprintf(buf + 2, 5, "%04X", code);
-									stream << buf;
-								}
-								else {
-									stream << (x.str_val())[j];
-								}
-
-							}
+							write_char(stream, x.str_val()[j]);
 						}
 
 						stream << "\"";
@@ -4489,31 +4446,7 @@ namespace claujson {
 
 							size_t len = x.str_val().size();
 							for (uint64_t j = 0; j < len; ++j) {
-								switch ((x.str_val())[j]) {
-								case '\\':
-									stream << "\\\\";
-									break;
-								case '\"':
-									stream << "\\\"";
-									break;
-								case '\n':
-									stream << "\\n";
-									break;
-
-								default:
-
-									int code = (x.str_val())[j];
-									if (code > 0 && (code < 0x20 || code == 0x7F))
-									{
-										char buf[] = "\\uDDDD";
-										snprintf(buf + 2, 5, "%04X", code);
-										stream << buf;
-									}
-									else {
-										stream << (x.str_val())[j];
-									}
-
-								}
+								write_char(stream, x.str_val()[j]);
 							}
 							stream << "\"";
 
@@ -4580,31 +4513,7 @@ namespace claujson {
 
 						size_t len = x.str_val().size();
 						for (uint64_t j = 0; j < len; ++j) {
-							switch ((x.str_val())[j]) {
-							case '\\':
-								stream << "\\\\";
-								break;
-							case '\"':
-								stream << "\\\"";
-								break;
-							case '\n':
-								stream << "\\n";
-								break;
-
-							default:
-
-								int code = (x.str_val())[j];
-								if (code > 0 && (code < 0x20 || code == 0x7F))
-								{
-									char buf[] = "\\uDDDD";
-									snprintf(buf + 2, 5, "%04X", code);
-									stream << buf;
-								}
-								else {
-									stream << (x.str_val())[j];
-								}
-
-							}
+							write_char(stream, x.str_val()[j]);
 						}stream << "\"";
 					}
 					else if (x.type() == ValueType::BOOL) {
@@ -4640,31 +4549,7 @@ namespace claujson {
 
 				size_t len = x.str_val().size();
 				for (uint64_t j = 0; j < len; ++j) {
-					switch ((x.str_val())[j]) {
-					case '\\':
-						stream << "\\\\";
-						break;
-					case '\"':
-						stream << "\\\"";
-						break;
-					case '\n':
-						stream << "\\n";
-						break;
-
-					default:
-
-						int code = (x.str_val())[j];
-						if (code > 0 && (code < 0x20 || code == 0x7F))
-						{
-							char buf[] = "\\uDDDD";
-							snprintf(buf + 2, 5, "%04X", code);
-							stream << buf;
-						}
-						else {
-							stream << (x.str_val())[j];
-						}
-
-					}
+					write_char(stream, x.str_val()[j]);
 				}
 				stream << "\"";
 
@@ -4706,31 +4591,7 @@ namespace claujson {
 
 						size_t len = x.str_val().size();
 						for (uint64_t j = 0; j < len; ++j) {
-							switch ((x.str_val())[j]) {
-							case '\\':
-								stream << "\\\\";
-								break;
-							case '\"':
-								stream << "\\\"";
-								break;
-							case '\n':
-								stream << "\\n";
-								break;
-
-							default:
-
-								int code = (x.str_val())[j];
-								if (code > 0 && (code < 0x20 || code == 0x7F)) // chk this... with validate_string function. from simdjson..
-								{
-									char buf[] = "\\uDDDD";
-									snprintf(buf + 2, 5, "%04X", code);
-									stream << buf;
-								}
-								else {
-									stream << (x.str_val())[j];
-								}
-
-							}
+							write_char(stream, x.str_val()[j]);
 						}stream << "\"";
 
 						{
@@ -4768,31 +4629,7 @@ namespace claujson {
 
 						size_t len = x.str_val().size();
 						for (uint64_t j = 0; j < len; ++j) {
-							switch ((x.str_val())[j]) {
-							case '\\':
-								stream << "\\\\";
-								break;
-							case '\"':
-								stream << "\\\"";
-								break;
-							case '\n':
-								stream << "\\n";
-								break;
-
-							default:
-
-								int code = (x.str_val())[j];
-								if (code > 0 && (code < 0x20 || code == 0x7F))
-								{
-									char buf[] = "\\uDDDD";
-									snprintf(buf + 2, 5, "%04X", code);
-									stream << buf;
-								}
-								else {
-									stream << (x.str_val())[j];
-								}
-
-							}
+							write_char(stream, x.str_val()[j]);
 						}
 
 						stream << "\"";
@@ -4810,31 +4647,7 @@ namespace claujson {
 
 							size_t len = x.str_val().size();
 							for (uint64_t j = 0; j < len; ++j) {
-								switch ((x.str_val())[j]) {
-								case '\\':
-									stream << "\\\\";
-									break;
-								case '\"':
-									stream << "\\\"";
-									break;
-								case '\n':
-									stream << "\\n";
-									break;
-
-								default:
-
-									int code = (x.str_val())[j];
-									if (code > 0 && (code < 0x20 || code == 0x7F))
-									{
-										char buf[] = "\\uDDDD";
-										snprintf(buf + 2, 5, "%04X", code);
-										stream << buf;
-									}
-									else {
-										stream << (x.str_val())[j];
-									}
-
-								}
+								write_char(stream, x.str_val()[j]);
 							}
 							stream << "\"";
 
@@ -4901,31 +4714,7 @@ namespace claujson {
 
 						size_t len = x.str_val().size();
 						for (uint64_t j = 0; j < len; ++j) {
-							switch ((x.str_val())[j]) {
-							case '\\':
-								stream << "\\\\";
-								break;
-							case '\"':
-								stream << "\\\"";
-								break;
-							case '\n':
-								stream << "\\n";
-								break;
-
-							default:
-
-								int code = (x.str_val())[j];
-								if (code > 0 && (code < 0x20 || code == 0x7F))
-								{
-									char buf[] = "\\uDDDD";
-									snprintf(buf + 2, 5, "%04X", code);
-									stream << buf;
-								}
-								else {
-									stream << (x.str_val())[j];
-								}
-
-							}
+							write_char(stream, x.str_val()[j]);
 						}stream << "\"";
 					}
 					else if (x.type() == ValueType::BOOL) {
@@ -4961,31 +4750,7 @@ namespace claujson {
 
 				size_t len = x.str_val().size();
 				for (uint64_t j = 0; j < len; ++j) {
-					switch ((x.str_val())[j]) {
-					case '\\':
-						stream << "\\\\";
-						break;
-					case '\"':
-						stream << "\\\"";
-						break;
-					case '\n':
-						stream << "\\n";
-						break;
-
-					default:
-
-						int code = (x.str_val())[j];
-						if (code > 0 && (code < 0x20 || code == 0x7F))
-						{
-							char buf[] = "\\uDDDD";
-							snprintf(buf + 2, 5, "%04X", code);
-							stream << buf;
-						}
-						else {
-							stream << (x.str_val())[j];
-						}
-
-					}
+					write_char(stream, x.str_val()[j]);
 				}
 				stream << "\"";
 
@@ -5045,31 +4810,7 @@ namespace claujson {
 
 				size_t len = x.str_val().size();
 				for (uint64_t j = 0; j < len; ++j) {
-					switch ((x.str_val())[j]) {
-					case '\\':
-						stream << "\\\\";
-						break;
-					case '\"':
-						stream << "\\\"";
-						break;
-					case '\n':
-						stream << "\\n";
-						break;
-
-					default:
-
-						int code = (x.str_val())[j];
-						if (code > 0 && (code < 0x20 || code == 0x7F))
-						{
-							char buf[] = "\\uDDDD";
-							snprintf(buf + 2, 5, "%04X", code);
-							stream << buf;
-						}
-						else {
-							stream << (x.str_val())[j];
-						}
-
-					}
+					write_char(stream, x.str_val()[j]);
 				}stream << "\"";
 			}
 			else if (x.type() == ValueType::BOOL) {
@@ -5147,31 +4888,7 @@ namespace claujson {
 
 				size_t len = x.str_val().size();
 				for (uint64_t j = 0; j < len; ++j) {
-					switch ((x.str_val())[j]) {
-					case '\\':
-						stream << "\\\\";
-						break;
-					case '\"':
-						stream << "\\\"";
-						break;
-					case '\n':
-						stream << "\\n";
-						break;
-
-					default:
-
-						int code = (x.str_val())[j];
-						if (code > 0 && (code < 0x20 || code == 0x7F))
-						{
-							char buf[] = "\\uDDDD";
-							snprintf(buf + 2, 5, "%04X", code);
-							stream << buf;
-						}
-						else {
-							stream << (x.str_val())[j];
-						}
-
-					}
+					write_char(stream, x.str_val()[j]);
 				}stream << "\"";
 			}
 			else if (x.type() == ValueType::BOOL) {
