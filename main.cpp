@@ -307,6 +307,11 @@ int main(int argc, char* argv[])
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
 
+
+			//	claujson::clean(j);
+
+			//	return 0;
+
 				//claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, 0);
 				std::cout << "save_parallel" <<
@@ -314,7 +319,7 @@ int main(int argc, char* argv[])
 
 				//claujson::clean(j);
 
-				//return 0;
+			//return 0;
 
 				//claujson::LoadData::save(std::cout, ut);
 				//claujson::LoadData::save("output14.json", j);
@@ -330,7 +335,7 @@ int main(int argc, char* argv[])
 
 				// json_pointer, json_pointerA <- u8string_view?
 
-				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
+				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec, false)) {
 					std::cout << "json pointer error.\n";
 					return 1;
 				}
@@ -341,8 +346,8 @@ int main(int argc, char* argv[])
 					for (int i = 0; i < 1; ++i) {
 						if (j.is_structured()) {
 							auto& features = j[1]; 
-							for (auto& feature : features) {
-								auto& coordinate = feature.at("geometry"sv).at("coordinates"sv)[0];  // feature.json_pointerB(vec)[0];  
+							for (auto& feature : features) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
+								auto& coordinate = feature["geometry"sv]["coordinates"sv][0];  // feature.json_pointerB(vec)[0];  
 								for (auto& coordinate_ : coordinate) {
 									for (auto& x : coordinate_) {
 										if (x.is_float()) {

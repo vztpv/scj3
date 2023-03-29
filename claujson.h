@@ -246,15 +246,15 @@ namespace claujson {
 		explicit Value(uint64_t x);
 		explicit Value(double x);
 
-		explicit Value(std::string_view x); // C++17
+		explicit Value(std::string_view x, bool convert = true); // C++17
 
 #if __cplusplus >= 202002L
 		// C++20~
-		explicit Value(std::u8string_view x);
-		explicit Value(const char8_t* x);
+		explicit Value(std::u8string_view x, bool convert = true);
+		explicit Value(const char8_t* x, bool convert = true);
 #endif
 		
-		explicit Value(const char* x);
+		explicit Value(const char* x, bool convert = true);
 
 		explicit Value(Value*) = delete;
 
@@ -344,23 +344,26 @@ namespace claujson {
 
 		Structured* ptr_val() const;
 
-		Value& json_pointer(std::string_view route);
+		Value& json_pointer(std::string_view route, bool convert = true);
 
-		const Value& json_pointer(std::string_view route) const;
+		const Value& json_pointer(std::string_view route, bool convert = true) const;
+
+		Value& json_pointer(const Value& route);
+		const Value& json_pointer(const Value& route) const;
 
 		std::vector<Value>::iterator begin(); 
 
 		std::vector<Value>::iterator end();
 
-		static bool json_pointerA(std::string_view route, std::vector<Value>& vec);
+		static bool json_pointerA(std::string_view route, std::vector<Value>& vec, bool convert = true);
 #if __cplusplus >= 202002L
 
-		Value& json_pointer(std::u8string_view route);
+		Value& json_pointer(std::u8string_view route, bool convert = true);
 
-		const Value& json_pointer(std::u8string_view route) const;
+		const Value& json_pointer(std::u8string_view route, bool convert = true) const;
 
 
-		static bool json_pointerA(std::u8string_view route, std::vector<Value>& vec);
+		static bool json_pointerA(std::u8string_view route, std::vector<Value>& vec, bool convert = true);
 #endif
 
 		Value& json_pointerB(const std::vector<Value>& routeDataVec);
@@ -374,15 +377,34 @@ namespace claujson {
 		const Structured* as_structured_ptr()const;
 
 
-		Value& operator[](size_t idx);
-		const Value& operator[](size_t idx) const;
+		// with convert...
+		const Value& at(std::string_view key) const;
+		Value& at(std::string_view key);
 
-		Value& at(std::string_view x);
-		const Value& at(std::string_view x) const;
+		size_t find(std::string_view key) const;
+
+		size_t find_(std::string_view key) const; // find without key`s converting?
 #if __cplusplus >= 202002L
-		Value& at(std::u8string_view x);
-		const Value& at(std::u8string_view x) const;
+		const Value& at(std::u8string_view key) const;
+
+		Value& at(std::u8string_view key);
+
+		size_t find(std::u8string_view key) const;
+
+		size_t find_(std::u8string_view key) const; // find without key`s converting?
+
+		// without covnert
+		Value& operator[](std::u8string_view key); // if not exist key, then nothing.
+		const Value& operator[](std::u8string_view key) const; // if not exist key, then nothing.
 #endif
+
+		// at vs [] (at <- convert key to key_in_json.) ([] <- do not convert.)
+		Value& operator[](std::string_view key); // if not exist key, then nothing.
+		const Value& operator[](std::string_view key) const; // if not exist key, then nothing.
+
+		Value& operator[](size_t idx);
+
+		const Value& operator[](size_t idx) const;
 	public:
 		void clear();
 
@@ -405,7 +427,7 @@ namespace claujson {
 
 		void set_float(double x);
 
-		bool set_str(const char* str, size_t len);
+		bool set_str(const char* str, size_t len, bool convert);
 	private:
 		void set_str_in_parse(const char* str, size_t len);
 	public:
@@ -474,18 +496,30 @@ namespace claujson {
 
 		virtual ~Structured();
 
+		// with convert...
 		const Value& at(std::string_view key) const;
-
 		Value& at(std::string_view key);
 
 		size_t find(std::string_view key) const;
+
+		size_t find_(std::string_view key) const; // find without key`s converting?
 #if __cplusplus >= 202002L
 		const Value& at(std::u8string_view key) const;
 
 		Value& at(std::u8string_view key);
 
 		size_t find(std::u8string_view key) const;
+
+		size_t find_(std::u8string_view key) const; // find without key`s converting?
+
+		// without covnert
+		Value& operator[](std::u8string_view key); // if not exist key, then nothing.
+		const Value& operator[](std::u8string_view key) const; // if not exist key, then nothing.
 #endif
+
+		// at vs [] (at <- convert key to key_in_json.) ([] <- do not convert.)
+		Value& operator[](std::string_view key); // if not exist key, then nothing.
+		const Value& operator[](std::string_view key) const; // if not exist key, then nothing.
 
 		Value& operator[](size_t idx);
 
@@ -762,9 +796,13 @@ namespace claujson {
 
 	void clean(Value& x);
 
+	std::pair<bool, std::string> convert_to_string_in_json(std::string_view x);
+
 	bool is_valid_string_in_json(std::string_view x);
 
 #if __cplusplus >= 202002L
+	std::pair<bool, std::string> convert_to_string_in_json(std::u8string_view x);
+
 	bool is_valid_string_in_json(std::u8string_view x);
 #endif
 }
