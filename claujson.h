@@ -381,6 +381,13 @@ namespace claujson {
 		const Value& at(std::string_view key) const;
 		Value& at(std::string_view key);
 
+
+		size_t find(std::string_view key, bool convert) {
+			if (convert) {
+				return find(key);
+			}
+			return find_(key);
+		}
 		size_t find(std::string_view key) const;
 
 		size_t find_(std::string_view key) const; // find without key`s converting?
@@ -392,6 +399,13 @@ namespace claujson {
 		size_t find(std::u8string_view key) const;
 
 		size_t find_(std::u8string_view key) const; // find without key`s converting?
+
+		size_t find(std::u8string_view key, bool convert) {
+			if (convert) {
+				return find(key);
+			}
+			return find_(key);
+		}
 
 		// without covnert
 		Value& operator[](std::u8string_view key); // if not exist key, then nothing.
@@ -503,6 +517,16 @@ namespace claujson {
 		size_t find(std::string_view key) const;
 
 		size_t find_(std::string_view key) const; // find without key`s converting?
+
+
+		size_t find(std::string_view key, bool convert) {
+			if (convert) {
+				return find(key);
+			}
+			return find_(key);
+		}
+
+
 #if __cplusplus >= 202002L
 		const Value& at(std::u8string_view key) const;
 
@@ -511,6 +535,15 @@ namespace claujson {
 		size_t find(std::u8string_view key) const;
 
 		size_t find_(std::u8string_view key) const; // find without key`s converting?
+
+
+		size_t find(std::u8string_view key, bool convert) {
+			if (convert) {
+				return find(key);
+			}
+			return find_(key);
+		}
+
 
 		// without covnert
 		Value& operator[](std::u8string_view key); // if not exist key, then nothing.

@@ -398,9 +398,9 @@ int main(int argc, char* argv[])
 					for (int i = 0; i < 1; ++i) {
 						auto& features = j.as_object()[1]; // j[1];
 						for (auto& feature : features.as_array()) {
-							auto& geometry = feature.as_object().at(X.str_val()); // as_array()[t].as_object()["geometry"];
+							auto& geometry = feature.as_object()[X.str_val()]; // as_array()[t].as_object()["geometry"];
 							if (geometry.is_structured()) { // is_obj or arr?  -> is_structured
-								auto& coordinates = geometry.as_object().at(Y.str_val()); // todo - add? at(const Data& data) ?
+								auto& coordinates = geometry.as_object()[Y.str_val()]; // todo - add? at(const Data& data) ?
 								auto& coordinate = coordinates.as_array()[0];
 								for (auto& coordinate_ : coordinate.as_array()) {
 									for (auto& x : coordinate_.as_array()) {
