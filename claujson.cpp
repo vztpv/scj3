@@ -1076,6 +1076,7 @@ namespace claujson {
 				_str_val->assign((char*)str, len);
 			}
 
+			_type = ValueType::STRING;
 			return true;
 		}
 
