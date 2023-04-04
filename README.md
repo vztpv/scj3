@@ -56,22 +56,21 @@ if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
 
 double sum = 0;
 if (true && ok) {
-	for (int i = 0; i < 1; ++i) {
-		if (j.is_structured()) {
-			auto& features = j.as_object()[1]; 
-			for (auto& feature : features.as_array()) {
-				auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
-				for (auto& coordinate_ : coordinate.as_array()) {
-					for (auto& x : coordinate_.as_array()) {
-						if (x.is_float()) {
-							sum += x.float_val();
-							counter++;
-						}
+	if (j.is_structured()) {
+		auto& features = j.as_object()[1]; 
+		for (auto& feature : features.as_array()) {
+			auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
+			for (auto& coordinate_ : coordinate.as_array()) {
+				for (auto& x : coordinate_.as_array()) {
+					if (x.is_float()) {
+						sum += x.float_val();
+						counter++;
 					}
 				}
 			}
 		}
 	}
+	
 }
 
 std::cout << sum << " ";
