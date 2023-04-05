@@ -14,7 +14,7 @@ save - multi-thread
     FetchContent_Declare(
       claujson
       GIT_REPOSITORY "https://github.com/vztpv/scj3"
-      GIT_TAG "0.13.0"
+      GIT_TAG "0.13.1"
       )
     FetchContent_MakeAvailable(claujson)
     
