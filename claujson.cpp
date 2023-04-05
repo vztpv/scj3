@@ -4182,9 +4182,20 @@ namespace claujson {
 		case '\n':
 			stream << "\\n";
 			break;
-
+		case '\b': 
+			stream << "\\b";
+			break;
+		case '\f': 
+			stream << "\\f"; 
+			break;
+		case '\r': 
+			stream << "\\r";
+			break;
+		case '\t': 
+			stream << "\\t"; 
+			break;
 		default:
-
+		{
 			int code = ch;
 			if ((code >= 0 && code < 0x20) || code == 0x7F)
 			{
@@ -4195,7 +4206,7 @@ namespace claujson {
 			else {
 				stream << ch;
 			}
-
+		}
 		}
 	}
 
