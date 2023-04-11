@@ -4854,13 +4854,7 @@ namespace claujson {
 				thr_result[i].get();
 			}
 
-			std::ofstream outFile(fileName, std::ios::binary);
-
-			for (size_t i = 0; i < stream.size(); ++i) {
-				outFile.write(stream[i].buf(), stream[i].buf_size());
-			}
-
-			outFile.close();
+			
 
 			int op = 0;
 			int ret = claujson::LoadData2::Merge2(temp_parent[0], result[0], &temp_parent[1], op);
@@ -4875,6 +4869,15 @@ namespace claujson {
 					delete result[i];
 					result[i] = nullptr;
 				}
+			}
+			
+			std::ofstream outFile(fileName, std::ios::binary);
+			if (outFile) {
+				for (size_t i = 0; i < stream.size(); ++i) {
+					outFile.write(stream[i].buf(), stream[i].buf_size());
+				}
+
+				outFile.close();
 			}
 		}
 	}
