@@ -1239,9 +1239,8 @@ namespace claujson {
 		}
 		else {
 			std::swap(_int_val, other._int_val);
+			other._type = ValueType::NONE;
 		}
-
-		clean(other);
 	}
 
 	Value::Value() : _int_val(0), _valid(true), _type(ValueType::NONE) { }
