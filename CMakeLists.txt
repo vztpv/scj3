@@ -17,6 +17,7 @@ set(PROGRAM_NAME11 claujson_test11) # C++14?
 set(PROGRAM_NAME claujson_test) # C++17
 set(PROGRAM_NAME2 claujson_test2) # c++20
 set(LIB_NAME claujson) # static lib
+set(LIB_NAME11 claujson11) # static lib
 
 set(ROOT .)
 
@@ -63,6 +64,7 @@ target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${PROGRAM_NAME2} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${PROGRAM_NAME11} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${LIB_NAME} PUBLIC ${INCLUDE_DIR})
+target_include_directories(${LIB_NAME11} PUBLIC ${INCLUDE_DIR})
 
 #google test
 enable_testing()
@@ -75,6 +77,7 @@ add_test(NAME claujson_google_test COMMAND claujson_google_test)
 
 if (UNIX) 
         target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
+        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++11 -march=native -pthread -Wno-narrowing -O2)
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing -O2)
 	target_compile_options(${PROGRAM_NAME2} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
 	target_compile_options(${PROGRAM_NAME11} PRIVATE -m64 -std=c++14 -march=native -pthread -Wno-narrowing -O2)
@@ -104,6 +107,31 @@ target_compile_definitions(${LIB_NAME} PRIVATE
             ${DEFAULT_CXX_EXCEPTION_HANDLING}
         )
     endif()
+    
+    target_compile_definitions(${LIB_NAME11} PRIVATE
+        "$<$<CONFIG:Release>:"
+            "NDEBUG"
+        ">"
+        "UNICODE;"
+        "_UNICODE"
+    )
+	
+	if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+        target_compile_options(${LIB_NAME11} PRIVATE
+            $<$<CONFIG:Release>:
+                /std:c++14;
+                /Oi;
+                /Gy
+            >
+            /permissive-;
+            /sdl;
+            /W3;
+	    /Zc:__cplusplus;
+            ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
+            ${DEFAULT_CXX_EXCEPTION_HANDLING}
+        )
+    endif()
+    
   # 
 	target_compile_definitions(${PROGRAM_NAME} PRIVATE
         "$<$<CONFIG:Release>:"
@@ -252,13 +280,13 @@ if (UNIX)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt pthread)
 	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc pthread)
 	target_link_libraries(${PROGRAM_NAME2} PRIVATE ${LIB_NAME} mimalloc pthread)
-	target_link_libraries(${PROGRAM_NAME11} PRIVATE ${LIB_NAME} mimalloc pthread)
+	target_link_libraries(${PROGRAM_NAME11} PRIVATE ${LIB_NAME11} mimalloc pthread)
 	target_link_libraries(claujson_google_test PRIVATE ${LIB_NAME} gtest mimalloc pthread)
 elseif (MSVC)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt)
 	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc-static)
 	target_link_libraries(${PROGRAM_NAME2} PRIVATE ${LIB_NAME} mimalloc-static)
-	target_link_libraries(${PROGRAM_NAME11} PRIVATE ${LIB_NAME} mimalloc-static)
+	target_link_libraries(${PROGRAM_NAME11} PRIVATE ${LIB_NAME11} mimalloc-static)
   target_link_libraries(claujson_google_test PRIVATE ${LIB_NAME} gtest mimalloc-static)
 	
 endif()
