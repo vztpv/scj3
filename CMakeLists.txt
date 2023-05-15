@@ -13,6 +13,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 #set(CMAKE_CXX_STANDARD 17) # C++17
 set(CMAKE_BUILD_TYPE "Release")
 
+set(PROGRAM_NAME11 claujson_test11) # C++11
 set(PROGRAM_NAME claujson_test) # C++17
 set(PROGRAM_NAME2 claujson_test2) # c++20
 set(LIB_NAME claujson) # static lib
@@ -29,6 +30,7 @@ set(INCLUDE_DIR ${ROOT})
 add_library(${LIB_NAME} STATIC ${SRC_DIR}/claujson.cpp ${SRC_DIR}/_simdjson.cpp) 
 add_executable(${PROGRAM_NAME} ${SRC_DIR}/main.cpp)
 add_executable(${PROGRAM_NAME2} ${SRC_DIR}/main.cpp)
+add_executable(${PROGRAM_NAME11} ${SRC_DIR}/main.cpp)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -74,6 +76,7 @@ if (UNIX)
         target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing -O2)
 	target_compile_options(${PROGRAM_NAME2} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
+	target_compile_options(${PROGRAM_NAME11} PRIVATE -m64 -std=c++11 -march=native -pthread -Wno-narrowing -O2)
         target_compile_options(claujson_google_test PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing  -O2)
 elseif (MSVC)
 
@@ -213,6 +216,7 @@ if (UNIX)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt pthread)
 	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc pthread)
 	target_link_libraries(${PROGRAM_NAME2} PRIVATE ${LIB_NAME} mimalloc pthread)
+	target_link_libraries(${PROGRAM_NAME11} PRIVATE ${LIB_NAME} mimalloc pthread)
 	target_link_libraries(claujson_google_test PRIVATE ${LIB_NAME} gtest mimalloc pthread)
 elseif (MSVC)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt)
