@@ -240,7 +240,7 @@ target_compile_definitions(${LIB_NAME} PRIVATE
         )
     endif()
     
-    	target_compile_definitions(${PROGRAM_NAME11} PRIVATE
+    	target_compile_definitions(${PROGRAM_NAME14} PRIVATE
         "$<$<CONFIG:Release>:"
             "NDEBUG"
         ">"
@@ -250,7 +250,7 @@ target_compile_definitions(${LIB_NAME} PRIVATE
     )
 	
 	if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
-        target_compile_options(${PROGRAM_NAME11} PRIVATE
+        target_compile_options(${PROGRAM_NAME14} PRIVATE
             $<$<CONFIG:Release>:
                 /std:c++14;
                 /Oi;
@@ -265,7 +265,7 @@ target_compile_definitions(${LIB_NAME} PRIVATE
         )
     endif()
     if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
-        target_link_options(${PROGRAM_NAME11} PRIVATE
+        target_link_options(${PROGRAM_NAME14} PRIVATE
             $<$<CONFIG:Release>:
                 /OPT:REF;
                 /OPT:ICF
