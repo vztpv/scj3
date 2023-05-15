@@ -209,6 +209,41 @@ target_compile_definitions(${LIB_NAME} PRIVATE
             /SUBSYSTEM:CONSOLE
         )
     endif()
+    
+    	target_compile_definitions(${PROGRAM_NAME11} PRIVATE
+        "$<$<CONFIG:Release>:"
+            "NDEBUG"
+        ">"
+        "_CONSOLE;"
+        "UNICODE;"
+        "_UNICODE"
+    )
+	
+	if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+        target_compile_options(${PROGRAM_NAME11} PRIVATE
+            $<$<CONFIG:Release>:
+                /std:c++11;
+                /Oi;
+                /Gy
+            >
+            /permissive-;
+	    /Zc:__cplusplus ;
+            /sdl;
+            /W3;
+            ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
+            ${DEFAULT_CXX_EXCEPTION_HANDLING}
+        )
+    endif()
+    if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+        target_link_options(${PROGRAM_NAME11} PRIVATE
+            $<$<CONFIG:Release>:
+                /OPT:REF;
+                /OPT:ICF
+            >
+            /DEBUG;
+            /SUBSYSTEM:CONSOLE
+        )
+    endif()
 endif()
 
 
@@ -222,6 +257,7 @@ elseif (MSVC)
 	target_link_libraries(${LIB_NAME} PRIVATE fmt)
 	target_link_libraries(${PROGRAM_NAME} PRIVATE ${LIB_NAME} mimalloc-static)
 	target_link_libraries(${PROGRAM_NAME2} PRIVATE ${LIB_NAME} mimalloc-static)
+	target_link_libraries(${PROGRAM_NAME11} PRIVATE ${LIB_NAME} mimalloc-static)
   target_link_libraries(claujson_google_test PRIVATE ${LIB_NAME} gtest mimalloc-static)
 	
 endif()
