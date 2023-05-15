@@ -8,6 +8,7 @@
 #include <vector>
 #include <list>
 #include <string>
+#include <cstring>
 #include <set>
 #include <fstream>
 #include <iomanip>
