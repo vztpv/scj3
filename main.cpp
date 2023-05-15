@@ -1,6 +1,6 @@
 ﻿
 // now, test only haswell..
-// need C++17, 64bit..
+// need C++14, 64bit..
 
 
 #include "mimalloc-new-delete.h"
@@ -16,8 +16,6 @@
 
 #include <cstring>
 
-
-using namespace std::literals::string_view_literals;
 // using namespace std::literals::u8string_view_literals; // ?? 
 
 void utf_8_test() {
@@ -65,7 +63,7 @@ void json_pointer_test() {
 		   "k\"l" : 6,
 		   " " : 7,
 		   "m~n" : 8
-		})";
+		})"sv;
 
 	auto test2 = u8R"({
 		   "foo": ["bar2", "baz"] ,
@@ -79,7 +77,7 @@ void json_pointer_test() {
 		   " " : 7,
 		   "m~n" : 8,
 		   "zzz": 9
-		})";
+		})"sv;
 
 	//	The following JSON strings evaluate to the accompanying values :
 
@@ -222,7 +220,7 @@ void str_test() {
 int main(int argc, char* argv[])
 {
 	if (argc <= 1) {
-		std::cout << "[program name] [json file name] \n";
+		std::cout << "[program name] [json file name] (thr_num) \n";
 		return 2;
 	}
 
@@ -274,15 +272,16 @@ int main(int argc, char* argv[])
 	//try 
 	{
 		claujson::init(0);
-		claujson::log.console();
+		if (argc < 4) {
+			claujson::log.console();
+		}
+		//utf_8_test();
 
-		utf_8_test();
+		//key_dup_test();
 
-		key_dup_test();
+		//json_pointer_test();
 
-		json_pointer_test();
-
-		str_test();
+		//str_test();
 
 		for (int i = 0; i < 3; ++i) {
 			claujson::Value j;
@@ -292,8 +291,14 @@ int main(int argc, char* argv[])
 
 				auto a = std::chrono::steady_clock::now();
 
+				int thr_num = 1;
+
+				if (argc > 2) {
+					thr_num = std::atoi(argv[2]);
+				}
+
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, thr_num, true); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
@@ -308,9 +313,9 @@ int main(int argc, char* argv[])
 				std::cout << "total " << dur.count() << "ms\n";
 
 
-			//	claujson::clean(j);
+				//claujson::clean(j);
 
-			//	return 0;
+				//return 0;
 
 				//claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, 0);

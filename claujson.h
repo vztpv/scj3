@@ -12,11 +12,88 @@
 #include <fstream>
 #include <iomanip>
 
-#include <string_view>
 
+
+
+#if __cpp_lib_string_view
+#include <string_view>
+using namespace std::literals::string_view_literals;
+
+using StringView = std::string_view;
+#else
 
 namespace claujson {
+	class StringView {
+	public:
+		StringView(const std::string& str) : m_str(str.data()), m_len(str.size()) { }
+		explicit StringView(const char* str) : m_str(str) { m_len = std::strlen(str); }
+		explicit StringView(const char* str, size_t len) : m_str(str), m_len(len) { }
+		StringView(const StringView& other) {
+			m_str = other.m_str;
+			m_len = other.m_len;
+		}
 
+	public:
+		const char* data() const {
+			return m_str;
+		}
+
+		size_t size() const {
+			return m_len;
+		}
+
+		size_t length() const {
+			return m_len;
+		}
+
+		bool empty() const {
+			return 0 == m_len;
+		}
+
+		StringView substr(size_t pos, size_t n) const {
+			return StringView(m_str + pos, n);
+		}
+
+		const char& operator[](size_t idx) const {
+			return m_str[idx];
+		}
+		
+		// returns index;
+		size_t find(const char ch, size_t start = 0) {
+			for (size_t i = start; i < size(); ++i) {
+				if (ch == (*this)[i]) {
+					return i;
+				}
+			}
+			return npos;
+		}
+
+		StringView& operator=(const StringView& other) {
+			StringView temp(other);
+			this->m_str = temp.m_str;
+			this->m_len = temp.m_len;
+			return *this;
+		}
+	private:
+		const char* m_str;
+		size_t m_len;
+	public:
+		static size_t npos;
+
+		friend std::ostream& operator<<(std::ostream& stream, const claujson::StringView& sv) {
+			stream << sv.data();
+			return stream;
+		}
+	};
+}
+
+
+claujson::StringView operator""sv(const char* str, size_t sz);
+bool operator==(const std::string& str, claujson::StringView sv);
+
+#endif
+
+namespace claujson {
 	class Log {
 	public:
 		class Info {
@@ -138,11 +215,11 @@ namespace claujson {
 	public:
 		Error() : line(0), msg_size(0), _msg("") { }
 
-		std::string_view msg() const {
-			return std::string_view(_msg, msg_size);
+		StringView msg() const {
+			return StringView(_msg, msg_size);
 		}
 
-		void make(size_t line, std::string_view msg) {
+		void make(size_t line, StringView msg) {
 			make(line, msg.data(), msg.size());
 		}
 
@@ -172,7 +249,7 @@ namespace claujson {
 
 	static Log::Info info;
 	static Log::Warning warn;
-	inline Log log; // no static..
+	extern Log log; // no static..
 
 	// inline Error error;
 
@@ -246,7 +323,7 @@ namespace claujson {
 		explicit Value(uint64_t x);
 		explicit Value(double x);
 
-		explicit Value(std::string_view x, bool convert = true); // C++17
+		explicit Value(StringView x, bool convert = true); // C++17
 
 #if __cplusplus >= 202002L
 		// C++20~
@@ -344,9 +421,9 @@ namespace claujson {
 
 		Structured* ptr_val() const;
 
-		Value& json_pointer(std::string_view route, bool convert = true);
+		Value& json_pointer(StringView route, bool convert = true);
 
-		const Value& json_pointer(std::string_view route, bool convert = true) const;
+		const Value& json_pointer(StringView route, bool convert = true) const;
 
 		Value& json_pointer(const Value& route);
 		const Value& json_pointer(const Value& route) const;
@@ -355,7 +432,7 @@ namespace claujson {
 
 		std::vector<Value>::iterator end();
 
-		static bool json_pointerA(std::string_view route, std::vector<Value>& vec, bool convert = true);
+		static bool json_pointerA(StringView route, std::vector<Value>& vec, bool convert = true);
 #if __cplusplus >= 202002L
 
 		Value& json_pointer(std::u8string_view route, bool convert = true);
@@ -378,19 +455,19 @@ namespace claujson {
 
 
 		// with convert...
-		const Value& at(std::string_view key) const;
-		Value& at(std::string_view key);
+		const Value& at(StringView key) const;
+		Value& at(StringView key);
 
 
-		size_t find(std::string_view key, bool convert) {
+		size_t find(StringView key, bool convert) {
 			if (convert) {
 				return find(key);
 			}
 			return find_(key);
 		}
-		size_t find(std::string_view key) const;
+		size_t find(StringView key) const;
 
-		size_t find_(std::string_view key) const; // find without key`s converting?
+		size_t find_(StringView key) const; // find without key`s converting?
 #if __cplusplus >= 202002L
 		const Value& at(std::u8string_view key) const;
 
@@ -413,8 +490,8 @@ namespace claujson {
 #endif
 
 		// at vs [] (at <- convert key to key_in_json.) ([] <- do not convert.)
-		Value& operator[](std::string_view key); // if not exist key, then nothing.
-		const Value& operator[](std::string_view key) const; // if not exist key, then nothing.
+		Value& operator[](StringView key); // if not exist key, then nothing.
+		const Value& operator[](StringView key) const; // if not exist key, then nothing.
 
 		Value& operator[](size_t idx);
 
@@ -493,9 +570,9 @@ namespace claujson {
 		PtrWeak<Structured> parent = nullptr;
 		bool valid = true; //
 	protected:
-		static inline Value data_null{ nullptr, false }; // valid is false..
+		static Value data_null; // valid is false..
 	public:
-		inline static size_t npos = -1; // 
+		static size_t npos; // 
 
 		bool is_valid() const;
 	protected:
@@ -511,15 +588,15 @@ namespace claujson {
 		virtual ~Structured();
 
 		// with convert...
-		const Value& at(std::string_view key) const;
-		Value& at(std::string_view key);
+		const Value& at(StringView key) const;
+		Value& at(StringView key);
 
-		size_t find(std::string_view key) const;
+		size_t find(StringView key) const;
 
-		size_t find_(std::string_view key) const; // find without key`s converting?
+		size_t find_(StringView key) const; // find without key`s converting?
 
 
-		size_t find(std::string_view key, bool convert) {
+		size_t find(StringView key, bool convert) {
 			if (convert) {
 				return find(key);
 			}
@@ -551,8 +628,8 @@ namespace claujson {
 #endif
 
 		// at vs [] (at <- convert key to key_in_json.) ([] <- do not convert.)
-		Value& operator[](std::string_view key); // if not exist key, then nothing.
-		const Value& operator[](std::string_view key) const; // if not exist key, then nothing.
+		Value& operator[](StringView key); // if not exist key, then nothing.
+		const Value& operator[](StringView key) const; // if not exist key, then nothing.
 
 		Value& operator[](size_t idx);
 
@@ -599,7 +676,7 @@ namespace claujson {
 
 		virtual bool insert_array_element(size_t idx, Value val) = 0;
 
-		virtual void erase(std::string_view key, bool real = false) = 0;
+		virtual void erase(StringView key, bool real = false) = 0;
 #if __cplusplus >= 202002L
 		virtual void erase(std::u8string_view key, bool real = false) = 0;
 #endif
@@ -686,7 +763,7 @@ namespace claujson {
 
 		virtual bool insert_array_element(size_t idx, Value val);
 
-		virtual void erase(std::string_view key, bool real = false);
+		virtual void erase(StringView key, bool real = false);
 
 #if __cplusplus >= 202002L
 		virtual void erase(std::u8string_view key, bool real = false);
@@ -767,7 +844,7 @@ namespace claujson {
 
 		virtual bool insert_array_element(size_t idx, Value val);
 
-		virtual void erase(std::string_view key, bool real = false);
+		virtual void erase(StringView key, bool real = false);
 #if __cplusplus >= 202002L
 		virtual void erase(std::u8string_view key, bool real = false);
 #endif
@@ -805,7 +882,7 @@ namespace claujson {
 	std::pair<bool, size_t> parse(const std::string& fileName, Value& ut, size_t thr_num, bool use_all_function = false);
 
 	// parse json str.
-	std::pair<bool, size_t> parse_str(std::string_view str, Value& ut, size_t thr_num, bool use_all_function = false);
+	std::pair<bool, size_t> parse_str(StringView str, Value& ut, size_t thr_num, bool use_all_function = false);
 
 #if __cplusplus >= 202002L
 	// C++20~
@@ -829,9 +906,9 @@ namespace claujson {
 
 	void clean(Value& x);
 
-	std::pair<bool, std::string> convert_to_string_in_json(std::string_view x);
+	std::pair<bool, std::string> convert_to_string_in_json(StringView x);
 
-	bool is_valid_string_in_json(std::string_view x);
+	bool is_valid_string_in_json(StringView x);
 
 #if __cplusplus >= 202002L
 	std::pair<bool, std::string> convert_to_string_in_json(std::u8string_view x);
