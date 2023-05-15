@@ -13,7 +13,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 #set(CMAKE_CXX_STANDARD 17) # C++17
 set(CMAKE_BUILD_TYPE "Release")
 
-set(PROGRAM_NAME11 claujson_test11) # C++11
+set(PROGRAM_NAME11 claujson_test11) # C++14?
 set(PROGRAM_NAME claujson_test) # C++17
 set(PROGRAM_NAME2 claujson_test2) # c++20
 set(LIB_NAME claujson) # static lib
@@ -77,7 +77,7 @@ if (UNIX)
         target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
 	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing -O2)
 	target_compile_options(${PROGRAM_NAME2} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
-	target_compile_options(${PROGRAM_NAME11} PRIVATE -m64 -std=c++11 -march=native -pthread -Wno-narrowing -O2)
+	target_compile_options(${PROGRAM_NAME11} PRIVATE -m64 -std=c++14 -march=native -pthread -Wno-narrowing -O2)
         target_compile_options(claujson_google_test PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing  -O2)
 elseif (MSVC)
 
@@ -223,7 +223,7 @@ target_compile_definitions(${LIB_NAME} PRIVATE
 	if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
         target_compile_options(${PROGRAM_NAME11} PRIVATE
             $<$<CONFIG:Release>:
-                /std:c++11;
+                /std:c++14;
                 /Oi;
                 /Gy
             >
