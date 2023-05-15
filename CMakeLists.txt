@@ -29,6 +29,7 @@ set(INCLUDE_DIR ${ROOT})
 
 # build setting.
 add_library(${LIB_NAME} STATIC ${SRC_DIR}/claujson.cpp ${SRC_DIR}/_simdjson.cpp) 
+add_library(${LIB_NAME11} STATIC ${SRC_DIR}/claujson.cpp ${SRC_DIR}/_simdjson.cpp) 
 add_executable(${PROGRAM_NAME} ${SRC_DIR}/main.cpp)
 add_executable(${PROGRAM_NAME2} ${SRC_DIR}/main.cpp)
 add_executable(${PROGRAM_NAME11} ${SRC_DIR}/main.cpp)
