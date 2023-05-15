@@ -61,6 +61,7 @@ FetchContent_MakeAvailable(GoogleTest)
 # header..
 target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${PROGRAM_NAME2} PRIVATE ${INCLUDE_DIR})
+target_include_directories(${PROGRAM_NAME11} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${LIB_NAME} PUBLIC ${INCLUDE_DIR})
 
 #google test
