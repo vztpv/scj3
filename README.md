@@ -7,14 +7,14 @@ parsing - multi-thread(used in clauparser),
 
 save - multi-thread
   
-(C++17, 64bit, Windows)
+(C++14, 64bit, Windows)
 
 # Use static lib (claujson) with CMake!
     include(FetchContent)
     FetchContent_Declare(
       claujson
       GIT_REPOSITORY "https://github.com/vztpv/scj3"
-      GIT_TAG "0.13.2"
+      GIT_TAG "0.14.0"
       )
     FetchContent_MakeAvailable(claujson)
     
