@@ -26,7 +26,7 @@ namespace claujson {
 	class StringView {
 	public:
 		StringView(const std::string& str) : m_str(str.data()), m_len(str.size()) { }
-		explicit StringView(const char* str) : m_str(str) { m_len = std::strlen(str); }
+		explicit StringView(const char* str) : m_str(str) { m_len = strlen(str); }
 		explicit StringView(const char* str, size_t len) : m_str(str), m_len(len) { }
 		StringView(const StringView& other) {
 			m_str = other.m_str;
