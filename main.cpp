@@ -216,9 +216,81 @@ void str_test() {
 	
 }
 
+// iterator test.
+#include <functional>
+namespace claujson {
+	class JsonIterator {
+	public:
+		JsonIterator& enter(std::function<void(Structured*)> func = { }) {
+			if (_m_now && _m_now->get_value_list(_m_child_pos_in_parent.back()).is_structured()) {
+				_m_now = _m_now->get_value_list(_m_child_pos_in_parent.back()).as_structured_ptr();
+				_m_child_pos_in_parent.push_back(0);
+				if (func) {
+					func(_m_now);
+				}
+			}
+			return *this;
+		}
+		
+		JsonIterator& quit(std::function<void(Structured*)> func = { }) {
+			if (_m_now) {
+				_m_child_pos_in_parent.pop_back();
+				_m_now = _m_now->get_parent();
+				if (func) {
+					func(_m_now);
+				}
+			}
+			return *this;
+		}
+
+		JsonIterator& next(std::function<void(Structured*)> func = { }) {
+			if (_m_now) {
+				_m_child_pos_in_parent.back()++;
+				if (func) {
+					func(_m_now);
+				}
+			}
+			return *this;
+		}
+
+		JsonIterator& iterate(std::function<void(Value&)> func) {
+			if (_m_now) {
+				size_t len = _m_now->get_data_size();
+				for (size_t i = _m_child_pos_in_parent.back(); i < len; ++i) {
+					func(_m_now->get_value_list(i));
+				}
+			}
+			return *this;
+		}
+
+		bool is_valid() const {
+			return _m_now && _m_child_pos_in_parent.empty() == false && _m_child_pos_in_parent.back() < _m_now->get_data_size();
+		}
+
+		Value& now() {
+			if (_m_now) {
+				return _m_now->get_value_list(_m_child_pos_in_parent.back());
+			}
+			static Value null_data(nullptr, false);
+			return null_data;
+		}
+
+	public:
+		JsonIterator(Structured* arr_or_obj) : _m_now(arr_or_obj) {
+			_m_child_pos_in_parent.push_back(0);
+		}
+	private:
+		Structured* _m_now = nullptr;
+		std::vector<size_t> _m_child_pos_in_parent;
+	};
+}
+
 
 int main(int argc, char* argv[])
 {
+
+	std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array) << " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
+
 	if (argc <= 1) {
 		std::cout << "[program name] [json file name] (thr_num) \n";
 		return 2;
@@ -313,9 +385,9 @@ int main(int argc, char* argv[])
 				std::cout << "total " << dur.count() << "ms\n";
 
 
-				//claujson::clean(j);
+				claujson::clean(j);
 
-				//return 0;
+				return 0;
 
 				//claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, 0);
@@ -373,6 +445,40 @@ int main(int argc, char* argv[])
 				std::cout << sum << " ";
 				std::cout << counter << "  ";
 				
+				{
+					double sum = 0;
+					counter = 0;
+					
+					if (true && ok) {
+						int chk = 0;
+						for (int i = 0; i < 1; ++i) {
+							claujson::JsonIterator iter(j[1].as_structured_ptr()); // features
+							while (iter.is_valid()) {
+								auto& x = iter.now()["geometry"sv]["coordinates"sv][0]; // coordinate
+								claujson::JsonIterator iter2(x.as_structured_ptr());
+								iter2.iterate([&](claujson::Value& v) {
+									claujson::JsonIterator iter3(v.as_structured_ptr());
+									iter3.iterate([&](claujson::Value& v) {
+										if (v.is_float()) {
+											sum += v.get_floating();
+											counter++;
+											chk++;
+										}
+										}
+									);
+									}
+								);
+								iter.next();
+							}
+						}
+					}
+
+					auto d = std::chrono::steady_clock::now();
+					dur = std::chrono::duration_cast<std::chrono::milliseconds>(d - c);
+					std::cout << dur.count() << "ms\n";
+					std::cout << sum << " ";
+					std::cout << counter << "  ";
+				}
 				claujson::clean(j);
 				return 0;
 

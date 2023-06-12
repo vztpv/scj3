@@ -8,7 +8,6 @@
 #include <vector>
 #include <list>
 #include <string>
-#include <cstring>
 #include <set>
 #include <fstream>
 #include <iomanip>
@@ -27,7 +26,7 @@ namespace claujson {
 	class StringView {
 	public:
 		StringView(const std::string& str) : m_str(str.data()), m_len(str.size()) { }
-		explicit StringView(const char* str) : m_str(str) { m_len = strlen(str); }
+		explicit StringView(const char* str) : m_str(str) { m_len = std::strlen(str); }
 		explicit StringView(const char* str, size_t len) : m_str(str), m_len(len) { }
 		StringView(const StringView& other) {
 			m_str = other.m_str;
@@ -294,15 +293,12 @@ namespace claujson {
 		friend claujson::Value& Convert(Value& data, uint64_t idx, uint64_t idx2, bool key,
 			char* buf,  uint64_t id, bool& err);
 	private:
-		union { // 64bit.. DO NOT build 32bit! //
+		union {
 			int64_t _int_val = 0;
 			uint64_t _uint_val;
 			double _float_val;
 			std::string* _str_val;
-			Structured* _ptr_val; // ARRAY_OR_OBJECT -> todo : Array, or Object?
-
-			// cf) Array* _arr_val; , Object* _obj_val; 
-
+			Structured* _ptr_val; 
 			bool _bool_val;
 		};
 

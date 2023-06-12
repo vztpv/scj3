@@ -1851,6 +1851,7 @@ namespace claujson {
 		if (val.is_ptr()) {
 			auto* x = (Structured*)val.ptr_val();
 			x->set_key(key.clone()); // no need?
+			x->set_parent(this);
 		}
 		obj_key_vec.push_back(std::move(key));
 		obj_val_vec.push_back(std::move(val));
@@ -2156,6 +2157,10 @@ namespace claujson {
 	bool Array::add_array_element(Value val) {
 		if (!is_valid()) {
 			return false;
+		}
+
+		if (val.is_ptr()) {
+			val.as_structured_ptr()->set_parent(this);
 		}
 
 		arr_vec.push_back(std::move(val));
@@ -2522,6 +2527,7 @@ namespace claujson {
 		if (val.is_ptr()) {
 			auto* x = (Structured*)val.ptr_val();
 			x->set_key(key.clone()); // no need?
+			x->set_parent(this);
 		}
 
 		obj_key_vec.push_back(std::move(key));
@@ -2533,6 +2539,10 @@ namespace claujson {
 		if (!obj_key_vec.empty()) {
 			ERROR("partialJson is array or object.");
 			return false;
+		}
+
+		if (val.is_ptr()) {
+			val.as_structured_ptr()->set_parent(this);
 		}
 
 		arr_vec.push_back(std::move(val));
@@ -4831,7 +4841,8 @@ namespace claujson {
 		}
 
 		if (thr_num <= 0) {
-			thr_num = std::thread::hardware_concurrency();
+			thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
+
 		}
 		if (thr_num <= 0) {
 			thr_num = 1;
@@ -5594,7 +5605,7 @@ namespace claujson {
 	std::pair<bool, size_t> parse(const std::string& fileName, Value& ut, size_t thr_num, bool use_all_function)
 	{
 		if (thr_num <= 0) {
-			thr_num = std::thread::hardware_concurrency();
+			thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
 		}
 		if (thr_num <= 0) {
 			thr_num = 1;
@@ -5732,7 +5743,8 @@ namespace claujson {
 		log << info << str << "\n";
 
 		if (thr_num <= 0) {
-			thr_num = std::thread::hardware_concurrency();
+			thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
+
 		}
 		if (thr_num <= 0) {
 			thr_num = 1;
@@ -6182,7 +6194,8 @@ namespace claujson {
 
 		if (!pool) {
 			if (thr_num <= 0) {
-				thr_num = std::thread::hardware_concurrency();
+				thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
+
 			}
 			if (thr_num <= 0) {
 				thr_num = 1;
