@@ -11,7 +11,7 @@
 #include <set>
 #include <fstream>
 #include <iomanip>
-
+#include <cstring>
 
 
 
