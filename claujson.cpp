@@ -5,7 +5,7 @@
 
 #include <future>
 
-
+#include <set>
 #include "fmt/format.h"
 
 #include "ThreadPool.h"
@@ -3600,6 +3600,7 @@ namespace claujson {
 				auto a = std::chrono::steady_clock::now();
 
 				std::vector<TokenTemp> Vec;
+				Vec.reserve(1024);
 
 				if (token_arr_len <= 0) {
 					*next = nullptr;
@@ -3610,11 +3611,11 @@ namespace claujson {
 
 				int state = start_state;
 				size_t braceNum = 0;
-				std::vector< class Structured* > nestedUT;
-
-				nestedUT.reserve(10);
-				nestedUT.push_back(global);
-
+				
+				Structured* nowUT = global; // use get_parent(), not std::vector<Structured*>
+				std::vector<Value> vec;
+				vec.reserve(1024);
+				
 				int64_t count = 0;
 
 				TokenTemp key; 
@@ -3633,21 +3634,21 @@ namespace claujson {
 						if (!Vec.empty()) {
 
 							if (Vec[0].is_key) {
-								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size() / 2);
+								nowUT->reserve_data_list(nowUT->get_data_size() + Vec.size() / 2);
 
 								for (size_t x = 0; x < Vec.size(); x += 2) {
 								
-									nestedUT[braceNum]->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx,
+									nowUT->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx,
 										(Vec[x + 1].buf_idx), Vec[x + 1].next_buf_idx,
 										buf, Vec[x].token_idx, Vec[x + 1].token_idx);
 								}
 							}
 							else {
-								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size());
+								nowUT->reserve_data_list(nowUT->get_data_size() + Vec.size());
 
 								for (size_t x = 0; x < Vec.size(); x += 1) {
 								
-									nestedUT[braceNum]->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx, buf, Vec[x].token_idx);
+									nowUT->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx, buf, Vec[x].token_idx);
 								}
 							}
 
@@ -3656,26 +3657,21 @@ namespace claujson {
 
 
 						if (key.is_key) {
-							nestedUT[braceNum]->add_user_type(key.buf_idx, key.next_buf_idx, buf,
+							nowUT->add_user_type(key.buf_idx, key.next_buf_idx, buf,
 								type == _simdjson::internal::tape_type::START_OBJECT ? ValueType::OBJECT : ValueType::ARRAY, key.token_idx); // object vs array
 							key.is_key = false;
 						}
 						else {
-							nestedUT[braceNum]->add_user_type(type == _simdjson::internal::tape_type::START_OBJECT ? ValueType::OBJECT : ValueType::ARRAY);
+							nowUT->add_user_type(type == _simdjson::internal::tape_type::START_OBJECT ? ValueType::OBJECT : ValueType::ARRAY);
 						}
 
 
-						class Structured* pTemp = (Structured*)nestedUT[braceNum]->get_value_list(nestedUT[braceNum]->get_data_size() - 1).ptr_val();
+						class Structured* pTemp = (Structured*)nowUT->get_value_list(nowUT->get_data_size() - 1).as_structured_ptr();
 
 						braceNum++;
 
-						/// new nestedUT
-						if (nestedUT.size() == braceNum) {
-							nestedUT.push_back(nullptr);
-						}
-
 						/// initial new nestedUT.
-						nestedUT[braceNum] = pTemp;
+						nowUT = pTemp;
 
 						state = 0;
 
@@ -3688,20 +3684,20 @@ namespace claujson {
 
 						if (!Vec.empty()) {
 							if (type == _simdjson::internal::tape_type::END_OBJECT) {
-								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size() / 2);
+								nowUT->reserve_data_list(nowUT->get_data_size() + Vec.size() / 2);
 
 								for (size_t x = 0; x < Vec.size(); x += 2) {
 									
-									nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx,
+									nowUT->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx,
 										Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx, buf, Vec[x].token_idx, Vec[x + 1].token_idx);
 								}
 							}
 							else { // END_ARRAY
-								nestedUT[braceNum]->reserve_data_list(nestedUT[braceNum]->get_data_size() + Vec.size());
+								nowUT->reserve_data_list(nowUT->get_data_size() + Vec.size());
 
 								for (auto& x : Vec) {
 
-									nestedUT[braceNum]->add_item_type((x.buf_idx), x.next_buf_idx, buf, x.token_idx);
+									nowUT->add_item_type((x.buf_idx), x.next_buf_idx, buf, x.token_idx);
 								}
 							}
 
@@ -3721,35 +3717,30 @@ namespace claujson {
 							}
 
 							bool chk = false;
-							size_t len = nestedUT[braceNum]->get_data_size();
+							size_t len = nowUT->get_data_size();
 
 							for (size_t i = 0; i < len; ++i) {
-								if (nestedUT[braceNum]->get_value_list(i).is_ptr()) {
-									ut->add_user_type(Ptr<Structured>((Structured*)nestedUT[braceNum]->get_value_list(i).ptr_val()));
+								if (nowUT->get_value_list(i).is_ptr()) {
+									ut->add_user_type(Ptr<Structured>((Structured*)nowUT->get_value_list(i).ptr_val()));
 								}
 								else {
 									if (ut->is_object()) {
-										ut->add_object_element(std::move(nestedUT[braceNum]->get_key_list(i)),
-											std::move(nestedUT[braceNum]->get_value_list(i)));
+										ut->add_object_element(std::move(nowUT->get_key_list(i)),
+											std::move(nowUT->get_value_list(i)));
 									}
 									else {
-										ut->add_array_element(std::move(nestedUT[braceNum]->get_value_list(i)));
+										ut->add_array_element(std::move(nowUT->get_value_list(i)));
 									}
 								}
 							}
 
-							nestedUT[braceNum]->clear();
-							nestedUT[braceNum]->add_user_type(std::move(ut));
-
-							braceNum++;
+							nowUT->clear();
+							nowUT->add_user_type(std::move(ut));
 						}
-
-						{
-							if (braceNum < nestedUT.size()) {
-								nestedUT[braceNum] = nullptr;
-							}
-
+						else {						
 							braceNum--;
+
+							nowUT = nowUT->get_parent();
 						}
 					}
 					else {
@@ -3804,21 +3795,21 @@ namespace claujson {
 
 
 				if (next) {
-					*next = nestedUT[braceNum];
+					*next = nowUT;
 				}
 
 				if (Vec.empty() == false) {
 					if (Vec[0].is_key) {
 						for (size_t x = 0; x < Vec.size(); x += 2) {
 		
-							nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx,
+							nowUT->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx,
 								buf, Vec[x].token_idx, Vec[x + 1].token_idx);
 						}
 					}
 					else {
 						for (size_t x = 0; x < Vec.size(); x += 1) {
 						
-							nestedUT[braceNum]->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, buf, Vec[x].token_idx);
+							nowUT->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, buf, Vec[x].token_idx);
 						}
 					}
 
@@ -4914,6 +4905,416 @@ namespace claujson {
 		}
 	}
 
+	bool is_valid2(_simdjson::dom::parser_for_claujson& dom_parser, size_t start, size_t last, 
+		int* _start_state, int* _last_state, 
+		std::vector<int>* _is_array = nullptr, std::vector<int>* _is_virtual_array = nullptr,
+		int* err = nullptr) {
+
+		const auto& buf = dom_parser.raw_buf();
+		const auto buf_len = dom_parser.raw_len();
+
+		auto* simdjson_imple = dom_parser.raw_implementation().get();
+		size_t idx = start;
+		size_t depth = 0;
+		std::vector<int> is_array;
+		std::vector<int> is_virtual_array;
+
+		is_array.reserve(1024);
+		is_virtual_array.reserve(1024);
+
+		int state = 0;
+
+
+		if (start > last) {			
+			return false;
+		}
+
+		if (start > 0 && start == last) {
+			return false;
+		}
+		//
+// Start the document
+//
+		///if (at_eof()) { return EMPTY; }
+
+		if (simdjson_imple->n_structural_indexes == 0) {
+			return true; // chk?
+		}
+
+		//log_start_value("document");
+		//SIMDJSON_TRY(visitor.visit_document_start(*this));
+
+		//
+		// Read first value
+		//
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx++]]; //advance();
+
+			// Make sure the outer object or array is closed before continuing; otherwise, there are ways we
+			// could get into memory corruption. See https://github.com/simdjson/simdjson/issues/906
+			//if (!STREAMING) {
+			switch (value) {
+			case '{': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != '}') {
+				log << warn << ("starting brace unmatched");
+
+				if (err) {
+					*err = 1;
+				}
+
+				return false;
+			}
+					break;
+			case '[': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != ']') {
+				log << warn << ("starting bracket unmatched");
+				if (err) {
+					*err = 1;
+				}
+				return false;
+			}
+					break;
+			}
+			//	}
+
+			switch (value) { // start == 0
+			case '{': { if (buf[simdjson_imple->structural_indexes[idx]] == '}') {
+				++idx; log << warn << ("empty object"); break;
+			} *_start_state = 0;  goto object_begin;  }
+			case '[': { if (buf[simdjson_imple->structural_indexes[idx]] == ']') {
+				++idx; log << warn << ("empty array"); break;
+			} *_start_state = 4;  goto array_begin; }
+
+			default: break;
+			}
+
+
+			if (start > 0 && value == ',') {
+				if (idx < simdjson_imple->n_structural_indexes - 1) {
+					if (buf[simdjson_imple->structural_indexes[idx + 1]] == ':') {
+						--idx;
+						*_start_state = 2;
+						goto object_continue;
+					}
+					else {
+						--idx;
+						*_start_state = 6;
+						goto array_continue;
+					}
+				}
+				else { // idx >= n_~~  // error
+					*err = true;
+					return false;
+				}
+			}
+
+			switch (value) {
+			case ':':
+			case ',':
+			case '}':
+			case ']':
+			{ log << warn << "not primitive"; return false; } break;
+			}
+		}
+		goto document_end;
+
+		//
+		// Object parser states
+		//
+	object_begin:
+		//log_start_value("object");
+		depth++; 
+
+		{
+			if (idx > last) {
+				goto document_end;
+			}
+			if (err && *err) {
+				return false;
+			}
+		}
+		state = 0;
+		if (is_array.size() < depth) {
+			is_array.push_back(0);
+		}
+		if (depth >= dom_parser.max_depth()) {
+			log << warn << ("Exceeded max depth!");
+			if (err) {
+				*err = 1;
+			}
+			return false;
+		}
+
+		//dom_parser.is_array[depth] = false;
+		is_array[depth - 1] = 0;
+		//SIMDJSON_TRY(visitor.visit_object_start(*this));
+
+		{
+			auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
+			if (key != '"') {
+				log << warn << ("Object does not start with a key");
+				if (err) {
+					*err = 1;
+				}
+				return false;
+			}
+			//SIMDJSON_TRY(visitor.increment_count(*this));
+			//SIMDJSON_TRY(visitor.visit_key(*this, key));
+		}
+
+	object_field:
+		
+		{
+			if (idx > last) {
+				goto document_end;
+			}
+			if (err && *err) {
+				return false;
+			}
+		}
+
+		state = 1;
+		
+		if (simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx++]] != ':')) { log << warn << ("Missing colon after key in object"); return false; }
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx++]];
+			switch (value) {
+			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
+			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
+			case ',': { log << warn << "wrong comma.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ':': { log << warn << "wrong colon.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case '}': { log << warn << "wrong }.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ']': { log << warn << "wrong ].";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			default: //SIMDJSON_TRY(visitor.visit_primitive(*this, value)); 
+				break;
+			}
+		}
+
+	object_continue:
+		
+		{
+			if (idx > last) {
+				goto document_end;
+			}
+			if (err && *err) {
+				return false;
+			}
+		}
+state = 2;
+		switch (buf[simdjson_imple->structural_indexes[idx++]]) {
+		case ',':
+			//SIMDJSON_TRY(visitor.increment_count(*this));
+		{
+			auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
+			if (simdjson_unlikely(key != '"')) {
+				log << warn << ("Key string missing at beginning of field in object");
+				if (err) {
+					*err = 1;
+				}
+				return false;
+			}
+			//SIMDJSON_TRY(visitor.visit_key(*this, key));
+		}
+		goto object_field;
+		case '}': goto scope_end;
+		case ':': { log << warn << "wrong colon.";
+			if (err) {
+				*err = 1;
+			}
+			return false; }
+		default: log << warn << ("No comma between object fields"); return false;
+		}
+
+	scope_end:
+		{
+		state = 3;
+			if (depth > 0) {
+				depth--; is_array.pop_back();
+			}
+			else {
+				// depth <= 0 .. virtual array or virtual object..
+				switch (buf[simdjson_imple->structural_indexes[idx - 1]]) {
+				case ']':
+					is_virtual_array.push_back(1);
+					break;
+				case '}':
+					is_virtual_array.push_back(0);
+					break;
+				}
+			}
+
+			if (idx > last) { // depth == 0) {
+				goto document_end;
+			}
+
+			if (depth == 0) { 
+				// is in array or object ?
+				if (buf[simdjson_imple->structural_indexes[idx]] == ',') {
+					++idx;
+					if (idx < simdjson_imple->n_structural_indexes - 1) {
+						if (buf[simdjson_imple->structural_indexes[idx + 1]] == ':') {
+							--idx;
+							goto object_continue;
+						}
+						else {
+							--idx;
+							goto array_continue;
+						}
+					}
+					else { // idx >= n_~~  // error
+						*err = true;
+						return false;
+					}
+				}
+				else {
+					switch (buf[simdjson_imple->structural_indexes[idx]]) {
+					case ']':
+					case '}':
+						++idx;
+						goto scope_end;
+						break;
+					default:
+						// error
+						*err = true;
+						return false;
+					}
+				}
+			}
+
+			if (is_array[depth - 1]) { goto array_continue; }
+			goto object_continue;
+		}
+
+		//
+		// Array parser states
+		//
+	array_begin:
+		
+		{
+			if (idx > last) {
+				goto document_end;
+			}
+			if (err && *err) {
+				return false;
+			}
+		}
+		state = 4;
+		//log_start_value("array");
+		depth++;
+		if (depth >= dom_parser.max_depth()) { log << warn << ("Exceeded max depth!"); return false; }
+		if (is_array.size() < depth) { is_array.push_back(1); }
+		is_array[depth - 1] = 1;
+
+		
+
+		//SIMDJSON_TRY(visitor.visit_array_start(*this));
+	//	SIMDJSON_TRY(visitor.increment_count(*this));
+
+	array_value:
+		{
+			if (idx > last) {
+				goto document_end;
+			}
+			if (err && *err) {
+				return false;
+			}
+		}
+
+		state = 5;
+		{
+			auto value = buf[simdjson_imple->structural_indexes[idx++]];
+			switch (value) {
+			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
+			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
+			case ',': { log << warn << "wrong comma.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ':': { log << warn << "wrong colon.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case '}': { log << warn << "wrong }.";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			case ']': { log << warn << "wrong ].";
+				if (err) {
+					*err = 1;
+				}
+				return false; }
+			default: break;
+			}
+		}
+
+	array_continue:
+		{
+			if (idx > last) {
+				goto document_end;
+			}
+			if (err && *err) {
+				return false;
+			}
+		}
+
+		state = 6;
+		switch (buf[simdjson_imple->structural_indexes[idx++]]) {
+		case ',': goto array_value;
+		case ']': goto scope_end;
+		case ':': { log << warn << "wrong colon.";
+			if (err) {
+				*err = 1;
+			}
+			return false; }
+		default: log << warn << ("Missing comma between array values");
+			if (err) {
+				*err = 1;
+			}
+			return false;
+		}
+
+	document_end:
+		
+		*_last_state = state;
+
+		// If we didn't make it to the end, it's an error
+		if (idx <= last) {
+			log << warn << ("More than one JSON value at the root of the document, or extra characters at the end of the JSON!"); // chk...
+
+			if (err) {
+				*err = 1;
+			}
+			return false;
+		}
+
+		if (_is_array) {
+			*_is_array = std::move(is_array);
+		}
+
+		if (_is_virtual_array) {
+			*_is_virtual_array = std::move(is_virtual_array);
+		}
+
+		return true;
+	}
+
 	bool is_valid(_simdjson::dom::parser_for_claujson& dom_parser, size_t middle, std::vector<int>* _is_array = nullptr, int* err = nullptr) {
 
 		const auto& buf = dom_parser.raw_buf();
@@ -5673,36 +6074,95 @@ namespace claujson {
 				auto a = std::chrono::steady_clock::now();
 
 				if (use_all_function) {
-					size_t middle = length / 2;
-					for (size_t i = middle; i < length; ++i) {
-						if (buf[simdjson_imple_->structural_indexes[i]] == ',') {
-							middle = i; break;
-						}
-						if (i == length - 1) {
-							middle = length;
+
+					std::set<size_t> _set;
+
+					std::vector<int> start(thr_num + 1);
+					std::vector<int> last(thr_num);
+
+					std::vector<int> start_state(thr_num, -1);
+					std::vector<int> last_state(thr_num, -1);
+
+					for (size_t i = 1; i < thr_num; ++i) {
+						size_t middle = length / thr_num * i;
+						for (size_t i = middle; i < length; ++i) {
+							if (buf[simdjson_imple_->structural_indexes[i]] == ',') {
+								middle = i; _set.insert(i); break;
+							}
+
+							if (i == length - 1) {
+								middle = length;
+							}
 						}
 					}
 
-					std::vector<int> vec[2];
-					std::vector<std::future<bool>> thr_result(2);
+					_set.insert(0);
+
+					start.resize(1 + _set.size());
+					last.resize(_set.size());
+
+					int count = 0;
+					for (auto x : _set) {
+						start[count] = x;
+						++count;
+					}
+					start[_set.size()] = length - 1;
+
+					for (size_t i = 0; i < _set.size(); ++i) {
+						last[i] = start[i + 1];
+					}
+					
+					std::vector<std::vector<int>> is_array(_set.size()), is_virtual_array(_set.size());
+					std::vector<std::future<bool>> thr_result(_set.size());
 					int err = 0;
 
-					thr_result[0] = pool->enqueue(is_valid, std::ref(test), middle, &vec[0], &err);
-					thr_result[1] = pool->enqueue(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
+					for (int i = 0; i < _set.size(); ++i) {
+						thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], &err);
+					}
+					std::vector<int> result(_set.size());
 
-					bool x = thr_result[0].get();
-					bool y = thr_result[1].get();
-
-					if (!x || !y) {
-						return { false, 0 };
+					for (size_t i = 0; i < _set.size(); ++i) {
+						result[i] = (int)thr_result[i].get();
 					}
 
-
-					if (vec[0].size() != vec[1].size()) { return { false, 0 }; }
-					for (size_t i = 0; i < vec[0].size(); ++i) {
-						if (vec[0][i] != vec[1][i]) {
-							return { false, 0 };
+					for (size_t i = 0; i < result.size(); ++i) {
+						if (result[i] == false) {
+							return { false, -1 };
 						}
+					}
+
+					for (size_t i = 0; i < _set.size() - 1; ++i) {
+						if (start_state[i + 1] != last_state[i]) {
+							return { false, -2 };
+						}
+					}
+
+					if (is_virtual_array[0].empty() == false) { // first block has no virtual array or virtual object.!
+						return { false, -3 };
+					}
+
+					for (size_t i = 1; i < _set.size(); ++i) {
+						if (false == is_virtual_array[i].empty()) {
+							// remove? matched is_array(or object) and is_virtual_array(or object)
+							if (is_array[0].size() >= is_virtual_array[i].size()) {
+								for (size_t j = 0; j < is_virtual_array[i].size(); ++j) {
+									if (is_array[0].back() != is_virtual_array[i][j]) {
+										return { false, -3 };
+									}
+									is_array[0].pop_back();
+								}
+							}
+							else {
+								return { false, -3 };
+							}
+						}
+						// added...
+						is_array[0].insert(is_array[0].end(), is_array[i].begin(), is_array[i].end());
+					}
+
+					if (false == is_array[0].empty()) {
+						return { false, -4 };
+
 					}
 				}
 				else {
@@ -5800,35 +6260,97 @@ namespace claujson {
 			b = std::chrono::steady_clock::now();
 
 			if (use_all_function) {
-				size_t middle = length / 2;
-				for (size_t i = middle; i < length; ++i) {
-					if (buf[simdjson_imple_->structural_indexes[i]] == ',') {
-						middle = i; break;
-					}
-					if (i == length - 1) {
-						middle = length;
+
+				std::set<size_t> _set;
+
+				std::vector<int> start(thr_num + 1);
+				std::vector<int> last(thr_num);
+
+				std::vector<int> start_state(thr_num, -1);
+				std::vector<int> last_state(thr_num, -1);
+
+				for (size_t i = 1; i < thr_num; ++i) {
+					size_t middle = length / thr_num * i;
+					for (size_t i = middle; i < length; ++i) {
+						if (buf[simdjson_imple_->structural_indexes[i]] == ',') {
+							middle = i; _set.insert(i); break;
+						}
+
+						if (i == length - 1) {
+							middle = length;
+						}
 					}
 				}
 
-				std::vector<int> vec[2];
-				std::vector<std::future<bool>> thr_result(2);
+				_set.insert(0);
+
+				start.resize(1 + _set.size());
+				last.resize(_set.size());
+
+				int count = 0;
+				for (auto x : _set) {
+					start[count] = x;
+					++count;
+				}
+				start[_set.size()] = length - 1;
+
+				for (size_t i = 0; i < _set.size(); ++i) {
+					last[i] = start[i + 1];
+				}
+
+				std::vector<std::vector<int>> is_array(_set.size()), is_virtual_array(_set.size());
+				std::vector<std::future<bool>> thr_result(_set.size());
 				int err = 0;
 
-				thr_result[0] = pool->enqueue(is_valid, std::ref(test), middle, &vec[0], &err);
-				thr_result[1] = pool->enqueue(is_valid_reverse, std::ref(test), middle, &vec[1], &err);
+				for (int i = 0; i < _set.size(); ++i) {
+					thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], &err);
+				}
+				std::vector<int> vec(_set.size());
 
-				bool x = thr_result[0].get();
-				bool y = thr_result[1].get();
-
-				if (!x || !y) {
-					return { false, 0 };
+				for (size_t i = 0; i < _set.size(); ++i) {
+					vec[i] = (int)thr_result[i].get();
 				}
 
-				if (vec[0].size() != vec[1].size()) { return { false, 0 }; }
-				for (size_t i = 0; i < vec[0].size(); ++i) {
-					if (vec[0][i] != vec[1][i]) {
-						return { false, 0 };
+				bool result = true;
+
+				for (size_t i = 0; i < vec.size(); ++i) {
+					if (vec[i] == false) {
+						return { false, -1 };
 					}
+				}
+
+				for (size_t i = 0; i < _set.size() - 1; ++i) {
+					if (start_state[i + 1] != last_state[i]) {
+						return { false, -2 };
+					}
+				}
+
+				if (is_virtual_array[0].empty() == false) { // first block has no virtual array or virtual object.!
+					return { false, -3 };
+				}
+
+				for (size_t i = 1; i < _set.size(); ++i) {
+					if (false == is_virtual_array[i].empty()) {
+						//  
+						if (is_array[0].size() >= is_virtual_array[i].size()) {
+							for (size_t j = 0; j < is_virtual_array[i].size(); ++j) {
+								if (is_array[0].back() != is_virtual_array[i][j]) {
+									return { false, -3 };
+								}
+								is_array[0].pop_back();
+							}
+						}
+						else {
+							return { false, -3 };
+						}
+					}
+
+					is_array[0].insert(is_array[0].end(), is_array[i].begin(), is_array[i].end());
+				}
+
+				if (false == is_array[0].empty()) {
+					return { false, -4 };
+
 				}
 			}
 			else {

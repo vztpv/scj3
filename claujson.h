@@ -2,6 +2,9 @@
 
 // 64bit.. DO NOT build 32bit! //
 
+// todo - text_buf + ast?
+// todo - claujson::Ptr<Structured>->claujson::Value ? in parameter?
+
 #include <iostream>
 #include <memory>
 #include <map>
@@ -12,7 +15,6 @@
 #include <fstream>
 #include <iomanip>
 #include <cstring>
-
 
 
 #if __cpp_lib_string_view
@@ -590,7 +592,7 @@ namespace claujson {
 
 		size_t find(StringView key) const;
 
-		size_t find_(StringView key) const; // find without key`s converting?
+		size_t find_(StringView key) const; // find without key`s converting ( \uxxxx )
 
 
 		size_t find(StringView key, bool convert) {
@@ -608,7 +610,7 @@ namespace claujson {
 
 		size_t find(std::u8string_view key) const;
 
-		size_t find_(std::u8string_view key) const; // find without key`s converting?
+		size_t find_(std::u8string_view key) const; // find without key`s converting
 
 
 		size_t find(std::u8string_view key, bool convert) {
@@ -620,13 +622,13 @@ namespace claujson {
 
 
 		// without covnert
-		Value& operator[](std::u8string_view key); // if not exist key, then nothing.
-		const Value& operator[](std::u8string_view key) const; // if not exist key, then nothing.
+		Value& operator[](std::u8string_view key); // if not exist key, then Value <- is not valid.
+		const Value& operator[](std::u8string_view key) const; // if not exist key, then Value <- is not valid.
 #endif
 
 		// at vs [] (at <- convert key to key_in_json.) ([] <- do not convert.)
-		Value& operator[](StringView key); // if not exist key, then nothing.
-		const Value& operator[](StringView key) const; // if not exist key, then nothing.
+		Value& operator[](StringView key); // if not exist key, then Value <- is not valid.
+		const Value& operator[](StringView key) const; // if not exist key, then Value <- is not valid.
 
 		Value& operator[](size_t idx);
 
@@ -653,6 +655,13 @@ namespace claujson {
 		bool is_user_type() const;
 
 		// for valid with object or array or root.
+		size_t size() const {
+			return get_data_size();
+		}
+		bool empty() const {
+			return 0 == get_data_size();
+		}
+
 		virtual size_t get_data_size() const = 0; // data_size == key_list_size (if object), and data_size == value_list_size.
 		virtual Value& get_value_list(size_t idx) = 0;
 		virtual Value& get_key_list(size_t idx) = 0;
@@ -668,8 +677,8 @@ namespace claujson {
 		// todo return type void -> bool.
 		virtual bool add_object_element(Value key, Value val) = 0;
 		virtual bool add_array_element(Value val) = 0;
-		virtual bool add_array(Ptr<Structured> arr) = 0; // 
-		virtual bool add_object(Ptr<Structured> obj) = 0;
+		virtual bool add_array(Ptr<Structured> arr) = 0;  // change to Value ? or remove?
+		virtual bool add_object(Ptr<Structured> obj) = 0; // change to Value ? or remove?
 
 		virtual bool insert_array_element(size_t idx, Value val) = 0;
 
@@ -684,7 +693,8 @@ namespace claujson {
 
 
 	private:
-		virtual void MergeWith(PtrWeak<Structured> j, int start_offset) = 0; // start_offset is 0 or 1.
+		// used while parsing.
+		virtual void MergeWith(PtrWeak<Structured> j, int start_offset) = 0; // start_offset is 0 or 1 (if virtual array or virtual object exists)
 
 		virtual void Link(Ptr<Structured> j) = 0;
 
@@ -841,16 +851,16 @@ namespace claujson {
 
 		virtual bool insert_array_element(size_t idx, Value val);
 
-		virtual void erase(StringView key, bool real = false);
+		virtual void erase(StringView key, bool real = false); 
 #if __cplusplus >= 202002L
 		virtual void erase(std::u8string_view key, bool real = false);
 #endif
 		virtual void erase(size_t idx, bool real = false);
 
 	private:
+		// here only used in parsing.
 
-
-		virtual void MergeWith(PtrWeak<Structured> j, int start_offset);
+		virtual void MergeWith(PtrWeak<Structured> j, int start_offset); // start_offset is 0 or 1 (if virtual array or virtual object exists)
 
 
 		virtual void Link(Ptr<Structured> j);

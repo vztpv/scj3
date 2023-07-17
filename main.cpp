@@ -344,6 +344,7 @@ int main(int argc, char* argv[])
 	//try 
 	{
 		claujson::init(0);
+
 		if (argc < 4) {
 			claujson::log.console();
 		}
@@ -370,7 +371,7 @@ int main(int argc, char* argv[])
 				}
 
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, thr_num, true); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
@@ -390,7 +391,7 @@ int main(int argc, char* argv[])
 				return 0;
 
 				//claujson::save("test12.txt", j);
-				claujson::save_parallel("test34.json", j, 0);
+				claujson::save_parallel("test34.json", j, thr_num);
 				std::cout << "save_parallel" <<
 					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
