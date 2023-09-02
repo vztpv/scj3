@@ -742,7 +742,7 @@ namespace claujson {
 				}
 
 				result.resize(result.size() - count);
-				data = &j->at(result);
+				data = &((*j)[result]);
 			}
 		}
 
@@ -985,7 +985,7 @@ namespace claujson {
 					}
 				}
 
-				data = &j->at(result);
+				data = &((*j)[result]); // chk at vs []
 			}
 		}
 
@@ -1372,45 +1372,95 @@ namespace claujson {
 		return *this;
 	}
 
+	inline bool ConvertString(claujson::Value& data, char* text, size_t len) {
+		uint8_t sbuf[1024 + 1 + _simdjson::_SIMDJSON_PADDING];
+		std::unique_ptr<uint8_t[]> ubuf;
+		uint8_t* string_buf = nullptr;
+
+		if (len <= 1024) {
+			string_buf = sbuf;
+		}
+		else {
+			ubuf = std::make_unique<uint8_t[]>(len + _simdjson::_SIMDJSON_PADDING);
+			string_buf = &ubuf[0];
+		}
+		auto* x = simdjson_imple->parse_string((uint8_t*)text + 1, string_buf);
+		if (x == nullptr) {
+			return false; // ERROR("Error in Convert for string");
+		}
+		else {
+			*x = '\0';
+			auto string_length = uint32_t(x - string_buf);
+			data.set_str_in_parse(reinterpret_cast<char*>(string_buf), string_length);
+		}
+		return true;
+	}
+
+	inline bool ConvertNumber(claujson::Value& data, char* text, size_t len, bool isFirst) {
+		std::unique_ptr<uint8_t[]> copy;
+
+		uint64_t temp[2] = { 0 };
+
+		uint8_t* value = reinterpret_cast<uint8_t*>(text);
+
+		if (isFirst) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
+			copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[len + _simdjson::_SIMDJSON_PADDING]);
+			if (copy.get() == nullptr) { return false; } // ERROR("Error in Convert for new"); } // cf) new Json?
+			std::memcpy(copy.get(), text, len);
+			std::memset(copy.get() + len, ' ', _simdjson::_SIMDJSON_PADDING);
+			value = copy.get();
+		}
+
+		auto x = simdjson_imple->parse_number(value, temp);
+
+		if (x != _simdjson::SUCCESS) {
+			log << warn << "parse number error. " << x << "\n";
+			return false; //ERROR("parse number error. ");
+			//throw "Error in Convert to parse number";
+		}
+
+		long long int_val = 0;
+		unsigned long long uint_val = 0;
+		double float_val = 0;
+
+		switch (static_cast<_simdjson::internal::tape_type>(temp[0] >> 56)) {
+		case _simdjson::internal::tape_type::INT64:
+			memcpy(&int_val, &temp[1], sizeof(uint64_t));
+
+			data.set_int(int_val);
+			break;
+		case _simdjson::internal::tape_type::UINT64:
+			memcpy(&uint_val, &temp[1], sizeof(uint64_t));
+
+			data.set_uint(uint_val);
+			break;
+		case _simdjson::internal::tape_type::DOUBLE:
+			memcpy(&float_val, &temp[1], sizeof(uint64_t));
+
+			data.set_float(float_val);
+			break;
+		}
+
+		return true;
+	}
 
 	inline claujson::Value& Convert(claujson::Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
 		char* buf, uint64_t token_idx, bool& err) {
 
-		try {
+		//try {
 			data.clear();
-
-			uint32_t string_length;
 
 			switch (buf[buf_idx]) {
 			case '"':
-			{
-				uint8_t sbuf[1024 + 1 + _simdjson::_SIMDJSON_PADDING];
-				std::unique_ptr<uint8_t[]> ubuf;
-				uint8_t* string_buf = nullptr;
-
-				if (next_buf_idx - buf_idx <= 1024) {
-					string_buf = sbuf;
-				}
+				if (ConvertString(data, &buf[buf_idx], next_buf_idx - buf_idx)) {}
 				else {
-					ubuf = std::make_unique<uint8_t[]>(next_buf_idx - buf_idx + _simdjson::_SIMDJSON_PADDING);
-					string_buf = &ubuf[0];
+					goto ERR;
 				}
-				auto* x = simdjson_imple->parse_string((uint8_t*)&buf[buf_idx] + 1, string_buf);
-				if (x == nullptr) {
-					ERROR("Error in Convert for string");
-				}
-				else {
-					*x = '\0';
-					string_length = uint32_t(x - string_buf);
-				}
-
-				data.set_str_in_parse(reinterpret_cast<char*>(string_buf), string_length);
-			}
-			break;
+				break;
 			case 't':
 			{
 				if (!simdjson_imple->is_valid_true_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
-					ERROR("Error in Convert for true");
+					goto ERR; //ERROR("Error in Convert for true");
 				}
 
 				data.set_bool(true);
@@ -1418,14 +1468,14 @@ namespace claujson {
 			break;
 			case 'f':
 				if (!simdjson_imple->is_valid_false_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
-					ERROR("Error in Convert for false");
+					goto ERR; //ERROR("Error in Convert for false");
 				}
 
 				data.set_bool(false);
 				break;
 			case 'n':
 				if (!simdjson_imple->is_valid_null_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
-					ERROR("Error in Convert for null");
+					goto ERR; //ERROR("Error in Convert for null");
 				}
 
 				data.set_null();
@@ -1435,65 +1485,27 @@ namespace claujson {
 			case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
 			{
-				std::unique_ptr<uint8_t[]> copy;
-
-				uint64_t temp[2] = { 0 };
-
-				uint8_t* value = reinterpret_cast<uint8_t*>(buf + buf_idx);
-
-				if (token_idx == 0) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
-					copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[next_buf_idx - buf_idx + _simdjson::_SIMDJSON_PADDING]);
-					if (copy.get() == nullptr) { ERROR("Error in Convert for new"); } // cf) new Json?
-					std::memcpy(copy.get(), &buf[buf_idx], next_buf_idx - buf_idx);
-					std::memset(copy.get() + next_buf_idx - buf_idx, ' ', _simdjson::_SIMDJSON_PADDING);
-					value = copy.get();
-				}
-
-				auto x = simdjson_imple->parse_number(value, temp);
-
-				if (x != _simdjson::SUCCESS) {
-					log << warn << "parse number error. " << x << "\n";
-					ERROR("parse number error. ");
-					//throw "Error in Convert to parse number";
-				}
-
-				long long int_val = 0;
-				unsigned long long uint_val = 0;
-				double float_val = 0;
-
-				switch (static_cast<_simdjson::internal::tape_type>(temp[0] >> 56)) {
-				case _simdjson::internal::tape_type::INT64:
-					memcpy(&int_val, &temp[1], sizeof(uint64_t));
-
-					data.set_int(int_val);
-					break;
-				case _simdjson::internal::tape_type::UINT64:
-					memcpy(&uint_val, &temp[1], sizeof(uint64_t));
-
-					data.set_uint(uint_val);
-					break;
-				case _simdjson::internal::tape_type::DOUBLE:
-					memcpy(&float_val, &temp[1], sizeof(uint64_t));
-
-					data.set_float(float_val);
-					break;
+				if (ConvertNumber(data, &buf[buf_idx], next_buf_idx - buf_idx, token_idx == 0)) {} 
+				else {
+					goto ERR;
 				}
 
 				break;
 			}
 			default:
 				log << warn << "convert error : " << (int)buf[buf_idx] << " " << buf[buf_idx] << "\n";
-				ERROR("convert Error");
+				goto ERR; //ERROR("convert Error");
 				//throw "Error in Convert : not expected";
 			}
 			return data;
-		}
-		catch (const char* str) {
-			log << warn << str << "\n";
-			//ERROR(str);
-			err = true;
-			return data;
-		}
+		//}
+
+		//catch (const char* str) {
+	ERR:
+		//log << warn << str << "\n";
+		//ERROR(str);
+		err = true;
+		return data;
 	}
 
 	bool Structured::is_valid() const {
@@ -6122,7 +6134,7 @@ state = 2;
 					std::vector<int> result(_set.size());
 
 					for (size_t i = 0; i < _set.size(); ++i) {
-						result[i] = (int)thr_result[i].get();
+						result[i] = static_cast<int>(thr_result[i].get());
 					}
 
 					for (size_t i = 0; i < result.size(); ++i) {
@@ -6132,7 +6144,7 @@ state = 2;
 					}
 
 					for (size_t i = 0; i < _set.size() - 1; ++i) {
-						if (start_state[i + 1] != last_state[i]) {
+						if (start_state[i + 1] != last_state[i]) { // need more tests.
 							return { false, -2 };
 						}
 					}

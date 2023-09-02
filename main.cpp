@@ -285,10 +285,8 @@ namespace claujson {
 	};
 }
 
-
 int main(int argc, char* argv[])
 {
-
 	std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array) << " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
 
 	if (argc <= 1) {
@@ -303,7 +301,7 @@ int main(int argc, char* argv[])
 	{
 		auto str = R"()"sv;
 
-		claujson::init();
+		claujson::init(0);
 
 		claujson::Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
@@ -312,7 +310,7 @@ int main(int argc, char* argv[])
 	{
 		auto str = R"("A" : 3 )"sv;
 
-		claujson::init();
+		claujson::init(0);
 
 		claujson::Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
@@ -321,7 +319,7 @@ int main(int argc, char* argv[])
 	{
 		auto str = R"(3,  3)"sv;
 
-		claujson::init();
+		claujson::init(0);
 
 		claujson::Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
@@ -392,12 +390,12 @@ int main(int argc, char* argv[])
 
 				//claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, thr_num);
-				std::cout << "save_parallel" <<
+				std::cout << "save_parallel " <<
 					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
-				//claujson::clean(j);
+				claujson::clean(j);
 
-			//return 0;
+			return 0;
 
 				//claujson::LoadData::save(std::cout, ut);
 				//claujson::LoadData::save("output14.json", j);

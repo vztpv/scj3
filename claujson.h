@@ -294,6 +294,10 @@ namespace claujson {
 
 		friend claujson::Value& Convert(Value& data, uint64_t idx, uint64_t idx2, bool key,
 			char* buf,  uint64_t id, bool& err);
+
+
+		friend bool ConvertString(Value& data, char* text, size_t len);
+
 	private:
 		union {
 			int64_t _int_val = 0;
