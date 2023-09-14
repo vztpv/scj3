@@ -186,7 +186,7 @@ namespace claujson {
 	};
 
 	template <class T>
-	static void _print(Log& log, const T& val, const int op = -1) { // op : change_state, with op.
+	static void _print(Log& log, const T& val, const int op) { // op : change_state, with op.
 
 		if (op == 0 || op == 1) {
 			log.state = op;
@@ -231,7 +231,7 @@ namespace claujson {
 
 	template <class T>
 	inline Log& operator<<(Log& log, const T& val) {
-		_print(log, val);
+		_print(log, val, -1);
 		return log;
 	}
 
