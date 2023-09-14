@@ -96,6 +96,7 @@ bool operator==(const std::string& str, claujson::StringView sv);
 #endif
 
 namespace claujson {
+
 	class Log {
 	public:
 		class Info {
@@ -131,64 +132,11 @@ namespace claujson {
 			//
 		}
 
-	private:
-		template <class T>
-		void _print(const T& val) {
-			if (opt == Option::CONSOLE || opt == Option::CONSOLE_AND_FILE) {
-
-				int count = 0;
-
-				if ((opt2 & Option2::INFO) && state == 0) {
-					count = 1;
-				}
-				if ((opt2 & Option2::WARN) && state == 1) {
-					count = 1;
-				}
-
-				if (count) {
-					std::cout << val;
-				}
-			}
-
-			if (opt == Option::FILE || opt == Option::CONSOLE_AND_FILE) {
-				std::ofstream outFile;
-				outFile.open(fileName, std::ios::app);
-				if (outFile) {
-					int count = 0;
-
-					if ((opt2 & Option2::INFO) && state == 0) {
-						count = 1;
-					}
-					if ((opt2 & Option2::WARN) && state == 1) {
-						count = 1;
-					}
-
-					if (count) {
-						outFile << val;
-					}
-					outFile.close();
-				}
-			}
-		}
 	public:
 		template <class T>
-		Log& operator<<(const T& val) {
-			_print(val);
-			return *this;
-		}
+		friend static void _print(Log& log, const T& val, const int op);
 
-		template<>
-		Log& operator<<(const Info& x) {
-			state = 0;
-			_print(x);
-			return *this;
-		}
-		template<>
-		Log& operator<<(const Warning& x) {
-			state = 1;
-			_print(x);
-			return *this;
-		}
+	public:
 
 		Option option() const {
 			return opt;
@@ -236,6 +184,67 @@ namespace claujson {
 			}
 		}
 	};
+
+	template <class T>
+	static void _print(Log& log, const T& val, const int op = -1) { // op : change_state, with op.
+
+		if (op == 0 || op == 1) {
+			log.state = op;
+		}
+
+		if (log.opt == Log::Option::CONSOLE || log.opt == Log::Option::CONSOLE_AND_FILE) {
+
+			int count = 0;
+
+			if ((log.opt2 & Log::Option2::INFO) && log.state == 0) {
+				count = 1;
+			}
+			if ((log.opt2 & Log::Option2::WARN) && log.state == 1) {
+				count = 1;
+			}
+
+			if (count) {
+				std::cout << val;
+			}
+		}
+
+		if (log.opt == Log::Option::FILE || log.opt == Log::Option::CONSOLE_AND_FILE) {
+			std::ofstream outFile;
+			outFile.open(log.fileName, std::ios::app);
+			if (outFile) {
+				int count = 0;
+
+				if ((log.opt2 & Log::Option2::INFO) && log.state == 0) {
+					count = 1;
+				}
+				if ((log.opt2 & Log::Option2::WARN) && log.state == 1) {
+					count = 1;
+				}
+
+				if (count) {
+					outFile << val;
+				}
+				outFile.close();
+			}
+		}
+	}
+
+	template <class T>
+	inline Log& operator<<(Log& log, const T& val) {
+		_print(log, val);
+		return log;
+	}
+
+	template<>
+	inline Log& operator<<(Log& log, const Log::Info& x) {
+		_print(log, x, 0);
+		return log;
+	}
+	template<>
+	inline Log& operator<<(Log& log, const Log::Warning& x) {
+		_print(log, x, 1);
+		return log;
+	}
 
 	/*
 	class Error {
