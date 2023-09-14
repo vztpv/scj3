@@ -287,7 +287,8 @@ namespace claujson {
 
 int main(int argc, char* argv[])
 {
-	std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array) << " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
+	std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
+		<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
 
 	if (argc <= 1) {
 		std::cout << "[program name] [json file name] (thr_num) \n";
@@ -345,7 +346,17 @@ int main(int argc, char* argv[])
 
 		if (argc < 4) {
 			claujson::log.console();
+			claujson::log.info();
+			claujson::log.warn();
 		}
+		
+		//claujson::log.no_print();
+		//claujson::log.console();
+		//claujson::log.info();
+		//claujson::log.warn();
+		//claujson::log.info(true);
+		//claujson::log.warn(true);
+
 		//utf_8_test();
 
 		//key_dup_test();

@@ -101,14 +101,14 @@ namespace claujson {
 		class Info {
 		public:
 			friend std::ostream& operator<<(std::ostream& stream, const Info&) {
-				stream << "[INFO]";
+				stream << "[INFO] ";
 				return stream;
 			}
 		};
 		class Warning { 
 		public:
 			friend std::ostream& operator<<(std::ostream& stream, const Warning&) {
-				stream << "[WARN]";
+				stream << "[WARN] ";
 				return stream;
 			}
 		};
@@ -118,11 +118,12 @@ namespace claujson {
 		public:
 			static const int INFO = 1;
 			static const int WARN = 2;
+			static const int CLEAR = 0;
 		};
 	private:
-		Option opt;
-		int opt2;
-		int state;
+		Option opt; // console, file, ...
+		int opt2; // info, warn, ...
+		int state; // 1 : info, 2 : warn. // default is info!
 		std::string fileName;
 	public:
 
@@ -130,13 +131,19 @@ namespace claujson {
 			//
 		}
 
+	private:
 		template <class T>
-		Log& operator<<(const T& val) {
+		void _print(const T& val) {
 			if (opt == Option::CONSOLE || opt == Option::CONSOLE_AND_FILE) {
 
 				int count = 0;
-				count += opt2 & Option2::INFO;
-				count += opt2 & Option2::WARN;
+
+				if ((opt2 & Option2::INFO) && state == 0) {
+					count = 1;
+				}
+				if ((opt2 & Option2::WARN) && state == 1) {
+					count = 1;
+				}
 
 				if (count) {
 					std::cout << val;
@@ -148,8 +155,13 @@ namespace claujson {
 				outFile.open(fileName, std::ios::app);
 				if (outFile) {
 					int count = 0;
-					count += opt2 & Option2::INFO;
-					count += opt2 & Option2::WARN;
+
+					if ((opt2 & Option2::INFO) && state == 0) {
+						count = 1;
+					}
+					if ((opt2 & Option2::WARN) && state == 1) {
+						count = 1;
+					}
 
 					if (count) {
 						outFile << val;
@@ -157,7 +169,24 @@ namespace claujson {
 					outFile.close();
 				}
 			}
+		}
+	public:
+		template <class T>
+		Log& operator<<(const T& val) {
+			_print(val);
+			return *this;
+		}
 
+		template<>
+		Log& operator<<(const Info& x) {
+			state = 0;
+			_print(x);
+			return *this;
+		}
+		template<>
+		Log& operator<<(const Warning& x) {
+			state = 1;
+			_print(x);
 			return *this;
 		}
 
@@ -183,6 +212,7 @@ namespace claujson {
 
 		void no_print() {
 			opt = Option::NO_PRINT;
+			opt2 = Option2::CLEAR;
 		}
 
 		void file_name(const std::string& str) {

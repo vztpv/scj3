@@ -6029,6 +6029,7 @@ state = 2;
 		auto _ = std::chrono::steady_clock::now();
 
 		{
+			log << info << "simdjson-stage1 start\n";
 			// not static??
 			static _simdjson::dom::parser_for_claujson test;
 
