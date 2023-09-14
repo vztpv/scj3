@@ -134,7 +134,7 @@ namespace claujson {
 
 	public:
 		template <class T>
-		friend static void _print(Log& log, const T& val, const int op);
+		friend void _print(Log& log, const T& val, const int op);
 
 	public:
 
