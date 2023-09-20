@@ -3603,34 +3603,30 @@ namespace claujson {
 		};
 
 		static bool __LoadData(char* buf, size_t buf_len,
-
 			_simdjson::internal::dom_parser_implementation* imple,
 			int64_t token_arr_start, size_t token_arr_len, Ptr<Structured>& _global,
-			int start_state, int last_state, class Structured** next, int* err, uint64_t no)
+			int start_state, int last_state, // this line : now not used..
+			class Structured** next, int* err, uint64_t no)
 		{
 			try {
 				auto a = std::chrono::steady_clock::now();
 
-				std::vector<TokenTemp> Vec;
-				Vec.reserve(1024);
+				bool is_in_array = true;
 
 				if (token_arr_len <= 0) {
 					*next = nullptr;
 					return false;
 				}
 
+				// token_arr_len >= 1
+
 				class Structured* global = _global.get();
 
-				int state = start_state;
 				size_t braceNum = 0;
 				
 				Structured* nowUT = global; // use get_parent(), not std::vector<Structured*>
-				std::vector<Value> vec;
-				vec.reserve(1024);
-				
-				int64_t count = 0;
 
-				TokenTemp key; 
+				TokenTemp key; int state = 0;
 
 				for (uint64_t i = 0; i < token_arr_len; ++i) {
 
@@ -3639,34 +3635,13 @@ namespace claujson {
 					if (type == _simdjson::internal::tape_type::COMMA) {
 						continue;
 					}
+					
 						// Left 1
 					if (type == _simdjson::internal::tape_type::START_OBJECT ||
 						type == _simdjson::internal::tape_type::START_ARRAY) { // object start, array start
 
-						if (!Vec.empty()) {
 
-							if (Vec[0].is_key) {
-								nowUT->reserve_data_list(nowUT->get_data_size() + Vec.size() / 2);
-
-								for (size_t x = 0; x < Vec.size(); x += 2) {
-								
-									nowUT->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx,
-										(Vec[x + 1].buf_idx), Vec[x + 1].next_buf_idx,
-										buf, Vec[x].token_idx, Vec[x + 1].token_idx);
-								}
-							}
-							else {
-								nowUT->reserve_data_list(nowUT->get_data_size() + Vec.size());
-
-								for (size_t x = 0; x < Vec.size(); x += 1) {
-								
-									nowUT->add_item_type((Vec[x].buf_idx), Vec[x].next_buf_idx, buf, Vec[x].token_idx);
-								}
-							}
-
-							Vec.clear();
-						}
-
+						state = 0;
 
 						if (key.is_key) {
 							nowUT->add_user_type(key.buf_idx, key.next_buf_idx, buf,
@@ -3684,39 +3659,12 @@ namespace claujson {
 
 						/// initial new nestedUT.
 						nowUT = pTemp;
-
-						state = 0;
-
 					}
 					// Right 2
 					else if (type == _simdjson::internal::tape_type::END_OBJECT ||
 						type == _simdjson::internal::tape_type::END_ARRAY) {
 
 						state = 0;
-
-						if (!Vec.empty()) {
-							if (type == _simdjson::internal::tape_type::END_OBJECT) {
-								nowUT->reserve_data_list(nowUT->get_data_size() + Vec.size() / 2);
-
-								for (size_t x = 0; x < Vec.size(); x += 2) {
-									
-									nowUT->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx,
-										Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx, buf, Vec[x].token_idx, Vec[x + 1].token_idx);
-								}
-							}
-							else { // END_ARRAY
-								nowUT->reserve_data_list(nowUT->get_data_size() + Vec.size());
-
-								for (auto& x : Vec) {
-
-									nowUT->add_item_type((x.buf_idx), x.next_buf_idx, buf, x.token_idx);
-								}
-							}
-
-							Vec.clear();
-						}
-
-
 						if (braceNum == 0) {
 
 							Ptr<Structured> ut; // is v_array or v_object.
@@ -3756,6 +3704,42 @@ namespace claujson {
 						}
 					}
 					else {
+
+						bool is_key = false;
+						if (token_arr_start + i + 1 < imple->n_structural_indexes && buf[imple->structural_indexes[token_arr_start + i + 1]] == ':') {
+							is_key = true;
+						}
+
+						if (state == 0) {
+							//find {, [, }, ]
+							bool pass = false;
+							for (size_t x = i; x < token_arr_len; ++x) {
+								switch (buf[imple->structural_indexes[token_arr_start + x]]) {
+								case '{':
+								case '[':
+								case '}':
+								case ']':
+									pass = true;
+									break;
+								}
+								if (pass) {
+									if (is_key) { // "abc" : 123, "def" : 456 }
+										          //   i                      x
+										size_t sz = (x - i) / 3;
+										nowUT->reserve_data_list(sz);
+									}
+									else { // 123, 456 ]  or  123, 456, 789 ]
+										   //  i       x       i            x
+										size_t sz = (x - i) / 2 + 1;
+										nowUT->reserve_data_list(sz);
+									}
+									break;
+								}
+							}
+						}
+
+						state = 1;
+
 						{
 							TokenTemp data;
 
@@ -3769,10 +3753,6 @@ namespace claujson {
 								data.next_buf_idx = buf_len;
 							}
 
-							bool is_key = false;
-							if (token_arr_start + i + 1 < imple->n_structural_indexes && buf[imple->structural_indexes[token_arr_start + i + 1]] == ':') {
-								is_key = true;
-							}
 
 							if (is_key) {
 								data.is_key = true;
@@ -3780,15 +3760,7 @@ namespace claujson {
 								if (token_arr_start + i + 2 < imple->n_structural_indexes) {
 									const _simdjson::internal::tape_type _type = (_simdjson::internal::tape_type)buf[imple->structural_indexes[token_arr_start + i + 2]];
 
-									if (_type == _simdjson::internal::tape_type::START_ARRAY || _type == _simdjson::internal::tape_type::START_OBJECT) {
-										key = std::move(data);
-									}
-									else {
-										Vec.push_back(std::move(data));
-									}
-								}
-								else {
-									Vec.push_back(std::move(data));
+									key = std::move(data);
 								}
 								++i;
 
@@ -3796,42 +3768,21 @@ namespace claujson {
 								//	is_before_comma = false;
 							}
 							else {
-								Vec.push_back(std::move(data));
+								if (key.is_key) {
+									nowUT->add_item_type(key.buf_idx, key.next_buf_idx, data.buf_idx, data.next_buf_idx, buf, key.token_idx, data.token_idx);
+									key.is_key = false;
+								}
+								else {
+									nowUT->add_item_type(data.buf_idx, data.next_buf_idx, buf, data.token_idx);
+								}
 							}
-
-							state = 0;
 						}
 					}
 
 				}
-
 
 				if (next) {
 					*next = nowUT;
-				}
-
-				if (Vec.empty() == false) {
-					if (Vec[0].is_key) {
-						for (size_t x = 0; x < Vec.size(); x += 2) {
-		
-							nowUT->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, Vec[x + 1].buf_idx, Vec[x + 1].next_buf_idx,
-								buf, Vec[x].token_idx, Vec[x + 1].token_idx);
-						}
-					}
-					else {
-						for (size_t x = 0; x < Vec.size(); x += 1) {
-						
-							nowUT->add_item_type(Vec[x].buf_idx, Vec[x].next_buf_idx, buf, Vec[x].token_idx);
-						}
-					}
-
-					Vec.clear();
-				}
-
-				if (state != last_state) {
-					*err = -2;
-					return false;
-					// throw STRING("error final state is not last_state!  : ") + toStr(state);
 				}
 
 				auto b = std::chrono::steady_clock::now();
@@ -6175,7 +6126,6 @@ state = 2;
 
 					if (false == is_array[0].empty()) {
 						return { false, -4 };
-
 					}
 				}
 				else {
