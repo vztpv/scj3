@@ -3726,12 +3726,12 @@ namespace claujson {
 									if (is_key) { // "abc" : 123, "def" : 456 }
 										          //   i                      x
 										size_t sz = (x - i) / 3;
-										nowUT->reserve_data_list(sz);
+										nowUT->reserve_data_list(nowUT->get_data_size() + sz);
 									}
 									else { // 123, 456 ]  or  123, 456, 789 ]
 										   //  i       x       i            x
 										size_t sz = (x - i) / 2 + 1;
-										nowUT->reserve_data_list(sz);
+										nowUT->reserve_data_list(nowUT->get_data_size() + sz);
 									}
 									break;
 								}
