@@ -1126,7 +1126,7 @@ namespace claujson {
 
 			// chk... fallback..
 			{
-				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					free(buf_src);
@@ -1168,7 +1168,7 @@ namespace claujson {
 			buf_src[len] = '"';
 
 			{
-				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					log << warn << "not valid utf8" << "\n";
@@ -6717,7 +6717,7 @@ state = 2;
 
 			// chk... fallback..
 			{
-				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					free(buf_src);
@@ -6751,7 +6751,7 @@ state = 2;
 			buf_src[len] = '"';
 
 			{
-				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					log << warn << "not valid utf8" << "\n";
@@ -6800,7 +6800,7 @@ state = 2;
 
 			// chk... fallback..
 			{
-				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					free(buf_src);
@@ -6839,7 +6839,7 @@ state = 2;
 			buf_src[len] = '"';
 
 			{
-				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					log << warn << "not valid utf8" << "\n";

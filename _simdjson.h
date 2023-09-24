@@ -3218,7 +3218,8 @@ inline error_code dom_parser_implementation::allocate(size_t capacity, size_t ma
 #include <memory>
 
 namespace _simdjson {
-
+    class String {
+    public:
         /**
          * Validate the UTF-8 string.
          *
@@ -3226,14 +3227,15 @@ namespace _simdjson {
          * @param len the length of the string in bytes.
          * @return true if the string is valid UTF-8.
          */
-        _simdjson_inline _simdjson_warn_unused bool validate_utf8(const char* buf, size_t len) noexcept;
+       static _simdjson_warn_unused bool validate_utf8(const char* buf, size_t len) noexcept;
+
         /**
          * Validate the UTF-8 string.
          *
          * @param sv the string_view to validate.
          * @return true if the string is valid UTF-8.
          */
-        _simdjson_inline _simdjson_warn_unused bool validate_utf8(const std::string_view sv) noexcept {
+        static _simdjson_warn_unused bool validate_utf8(const std::string_view sv) noexcept {
             return validate_utf8(sv.data(), sv.size());
         }
 
@@ -3243,10 +3245,10 @@ namespace _simdjson {
          * @param p the string to validate.
          * @return true if the string is valid UTF-8.
          */
-        _simdjson_inline _simdjson_warn_unused bool validate_utf8(const std::string& s) noexcept {
+        static _simdjson_warn_unused bool validate_utf8(const std::string& s) noexcept {
             return validate_utf8(s.data(), s.size());
         }
-    
+    };
 /**
  * An implementation of _simdjson for a particular CPU architecture.
  *

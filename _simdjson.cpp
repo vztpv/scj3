@@ -6002,34 +6002,36 @@ inline error_code dom_parser_implementation::allocate(size_t capacity, size_t ma
 #include <memory>
 
 namespace _simdjson {
+    class String {
+    public:
+        /**
+         * Validate the UTF-8 string.
+         *
+         * @param buf the string to validate.
+         * @param len the length of the string in bytes.
+         * @return true if the string is valid UTF-8.
+         */
+        static _simdjson_warn_unused bool validate_utf8(const char* buf, size_t len) noexcept;
+        /**
+         * Validate the UTF-8 string.
+         *
+         * @param sv the string_view to validate.
+         * @return true if the string is valid UTF-8.
+         */
+        static _simdjson_warn_unused bool validate_utf8(const std::string_view sv) noexcept {
+            return validate_utf8(sv.data(), sv.size());
+        }
 
-/**
- * Validate the UTF-8 string.
- *
- * @param buf the string to validate.
- * @param len the length of the string in bytes.
- * @return true if the string is valid UTF-8.
- */
-_simdjson_warn_unused bool validate_utf8(const char * buf, size_t len) noexcept;
-/**
- * Validate the UTF-8 string.
- *
- * @param sv the string_view to validate.
- * @return true if the string is valid UTF-8.
- */
-_simdjson_inline _simdjson_warn_unused bool validate_utf8(const std::string_view sv) noexcept {
-  return validate_utf8(sv.data(), sv.size());
-}
-
-/**
- * Validate the UTF-8 string.
- *
- * @param p the string to validate.
- * @return true if the string is valid UTF-8.
- */
-_simdjson_inline _simdjson_warn_unused bool validate_utf8(const std::string& s) noexcept {
-  return validate_utf8(s.data(), s.size());
-}
+        /**
+         * Validate the UTF-8 string.
+         *
+         * @param p the string to validate.
+         * @return true if the string is valid UTF-8.
+         */
+        static _simdjson_warn_unused bool validate_utf8(const std::string& s) noexcept {
+            return validate_utf8(s.data(), s.size());
+        }
+    };
 
 /**
  * An implementation of _simdjson for a particular CPU architecture.
@@ -7240,7 +7242,7 @@ SIMDJSON_DLLIMPORTEXPORT internal::atomic_ptr<const implementation>& get_active_
 _simdjson_warn_unused error_code minify(const char *buf, size_t len, char *dst, size_t &dst_len) noexcept {
   return get_active_implementation()->minify(reinterpret_cast<const uint8_t *>(buf), len, reinterpret_cast<uint8_t *>(dst), dst_len);
 }
-_simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
+_simdjson_warn_unused bool String::validate_utf8(const char *buf, size_t len) noexcept {
   return get_active_implementation()->validate_utf8(buf, len);
 }
 const implementation * builtin_implementation() {
