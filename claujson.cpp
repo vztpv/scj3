@@ -1,7 +1,7 @@
 
 #include "claujson.h"
 
-#include "_simdjson.h" // modified simdjson // using simdjson 3.1.1
+#include "_simdjson.h" // modified simdjson // using simdjson 3.3.0
 
 #include <future>
 
@@ -1137,7 +1137,7 @@ namespace claujson {
 					return false;
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest);
+			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				free(buf_src);
 				free(buf_dest);
@@ -1176,7 +1176,7 @@ namespace claujson {
 					return false;
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest);
+			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				log << warn << "Error in Convert for string";
 				return false;
@@ -1384,7 +1384,7 @@ namespace claujson {
 			ubuf = std::make_unique<uint8_t[]>(len + _simdjson::_SIMDJSON_PADDING);
 			string_buf = &ubuf[0];
 		}
-		auto* x = simdjson_imple->parse_string((uint8_t*)text + 1, string_buf);
+		auto* x = simdjson_imple->parse_string((uint8_t*)text + 1, string_buf, false);
 		if (x == nullptr) {
 			return false; // ERROR("Error in Convert for string");
 		}
@@ -1414,6 +1414,7 @@ namespace claujson {
 		auto x = simdjson_imple->parse_number(value, temp);
 
 		if (x != _simdjson::SUCCESS) {
+			log << warn << std::string_view((char*)value, 20) << "\n";
 			log << warn << "parse number error. " << x << "\n";
 			return false; //ERROR("parse number error. ");
 			//throw "Error in Convert to parse number";
@@ -3611,8 +3612,6 @@ namespace claujson {
 			try {
 				auto a = std::chrono::steady_clock::now();
 
-				bool is_in_array = true;
-
 				if (token_arr_len <= 0) {
 					*next = nullptr;
 					return false;
@@ -5036,7 +5035,7 @@ namespace claujson {
 
 		state = 1;
 		
-		if (simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx++]] != ':')) { log << warn << ("Missing colon after key in object"); return false; }
+		if (_simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx++]] != ':')) { log << warn << ("Missing colon after key in object"); return false; }
 		{
 			auto value = buf[simdjson_imple->structural_indexes[idx++]];
 			switch (value) {
@@ -5083,7 +5082,7 @@ state = 2;
 			//SIMDJSON_TRY(visitor.increment_count(*this));
 		{
 			auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
-			if (simdjson_unlikely(key != '"')) {
+			if (_simdjson_unlikely(key != '"')) {
 				log << warn << ("Key string missing at beginning of field in object");
 				if (err) {
 					*err = 1;
@@ -5410,7 +5409,7 @@ state = 2;
 			}
 		}
 
-		if (simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx++]] != ':')) { log << warn << ("Missing colon after key in object"); return false; }
+		if (_simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx++]] != ':')) { log << warn << ("Missing colon after key in object"); return false; }
 		{
 			auto value = buf[simdjson_imple->structural_indexes[idx++]];
 			switch (value) {
@@ -5456,7 +5455,7 @@ state = 2;
 			//SIMDJSON_TRY(visitor.increment_count(*this));
 		{
 			auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
-			if (simdjson_unlikely(key != '"')) {
+			if (_simdjson_unlikely(key != '"')) {
 				log << warn << ("Key string missing at beginning of field in object");
 				if (err) {
 					*err = 1;
@@ -5744,7 +5743,7 @@ state = 2;
 		}
 
 
-		if (simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx--]] != ':')) {
+		if (_simdjson_unlikely(buf[simdjson_imple->structural_indexes[idx--]] != ':')) {
 			log << warn << ("Missing colon after key in object");
 			if (err) {
 				*err = 1;
@@ -6729,7 +6728,7 @@ state = 2;
 					return false;
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest);
+			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				free(buf_src);
 				free(buf_dest);
@@ -6760,7 +6759,7 @@ state = 2;
 					return false;
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest);
+			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				log << warn << "Error in Convert for string";
 				return false;
@@ -6812,7 +6811,7 @@ state = 2;
 					return { false, "" };
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest);
+			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				free(buf_src);
 				free(buf_dest);
@@ -6848,7 +6847,7 @@ state = 2;
 					return { false, "" };
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest);
+			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				log << warn << "Error in Convert for string";
 				return { false, "" };
