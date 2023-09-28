@@ -1397,6 +1397,7 @@ namespace claujson {
 	}
 
 	inline bool ConvertNumber(claujson::Value& data, char* text, size_t len, bool isFirst) {
+
 		std::unique_ptr<uint8_t[]> copy;
 
 		uint64_t temp[2] = { 0 };
@@ -1414,7 +1415,7 @@ namespace claujson {
 		auto x = simdjson_imple->parse_number(value, temp);
 
 		if (x != _simdjson::SUCCESS) {
-			log << warn << std::string_view((char*)value, 20) << "\n";
+			log << warn << StringView((char*)value, 20) << "\n";
 			log << warn << "parse number error. " << x << "\n";
 			return false; //ERROR("parse number error. ");
 			//throw "Error in Convert to parse number";
@@ -1450,7 +1451,7 @@ namespace claujson {
 
 		//try {
 			data.clear();
-
+			
 			switch (buf[buf_idx]) {
 			case '"':
 				if (ConvertString(data, &buf[buf_idx], next_buf_idx - buf_idx)) {}
@@ -1458,6 +1459,18 @@ namespace claujson {
 					goto ERR;
 				}
 				break;
+			case '-':
+			case '0':
+			case '1': case '2': case '3': case '4':
+			case '5': case '6': case '7': case '8': case '9':
+			{
+				if (ConvertNumber(data, &buf[buf_idx], next_buf_idx - buf_idx, token_idx == 0)) {} 
+				else {
+					goto ERR;
+				}
+
+				break;
+			}
 			case 't':
 			{
 				if (!simdjson_imple->is_valid_true_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
@@ -1481,18 +1494,7 @@ namespace claujson {
 
 				data.set_null();
 				break;
-			case '-':
-			case '0':
-			case '1': case '2': case '3': case '4':
-			case '5': case '6': case '7': case '8': case '9':
-			{
-				if (ConvertNumber(data, &buf[buf_idx], next_buf_idx - buf_idx, token_idx == 0)) {} 
-				else {
-					goto ERR;
-				}
-
-				break;
-			}
+			
 			default:
 				log << warn << "convert error : " << (int)buf[buf_idx] << " " << buf[buf_idx] << "\n";
 				goto ERR; //ERROR("convert Error");
@@ -3619,6 +3621,7 @@ namespace claujson {
 
 				// token_arr_len >= 1
 
+
 				class Structured* global = _global.get();
 
 				size_t braceNum = 0;
@@ -3710,28 +3713,30 @@ namespace claujson {
 
 						if (state == 0) {
 							//find {, [, }, ]
-							bool pass = false;
-							for (size_t x = i; x < token_arr_len; ++x) {
+							size_t x = i;
+							for (; x < token_arr_len; ++x) {
 								switch (buf[imple->structural_indexes[token_arr_start + x]]) {
 								case '{':
 								case '[':
 								case '}':
 								case ']':
-									pass = true;
+									goto found;
 									break;
 								}
-								if (pass) {
-									if (is_key) { // "abc" : 123, "def" : 456 }
-										          //   i                      x
-										size_t sz = (x - i) / 3;
-										nowUT->reserve_data_list(nowUT->get_data_size() + sz);
-									}
-									else { // 123, 456 ]  or  123, 456, 789 ]
-										   //  i       x       i            x
-										size_t sz = (x - i) / 2 + 1;
-										nowUT->reserve_data_list(nowUT->get_data_size() + sz);
-									}
-									break;
+								
+							}
+							
+							found:
+							{
+								if (is_key) { // "abc" : 123, "def" : 456 }
+									//   i                      x
+									size_t sz = (x - i) / 3;
+									nowUT->reserve_data_list(nowUT->get_data_size() + sz);
+								}
+								else { // 123, 456 ]  or  123, 456, 789 ]
+									//  i       x       i            x
+									size_t sz = (x - i) / 2 + 1;
+									nowUT->reserve_data_list(nowUT->get_data_size() + sz);
 								}
 							}
 						}

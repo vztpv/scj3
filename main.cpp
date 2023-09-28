@@ -394,11 +394,11 @@ int main(int argc, char* argv[])
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
 
-
+//
 				claujson::clean(j);
 
 				return 0;
-
+//
 				//claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, thr_num);
 				std::cout << "save_parallel " <<
