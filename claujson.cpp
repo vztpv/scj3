@@ -3675,7 +3675,6 @@ namespace claujson {
 								ut = Ptr<Structured>(new VirtualArray());
 							}
 
-							bool chk = false;
 							size_t len = nowUT->get_data_size();
 
 							for (size_t i = 0; i < len; ++i) {
@@ -3757,14 +3756,9 @@ namespace claujson {
 								data.is_key = true;
 
 								if (token_arr_start + i + 2 < imple->n_structural_indexes) {
-									const _simdjson::internal::tape_type _type = (_simdjson::internal::tape_type)buf[imple->structural_indexes[token_arr_start + i + 2]];
-
 									key = std::move(data);
 								}
-								++i;
-
-								//	is_next_comma = false;
-								//	is_before_comma = false;
+								++i; // pass key
 							}
 							else {
 								if (key.is_key) {
