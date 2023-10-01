@@ -57,14 +57,27 @@ if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
 double sum = 0;
 if (true && ok) {
 	if (j.is_structured()) {
-		auto& features = j.as_object()[1]; 
-		for (auto& feature : features.as_array()) {
-			auto& coordinate = feature.json_pointerB(vec).as_array()[0];  // { vec, op } // <- class??
-			for (auto& coordinate_ : coordinate.as_array()) {
-				for (auto& x : coordinate_.as_array()) {
+		auto& features = j[1];
+		claujson::Array* features_arr = features.as_array();
+		if (!features_arr) {
+			continue;
+		}
+		for (auto& feature : *features_arr) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
+			auto& coordinate = feature["geometry"sv]["coordinates"sv][0];  // feature.json_pointerB(vec)[0];  
+			claujson::Array* coordinate_arr = coordinate.as_array();
+			if (!coordinate_arr) {
+				continue;
+			}
+			for (auto& coordinate_ : *coordinate_arr) {
+				claujson::Array* coordinate__arr = coordinate_.as_array();
+				if (!coordinate__arr) {
+					continue;
+				}
+				for (auto& x : *coordinate__arr) {
 					if (x.is_float()) {
 						sum += x.float_val();
 						counter++;
+						chk++;
 					}
 				}
 			}
