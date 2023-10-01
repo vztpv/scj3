@@ -2014,7 +2014,10 @@ namespace claujson {
 
 			obj_key_vec.push_back(Value());
 			obj_val_vec.emplace_back(j.release());
+			return true;
 		}
+
+		return false;
 	}
 
 	bool Object::add_user_type(Value key, Ptr<Structured> j) {
