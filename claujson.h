@@ -600,7 +600,7 @@ namespace claujson {
 		friend class Object;
 		friend class PartialJson;
 	protected:
-		Value key;
+	//	Value key;
 		PtrWeak<Structured> parent = nullptr;
 	//	bool valid = true; //
 	protected:
@@ -669,13 +669,8 @@ namespace claujson {
 
 		const Value& operator[](size_t idx) const;
 
-		bool has_key() const;
-
 		PtrWeak<Structured> get_parent() const;
 
-		const Value& get_key() const;
-	protected:
-		bool set_key(Value key);
 	public:
 		bool change_key(const Value& key, const Value& new_key);
 
@@ -715,6 +710,9 @@ namespace claujson {
 		virtual bool add_array(Ptr<Structured> arr) = 0;  // change to Value ? or remove?
 		virtual bool add_object(Ptr<Structured> obj) = 0; // change to Value ? or remove?
 
+		virtual bool add_array(Value key, Ptr<Structured> arr) = 0;  // change to Value ? or remove?
+		virtual bool add_object(Value key, Ptr<Structured> obj) = 0; // change to Value ? or remove?
+
 		virtual bool insert_array_element(size_t idx, Value val) = 0;
 
 		virtual void erase(StringView key, bool real = false) = 0;
@@ -746,6 +744,9 @@ namespace claujson {
 		//
 
 		virtual void add_user_type(ValueType type) = 0; // int type -> enum?
+
+
+		virtual bool add_user_type(Value key, Ptr<Structured> j) = 0;
 
 		virtual bool add_user_type(Ptr<Structured> j) = 0;
 	};
@@ -803,6 +804,10 @@ namespace claujson {
 		virtual bool add_array(Ptr<Structured> arr);
 		virtual bool add_object(Ptr<Structured> obj);
 
+		virtual bool add_array(Value key, Ptr<Structured> arr);  // change to Value ? or remove?
+		virtual bool add_object(Value key, Ptr<Structured> obj); // change to Value ? or remove?
+
+
 		virtual bool insert_array_element(size_t idx, Value val);
 
 		virtual void erase(StringView key, bool real = false);
@@ -827,6 +832,8 @@ namespace claujson {
 			 ValueType type, uint64_t key_token_idx);
 
 		virtual void add_user_type(ValueType type);
+
+		virtual bool add_user_type(Value key, Ptr<Structured> j);
 
 		virtual bool add_user_type(Ptr<Structured> j);
 	};
@@ -884,6 +891,10 @@ namespace claujson {
 
 		virtual bool add_object(Ptr<Structured> obj);
 
+		virtual bool add_array(Value key, Ptr<Structured> arr);  // change to Value ? or remove?
+		
+		virtual bool add_object(Value key, Ptr<Structured> obj); // change to Value ? or remove?
+
 		virtual bool insert_array_element(size_t idx, Value val);
 
 		virtual void erase(StringView key, bool real = false); 
@@ -911,6 +922,8 @@ namespace claujson {
 			 ValueType type, uint64_t key_token_idx);
 
 		virtual void add_user_type(ValueType type);
+
+		virtual bool add_user_type(Value key, Ptr<Structured> j);
 
 		virtual bool add_user_type(Ptr<Structured> j);
 
