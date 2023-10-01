@@ -331,10 +331,6 @@ namespace claujson {
 	public:
 		friend std::ostream& operator<<(std::ostream& stream, const Value& data);
 
-		friend claujson::Value& Convert(Value& data, uint64_t idx, uint64_t idx2, bool key,
-			char* buf,  uint64_t id, bool& err);
-
-
 		friend bool ConvertString(Value& data, char* text, size_t len);
 
 	private:
@@ -470,10 +466,6 @@ namespace claujson {
 		Value& json_pointer(const Value& route);
 		const Value& json_pointer(const Value& route) const;
 
-		std::vector<Value>::iterator begin(); 
-
-		std::vector<Value>::iterator end();
-
 		static bool json_pointerA(StringView route, std::vector<Value>& vec, bool convert = true);
 #if __cplusplus >= 202002L
 
@@ -487,12 +479,12 @@ namespace claujson {
 
 		Value& json_pointerB(const std::vector<Value>& routeDataVec);
 
-		Array& as_array();
-		Object& as_object();
+		Array* as_array();
+		Object* as_object();
 		Structured* as_structured_ptr();
 
-		const Array& as_array()const;
-		const Object& as_object()const;
+		const Array* as_array()const;
+		const Object* as_object()const;
 		const Structured* as_structured_ptr()const;
 
 
@@ -610,15 +602,15 @@ namespace claujson {
 	protected:
 		Value key;
 		PtrWeak<Structured> parent = nullptr;
-		bool valid = true; //
+	//	bool valid = true; //
 	protected:
 		static Value data_null; // valid is false..
 	public:
 		static size_t npos; // 
 
-		bool is_valid() const;
+		//bool is_valid() const;
 	protected:
-		explicit Structured(bool valid);
+		//explicit Structured(bool valid);
 	public:
 		Structured(const Structured& other) = delete;
 		Structured& operator=(const Structured& other) = delete;
@@ -763,7 +755,7 @@ namespace claujson {
 		std::vector<Value> obj_key_vec;
 		std::vector<Value> obj_val_vec;
 	protected:
-		explicit Object(bool valid);
+		//explicit Object(bool valid);
 	public:
 		friend class Value;
 
@@ -843,7 +835,7 @@ namespace claujson {
 	protected:
 		std::vector<Value> arr_vec;
 	protected:
-		explicit Array(bool valid);
+		//explicit Array(bool valid);
 	public:
 		friend class Value;
 		friend class PartialJson;

@@ -648,21 +648,6 @@ namespace claujson {
 #endif
 
 
-	std::vector<Value>::iterator Value::begin() {
-		if (is_object()) {
-			return as_object().begin();
-		}
-		return as_array().begin();
-	}
-
-	std::vector<Value>::iterator Value::end() {
-		if (is_object()) {
-			return as_object().end();
-		}
-		return as_array().end();
-	}
-
-
 	Value& Value::json_pointerB(const std::vector<Value>& routeDataVec) { // option-> StringView route?
 		static Value unvalid_data(nullptr, false);
 
@@ -1511,9 +1496,9 @@ namespace claujson {
 		return data;
 	}
 
-	bool Structured::is_valid() const {
-		return valid;
-	}
+	//bool Structured::is_valid() const {
+	//	return valid;
+	//}
 
 
 	Structured* Structured::clone() const {
@@ -1528,7 +1513,7 @@ namespace claujson {
 		}
 	}
 
-	Structured::Structured(bool valid) : valid(valid) { }
+	//Structured::Structured(bool valid) : valid(valid) { }
 
 	Structured::Structured() { }
 
@@ -1540,7 +1525,7 @@ namespace claujson {
 
 
 	const Value& Structured::at(StringView key) const {
-		if (!is_object() || !is_valid()) {
+		if (!is_object()) {
 			return data_null;
 		}
 
@@ -1561,7 +1546,7 @@ namespace claujson {
 	}
 
 	Value& Structured::at(StringView key) {
-		if (!is_object() || !is_valid()) {
+		if (!is_object()) { //} || !is_valid()) {
 			return data_null;
 		}
 
@@ -1582,7 +1567,7 @@ namespace claujson {
 	}
 
 	size_t Structured::find(StringView key) const { 
-		if (!is_object() || !is_valid()) {
+		if (!is_object()) { //} || !is_valid()) {
 			return npos;
 		}
 
@@ -1603,7 +1588,7 @@ namespace claujson {
 	}
 
 	size_t Structured::find_(StringView key) const {
-		if (!is_object() || !is_valid()) {
+		if (!is_object()) { // } || !is_valid()) {
 			return npos;
 		}
 
@@ -1643,14 +1628,14 @@ namespace claujson {
 #endif
 
 	Value& Structured::operator[](size_t idx) {
-		if (idx >= get_data_size() || !is_valid()) {
+		if (idx >= get_data_size()) {
 			return data_null;
 		}
 		return get_value_list(idx);
 	}
 
 	const Value& Structured::operator[](size_t idx) const {
-		if (idx >= get_data_size() || !is_valid()) {
+		if (idx >= get_data_size()) {
 			return data_null;
 		}
 		return get_value_list(idx);
@@ -1659,7 +1644,7 @@ namespace claujson {
 
 	Value& Structured::operator[](StringView key) { // if not exist key, then nothing.
 		size_t idx = npos;
-		if (!is_valid() || (idx = find_(key)) == npos) {
+		if ((idx = find_(key)) == npos) {
 			return data_null; 
 		}
 
@@ -1667,7 +1652,7 @@ namespace claujson {
 	}
 	const Value& Structured::operator[](StringView key) const { // if not exist key, then nothing.
 		size_t idx = npos;
-		if (!is_valid() || (idx = find_(key)) == npos) {
+		if ((idx = find_(key)) == npos) {
 			return data_null;
 		}
 
@@ -1733,7 +1718,7 @@ namespace claujson {
 	}
 
 
-	Object::Object(bool valid) : Structured(valid) { }
+	//Object::Object(bool valid) : Structured(valid) { }
 
 
 	class CompKey {
@@ -1859,7 +1844,7 @@ namespace claujson {
 	}
 
 	bool Object::add_object_element(Value key, Value val) {
-		if (!is_valid() || !key.is_str()) {
+		if (!key.is_str()) {
 			return false;
 		}
 
@@ -1876,9 +1861,6 @@ namespace claujson {
 
 	bool Object::add_array_element(Value val) { return false; }
 	bool Object::add_array(Ptr<Structured> arr) {
-		if (!is_valid()) {
-			return false;
-		}
 
 		if (arr->has_key()) {
 			obj_key_vec.push_back(arr->get_key().clone());
@@ -1892,9 +1874,6 @@ namespace claujson {
 	}
 
 	bool Object::add_object(Ptr<Structured> obj) {
-		if (!is_valid()) {
-			return false;
-		}
 
 		if (obj->has_key()) {
 			obj_key_vec.push_back(obj->get_key().clone());
@@ -1920,9 +1899,6 @@ namespace claujson {
 	}
 #endif
 	void Object::erase(size_t idx, bool real) {
-		if (!is_valid()) {
-			return;
-		}
 
 		if (real) {
 			clean(obj_key_vec[idx]);
@@ -1935,9 +1911,6 @@ namespace claujson {
 
 
 	void Object::MergeWith(PtrWeak<Structured> j, int start_offset) {
-		if (!is_valid()) {
-			return;
-		}
 
 		if (j->is_object()) {
 			auto* x = dynamic_cast<Object*>(j);
@@ -1993,9 +1966,6 @@ namespace claujson {
 	}
 
 	void Object::Link(Ptr<Structured> j) {
-		if (!is_valid()) {
-			return;
-		}
 
 		if (j->has_key()) {
 			//
@@ -2015,9 +1985,7 @@ namespace claujson {
 
 	void Object::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 		char* buf, uint64_t key_token_idx, uint64_t val_token_idx) {
-		if (!is_valid()) {
-			return;
-		}
+
 		{
 			Value temp;// key
 			Value temp2;
@@ -2060,9 +2028,6 @@ namespace claujson {
 	}
 
 	bool Object::add_user_type(Ptr<Structured> j) {
-		if (!is_valid()) {
-			return false;
-		}
 
 		if (j->is_virtual()) {
 			j->set_parent(this);
@@ -2084,7 +2049,7 @@ namespace claujson {
 		return true;
 	}
 
-	Array::Array(bool valid) : Structured(valid) { }
+	//Array::Array(bool valid) : Structured(valid) { }
 
 
 	Structured* Array::clone() const {
@@ -2170,9 +2135,6 @@ namespace claujson {
 	}
 
 	bool Array::add_array_element(Value val) {
-		if (!is_valid()) {
-			return false;
-		}
 
 		if (val.is_ptr()) {
 			val.as_structured_ptr()->set_parent(this);
@@ -2184,9 +2146,6 @@ namespace claujson {
 	}
 
 	bool Array::add_array(Ptr<Structured> arr) {
-		if (!is_valid()) {
-			return false;
-		}
 
 		if (!arr->has_key()) {
 			arr_vec.push_back(Value(arr.release()));
@@ -2198,9 +2157,6 @@ namespace claujson {
 	}
 
 	bool Array::add_object(Ptr<Structured> obj) {
-		if (!is_valid()) {
-			return false;
-		}
 
 		if (!obj->has_key()) {
 			arr_vec.push_back(Value(obj.release()));
@@ -2212,9 +2168,6 @@ namespace claujson {
 	}
 
 	bool Array::insert_array_element(size_t idx, Value val) {
-		if (!is_valid()) {
-			return false;
-		}
 
 		arr_vec.insert(arr_vec.begin() + idx, std::move(val));
 
@@ -2233,9 +2186,6 @@ namespace claujson {
 #endif
 
 	void Array::erase(size_t idx, bool real) {
-		if (!is_valid()) {
-			return;
-		}
 
 		if (real) {
 			clean(arr_vec[idx]);
@@ -2245,9 +2195,6 @@ namespace claujson {
 	}
 
 	void Array::MergeWith(PtrWeak<Structured> j, int start_offset) {
-		if (!is_valid()) {
-			return;
-		}
 
 		if (j->is_array()) {
 			auto* x = dynamic_cast<Array*>(j);
@@ -2302,9 +2249,6 @@ namespace claujson {
 	}
 
 	void Array::Link(Ptr<Structured> j) {
-		if (!is_valid()) {
-			return;
-		}
 
 		if (!j->has_key()) {
 			//
@@ -2332,10 +2276,6 @@ namespace claujson {
 
 	void Array::add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
 		char* buf, uint64_t val_token_idx) {
-		if (!is_valid()) {
-			return;
-		}
-
 
 		{
 			Value temp2;
@@ -2356,10 +2296,6 @@ namespace claujson {
 	}
 
 	bool Array::add_user_type(Ptr<Structured> j) {
-		if (!is_valid()) {
-			return false;
-		}
-
 
 		if (j->is_virtual()) {
 			j->set_parent(this);
@@ -2531,7 +2467,7 @@ namespace claujson {
 
 
 	bool PartialJson::add_object_element(Value key, Value val) {
-		if (!is_valid() || !key.is_str()) {
+		if (!key.is_str()) {
 			return false;
 		}
 		if (!arr_vec.empty()) {
@@ -2598,9 +2534,6 @@ namespace claujson {
 	}
 
 	void PartialJson::MergeWith(PtrWeak<Structured> j, int start_offset) {
-		if (!is_valid()) {
-			return;
-		}
 
 		if (j->is_array()) {
 			auto* x = dynamic_cast<Array*>(j);
@@ -2772,11 +2705,8 @@ namespace claujson {
 
 	inline void Object::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
 		ValueType type, uint64_t key_token_idx) {
-		if (!is_valid()) {
-			return;
-		}
 
-		{
+			{
 			Value temp;
 			bool e = false;
 
@@ -2806,9 +2736,6 @@ namespace claujson {
 		}
 	}
 	inline void Array::add_user_type(ValueType type) {
-		if (!is_valid()) {
-			return;
-		}
 
 		{
 			Structured* json = nullptr;
@@ -2889,37 +2816,33 @@ namespace claujson {
 		}
 	}
 
-	Array& Value::as_array() {
+	Array* Value::as_array() {
 		if (is_ptr() && as_structured_ptr()->is_array()) {
-			return *static_cast<Array*>(_ptr_val);
+			return static_cast<Array*>(_ptr_val);
 		}
-		static Array empty_arr{ false };
-		return empty_arr;
+		return nullptr;
 	}
 
-	Object& Value::as_object() {
+	Object* Value::as_object() {
 		if (is_ptr() && as_structured_ptr()->is_object()) {
-			return *static_cast<Object*>(_ptr_val);
+			return static_cast<Object*>(_ptr_val);
 		}
-		static Object empty_obj{ false };
-		return empty_obj;
+		return nullptr;
 	}
 
 
-	const Array& Value::as_array() const {
+	const Array* Value::as_array() const {
 		if (is_ptr() && as_structured_ptr()->is_array()) {
-			return *static_cast<Array*>(_ptr_val);
+			return static_cast<Array*>(_ptr_val);
 		}
-		static const Array empty_arr{ false };
-		return empty_arr;
+		return nullptr;
 	}
 
-	const Object& Value::as_object() const {
+	const Object* Value::as_object() const {
 		if (is_ptr() && as_structured_ptr()->is_object()) {
-			return *static_cast<Object*>(_ptr_val);
+			return static_cast<Object*>(_ptr_val);
 		}
-		static const Object empty_obj{ false };
-		return empty_obj;
+		return nullptr;
 	}
 
 	Structured* Value::as_structured_ptr() {

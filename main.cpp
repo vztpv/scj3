@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
 			claujson::log.info();
 			claujson::log.warn();
 		}
-		
+
 		//claujson::log.no_print();
 		//claujson::log.console();
 		//claujson::log.info();
@@ -394,19 +394,18 @@ int main(int argc, char* argv[])
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
 
-//
+				//
 				claujson::clean(j);
 
 				return 0;
-//
-				//claujson::save("test12.txt", j);
+				//
+								//claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, thr_num);
-				std::cout << "save_parallel " <<
-					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
+				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
-				claujson::clean(j);
+				//claujson::clean(j);
 
-			return 0;
+				//return 0;
 
 				//claujson::LoadData::save(std::cout, ut);
 				//claujson::LoadData::save("output14.json", j);
@@ -432,11 +431,23 @@ int main(int argc, char* argv[])
 					int chk = 0;
 					for (int i = 0; i < 1; ++i) {
 						if (j.is_structured()) {
-							auto& features = j[1]; 
-							for (auto& feature : features) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
+							auto& features = j[1];
+							claujson::Array* features_arr = features.as_array();
+							if (!features_arr) {
+								continue;
+							}
+							for (auto& feature : *features_arr) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
 								auto& coordinate = feature["geometry"sv]["coordinates"sv][0];  // feature.json_pointerB(vec)[0];  
-								for (auto& coordinate_ : coordinate) {
-									for (auto& x : coordinate_) {
+								claujson::Array* coordinate_arr = coordinate.as_array();
+								if (!coordinate_arr) {
+									continue;
+								}
+								for (auto& coordinate_ : *coordinate_arr) {
+									claujson::Array* coordinate__arr = coordinate_.as_array();
+									if (!coordinate__arr) {
+										continue;
+									}
+									for (auto& x : *coordinate__arr) {
 										if (x.is_float()) {
 											sum += x.float_val();
 											counter++;
@@ -455,6 +466,9 @@ int main(int argc, char* argv[])
 				std::cout << sum << " ";
 				std::cout << counter << "  ";
 				
+				claujson::clean(j);
+				return 0;
+
 				{
 					double sum = 0;
 					counter = 0;
@@ -514,7 +528,7 @@ int main(int argc, char* argv[])
 				claujson::Value Y("coordinates"sv); // use claujson::Value.
 
 				sum = 0; counter = 0;
-				if (true && ok) {
+				/*if (true && ok) {
 					int chk = 0;
 					for (int i = 0; i < 1; ++i) {
 						auto& features = j.as_object()[1]; // j[1];
@@ -540,7 +554,7 @@ int main(int argc, char* argv[])
 							}
 						}
 					}
-				}
+				}*/
 
 				auto c3 = std::chrono::steady_clock::now();
 				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c3 - c2);
