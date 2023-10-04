@@ -944,11 +944,11 @@ namespace claujson {
 	std::pair<bool, size_t> parse_str(std::u8string_view str, Value& ut, size_t thr_num, bool use_all_function = false);
 #endif
 
-	std::string save_to_str(const Value& global);
+	std::string save_to_str(const Value& global, bool prettty = true);
 	
-	void save(const std::string& fileName, const Value& global);
+	void save(const std::string& fileName, const Value& global, bool pretty = true);
 
-	void save_parallel(const std::string& fileName, Value& j, size_t thr_num);
+	void save_parallel(const std::string& fileName, Value& j, size_t thr_num, bool pretty = true);
 
 	[[nodiscard]]
 	Value diff(const Value& x, const Value& y);

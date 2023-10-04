@@ -401,6 +401,7 @@ int main(int argc, char* argv[])
 				//
 							//	claujson::save("test12.txt", j);
 				claujson::save_parallel("test34.json", j, thr_num);
+				claujson::save_parallel("test56.json", j, thr_num, false);
 				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
 				//claujson::clean(j);
