@@ -3990,8 +3990,19 @@ namespace claujson {
 
 		StrStream& operator<<(StringView sv) { // chk! 
 			char buf[1024] = { 0 };
-			memcpy_s(buf, 1024, sv.data(), sv.size());
-			fmt::format_to(std::back_inserter(out), "{}", buf);
+			if (sv.size() >= 1024) {
+				char* new_buf = (char*)malloc(sizeof(char) * (sv.size() + 1));
+				if (new_buf) {
+					memcpy(new_buf, sv.data(), sv.size());
+					new_buf[sv.size()] = '\0';
+					fmt::format_to(std::back_inserter(out), "{}", new_buf);
+					free(new_buf);
+				}
+			}
+			else {
+				memcpy(buf, sv.data(), sv.size());
+				fmt::format_to(std::back_inserter(out), "{}", buf);
+			}
 			return *this;
 		}
 
