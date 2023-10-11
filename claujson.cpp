@@ -4010,7 +4010,9 @@ namespace claujson {
 			if (x == 0.0) {
 				fmt::format_to(std::back_inserter(out), "0.0");
 			}
-			fmt::format_to(std::back_inserter(out), "{}", x); // FMT_COMPILE("{:.10f}"), x);
+			else {		
+				fmt::format_to(std::back_inserter(out), "{}", x); // FMT_COMPILE("{:.10f}"), x);
+			}
 			return *this;
 		}
 
