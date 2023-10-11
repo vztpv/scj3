@@ -339,7 +339,7 @@ namespace claujson {
 			uint64_t _uint_val;
 			double _float_val;
 			std::string* _str_val;
-			Structured* _ptr_val; 
+			Structured* _array_or_object_ptr;
 			bool _bool_val;
 		};
 
@@ -403,7 +403,7 @@ namespace claujson {
 
 		bool is_str() const;
 
-		bool is_ptr() const; // check is_structured()
+		//bool is_ptr() const; // check is_structured()
 
 		int64_t get_integer() const {
 			return int_val();
@@ -454,10 +454,10 @@ namespace claujson {
 		bool& bool_val();
 
 		Structured* get_structured() const {
-			return ptr_val();
+			return _array_or_object_ptr;
 		}
 
-		Structured* ptr_val() const;
+	//	Structured* ptr_val() const;
 
 		Value& json_pointer(StringView route, bool convert = true);
 
@@ -841,6 +841,8 @@ namespace claujson {
 	class Array : public Structured {
 	protected:
 		std::vector<Value> arr_vec;
+	private:
+		std::vector<Value> temp;
 	protected:
 		//explicit Array(bool valid);
 	public:
