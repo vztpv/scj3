@@ -5,7 +5,6 @@
 
 #include "mimalloc-new-delete.h"
 
-
 #include <iostream>
 #include <string>
 #include <ctime>
