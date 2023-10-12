@@ -4,7 +4,7 @@
 
 
 #include "mimalloc-new-delete.h"
-#include "fmt/format.h"
+
 
 #include <iostream>
 #include <string>
