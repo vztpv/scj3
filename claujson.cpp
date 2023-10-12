@@ -4078,7 +4078,9 @@ namespace claujson {
 	}
 
 	inline void write_char(StrStream& stream, const std::string& str) {
+		
 		size_t sz = str.size();
+
 		for (size_t i = 0; i < sz; ++i) {
 			write_char(stream, str[i]);
 		}
@@ -4131,9 +4133,8 @@ namespace claujson {
 				stream << "\"";
 
 				size_t len = x.str_val().size();
-				for (uint64_t j = 0; j < len; ++j) {
-					write_char(stream, x.str_val()[j]);
-				}stream << "\"";
+				write_char(stream, x.str_val());
+				stream << "\"";
 			}
 			else if (x.type() == ValueType::BOOL) {
 				stream << (x.bool_val() ? "true" : "false");
@@ -4236,9 +4237,7 @@ namespace claujson {
 							stream << "\"";
 
 						}break;
-						case ValueType::BOOL: {
-							stream << (x.bool_val() ? "true" : "false");
-						}break;
+						
 						case ValueType::FLOAT: {
 							stream << (x.float_val());
 						}break;
@@ -4247,6 +4246,9 @@ namespace claujson {
 						}break;
 						case ValueType::UINT: {
 							stream << x.uint_val();
+						}break;
+						case ValueType::BOOL: {
+							stream << (x.bool_val() ? "true" : "false");
 						}break;
 						case ValueType::NULL_: {
 							stream << "null";
@@ -4301,9 +4303,7 @@ namespace claujson {
 						stream << "\"";
 
 					}break;
-					case ValueType::BOOL: {
-						stream << (x.bool_val() ? "true" : "false");
-					}break;
+					
 					case ValueType::FLOAT: {
 						stream << (x.float_val());
 					}break;
@@ -4312,6 +4312,9 @@ namespace claujson {
 					}break;
 					case ValueType::UINT: {
 						stream << x.uint_val();
+					}break;
+					case ValueType::BOOL: {
+						stream << (x.bool_val() ? "true" : "false");
 					}break;
 					case ValueType::NULL_: {
 						stream << "null";
@@ -4338,9 +4341,7 @@ namespace claujson {
 				stream << "\"";
 
 			}break;
-			case ValueType::BOOL: {
-				stream << (x.bool_val() ? "true" : "false");
-			}break;
+			
 			case ValueType::FLOAT: {
 				stream << (x.float_val());
 			}break;
@@ -4349,6 +4350,9 @@ namespace claujson {
 			}break;
 			case ValueType::UINT: {
 				stream << x.uint_val();
+			}break;
+			case ValueType::BOOL: {
+				stream << (x.bool_val() ? "true" : "false");
 			}break;
 			case ValueType::NULL_: {
 				stream << "null";
@@ -4374,9 +4378,9 @@ namespace claujson {
 						stream << "\"";
 
 						size_t len = x.str_val().size();
-						for (uint64_t j = 0; j < len; ++j) {
-							write_char(stream, x.str_val()[j]);
-						}stream << "\"";
+						
+						write_char(stream, x.str_val());
+						stream << "\"";
 
 						{
 							stream << str_get(str_colon, pretty); // " : ";
@@ -4411,9 +4415,8 @@ namespace claujson {
 						stream << "\"";
 
 						size_t len = x.str_val().size();
-						for (uint64_t j = 0; j < len; ++j) {
-							write_char(stream, x.str_val()[j]);
-						}
+						write_char(stream, x.str_val());
+						
 
 						stream << "\"";
 
@@ -4429,9 +4432,9 @@ namespace claujson {
 							stream << "\"";
 
 							size_t len = x.str_val().size();
-							for (uint64_t j = 0; j < len; ++j) {
-								write_char(stream, x.str_val()[j]);
-							}
+							
+							write_char(stream, x.str_val());
+							
 							stream << "\"";
 
 						}
@@ -4493,9 +4496,8 @@ namespace claujson {
 						stream << "\"";
 
 						size_t len = x.str_val().size();
-						for (uint64_t j = 0; j < len; ++j) {
-							write_char(stream, x.str_val()[j]);
-						}stream << "\"";
+						write_char(stream, x.str_val());
+						stream << "\"";
 					}
 					else if (x.type() == ValueType::BOOL) {
 						stream << (x.bool_val() ? "true" : "false");
@@ -4526,9 +4528,9 @@ namespace claujson {
 				stream << "\"";
 
 				size_t len = x.str_val().size();
-				for (uint64_t j = 0; j < len; ++j) {
-					write_char(stream, x.str_val()[j]);
-				}
+				
+				write_char(stream, x.str_val());
+				
 				stream << "\"";
 
 			}
@@ -4586,9 +4588,8 @@ namespace claujson {
 				stream << "\"";
 
 				size_t len = x.str_val().size();
-				for (uint64_t j = 0; j < len; ++j) {
-					write_char(stream, x.str_val()[j]);
-				}stream << "\"";
+				write_char(stream, x.str_val());
+				stream << "\"";
 			}
 			else if (x.type() == ValueType::BOOL) {
 				stream << (x.bool_val() ? "true" : "false");
@@ -4664,9 +4665,8 @@ namespace claujson {
 				stream << "\"";
 
 				size_t len = x.str_val().size();
-				for (uint64_t j = 0; j < len; ++j) {
-					write_char(stream, x.str_val()[j]);
-				}stream << "\"";
+				write_char(stream, x.str_val());
+				stream << "\"";
 			}
 			else if (x.type() == ValueType::BOOL) {
 				stream << (x.bool_val() ? "true" : "false");
@@ -4731,10 +4731,10 @@ namespace claujson {
 			
 			std::vector<claujson::StrStream> stream(thr_num);
 
-
-
 			//std::vector<std::thread> thr(thr_num);
 			std::vector<std::future<void>> thr_result(thr_num);
+
+			
 			thr_result[0] = pool->enqueue(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], pretty, (false));
 
 

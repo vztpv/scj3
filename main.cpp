@@ -4,7 +4,7 @@
 
 
 #include "mimalloc-new-delete.h"
-
+#include "fmt/format.h"
 
 #include <iostream>
 #include <string>
@@ -285,6 +285,298 @@ namespace claujson {
 	};
 }
 
+namespace test {
+	class JsonIterator {
+	public:
+		JsonIterator& enter() {
+			if (_m_now && _m_now->get_value_list(_m_child_pos_in_parent.back()).is_structured()) {
+				_m_now = _m_now->get_value_list(_m_child_pos_in_parent.back()).as_structured_ptr();
+				_m_child_pos_in_parent.push_back(0);
+			}
+			return *this;
+		}
+
+		JsonIterator& quit() {
+			if (_m_now) {
+				_m_child_pos_in_parent.pop_back();
+				_m_now = _m_now->get_parent();
+			}
+			return *this;
+		}
+
+		JsonIterator& next() {
+			if (_m_now) {
+				_m_child_pos_in_parent.back()++;
+			}
+			return *this;
+		}
+
+		bool is_next_valid() const {
+			return _m_now && _m_child_pos_in_parent.empty() == false && _m_child_pos_in_parent.back() < _m_now->get_data_size();
+		}
+
+		const claujson::Value& now_value() {
+			if (_m_now) {
+				return _m_now->get_value_list(_m_child_pos_in_parent.back()); // get_value_list_ex..? check valid of index?
+			}
+			static claujson::Value null_data(nullptr, false);
+			return null_data;
+		}
+
+		const claujson::Value& now_key() {
+			if (_m_now) {
+				return _m_now->get_key_list(_m_child_pos_in_parent.back()); // get_value_list_ex..? check valid of index?
+			}
+			static claujson::Value null_data(nullptr, false);
+			return null_data;
+		}
+
+	public:
+		JsonIterator(const claujson::Structured* arr_or_obj) : _m_now(arr_or_obj) {
+			_m_child_pos_in_parent.push_back(0);
+		}
+	private:
+		const claujson::Structured* _m_now = nullptr;
+		std::vector<size_t> _m_child_pos_in_parent;
+	};
+	
+	class StrStream {
+	private:
+		fmt::memory_buffer out;
+
+	public:
+
+		const char* buf() const {
+			return out.data();
+		}
+		size_t buf_size() const {
+			return out.size();
+		}
+
+		StrStream& operator<<(const char* x) {
+			fmt::format_to(std::back_inserter(out), "{}", x);
+			return *this;
+		}
+
+		StrStream& operator<<(StringView sv) { // chk! 
+			if (sv.empty() || sv[0] == '\0') {
+				return *this;
+			}
+
+			fmt::format_to_n(std::back_inserter(out), sv.size(), "{}", sv.data());
+
+			return *this;
+		}
+
+		StrStream& operator<<(double x) {
+			if (x == 0.0) {
+				fmt::format_to(std::back_inserter(out), "0.0"); //?
+			}
+			else {
+				fmt::format_to(std::back_inserter(out), "{}", x); // FMT_COMPILE("{:.10f}"), x);
+			}
+			return *this;
+		}
+
+		StrStream& operator<<(int64_t x) {
+			fmt::format_to(std::back_inserter(out), "{}", x);
+			return *this;
+		}
+
+		StrStream& operator<<(uint64_t x) {
+			fmt::format_to(std::back_inserter(out), "{}", x);
+			return *this;
+		}
+
+		StrStream& operator<<(char ch) {
+			fmt::format_to(std::back_inserter(out), "{}", ch);
+			return *this;
+		}
+	};
+
+	inline void write_char(StrStream& stream, char ch) {
+		switch (ch) {
+		case '\\':
+			stream << "\\\\";
+			break;
+		case '\"':
+			stream << "\\\"";
+			break;
+		case '\n':
+			stream << "\\n";
+			break;
+		case '\b':
+			stream << "\\b";
+			break;
+		case '\f':
+			stream << "\\f";
+			break;
+		case '\r':
+			stream << "\\r";
+			break;
+		case '\t':
+			stream << "\\t";
+			break;
+		default:
+		{
+			int code = ch;
+			if ((code >= 0 && code < 0x20) || code == 0x7F)
+			{
+				char buf[] = "\\uDDDD";
+				snprintf(buf + 2, 5, "%04X", code);
+				stream << buf;
+			}
+			else {
+				stream << ch;
+			}
+		}
+		}
+	}
+
+	inline void write_char(StrStream& stream, const std::string& str) {
+		size_t sz = str.size();
+		for (size_t i = 0; i < sz; ++i) {
+			write_char(stream, str[i]);
+		}
+	}
+
+	void _save_primitive(StrStream& stream, const claujson::Value& x) {
+		switch (x.type()) {
+		case claujson::ValueType::STRING: {
+			stream << "\"";
+
+			size_t len = x.str_val().size();
+			//for (uint64_t j = 0; j < len; ++j) {
+			write_char(stream, x.str_val());
+			//}
+			stream << "\"";
+
+		}break;
+		case claujson::ValueType::BOOL: {
+			stream << (x.bool_val() ? "true" : "false");
+		}break;
+		case claujson::ValueType::FLOAT: {
+			stream << (x.float_val());
+		}break;
+		case claujson::ValueType::INT: {
+			stream << x.int_val();
+		}break;
+		case claujson::ValueType::UINT: {
+			stream << x.uint_val();
+		}break;
+		case claujson::ValueType::NULL_: {
+			stream << "null";
+		}break;
+		}
+	}
+	void _save(StrStream& stream, const claujson::Value& j) {
+		if (j.is_primitive()) {
+			return _save_primitive(stream, j);
+		}
+		std::vector<claujson::ValueType> _array_or_obj;
+		JsonIterator iter(j.as_structured_ptr());
+		bool is_j_array = false;
+
+		if (iter.now_value().is_array()) {
+			stream << "[";
+			_array_or_obj.push_back(claujson::ValueType::ARRAY);
+			is_j_array = true;
+		}
+		else {
+			stream << "{";
+			_array_or_obj.push_back(claujson::ValueType::OBJECT);
+		}
+
+		do {
+			if (iter.is_next_valid()) {
+				if (_array_or_obj.back() == claujson::ValueType::ARRAY) {
+					if (auto& x = iter.now_value(); x.is_array()) {
+						stream << "[";
+						_array_or_obj.push_back(claujson::ValueType::ARRAY);
+						iter.enter();
+					}
+					else if (x.is_object()) {
+						stream << "{";
+						_array_or_obj.push_back(claujson::ValueType::OBJECT);
+						iter.enter();
+					}
+					else {
+						_save_primitive(stream, x);
+
+						iter.next();
+
+						if (iter.is_next_valid()) {
+							stream << ",";
+						}
+					}
+				}
+				else {
+					auto& key = iter.now_key();
+
+					_save_primitive(stream, key);
+
+					stream << ":";
+
+					if (auto& x = iter.now_value(); x.is_array()) {
+						stream << "[";
+						_array_or_obj.push_back(claujson::ValueType::ARRAY);
+						iter.enter();
+					}
+					else if (x.is_object()) {
+						stream << "{";
+						_array_or_obj.push_back(claujson::ValueType::OBJECT);
+						iter.enter();
+					}
+					else {
+						_save_primitive(stream, x);
+
+						iter.next();
+
+						if (iter.is_next_valid()) {
+							stream << ",";
+						}
+					}
+				}
+			}
+			else {
+				iter.quit();
+				if (_array_or_obj.back() == claujson::ValueType::ARRAY) {
+					stream << "]";
+				}
+				else { // x.is_object()
+					stream << "}";
+				}
+				_array_or_obj.pop_back();
+
+				iter.next();
+
+				if (iter.is_next_valid()) {
+					stream << ",";
+				}
+			}
+		} while (!_array_or_obj.empty());
+	
+		if (is_j_array) {
+			stream << "]";
+		}
+		else {
+			stream << "}";
+		}
+	}
+	void save(const std::string& fileName, const claujson::Value& j) {
+		StrStream stream;
+
+		_save(stream, j);
+
+		std::ofstream outFile;
+		outFile.open(fileName, std::ios::binary); // binary!
+		if (outFile) {
+			outFile.write(stream.buf(), stream.buf_size());
+			outFile.close();
+		}
+	}
+
+}
 int main(int argc, char* argv[])
 {
 	std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
@@ -373,14 +665,14 @@ int main(int argc, char* argv[])
 
 				auto a = std::chrono::steady_clock::now();
 
-				int thr_num = 1;
+				int thr_num = 0;
 
 				if (argc > 2) {
 					thr_num = std::atoi(argv[2]);
 				}
 
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, thr_num, true); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
@@ -401,8 +693,14 @@ int main(int argc, char* argv[])
 				//
 							//	claujson::save("test12.txt", j);
 				//claujson::save_parallel("test34.json", j, thr_num);
-				claujson::save_parallel("test56.json", j, thr_num, false);
+				claujson::save_parallel("test56.json", j, 0, false);
 				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
+
+				//b = std::chrono::steady_clock::now();
+				//test::save("test78.json", j);
+
+			//	std::cout << "save " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
+
 
 				claujson::clean(j);
 
