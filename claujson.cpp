@@ -3243,7 +3243,7 @@ namespace claujson {
 			int a = clock();
 			size_t len = claujson::LoadData2::Size(j.as_structured_ptr());
 			int b = clock();
-			std::cout << "size is " << b - a << "ms\n";
+			log << info << "size is " << b - a << "ms\n";
 			if (len / n == 0) {
 				return { nullptr };
 			}
@@ -3979,12 +3979,12 @@ namespace claujson {
 			return m_buffer.GetSize();
 		}
 
-		StrStream& operator<<(StringView x) {
-			m_writer.String(x.data(), x.size()); // fmt::format_to(std::back_inserter(out), "{}", x);
+		StrStream& add_1(const char* x, size_t sz) {
+			m_writer.String(x, sz); // fmt::format_to(std::back_inserter(out), "{}", x);
 			return *this;
 		}
 
-		StrStream& operator<<(const char* x) {
+		StrStream& add_2(const char* x) {
 			if (x[0] == ' ') {
 				x = x + 1;
 			}
@@ -3996,24 +3996,27 @@ namespace claujson {
 			return *this;
 		}
 
-		StrStream& operator<<(double x) {
+		StrStream& add_float(double x) {
 			m_writer.Double(x); // fmt::format_to(std::back_inserter(out), "{:f}", x);
 			return *this;
 		}
 
-		StrStream& operator<<(int64_t x) {
+		StrStream& add_int(int64_t x) {
 			m_writer.Int64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
 			return *this;
 		}
 
-		StrStream& operator<<(uint64_t x) {
+		StrStream& add_uint(uint64_t x) {
 			m_writer.Uint64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
 			return *this;
 		}
 
-		StrStream& operator<<(char ch) {
-			char temp[] = { ch, '\0' }; // fmt::format_to(std::back_inserter(out), "{}", ch);
-			m_writer.String(temp);
+		StrStream& add_3(const char* str) {
+			while (*str != '\0') {
+				add_2(str);
+				++str;
+			}
+
 			return *this;
 		}
 	};
@@ -4043,25 +4046,25 @@ namespace claujson {
 	inline void write_char(StrStream& stream, char ch) {
 		switch (ch) {
 		case '\\':
-			stream << "\\\\";
+			stream.add_3("\\\\");
 			break;
 		case '\"':
-			stream << "\\\"";
+			stream.add_3("\\\"");
 			break;
 		case '\n':
-			stream << "\\n";
+			stream.add_3("\\n");
 			break;
 		case '\b':
-			stream << "\\b";
+			stream.add_3("\\b");
 			break;
 		case '\f':
-			stream << "\\f";
+			stream.add_3("\\f");
 			break;
 		case '\r':
-			stream << "\\r";
+			stream.add_3("\\r");
 			break;
 		case '\t':
-			stream << "\\t";
+			stream.add_3("\\t");
 			break;
 		default:
 		{
@@ -4070,17 +4073,18 @@ namespace claujson {
 			{
 				char buf[] = "\\uDDDD";
 				snprintf(buf + 2, 5, "%04X", code);
-				stream << buf;
+				stream.add_3(buf);
 			}
 			else {
-				stream << ch;
+				char buf[] = { ch, '\0' };
+				stream.add_3(buf);
 			}
 		}
 		}
 	}
 
 	inline void write_char(StrStream& stream, const std::string& str) {
-		stream << StringView(str);
+		stream.add_1(str.data(), str.size());
 	}
 
 	static  const char* str_open_array[] = { " [ \n", "[" };
@@ -4091,6 +4095,28 @@ namespace claujson {
 	static   const  char* str_colon[] = { " : ", ":" };
 	static   const  char* str_space[] = { " ", "" };
 
+	void save_primitive(StrStream& stream, const Value& x) {
+		if (x.type() == ValueType::STRING) {
+
+			write_char(stream, x.str_val());
+
+		}
+		else if (x.type() == ValueType::BOOL) {
+			stream.add_3(x.bool_val() ? "true" : "false");
+		}
+		else if (x.type() == ValueType::FLOAT) {
+			stream.add_float(x.float_val());
+		}
+		else if (x.type() == ValueType::INT) {
+			stream.add_int(x.int_val());
+		}
+		else if (x.type() == ValueType::UINT) {
+			stream.add_uint(x.uint_val());
+		}
+		else if (x.type() == ValueType::NULL_) {
+			stream.add_3("null");
+		}
+	}
 	std::string LoadData::save_to_str(const Value& global, bool pretty) {
 		StrStream stream;
 
@@ -4098,46 +4124,25 @@ namespace claujson {
 			bool is_arr = global.as_structured_ptr()->is_array();
 
 			if (is_arr) {
-				stream << str_open_array[pretty ? 1 : 0];
+				stream.add_2(str_open_array[pretty ? 1 : 0]);
 			}
 			else {
-				stream << str_open_object[pretty ? 1 : 0];
+				stream.add_2(str_open_object[pretty ? 1 : 0]);
 			}
 
 			_save(stream, global, 0, pretty);
 
 			if (is_arr) {
-				stream << str_close_array[pretty ? 1 : 0];
+				stream.add_2(str_close_array[pretty ? 1 : 0]);
 			}
 			else {
-				stream << str_close_object[pretty ? 1 : 0];
+				stream.add_2(str_close_object[pretty ? 1 : 0]);
 			}
 
 		}
 		else {
 			auto& x = global;
-			if (x.type() == ValueType::STRING) {
-				stream << "\"";
-
-				size_t len = x.str_val().size();
-				write_char(stream, x.str_val());
-				stream << "\"";
-			}
-			else if (x.type() == ValueType::BOOL) {
-				stream << (x.bool_val() ? "true" : "false");
-			}
-			else if (x.type() == ValueType::FLOAT) {
-				stream << (x.float_val());
-			}
-			else if (x.type() == ValueType::INT) {
-				stream << x.int_val();
-			}
-			else if (x.type() == ValueType::UINT) {
-				stream << x.uint_val();
-			}
-			else if (x.type() == ValueType::NULL_) {
-				stream << "null";
-			}
+			save_primitive(stream, x);
 		}
 
 		return std::string(stream.buf(), stream.buf_size());
@@ -4158,16 +4163,11 @@ namespace claujson {
 					auto& x = ut->get_key_list(i);
 
 					if (x.type() == ValueType::STRING) {
-						//stream << "\"";
 
-						//size_t len = x.str_val().size();
-						//for (uint64_t j = 0; j < len; ++j) {
 						write_char(stream, x.str_val());
-						//} 
-						//stream << "\"";
 
 						{
-							stream << str_colon[pretty ? 1 : 0];
+							stream.add_2(str_colon[pretty ? 1 : 0]);
 						}
 					}
 					else {
@@ -4177,75 +4177,41 @@ namespace claujson {
 					auto* y = ((Structured*)(ut->get_value_list(i).as_structured_ptr()));
 
 					if (y->is_object() && y->is_virtual() == false) {
-						stream << str_open_object[pretty ? 1 : 0]; // "{";
+						stream.add_2(str_open_object[pretty ? 1 : 0]); // "{";
 					}
 					else if (y->is_array() && y->is_virtual() == false) {
-						stream << str_open_array[pretty ? 1 : 0]; // "[";
+						stream .add_2(str_open_array[pretty ? 1 : 0]); // "[";
 					}
 
 					_save(stream, ut->get_value_list(i), chk_list, depth + 1, pretty);
 
 					if (y->is_object() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
-						stream << str_close_object[pretty ? 1 : 0]; // "}";
+						stream .add_2(str_close_object[pretty ? 1 : 0]); // "}";
 					}
 					else if (y->is_array() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
-						stream << str_close_array[pretty ? 1 : 0]; // "]";
+						stream .add_2(str_close_array[pretty ? 1 : 0]); // "]";
 					}
 				}
 				else {
 					auto& x = ut->get_key_list(i);
 
 					if (x.type() == ValueType::STRING) {
-						//stream << "\"";
-
-						size_t len = x.str_val().size();
-						//for (uint64_t j = 0; j < len; ++j) {
 						write_char(stream, x.str_val());
-						//}
-
-						//stream << "\"";
 
 						{
-							stream << str_colon[pretty ? 1 : 0]; // " : ";
+							stream.add_2(str_colon[pretty ? 1 : 0]); // " : ";
 						}
 					}
 
 					{
 						auto& x = ut->get_value_list(i);
 
-						switch (x.type()) {
-						case ValueType::STRING: {
-							//stream << "\"";
-
-							size_t len = x.str_val().size();
-							//for (uint64_t j = 0; j < len; ++j) {
-							write_char(stream, x.str_val());
-							//}
-							//stream << "\"";
-
-						}break;
-
-						case ValueType::FLOAT: {
-							stream << (x.float_val());
-						}break;
-						case ValueType::INT: {
-							stream << x.int_val();
-						}break;
-						case ValueType::UINT: {
-							stream << x.uint_val();
-						}break;
-						case ValueType::BOOL: {
-							stream << (x.bool_val() ? "true" : "false");
-						}break;
-						case ValueType::NULL_: {
-							stream << "null";
-						}break;
-						}
+						save_primitive(stream, x);
 					}
 				}
 
 				if (i < ut->get_data_size() - 1) {
-					stream << str_comma[pretty ? 1 : 0]; // ",";
+					stream.add_2(str_comma[pretty ? 1 : 0]); // ",";
 				}
 			}
 		}
@@ -4257,10 +4223,10 @@ namespace claujson {
 					auto* y = ((Structured*)(ut->get_value_list(i).as_structured_ptr()));
 
 					if (y->is_object() && y->is_virtual() == false) {
-						stream << str_open_object[pretty ? 1 : 0]; // "{";
+						stream .add_2(str_open_object[pretty ? 1 : 0]); // "{";
 					}
 					else if (y->is_array() && y->is_virtual() == false) {
-						stream << str_open_array[pretty ? 1 : 0]; // "[";
+						stream .add_2(str_open_array[pretty ? 1 : 0]); // "[";
 					}
 
 					_save(stream, ut->get_value_list(i), chk_list, depth + 1, pretty);
@@ -4269,82 +4235,29 @@ namespace claujson {
 
 
 					if (y->is_object() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
-						stream << str_close_object[pretty ? 1 : 0]; // "}";
+						stream .add_2(str_close_object[pretty ? 1 : 0]); // "}";
 					}
 					else if (y->is_array() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
-						stream << str_close_array[pretty ? 1 : 0]; // "]";
+						stream .add_2(str_close_array[pretty ? 1 : 0]); // "]";
 					}
 
 				}
 				else {
 					auto& x = ut->get_value_list(i);
 
-					switch (x.type()) {
-					case ValueType::STRING: {
-						stream << "\"";
 
-						size_t len = x.str_val().size();
-						//for (uint64_t j = 0; j < len; ++j) {
-						write_char(stream, x.str_val());
-						//}
-						stream << "\"";
-
-					}break;
-
-					case ValueType::FLOAT: {
-						stream << (x.float_val());
-					}break;
-					case ValueType::INT: {
-						stream << x.int_val();
-					}break;
-					case ValueType::UINT: {
-						stream << x.uint_val();
-					}break;
-					case ValueType::BOOL: {
-						stream << (x.bool_val() ? "true" : "false");
-					}break;
-					case ValueType::NULL_: {
-						stream << "null";
-					}break;
-					}
+					save_primitive(stream, x);
 				}
 
 				if (i < ut->get_data_size() - 1) {
-					stream << str_comma[pretty ? 1 : 0]; // ",";
+					stream.add_2(str_comma[pretty ? 1 : 0]); // ",";
 				}
 			}
 		}
 		else if (data) { // valid
 			auto& x = data;
 
-			switch (x.type()) {
-			case ValueType::STRING: {
-				stream << "\"";
-
-				size_t len = x.str_val().size();
-				//for (uint64_t j = 0; j < len; ++j) {
-				write_char(stream, x.str_val());
-				//}
-				stream << "\"";
-
-			}break;
-
-			case ValueType::FLOAT: {
-				stream << (x.float_val());
-			}break;
-			case ValueType::INT: {
-				stream << x.int_val();
-			}break;
-			case ValueType::UINT: {
-				stream << x.uint_val();
-			}break;
-			case ValueType::BOOL: {
-				stream << (x.bool_val() ? "true" : "false");
-			}break;
-			case ValueType::NULL_: {
-				stream << "null";
-			}break;
-			}
+			save_primitive(stream, x);
 		}
 	}
 
@@ -4362,15 +4275,15 @@ namespace claujson {
 					auto& x = ut->get_key_list(i);
 
 					if (x.type() == ValueType::STRING) {
-						stream << "\"";
+
 
 						size_t len = x.str_val().size();
 
 						write_char(stream, x.str_val());
-						stream << "\"";
+
 
 						{
-							stream << str_colon[pretty ? 1 : 0]; // " : ";
+							stream .add_2(str_colon[pretty ? 1 : 0]); // " : ";
 						}
 					}
 					else {
@@ -4380,71 +4293,47 @@ namespace claujson {
 					auto* y = ((Structured*)(ut->get_value_list(i).as_structured_ptr()));
 
 					if (y->is_object() && y->is_virtual() == false) {
-						stream << str_open_object[pretty ? 1 : 0];
+						stream .add_2(str_open_object[pretty ? 1 : 0]);
 					}
 					else if (y->is_array() && y->is_virtual() == false) {
-						stream << str_open_array[pretty ? 1 : 0];
+						stream .add_2(str_open_array[pretty ? 1 : 0]);
 					}
 
 					_save(stream, ut->get_value_list(i), depth + 1, pretty);
 
 					if (y->is_object()) {
-						stream << str_close_object[pretty ? 1 : 0];
+						stream .add_2(str_close_object[pretty ? 1 : 0]);
 					}
 					else if (y->is_array()) {
-						stream << str_close_array[pretty ? 1 : 0];
+						stream .add_2(str_close_array[pretty ? 1 : 0]);
 					}
 				}
 				else {
 					auto& x = ut->get_key_list(i);
 
 					if (x.type() == ValueType::STRING) {
-						stream << "\"";
+				
 
 						size_t len = x.str_val().size();
 						write_char(stream, x.str_val());
 
 
-						stream << "\"";
+
 
 						{
-							stream << str_colon[pretty ? 1 : 0];
+							stream .add_2(str_colon[pretty ? 1 : 0]);
 						}
 					}
 
 					{
 						auto& x = ut->get_value_list(i);
 
-						if (x.type() == ValueType::STRING) {
-							stream << "\"";
-
-							size_t len = x.str_val().size();
-
-							write_char(stream, x.str_val());
-
-							stream << "\"";
-
-						}
-						else if (x.type() == ValueType::BOOL) {
-							stream << (x.bool_val() ? "true" : "false");
-						}
-						else if (x.type() == ValueType::FLOAT) {
-							stream << (x.float_val());
-						}
-						else if (x.type() == ValueType::INT) {
-							stream << x.int_val();
-						}
-						else if (x.type() == ValueType::UINT) {
-							stream << x.uint_val();
-						}
-						else if (x.type() == ValueType::NULL_) {
-							stream << "null";
-						}
+						save_primitive(stream, x);
 					}
 				}
 
 				if (i < ut->get_data_size() - 1) {
-					stream << str_comma[pretty ? 1 : 0];
+					stream.add_2(str_comma[pretty ? 1 : 0]);
 				}
 			}
 		}
@@ -4456,10 +4345,10 @@ namespace claujson {
 					auto* y = ((Structured*)(ut->get_value_list(i).as_structured_ptr()));
 
 					if (y->is_object() && y->is_virtual() == false) {
-						stream << str_open_object[pretty ? 1 : 0];
+						stream .add_2(str_open_object[pretty ? 1 : 0]);
 					}
 					else if (y->is_array() && y->is_virtual() == false) {
-						stream << str_open_array[pretty ? 1 : 0];
+						stream.add_2(str_open_array[pretty ? 1 : 0]);
 					}
 
 					_save(stream, ut->get_value_list(i), depth + 1, pretty);
@@ -4468,74 +4357,28 @@ namespace claujson {
 
 
 					if (y->is_object()) {
-						stream << str_close_object[pretty ? 1 : 0];
+						stream .add_2(str_close_object[pretty ? 1 : 0]);
 					}
 					else if (y->is_array()) {
-						stream << str_close_array[pretty ? 1 : 0];
+						stream .add_2(str_close_array[pretty ? 1 : 0]);
 					}
 
 				}
 				else {
-
 					auto& x = ut->get_value_list(i);
 
-					if (x.type() == ValueType::STRING) {
-						stream << "\"";
-
-						size_t len = x.str_val().size();
-						write_char(stream, x.str_val());
-						stream << "\"";
-					}
-					else if (x.type() == ValueType::BOOL) {
-						stream << (x.bool_val() ? "true" : "false");
-					}
-					else if (x.type() == ValueType::FLOAT) {
-						stream << (x.float_val());
-					}
-					else if (x.type() == ValueType::INT) {
-						stream << x.int_val();
-					}
-					else if (x.type() == ValueType::UINT) {
-						stream << x.uint_val();
-					}
-					else if (x.type() == ValueType::NULL_) {
-						stream << "null";
-					}
+					save_primitive(stream, x);
 				}
 
 				if (i < ut->get_data_size() - 1) {
-					stream << ",";
+					stream.add_2(str_comma[pretty? 1 : 0]);
 				}
 			}
 		}
 		else if (data) { // valid
 			auto& x = data;
 
-			if (x.type() == ValueType::STRING) {
-				stream << "\"";
-
-				size_t len = x.str_val().size();
-
-				write_char(stream, x.str_val());
-
-				stream << "\"";
-
-			}
-			else if (x.type() == ValueType::BOOL) {
-				stream << (x.bool_val() ? "true" : "false");
-			}
-			else if (x.type() == ValueType::FLOAT) {
-				stream << (x.float_val());
-			}
-			else if (x.type() == ValueType::INT) {
-				stream << x.int_val();
-			}
-			else if (x.type() == ValueType::UINT) {
-				stream << x.uint_val();
-			}
-			else if (x.type() == ValueType::NULL_) {
-				stream << "null";
-			}
+			save_primitive(stream, x);
 		}
 	}
 
@@ -4545,54 +4388,34 @@ namespace claujson {
 
 		if (global.is_structured()) {
 			if (hint) {
-				stream << str_comma[pretty ? 1 : 0];
+				stream.add_2(str_comma[pretty ? 1 : 0]);
 			}
 			bool is_arr = global.as_structured_ptr()->is_array();
 
 			if (is_arr) {
-				stream << str_open_array[pretty ? 1 : 0];
+				stream .add_2(str_open_array[pretty ? 1 : 0]);
 			}
 			else {
-				stream << str_open_object[pretty ? 1 : 0];
+				stream .add_2(str_open_object[pretty ? 1 : 0]);
 			}
 
 			_save(stream, global, 1, pretty);
 
 			if (is_arr) {
-				stream << str_close_array[pretty];
+				stream .add_2(str_close_array[pretty]);
 			}
 			else {
-				stream << str_close_object[pretty ? 1 : 0];
+				stream .add_2(str_close_object[pretty ? 1 : 0]);
 			}
 
 		}
 		else {
 			if (hint) {
-				stream << str_comma[pretty ? 1 : 0];
+				stream.add_2(str_comma[pretty ? 1 : 0]);
 			}
 			auto& x = global;
-			if (x.type() == ValueType::STRING) {
-				stream << "\"";
 
-				size_t len = x.str_val().size();
-				write_char(stream, x.str_val());
-				stream << "\"";
-			}
-			else if (x.type() == ValueType::BOOL) {
-				stream << (x.bool_val() ? "true" : "false");
-			}
-			else if (x.type() == ValueType::FLOAT) {
-				stream << (x.float_val());
-			}
-			else if (x.type() == ValueType::INT) {
-				stream << x.int_val();
-			}
-			else if (x.type() == ValueType::UINT) {
-				stream << x.uint_val();
-			}
-			else if (x.type() == ValueType::NULL_) {
-				stream << "null";
-			}
+			save_primitive(stream, x);
 		}
 
 		std::ofstream outFile;
@@ -4620,56 +4443,36 @@ namespace claujson {
 
 		if (global.is_structured()) {
 			if (hint) {
-				stream << str_comma[pretty ? 1 : 0]; // stream << ",";
+				stream.add_2(str_comma[pretty ? 1 : 0]); // stream << ",";
 			}
 
 			auto* j = global.as_structured_ptr();
 
 
 			if (j->is_array() && j->is_virtual() == false) {
-				stream << str_open_array[pretty ? 1 : 0];
+				stream .add_2(str_open_array[pretty ? 1 : 0]);
 			}
 			else if (j->is_object() && j->is_virtual() == false) {
-				stream << str_open_object[pretty ? 1 : 0];
+				stream .add_2(str_open_object[pretty ? 1 : 0]);
 			}
 
 			_save(stream, global, chk_list, 1, pretty);
 
 			if (j->is_array() && std::find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
-				stream << str_close_array[pretty ? 1 : 0];
+				stream .add_2(str_close_array[pretty ? 1 : 0]);
 			}
 			else if (j->is_object() && std::find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
-				stream << str_close_object[pretty ? 1 : 0];
+				stream .add_2(str_close_object[pretty ? 1 : 0]);
 			}
 		}
 		else {
 			if (hint) {
-				stream << str_comma[pretty ? 1 : 0];
+				stream.add_2(str_comma[pretty ? 1 : 0]);
 			}
 
 			auto& x = global;
-			if (x.type() == ValueType::STRING) {
-				//stream << "\"";
 
-				size_t len = x.str_val().size();
-				write_char(stream, x.str_val());
-				//stream << "\"";
-			}
-			else if (x.type() == ValueType::BOOL) {
-				stream << (x.bool_val() ? "true" : "false");
-			}
-			else if (x.type() == ValueType::FLOAT) {
-				stream << (x.float_val());
-			}
-			else if (x.type() == ValueType::INT) {
-				stream << x.int_val();
-			}
-			else if (x.type() == ValueType::UINT) {
-				stream << x.uint_val();
-			}
-			else if (x.type() == ValueType::NULL_) {
-				stream << "null";
-			}
+			save_primitive(stream, x);
 		}
 	}
 
