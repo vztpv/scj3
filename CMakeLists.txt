@@ -55,13 +55,13 @@ include(FetchContent)
 FetchContent_Declare(
   RapidJSON
   GIT_REPOSITORY "https://github.com/Tencent/rapidjson"
-  GIT_TAG "v1.1.0" # v1.1.0
+  GIT_TAG "v1.0.0" # v1.1.0
   )
 FetchContent_GetProperties(RapidJSON)
 if(NOT RapidJSON_POPULATED)
 	FetchContent_Populate(RapidJSON)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-	add_subdirectory(${RapidJSON_SOURCE_DIR}/include EXCLUDE_FROM_ALL)
+	add_subdirectory(${RapidJSON_SOURCE_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 # header..
