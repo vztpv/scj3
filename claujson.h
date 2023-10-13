@@ -600,17 +600,11 @@ namespace claujson {
 		friend class Object;
 		friend class PartialJson;
 	protected:
-	//	Value key;
 		PtrWeak<Structured> parent = nullptr;
-	//	bool valid = true; //
 	protected:
 		static Value data_null; // valid is false..
 	public:
 		static size_t npos; // 
-
-		//bool is_valid() const;
-	protected:
-		//explicit Structured(bool valid);
 	public:
 		Structured(const Structured& other) = delete;
 		Structured& operator=(const Structured& other) = delete;

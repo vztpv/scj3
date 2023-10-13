@@ -409,16 +409,16 @@ int main(int argc, char* argv[])
 			//	std::cout << "save " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
 
-				claujson::clean(j);
+				//claujson::clean(j);
 
-				return 0;
+				//return 0;
 
 				//claujson::LoadData::save(std::cout, ut);
 				//claujson::LoadData::save("output14.json", j);
-
+//
 				auto c = std::chrono::steady_clock::now();
-				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
-				std::cout << "write " << dur.count() << "ms\n";
+				//dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
+				//std::cout << "write " << dur.count() << "ms\n";
 
 				int counter = 0;
 				ok = x.first;
