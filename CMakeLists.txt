@@ -1,5 +1,5 @@
 # CMake 프로그램의 최소 버전
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.11)
 
 # 프로젝트 정보
 project(
@@ -61,7 +61,6 @@ FetchContent_GetProperties(RapidJSON)
 if(NOT RapidJSON_POPULATED)
 	FetchContent_Populate(RapidJSON)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-	add_subdirectory(${RapidJSON_SOURCE_DIR} ${RapidJSON_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 # header..
