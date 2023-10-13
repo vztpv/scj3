@@ -1,5 +1,5 @@
 # CMake 프로그램의 최소 버전
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.11.0)
 
 # 프로젝트 정보
 project(
@@ -55,21 +55,21 @@ include(FetchContent)
 FetchContent_Declare(
   RapidJSON
   GIT_REPOSITORY "https://github.com/Tencent/rapidjson"
-  GIT_TAG "v1.0.0" # v1.1.0
+  GIT_TAG "v1.1.0" # v1.1.0
   )
 FetchContent_GetProperties(RapidJSON)
 if(NOT RapidJSON_POPULATED)
 	FetchContent_Populate(RapidJSON)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-	add_subdirectory(${RapidJSON_SOURCE_DIR} EXCLUDE_FROM_ALL)
+	add_subdirectory(${rapidjson_SOURCE_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 # header..
-target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${RapidJSON_SOURCE_DIR}/include)
-target_include_directories(${PROGRAM_NAME2} PRIVATE ${INCLUDE_DIR} ${RapidJSON_SOURCE_DIR}/include)
-target_include_directories(${PROGRAM_NAME14} PRIVATE ${INCLUDE_DIR} ${RapidJSON_SOURCE_DIR}/include)
-target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIR} ${RapidJSON_SOURCE_DIR}/include)
-target_include_directories(${LIB_NAME14} PRIVATE ${INCLUDE_DIR} ${RapidJSON_SOURCE_DIR}/include)
+target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${PROGRAM_NAME2} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${PROGRAM_NAME14} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${LIB_NAME14} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
 
 
 if (UNIX) 
