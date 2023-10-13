@@ -47,7 +47,7 @@ FetchContent_GetProperties(Mimalloc)
 if(NOT Mimalloc_POPULATED)
 	FetchContent_Populate(Mimalloc)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-	add_subdirectory(${mimalloc_SOURCE_DIR})
+	add_subdirectory(${mimalloc_SOURCE_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 
@@ -61,7 +61,7 @@ FetchContent_GetProperties(RapidJSON)
 if(NOT RapidJSON_POPULATED)
 	FetchContent_Populate(RapidJSON)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
- 	add_subdirectory(${RapidJSON_SOURCE_DIR})
+ 	add_subdirectory(${RapidJSON_SOURCE_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 # header..
