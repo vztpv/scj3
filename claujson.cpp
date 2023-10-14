@@ -4043,7 +4043,8 @@ namespace claujson {
 
 	};
 
-	inline void write_char(StrStream& stream, char ch) {
+	// precated?
+	inline void _write_string(StrStream& stream, char ch) {
 		switch (ch) {
 		case '\\':
 			stream.add_3("\\\\");
@@ -4083,7 +4084,7 @@ namespace claujson {
 		}
 	}
 
-	inline void write_char(StrStream& stream, const std::string& str) {
+	inline void write_string(StrStream& stream, const std::string& str) {
 		stream.add_1(str.data(), str.size());
 	}
 
@@ -4095,10 +4096,10 @@ namespace claujson {
 	static   const  char* str_colon[] = { " : ", ":" };
 	static   const  char* str_space[] = { " ", "" };
 
-	void save_primitive(StrStream& stream, const Value& x) {
+	inline void save_primitive(StrStream& stream, const Value& x) {
 		if (x.type() == ValueType::STRING) {
 
-			write_char(stream, x.str_val());
+			write_string(stream, x.str_val());
 
 		}
 		else if (x.type() == ValueType::BOOL) {
@@ -4164,7 +4165,7 @@ namespace claujson {
 
 					if (x.type() == ValueType::STRING) {
 
-						write_char(stream, x.str_val());
+						write_string(stream, x.str_val());
 
 						{
 							stream.add_2(str_colon[pretty ? 1 : 0]);
@@ -4196,7 +4197,7 @@ namespace claujson {
 					auto& x = ut->get_key_list(i);
 
 					if (x.type() == ValueType::STRING) {
-						write_char(stream, x.str_val());
+						write_string(stream, x.str_val());
 
 						{
 							stream.add_2(str_colon[pretty ? 1 : 0]); // " : ";
@@ -4279,7 +4280,7 @@ namespace claujson {
 
 						size_t len = x.str_val().size();
 
-						write_char(stream, x.str_val());
+						write_string(stream, x.str_val());
 
 
 						{
@@ -4315,7 +4316,7 @@ namespace claujson {
 				
 
 						size_t len = x.str_val().size();
-						write_char(stream, x.str_val());
+						write_string(stream, x.str_val());
 
 
 
