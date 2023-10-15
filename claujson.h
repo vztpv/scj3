@@ -688,8 +688,9 @@ namespace claujson {
 
 		virtual size_t get_data_size() const = 0; // data_size == key_list_size (if object), and data_size == value_list_size.
 		virtual Value& get_value_list(size_t idx) = 0;
+	private:
 		virtual Value& get_key_list(size_t idx) = 0;
-
+	public:
 		virtual const Value& get_value_list(size_t idx) const = 0;
 		virtual const Value& get_key_list(size_t idx) const = 0;
 
@@ -707,7 +708,8 @@ namespace claujson {
 		virtual bool add_array(Value key, Ptr<Structured> arr) = 0;  // change to Value ? or remove?
 		virtual bool add_object(Value key, Ptr<Structured> obj) = 0; // change to Value ? or remove?
 
-		virtual bool insert_array_element(size_t idx, Value val) = 0;
+		virtual bool assign_value_element(size_t idx, Value val) = 0;
+		virtual bool assign_key_element(size_t idx, Value key) = 0;
 
 		virtual void erase(StringView key, bool real = false) = 0;
 #if __cplusplus >= 202002L
@@ -771,9 +773,9 @@ namespace claujson {
 		virtual size_t get_data_size() const;
 
 		virtual Value& get_value_list(size_t idx);
-
+	private:
 		virtual Value& get_key_list(size_t idx);
-
+	public:
 
 		virtual const Value& get_value_list(size_t idx) const;
 
@@ -802,7 +804,8 @@ namespace claujson {
 		virtual bool add_object(Value key, Ptr<Structured> obj); // change to Value ? or remove?
 
 
-		virtual bool insert_array_element(size_t idx, Value val);
+		virtual bool assign_value_element(size_t idx, Value val);
+		virtual bool assign_key_element(size_t idx, Value key);
 
 		virtual void erase(StringView key, bool real = false);
 
@@ -858,9 +861,9 @@ namespace claujson {
 		virtual size_t get_data_size() const;
 
 		virtual Value& get_value_list(size_t idx);
-
+	private:
 		virtual Value& get_key_list(size_t idx);
-
+	public:
 		virtual const Value& get_value_list(size_t idx) const;
 
 		virtual const Value& get_key_list(size_t idx) const;
@@ -891,7 +894,8 @@ namespace claujson {
 		
 		virtual bool add_object(Value key, Ptr<Structured> obj); // change to Value ? or remove?
 
-		virtual bool insert_array_element(size_t idx, Value val);
+		virtual bool assign_value_element(size_t idx, Value val);
+		virtual bool assign_key_element(size_t idx, Value key);
 
 		virtual void erase(StringView key, bool real = false); 
 #if __cplusplus >= 202002L

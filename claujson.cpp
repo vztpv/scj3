@@ -77,8 +77,9 @@ namespace claujson {
 		virtual Value& get_value_list(size_t idx);
 
 
-		virtual Value& get_key_list(size_t idx);
-
+	private:
+		virtual Value& get_key_list(size_t idx);		
+	public:
 
 		virtual const Value& get_value_list(size_t idx) const;
 
@@ -105,7 +106,8 @@ namespace claujson {
 		virtual bool add_array(Value key, Ptr<Structured> arr);
 		virtual bool add_object(Value key, Ptr<Structured> obj);
 
-		virtual bool insert_array_element(size_t idx, Value val);
+		virtual bool assign_value_element(size_t idx, Value val);
+		virtual bool assign_key_element(size_t idx, Value key);
 
 		virtual void erase(StringView key, bool real = false);
 #if __cplusplus >= 202002L
@@ -1873,7 +1875,14 @@ namespace claujson {
 		return false;
 	}
 
-	bool Object::insert_array_element(size_t idx, Value val) { return false; }
+	bool Object::assign_value_element(size_t idx, Value val) { this->obj_val_vec[idx] = std::move(val); return true; }
+	bool Object::assign_key_element(size_t idx, Value key) {
+		if (!key || !key.is_str()) {
+			return false;
+		}
+		this->obj_key_vec[idx] = std::move(key);
+		return true;
+	}
 
 	void Object::erase(StringView key, bool real) {
 		size_t idx = this->find(key);
@@ -2137,11 +2146,15 @@ namespace claujson {
 	bool Array::add_object(Value key, Ptr<Structured> obj) {
 		return false;
 	}
-	bool Array::insert_array_element(size_t idx, Value val) {
+	bool Array::assign_value_element(size_t idx, Value val) {
 
-		arr_vec.insert(arr_vec.begin() + idx, std::move(val));
+		arr_vec[idx] = std::move(val);
 
 		return true;
+	}
+
+	bool Array::assign_key_element(size_t idx, Value key) {
+		return false;
 	}
 
 	void Array::erase(StringView key, bool real) {
@@ -2477,7 +2490,13 @@ namespace claujson {
 		return false;
 	}
 
-	bool PartialJson::insert_array_element(size_t idx, Value val) {
+	bool PartialJson::assign_value_element(size_t idx, Value val) {
+		log << warn << "not used..";
+		ERROR("NOT USED");
+		return false;
+	}
+
+	bool PartialJson::assign_key_element(size_t idx, Value key) {
 		log << warn << "not used..";
 		ERROR("NOT USED");
 		return false;
