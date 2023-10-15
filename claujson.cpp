@@ -4540,7 +4540,7 @@ namespace claujson {
 				op = 0;
 			}
 			b = clock();
-			std::cout << "merge " << b - a << "ms\n";
+			log << info << "merge " << b - a << "ms\n";
 
 			for (size_t i = 0; i < result.size(); ++i) {
 				if (result[i]) {
@@ -4558,7 +4558,7 @@ namespace claujson {
 				outFile.close();
 			}
 			b = clock();
-			std::cout << "write to file " << b - a << "ms\n";
+			log << info << "write to file " << b - a << "ms\n";
 		}
 	}
 

@@ -401,9 +401,30 @@ int main(int argc, char* argv[])
 				//
 				// 
 				
-				claujson::save_parallel("test56.json", j, 0, true);
+				claujson::save_parallel("temp.json", j, 0, true);
+				
 				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
+				if (0) {
+
+					claujson::Value x;
+					auto result = claujson::parse("temp.json", x, 0, true);
+
+					if (!result.first) {
+						return 1;
+					}
+
+					auto _diff = claujson::diff(j, x);
+
+					if (_diff.is_valid() && _diff.as_structured_ptr() && _diff.as_array()->empty() == false) {
+						claujson::clean(x);
+						claujson::clean(_diff);
+						return 1;
+					}
+
+					claujson::clean(x);
+				}
+				
 				//b = std::chrono::steady_clock::now();
 				//test::save("test78.json", j);
 
