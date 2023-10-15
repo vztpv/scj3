@@ -86,6 +86,10 @@ namespace claujson {
 
 		virtual const Value& get_key_list(size_t idx) const;
 
+		virtual const Value& get_const_key_list(size_t idx);
+
+		virtual const Value& get_const_key_list(size_t idx) const;
+
 		virtual void clear(size_t idx);
 
 		virtual bool is_virtual() const;
@@ -1787,7 +1791,12 @@ namespace claujson {
 		return obj_key_vec[idx];
 	}
 
-
+	const Value& Object::get_const_key_list(size_t idx) {
+		return obj_key_vec[idx];
+	}
+	const Value& Object::get_const_key_list(size_t idx) const {
+		return obj_key_vec[idx];
+	}
 	const Value& Object::get_value_list(size_t idx) const {
 		return obj_val_vec[idx];
 	}
@@ -2081,6 +2090,15 @@ namespace claujson {
 		return data_null;
 	}
 
+	const Value& Array::get_const_key_list(size_t idx) {
+		return data_null;
+	}
+
+	const Value& Array::get_const_key_list(size_t idx) const {
+		return data_null;
+	}
+
+
 	const Value& Array::get_value_list(size_t idx) const {
 		return arr_vec[idx];
 	}
@@ -2359,7 +2377,36 @@ namespace claujson {
 		}
 	}
 
+	const Value& PartialJson::get_const_key_list(size_t idx) {
+		if (virtualJson.is_structured() && idx == 0) {
+			return data_null;
+		}
+		if (virtualJson.is_structured()) {
+			--idx;
+		}
 
+		if (!arr_vec.empty()) {
+			return data_null;
+		}
+		else {
+			return obj_key_vec[idx];
+		}
+	}
+	const Value& PartialJson::get_const_key_list(size_t idx) const {
+		if (virtualJson.is_structured() && idx == 0) {
+			return data_null;
+		}
+		if (virtualJson.is_structured()) {
+			--idx;
+		}
+
+		if (!arr_vec.empty()) {
+			return data_null;
+		}
+		else {
+			return obj_key_vec[idx];
+		}
+	}
 	const Value& PartialJson::get_value_list(size_t idx) const {
 		if (virtualJson.is_structured() && idx == 0) {
 			return virtualJson;

@@ -694,6 +694,9 @@ namespace claujson {
 		virtual const Value& get_value_list(size_t idx) const = 0;
 		virtual const Value& get_key_list(size_t idx) const = 0;
 
+		virtual const Value& get_const_key_list(size_t idx) = 0;
+		virtual const Value& get_const_key_list(size_t idx) const = 0;
+
 		virtual void clear(size_t idx) = 0;
 		virtual void clear() = 0;
 
@@ -781,6 +784,9 @@ namespace claujson {
 
 		virtual const Value& get_key_list(size_t idx) const;
 
+		virtual const Value& get_const_key_list(size_t idx);
+
+		virtual const Value& get_const_key_list(size_t idx) const;
 
 		virtual void clear(size_t idx);
 
@@ -867,6 +873,10 @@ namespace claujson {
 		virtual const Value& get_value_list(size_t idx) const;
 
 		virtual const Value& get_key_list(size_t idx) const;
+
+		virtual const Value& get_const_key_list(size_t idx);
+
+		virtual const Value& get_const_key_list(size_t idx) const;
 
 		virtual void clear(size_t idx);
 
