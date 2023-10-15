@@ -738,9 +738,6 @@ namespace claujson {
 		return *data;
 	}
 
-
-
-	// think.. Data vs Data& vs Data* ? 
 	// race condition..? not support multi-thread  access...
 	Value& Value::json_pointer(StringView route, bool convert) {
 		static Value unvalid_data(nullptr, false);
