@@ -944,7 +944,7 @@ namespace claujson {
 	
 	void save(const std::string& fileName, const Value& global, bool pretty = true);
 
-	void save_parallel(const std::string& fileName, Value& j, size_t thr_num, bool pretty = true);
+	void save_parallel(const std::string& fileName, Value& j, size_t thr_num, bool pretty = false);
 
 	[[nodiscard]]
 	Value diff(const Value& x, const Value& y);

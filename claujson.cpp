@@ -3984,15 +3984,8 @@ namespace claujson {
 			return *this;
 		}
 
-		StrStream& add_2(const char* x) {
-			if (x[0] == ' ') {
-				x = x + 1;
-			}
-			m_buffer.Put(*x);
-
-			if (*x == '{' || *x == '[') {
-				m_buffer.Put('\n');
-			}
+		StrStream& add_char(char x) {
+			m_buffer.Put(x);
 			return *this;
 		}
 
@@ -4011,9 +4004,9 @@ namespace claujson {
 			return *this;
 		}
 
-		StrStream& add_3(const char* str) {
+		StrStream& add_2(const char* str) {
 			while (*str != '\0') {
-				add_2(str);
+				add_char(*str);
 				++str;
 			}
 
@@ -4047,25 +4040,25 @@ namespace claujson {
 	inline void _write_string(StrStream& stream, char ch) {
 		switch (ch) {
 		case '\\':
-			stream.add_3("\\\\");
+			stream.add_2("\\\\");
 			break;
 		case '\"':
-			stream.add_3("\\\"");
+			stream.add_2("\\\"");
 			break;
 		case '\n':
-			stream.add_3("\\n");
+			stream.add_2("\\n");
 			break;
 		case '\b':
-			stream.add_3("\\b");
+			stream.add_2("\\b");
 			break;
 		case '\f':
-			stream.add_3("\\f");
+			stream.add_2("\\f");
 			break;
 		case '\r':
-			stream.add_3("\\r");
+			stream.add_2("\\r");
 			break;
 		case '\t':
-			stream.add_3("\\t");
+			stream.add_2("\\t");
 			break;
 		default:
 		{
@@ -4074,11 +4067,11 @@ namespace claujson {
 			{
 				char buf[] = "\\uDDDD";
 				snprintf(buf + 2, 5, "%04X", code);
-				stream.add_3(buf);
+				stream.add_2(buf);
 			}
 			else {
 				char buf[] = { ch, '\0' };
-				stream.add_3(buf);
+				stream.add_2(buf);
 			}
 		}
 		}
@@ -4088,13 +4081,13 @@ namespace claujson {
 		stream.add_1(str.data(), str.size());
 	}
 
-	static  const char* str_open_array[] = { " [ \n", "[" };
-	static   const  char* str_open_object[] = { " { \n", "{" };
-	static   const  char* str_close_array[] = { " ] \n", "]" };
-	static   const  char* str_close_object[] = { " } \n", "}" };
-	static   const  char* str_comma[] = { " , ", "," };
-	static   const  char* str_colon[] = { " : ", ":" };
-	static   const  char* str_space[] = { " ", "" };
+	static  const char* str_open_array[] = { "[", " [ \n",  };
+	static   const  char* str_open_object[] = { "{", " { \n",  };
+	static   const  char* str_close_array[] = { "]", " ] \n", };
+	static   const  char* str_close_object[] = { "}", " } \n", };
+	static   const  char* str_comma[] = { ",", " , " };
+	static   const  char* str_colon[] = { ":", " : " };
+	static   const  char* str_space[] = { "", " " };
 
 	inline void save_primitive(StrStream& stream, const Value& x) {
 		if (x.type() == ValueType::STRING) {
@@ -4103,7 +4096,7 @@ namespace claujson {
 
 		}
 		else if (x.type() == ValueType::BOOL) {
-			stream.add_3(x.bool_val() ? "true" : "false");
+			stream.add_2(x.bool_val() ? "true" : "false");
 		}
 		else if (x.type() == ValueType::FLOAT) {
 			stream.add_float(x.float_val());
@@ -4115,7 +4108,7 @@ namespace claujson {
 			stream.add_uint(x.uint_val());
 		}
 		else if (x.type() == ValueType::NULL_) {
-			stream.add_3("null");
+			stream.add_2("null");
 		}
 	}
 	std::string LoadData::save_to_str(const Value& global, bool pretty) {
@@ -4403,7 +4396,7 @@ namespace claujson {
 			_save(stream, global, 1, pretty);
 
 			if (is_arr) {
-				stream .add_2(str_close_array[pretty]);
+				stream .add_2(str_close_array[pretty? 1 : 0]);
 			}
 			else {
 				stream .add_2(str_close_object[pretty ? 1 : 0]);

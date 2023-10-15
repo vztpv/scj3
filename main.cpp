@@ -389,6 +389,7 @@ int main(int argc, char* argv[])
 					return 1;
 				}
 
+				
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
@@ -398,9 +399,9 @@ int main(int argc, char* argv[])
 
 				//return 0;
 				//
-							//	claujson::save("test12.txt", j);
-				//claujson::save_parallel("test34.json", j, thr_num);
-				claujson::save_parallel("test56.json", j, 0, false);
+				// 
+				
+				claujson::save_parallel("test56.json", j, 0, true);
 				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
 				//b = std::chrono::steady_clock::now();
