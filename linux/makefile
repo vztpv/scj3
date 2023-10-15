@@ -1,2 +1,0 @@
-scj:
-	g++ -std=c++17 -march=x86-64 -march=native stats.c random.c os.c bitmap.c arena.c segment-cache.c segment.c page.c alloc.c alloc-aligned.c alloc-posix.c heap.c options.c init.c main.cpp claujson.cpp simdjson.cpp -lpthread -pthread  -Wno-narrowing  -O2 -o scj
