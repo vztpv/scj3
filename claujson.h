@@ -682,8 +682,6 @@ namespace claujson {
 		// used while parsing.
 		virtual void MergeWith(PtrWeak<Structured> j, int start_offset) = 0; // start_offset is 0 or 1 (if virtual array or virtual object exists)
 
-		virtual void Link(Ptr<Structured> j) = 0;
-
 		// need rename param....!
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 			char* buf,  uint64_t key_token_idx, uint64_t val_token_idx) = 0;
@@ -777,8 +775,6 @@ namespace claujson {
 	private:
 		virtual void MergeWith(PtrWeak<Structured> j, int start_offset);
 
-		virtual void Link(Ptr<Structured> j);
-
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 			char* buf,  uint64_t key_token_idx, uint64_t val_token_idx);
 
@@ -871,10 +867,6 @@ namespace claujson {
 		// here only used in parsing.
 
 		virtual void MergeWith(PtrWeak<Structured> j, int start_offset); // start_offset is 0 or 1 (if virtual array or virtual object exists)
-
-
-		virtual void Link(Ptr<Structured> j);
-
 
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 			char* buf,  uint64_t key_token_idx, uint64_t val_token_idx);

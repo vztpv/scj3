@@ -124,8 +124,6 @@ namespace claujson {
 
 		virtual void MergeWith(PtrWeak<Structured> j, int start_offset);
 
-		virtual void Link(Ptr<Structured> j);
-
 		virtual void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 			char* buf, uint64_t key_token_idx, uint64_t val_token_idx);
 
@@ -1965,10 +1963,6 @@ namespace claujson {
 		}
 	}
 
-	void Object::Link(Ptr<Structured> j) {
-		return;
-	}
-
 	void Object::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 		char* buf, uint64_t key_token_idx, uint64_t val_token_idx) {
 
@@ -2244,9 +2238,6 @@ namespace claujson {
 		}
 	}
 
-	void Array::Link(Ptr<Structured> j) {
-		return;
-	}
 
 	void Array::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 		char* buf, uint64_t key_token_idx, uint64_t val_token_idx) {
@@ -2606,11 +2597,6 @@ namespace claujson {
 			ERROR("PartialJson::MergeWith Error");
 		}
 	}
-
-	void PartialJson::Link(Ptr<Structured> j) { // use carefully...
-		return;
-	}
-
 
 	void PartialJson::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 		char* buf, uint64_t key_token_idx, uint64_t val_token_idx) {
@@ -3301,10 +3287,11 @@ namespace claujson {
 			if (n == 0) {
 				return { nullptr };
 			}
-			int a = clock();
+			auto a = std::chrono::steady_clock::now();
 			size_t len = claujson::LoadData2::Size(j.as_structured_ptr());
-			int b = clock();
-			log << info << "size is " << b - a << "ms\n";
+			auto b= std::chrono::steady_clock::now();
+			auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a); 
+			log << info << "size is " << dur.count() << "ms\n";
 			if (len / n == 0) {
 				return { nullptr };
 			}
@@ -4541,10 +4528,12 @@ namespace claujson {
 
 			std::vector<int> hint(temp.size() - 1, false);
 
-			int a = clock();
+			auto a = std::chrono::steady_clock::now();
 			temp = LoadData2::Divide2(thr_num, j, result, hint);
-			int b = clock();
-			log << info << "divide... " << b - a << "ms\n";
+			auto b = std::chrono::steady_clock::now();
+			auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+
+			log << info << "divide... " << dur.count() << "ms\n";
 			if (temp.size() == 1 && temp[0] == nullptr) {
 				save(fileName, j, pretty, false);
 				return;
@@ -4554,7 +4543,7 @@ namespace claujson {
 				temp_parent[i] = temp[i]->get_parent();
 			}
 
-			a = clock();
+			a = std::chrono::steady_clock::now();
 
 			std::vector<claujson::StrStream> stream(thr_num);
 
@@ -4573,9 +4562,11 @@ namespace claujson {
 				thr_result[i].get();
 			}
 
-			b = clock();
-			log << info << "save_ " << b - a << "ms\n";
-			a = clock();
+			b = std::chrono::steady_clock::now();
+			dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+
+			log << info << "save_ " << dur.count() << "ms\n";
+			a = std::chrono::steady_clock::now();
 			int op = 0;
 			
 			claujson::LoadData2::Merge2(temp_parent[0], result[0], &temp_parent[1], op);
@@ -4584,8 +4575,10 @@ namespace claujson {
 				claujson::LoadData2::Merge2(temp_parent[i], result[i], &temp_parent[i + 1], op);
 				op = 0;
 			}
-			b = clock();
-			log << info << "merge " << b - a << "ms\n";
+			b = std::chrono::steady_clock::now();
+			dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+
+			log << info << "merge " << dur.count() << "ms\n";
 
 			for (size_t i = 0; i < result.size(); ++i) {
 				if (result[i]) {
@@ -4593,7 +4586,7 @@ namespace claujson {
 					result[i] = nullptr;
 				}
 			}
-			a = clock();
+			a = std::chrono::steady_clock::now();
 			std::ofstream outFile(fileName, std::ios::binary);
 			if (outFile) {
 				for (size_t i = 0; i < stream.size(); ++i) {
@@ -4602,8 +4595,9 @@ namespace claujson {
 
 				outFile.close();
 			}
-			b = clock();
-			log << info << "write to file " << b - a << "ms\n";
+			b = std::chrono::steady_clock::now();
+			dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+			log << info << "write to file " << dur.count() << "ms\n";
 		}
 	}
 
