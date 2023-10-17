@@ -573,7 +573,7 @@ namespace claujson {
 				routeVec.push_back(sub_route(route, found_idx, route.size()));
 				break;
 			}
-			// else { ... }
+			// else {... }
 			routeVec.push_back(sub_route(route, found_idx, new_idx));
 
 			found_idx = new_idx;
@@ -625,7 +625,7 @@ namespace claujson {
 				routeVec.push_back(sub_route(route, found_idx, route.size()));
 				break;
 			}
-			// else { ... }
+			// else {... }
 			routeVec.push_back(sub_route(route, found_idx, new_idx));
 
 			found_idx = new_idx;
@@ -771,7 +771,7 @@ namespace claujson {
 				routeVec.push_back(sub_route(route, found_idx, route.size()));
 				break;
 			}
-			// else { ... }
+			// else {... }
 			routeVec.push_back(sub_route(route, found_idx, new_idx));
 
 			found_idx = new_idx;
@@ -810,8 +810,6 @@ namespace claujson {
 
 			if (j->is_array()) { // array -> with idx
 				size_t idx = 0;
-				bool found = false;
-				size_t arr_size = j->get_data_size();
 
 				bool chk = to_uint_for_json_pointer(x.str_val(), &idx, simdjson_imple);
 
@@ -890,7 +888,7 @@ namespace claujson {
 				routeVec.push_back(sub_route(route, found_idx, route.size()));
 				break;
 			}
-			// else { ... }
+			// else {... }
 			routeVec.push_back(sub_route(route, found_idx, new_idx));
 
 			found_idx = new_idx;
@@ -3344,7 +3342,8 @@ namespace claujson {
 					if (i > 0 && temp_parent[i - 1] == nullptr) {
 						for (size_t j = 0; j < i; ++j) {
 							int op = 0;
-							int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+							
+							claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 
 						}
 
@@ -3367,7 +3366,8 @@ namespace claujson {
 				if (i > 0 && temp_parent[i - 1] == nullptr) {
 					for (size_t j = 0; j < i; ++j) {
 						int op = 0;
-						int ret = claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+						
+						claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 					}
 
 					for (size_t j = 0; j < result.size(); ++j) {
@@ -3395,21 +3395,16 @@ namespace claujson {
 				ut = (Structured*)ut->get_value_list(0).as_structured_ptr();
 			}
 
-			bool chk_ut_next = false;
-
-
-
 			while (true) {
 
 				class Structured* _ut = ut;
 				class Structured* _next = next;
 
 				//log << warn  << "chk\n";
-				if (ut_next && _ut == *ut_next) {
+				if (ut_next && _ut == *ut_next) { // chk_next_ut
 					*ut_next = _next;
-					chk_ut_next = true;
 
-					log << info << "chked in merge...\n";
+					log << info << "chked in merge...\n"; // special case!
 				}
 
 				if (_next->is_array() && _ut->is_object()) {
@@ -3539,8 +3534,6 @@ namespace claujson {
 			class Structured** next, int* err, uint64_t no)
 		{
 			try {
-				auto a = std::chrono::steady_clock::now();
-
 				if (token_arr_len <= 0) {
 					*next = nullptr;
 					return false;
@@ -3720,8 +3713,6 @@ namespace claujson {
 					*next = nowUT;
 				}
 
-				auto b = std::chrono::steady_clock::now();
-
 				return true;
 			}
 			catch (const char* _err) {
@@ -3765,18 +3756,10 @@ namespace claujson {
 			std::vector<Ptr<Structured>> __global;
 
 			try {
-				auto a__ = std::chrono::steady_clock::now();
 				{
-					// chk clear?
-
 					const int pivot_num = static_cast<int>(parse_num) - 1;
-					//size_t token_arr_len = length; // size?
-
-
-					bool first = true;
-					int64_t sum = 0;
-
-					{ auto a_ = std::chrono::steady_clock::now();
+					
+					{ 
 					std::set<int64_t> _pivots;
 					std::vector<int64_t> pivots;
 					//const int64_t num = token_arr_len; //
@@ -3808,8 +3791,7 @@ namespace claujson {
 						pivots.push_back(start[0]);
 						pivots.push_back(length);
 					}
-					auto b_ = std::chrono::steady_clock::now();
-					//log << warn  << "pivots.. " << b_ - a_ << "ms\n";
+
 					std::vector<class Structured*> next(pivots.size() - 1, nullptr);
 					{
 
@@ -3817,8 +3799,6 @@ namespace claujson {
 						for (size_t i = 0; i < __global.size(); ++i) {
 							__global[i] = Ptr<Structured>(new PartialJson());
 						}
-
-						//std::vector<std::thread> thr(pivots.size() - 1);
 
 						std::vector<std::future<bool>> result(pivots.size() - 1);
 						std::vector<int> err(pivots.size() - 1, 0);
@@ -4032,7 +4012,7 @@ namespace claujson {
 	private:
 		rapidjson::StringBuffer m_buffer;
 		rapidjson::Writer<rapidjson::StringBuffer> m_writer{m_buffer};
-		bool pretty = false;
+
 	public:
 
 		const char* buf() const {
@@ -4237,16 +4217,16 @@ namespace claujson {
 						stream.add_2(str_open_object[pretty ? 1 : 0]); // "{";
 					}
 					else if (y->is_array() && y->is_virtual() == false) {
-						stream .add_2(str_open_array[pretty ? 1 : 0]); // "[";
+						stream.add_2(str_open_array[pretty ? 1 : 0]); // "[";
 					}
 
 					_save(stream, ut->get_value_list(i), chk_list, depth + 1, pretty);
 
 					if (y->is_object() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
-						stream .add_2(str_close_object[pretty ? 1 : 0]); // "}";
+						stream.add_2(str_close_object[pretty ? 1 : 0]); // "}";
 					}
 					else if (y->is_array() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
-						stream .add_2(str_close_array[pretty ? 1 : 0]); // "]";
+						stream.add_2(str_close_array[pretty ? 1 : 0]); // "]";
 					}
 				}
 				else {
@@ -4280,10 +4260,10 @@ namespace claujson {
 					auto* y = ((Structured*)(ut->get_value_list(i).as_structured_ptr()));
 
 					if (y->is_object() && y->is_virtual() == false) {
-						stream .add_2(str_open_object[pretty ? 1 : 0]); // "{";
+						stream.add_2(str_open_object[pretty ? 1 : 0]); // "{";
 					}
 					else if (y->is_array() && y->is_virtual() == false) {
-						stream .add_2(str_open_array[pretty ? 1 : 0]); // "[";
+						stream.add_2(str_open_array[pretty ? 1 : 0]); // "[";
 					}
 
 					_save(stream, ut->get_value_list(i), chk_list, depth + 1, pretty);
@@ -4292,10 +4272,10 @@ namespace claujson {
 
 
 					if (y->is_object() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
-						stream .add_2(str_close_object[pretty ? 1 : 0]); // "}";
+						stream.add_2(str_close_object[pretty ? 1 : 0]); // "}";
 					}
 					else if (y->is_array() && std::find(chk_list.begin(), chk_list.end(), y) == chk_list.end()) {
-						stream .add_2(str_close_array[pretty ? 1 : 0]); // "]";
+						stream.add_2(str_close_array[pretty ? 1 : 0]); // "]";
 					}
 
 				}
@@ -4340,7 +4320,7 @@ namespace claujson {
 
 
 						{
-							stream .add_2(str_colon[pretty ? 1 : 0]); // " : ";
+							stream.add_2(str_colon[pretty ? 1 : 0]); // " : ";
 						}
 					}
 					else {
@@ -4350,19 +4330,19 @@ namespace claujson {
 					auto* y = ((Structured*)(ut->get_value_list(i).as_structured_ptr()));
 
 					if (y->is_object() && y->is_virtual() == false) {
-						stream .add_2(str_open_object[pretty ? 1 : 0]);
+						stream.add_2(str_open_object[pretty ? 1 : 0]);
 					}
 					else if (y->is_array() && y->is_virtual() == false) {
-						stream .add_2(str_open_array[pretty ? 1 : 0]);
+						stream.add_2(str_open_array[pretty ? 1 : 0]);
 					}
 
 					_save(stream, ut->get_value_list(i), depth + 1, pretty);
 
 					if (y->is_object()) {
-						stream .add_2(str_close_object[pretty ? 1 : 0]);
+						stream.add_2(str_close_object[pretty ? 1 : 0]);
 					}
 					else if (y->is_array()) {
-						stream .add_2(str_close_array[pretty ? 1 : 0]);
+						stream.add_2(str_close_array[pretty ? 1 : 0]);
 					}
 				}
 				else {
@@ -4378,7 +4358,7 @@ namespace claujson {
 
 
 						{
-							stream .add_2(str_colon[pretty ? 1 : 0]);
+							stream.add_2(str_colon[pretty ? 1 : 0]);
 						}
 					}
 
@@ -4402,7 +4382,7 @@ namespace claujson {
 					auto* y = ((Structured*)(ut->get_value_list(i).as_structured_ptr()));
 
 					if (y->is_object() && y->is_virtual() == false) {
-						stream .add_2(str_open_object[pretty ? 1 : 0]);
+						stream.add_2(str_open_object[pretty ? 1 : 0]);
 					}
 					else if (y->is_array() && y->is_virtual() == false) {
 						stream.add_2(str_open_array[pretty ? 1 : 0]);
@@ -4414,10 +4394,10 @@ namespace claujson {
 
 
 					if (y->is_object()) {
-						stream .add_2(str_close_object[pretty ? 1 : 0]);
+						stream.add_2(str_close_object[pretty ? 1 : 0]);
 					}
 					else if (y->is_array()) {
-						stream .add_2(str_close_array[pretty ? 1 : 0]);
+						stream.add_2(str_close_array[pretty ? 1 : 0]);
 					}
 
 				}
@@ -4450,19 +4430,19 @@ namespace claujson {
 			bool is_arr = global.as_structured_ptr()->is_array();
 
 			if (is_arr) {
-				stream .add_2(str_open_array[pretty ? 1 : 0]);
+				stream.add_2(str_open_array[pretty ? 1 : 0]);
 			}
 			else {
-				stream .add_2(str_open_object[pretty ? 1 : 0]);
+				stream.add_2(str_open_object[pretty ? 1 : 0]);
 			}
 
 			_save(stream, global, 1, pretty);
 
 			if (is_arr) {
-				stream .add_2(str_close_array[pretty? 1 : 0]);
+				stream.add_2(str_close_array[pretty? 1 : 0]);
 			}
 			else {
-				stream .add_2(str_close_object[pretty ? 1 : 0]);
+				stream.add_2(str_close_object[pretty ? 1 : 0]);
 			}
 
 		}
@@ -4507,19 +4487,19 @@ namespace claujson {
 
 
 			if (j->is_array() && j->is_virtual() == false) {
-				stream .add_2(str_open_array[pretty ? 1 : 0]);
+				stream.add_2(str_open_array[pretty ? 1 : 0]);
 			}
 			else if (j->is_object() && j->is_virtual() == false) {
-				stream .add_2(str_open_object[pretty ? 1 : 0]);
+				stream.add_2(str_open_object[pretty ? 1 : 0]);
 			}
 
 			_save(stream, global, chk_list, 1, pretty);
 
 			if (j->is_array() && std::find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
-				stream .add_2(str_close_array[pretty ? 1 : 0]);
+				stream.add_2(str_close_array[pretty ? 1 : 0]);
 			}
 			else if (j->is_object() && std::find(chk_list.begin(), chk_list.end(), j) == chk_list.end()) {
-				stream .add_2(str_close_object[pretty ? 1 : 0]);
+				stream.add_2(str_close_object[pretty ? 1 : 0]);
 			}
 		}
 		else {
@@ -4597,9 +4577,11 @@ namespace claujson {
 			log << info << "save_ " << b - a << "ms\n";
 			a = clock();
 			int op = 0;
-			int ret = claujson::LoadData2::Merge2(temp_parent[0], result[0], &temp_parent[1], op);
+			
+			claujson::LoadData2::Merge2(temp_parent[0], result[0], &temp_parent[1], op);
+			
 			for (size_t i = 1; i < temp.size() - 1; ++i) {
-				int ret = claujson::LoadData2::Merge2(temp_parent[i], result[i], &temp_parent[i + 1], op);
+				claujson::LoadData2::Merge2(temp_parent[i], result[i], &temp_parent[i + 1], op);
 				op = 0;
 			}
 			b = clock();
@@ -4631,7 +4613,6 @@ namespace claujson {
 		int* err = nullptr) {
 
 		const auto& buf = dom_parser.raw_buf();
-		const auto buf_len = dom_parser.raw_len();
 
 		auto* simdjson_imple = dom_parser.raw_implementation().get();
 		size_t idx = start;
@@ -4866,7 +4847,7 @@ namespace claujson {
 				depth--; is_array.pop_back();
 			}
 			else {
-				// depth <= 0 .. virtual array or virtual object..
+				// depth <= 0.. virtual array or virtual object..
 				switch (buf[simdjson_imple->structural_indexes[idx - 1]]) {
 				case ']':
 					is_virtual_array.push_back(1);
@@ -5347,7 +5328,6 @@ namespace claujson {
 	bool is_valid_reverse(_simdjson::dom::parser_for_claujson& dom_parser, int64_t middle, std::vector<int>* _is_array = nullptr, int* err = nullptr) { // str[middle] == ','
 
 		const auto& buf = dom_parser.raw_buf();
-		const auto buf_len = dom_parser.raw_len();
 
 		auto* simdjson_imple = dom_parser.raw_implementation().get();
 		int64_t idx = simdjson_imple->n_structural_indexes - 1;

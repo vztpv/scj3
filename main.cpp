@@ -456,7 +456,6 @@ int main(int argc, char* argv[])
 
 				double sum = 0;
 				if (true && ok) {
-					int chk = 0;
 					for (int i = 0; i < 1; ++i) {
 						if (j.is_structured()) {
 							auto& features = j[1];
@@ -479,7 +478,6 @@ int main(int argc, char* argv[])
 										if (x.is_float()) {
 											sum += x.float_val();
 											counter++;
-											chk++;
 										}
 									}
 								}

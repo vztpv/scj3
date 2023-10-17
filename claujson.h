@@ -2,9 +2,6 @@
 
 // 64bit.. DO NOT build 32bit! //
 
-// todo - text_buf + ast?
-// todo - claujson::Ptr<Structured>->claujson::Value ? in parameter?
-
 #include <iostream>
 #include <memory>
 #include <map>
@@ -13,7 +10,6 @@
 #include <string>
 #include <set>
 #include <fstream>
-#include <iomanip>
 #include <cstring>
 
 
@@ -245,48 +241,6 @@ namespace claujson {
 		_print(log, x, 1);
 		return log;
 	}
-
-	/*
-	class Error {
-	private:
-		int state = 0;
-		size_t line;
-		char _msg[1024 + 1];
-		size_t msg_size;
-	public:
-		Error() : line(0), msg_size(0), _msg("") { }
-
-		StringView msg() const {
-			return StringView(_msg, msg_size);
-		}
-
-		void make(size_t line, StringView msg) {
-			make(line, msg.data(), msg.size());
-		}
-
-		void make(size_t line, const char* msg, size_t msg_size) {
-			this->state = 1;
-			this->line = line;
-
-			if (msg_size > 1024) {
-				msg_size = 1024;
-			}
-
-			strncpy_s(this->_msg, msg, msg_size);
-
-			this->_msg[msg_size] = '\0';
-			this->msg_size = msg_size;
-		}
-
-		bool has_error() const {
-			return state == 1;
-		}
-
-		void clean() {
-			state = 0;
-		}
-	};
-	*/
 
 	static Log::Info info;
 	static Log::Warning warn;
