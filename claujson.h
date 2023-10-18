@@ -93,6 +93,11 @@ bool operator==(const std::string& str, claujson::StringView sv);
 
 namespace claujson {
 
+	class Log;
+
+	template <class T>
+	static void _print(Log& log, const T& val, const int op);
+
 	class Log {
 	public:
 		class Info {
@@ -130,7 +135,7 @@ namespace claujson {
 
 	public:
 		template <class T>
-		friend static void _print(Log& log, const T& val, const int op);
+		friend void _print(Log& log, const T& val, const int op);
 
 	public:
 
