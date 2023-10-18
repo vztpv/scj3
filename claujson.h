@@ -25,7 +25,7 @@ namespace claujson {
 	public:
 		StringView(const std::string& str) : m_str(str.data()), m_len(str.size()) { }
 		explicit StringView(const char* str) : m_str(str) { m_len = strlen(str); }
-		explicit StringView(const char* str, size_t len) : m_str(str), m_len(len) { }
+		explicit StringView(const char* str, uint64_t len) : m_str(str), m_len(len) { }
 		StringView(const StringView& other) {
 			m_str = other.m_str;
 			m_len = other.m_len;
@@ -36,11 +36,11 @@ namespace claujson {
 			return m_str;
 		}
 
-		size_t size() const {
+		uint64_t size() const {
 			return m_len;
 		}
 
-		size_t length() const {
+		uint64_t length() const {
 			return m_len;
 		}
 
@@ -48,17 +48,17 @@ namespace claujson {
 			return 0 == m_len;
 		}
 
-		StringView substr(size_t pos, size_t n) const {
+		StringView substr(uint64_t pos, uint64_t n) const {
 			return StringView(m_str + pos, n);
 		}
 
-		const char& operator[](size_t idx) const {
+		const char& operator[](uint64_t idx) const {
 			return m_str[idx];
 		}
 		
 		// returns index;
-		size_t find(const char ch, size_t start = 0) {
-			for (size_t i = start; i < size(); ++i) {
+		uint64_t find(const char ch, uint64_t start = 0) {
+			for (uint64_t i = start; i < size(); ++i) {
 				if (ch == (*this)[i]) {
 					return i;
 				}
@@ -74,9 +74,9 @@ namespace claujson {
 		}
 	private:
 		const char* m_str;
-		size_t m_len;
+		uint64_t m_len;
 	public:
-		static size_t npos;
+		static uint64_t npos;
 
 		friend std::ostream& operator<<(std::ostream& stream, const claujson::StringView& sv) {
 			stream << sv.data();
@@ -86,7 +86,7 @@ namespace claujson {
 }
 
 
-claujson::StringView operator""sv(const char* str, size_t sz);
+claujson::StringView operator""sv(const char* str, uint64_t sz);
 bool operator==(const std::string& str, claujson::StringView sv);
 
 #endif
@@ -130,7 +130,7 @@ namespace claujson {
 
 	public:
 		template <class T>
-		friend void _print(Log& log, const T& val, const int op);
+		friend static void _print(Log& log, const T& val, const int op);
 
 	public:
 
@@ -285,7 +285,7 @@ namespace claujson {
 	public:
 		friend std::ostream& operator<<(std::ostream& stream, const Value& data);
 
-		friend bool ConvertString(Value& data, char* text, size_t len);
+		friend bool ConvertString(Value& data, char* text, uint64_t len);
 
 	private:
 		union {
@@ -447,25 +447,25 @@ namespace claujson {
 		Value& at(StringView key);
 
 
-		size_t find(StringView key, bool convert) {
+		uint64_t find(StringView key, bool convert) {
 			if (convert) {
 				return find(key);
 			}
 			return find_(key);
 		}
-		size_t find(StringView key) const;
+		uint64_t find(StringView key) const;
 
-		size_t find_(StringView key) const; // find without key`s converting?
+		uint64_t find_(StringView key) const; // find without key`s converting?
 #if __cplusplus >= 202002L
 		const Value& at(std::u8string_view key) const;
 
 		Value& at(std::u8string_view key);
 
-		size_t find(std::u8string_view key) const;
+		uint64_t find(std::u8string_view key) const;
 
-		size_t find_(std::u8string_view key) const; // find without key`s converting?
+		uint64_t find_(std::u8string_view key) const; // find without key`s converting?
 
-		size_t find(std::u8string_view key, bool convert) {
+		uint64_t find(std::u8string_view key, bool convert) {
 			if (convert) {
 				return find(key);
 			}
@@ -481,9 +481,9 @@ namespace claujson {
 		Value& operator[](StringView key); // if not exist key, then nothing.
 		const Value& operator[](StringView key) const; // if not exist key, then nothing.
 
-		Value& operator[](size_t idx);
+		Value& operator[](uint64_t idx);
 
-		const Value& operator[](size_t idx) const;
+		const Value& operator[](uint64_t idx) const;
 	public:
 		void clear();
 
@@ -506,9 +506,9 @@ namespace claujson {
 
 		void set_float(double x);
 
-		bool set_str(const char* str, size_t len, bool convert);
+		bool set_str(const char* str, uint64_t len, bool convert);
 	private:
-		void set_str_in_parse(const char* str, size_t len);
+		void set_str_in_parse(const char* str, uint64_t len);
 	public:
 		void set_bool(bool x);
 
@@ -558,7 +558,7 @@ namespace claujson {
 	protected:
 		static Value data_null; // valid is false..
 	public:
-		static size_t npos; // 
+		static uint64_t npos; // 
 	public:
 		Structured(const Structured& other) = delete;
 		Structured& operator=(const Structured& other) = delete;
@@ -573,12 +573,12 @@ namespace claujson {
 		const Value& at(StringView key) const;
 		Value& at(StringView key);
 
-		size_t find(StringView key) const;
+		uint64_t find(StringView key) const;
 
-		size_t find_(StringView key) const; // find without key`s converting ( \uxxxx )
+		uint64_t find_(StringView key) const; // find without key`s converting ( \uxxxx )
 
 
-		size_t find(StringView key, bool convert) {
+		uint64_t find(StringView key, bool convert) {
 			if (convert) {
 				return find(key);
 			}
@@ -591,12 +591,12 @@ namespace claujson {
 
 		Value& at(std::u8string_view key);
 
-		size_t find(std::u8string_view key) const;
+		uint64_t find(std::u8string_view key) const;
 
-		size_t find_(std::u8string_view key) const; // find without key`s converting
+		uint64_t find_(std::u8string_view key) const; // find without key`s converting
 
 
-		size_t find(std::u8string_view key, bool convert) {
+		uint64_t find(std::u8string_view key, bool convert) {
 			if (convert) {
 				return find(key);
 			}
@@ -613,9 +613,9 @@ namespace claujson {
 		Value& operator[](StringView key); // if not exist key, then Value <- is not valid.
 		const Value& operator[](StringView key) const; // if not exist key, then Value <- is not valid.
 
-		Value& operator[](size_t idx);
+		Value& operator[](uint64_t idx);
 
-		const Value& operator[](size_t idx) const;
+		const Value& operator[](uint64_t idx) const;
 
 		PtrWeak<Structured> get_parent() const;
 
@@ -624,7 +624,7 @@ namespace claujson {
 
 		virtual Value& get_value();
 
-		virtual void reserve_data_list(size_t len) = 0; // if object, reserve key_list and value_list, if array, reserve value_list.
+		virtual void reserve_data_list(uint64_t len) = 0; // if object, reserve key_list and value_list, if array, reserve value_list.
 
 		virtual bool is_object() const = 0;
 		virtual bool is_array() const = 0;
@@ -633,25 +633,25 @@ namespace claujson {
 		bool is_user_type() const;
 
 		// for valid with object or array or root.
-		size_t size() const {
+		uint64_t size() const {
 			return get_data_size();
 		}
 		bool empty() const {
 			return 0 == get_data_size();
 		}
 
-		virtual size_t get_data_size() const = 0; // data_size == key_list_size (if object), and data_size == value_list_size.
-		virtual Value& get_value_list(size_t idx) = 0;
+		virtual uint64_t get_data_size() const = 0; // data_size == key_list_size (if object), and data_size == value_list_size.
+		virtual Value& get_value_list(uint64_t idx) = 0;
 	private:
-		virtual Value& get_key_list(size_t idx) = 0;
+		virtual Value& get_key_list(uint64_t idx) = 0;
 	public:
-		virtual const Value& get_value_list(size_t idx) const = 0;
-		virtual const Value& get_key_list(size_t idx) const = 0;
+		virtual const Value& get_value_list(uint64_t idx) const = 0;
+		virtual const Value& get_key_list(uint64_t idx) const = 0;
 
-		virtual const Value& get_const_key_list(size_t idx) = 0;
-		virtual const Value& get_const_key_list(size_t idx) const = 0;
+		virtual const Value& get_const_key_list(uint64_t idx) = 0;
+		virtual const Value& get_const_key_list(uint64_t idx) const = 0;
 
-		virtual void clear(size_t idx) = 0;
+		virtual void clear(uint64_t idx) = 0;
 		virtual void clear() = 0;
 
 		virtual bool is_virtual() const = 0;
@@ -665,14 +665,14 @@ namespace claujson {
 		virtual bool add_array(Value key, Ptr<Structured> arr) = 0;  // change to Value ? or remove?
 		virtual bool add_object(Value key, Ptr<Structured> obj) = 0; // change to Value ? or remove?
 
-		virtual bool assign_value_element(size_t idx, Value val) = 0;
-		virtual bool assign_key_element(size_t idx, Value key) = 0;
+		virtual bool assign_value_element(uint64_t idx, Value val) = 0;
+		virtual bool assign_key_element(uint64_t idx, Value key) = 0;
 
 		virtual void erase(StringView key, bool real = false) = 0;
 #if __cplusplus >= 202002L
 		virtual void erase(std::u8string_view key, bool real = false) = 0;
 #endif
-		virtual void erase(size_t idx, bool real = false) = 0;
+		virtual void erase(uint64_t idx, bool real = false) = 0;
 
 	private:
 		void set_parent(PtrWeak<Structured> j);
@@ -713,7 +713,7 @@ namespace claujson {
 
 		Structured* clone() const;
 
-		bool chk_key_dup(size_t* idx) const;  // chk dupplication of key. only Object, Virtual Object..
+		bool chk_key_dup(uint64_t* idx) const;  // chk dupplication of key. only Object, Virtual Object..
 
 		[[nodiscard]]
 		static Value Make();
@@ -725,22 +725,22 @@ namespace claujson {
 		virtual bool is_object() const;
 		virtual bool is_array() const;
 
-		virtual size_t get_data_size() const;
+		virtual uint64_t get_data_size() const;
 
-		virtual Value& get_value_list(size_t idx);
+		virtual Value& get_value_list(uint64_t idx);
 	private:
-		virtual Value& get_key_list(size_t idx);
+		virtual Value& get_key_list(uint64_t idx);
 	public:
 
-		virtual const Value& get_value_list(size_t idx) const;
+		virtual const Value& get_value_list(uint64_t idx) const;
 
-		virtual const Value& get_key_list(size_t idx) const;
+		virtual const Value& get_key_list(uint64_t idx) const;
 
-		virtual const Value& get_const_key_list(size_t idx);
+		virtual const Value& get_const_key_list(uint64_t idx);
 
-		virtual const Value& get_const_key_list(size_t idx) const;
+		virtual const Value& get_const_key_list(uint64_t idx) const;
 
-		virtual void clear(size_t idx);
+		virtual void clear(uint64_t idx);
 
 		virtual bool is_virtual() const;
 
@@ -751,7 +751,7 @@ namespace claujson {
 
 		std::vector<Value>::iterator end();
 
-		virtual void reserve_data_list(size_t len);
+		virtual void reserve_data_list(uint64_t len);
 
 		virtual bool add_object_element(Value key, Value val);
 		virtual bool add_array_element(Value val);
@@ -762,15 +762,15 @@ namespace claujson {
 		virtual bool add_object(Value key, Ptr<Structured> obj); // change to Value ? or remove?
 
 
-		virtual bool assign_value_element(size_t idx, Value val);
-		virtual bool assign_key_element(size_t idx, Value key);
+		virtual bool assign_value_element(uint64_t idx, Value val);
+		virtual bool assign_key_element(uint64_t idx, Value key);
 
 		virtual void erase(StringView key, bool real = false);
 
 #if __cplusplus >= 202002L
 		virtual void erase(std::u8string_view key, bool real = false);
 #endif
-		virtual void erase(size_t idx, bool real = false);
+		virtual void erase(uint64_t idx, bool real = false);
 
 	private:
 		virtual void MergeWith(PtrWeak<Structured> j, int start_offset);
@@ -814,27 +814,27 @@ namespace claujson {
 		virtual bool is_object() const;
 		virtual bool is_array() const;
 
-		virtual size_t get_data_size() const;
+		virtual uint64_t get_data_size() const;
 
-		virtual Value& get_value_list(size_t idx);
+		virtual Value& get_value_list(uint64_t idx);
 	private:
-		virtual Value& get_key_list(size_t idx);
+		virtual Value& get_key_list(uint64_t idx);
 	public:
-		virtual const Value& get_value_list(size_t idx) const;
+		virtual const Value& get_value_list(uint64_t idx) const;
 
-		virtual const Value& get_key_list(size_t idx) const;
+		virtual const Value& get_key_list(uint64_t idx) const;
 
-		virtual const Value& get_const_key_list(size_t idx);
+		virtual const Value& get_const_key_list(uint64_t idx);
 
-		virtual const Value& get_const_key_list(size_t idx) const;
+		virtual const Value& get_const_key_list(uint64_t idx) const;
 
-		virtual void clear(size_t idx);
+		virtual void clear(uint64_t idx);
 
 		virtual bool is_virtual() const;
 
 		virtual void clear();
 
-		virtual void reserve_data_list(size_t len);
+		virtual void reserve_data_list(uint64_t len);
 
 
 		std::vector<Value>::iterator begin();
@@ -854,14 +854,14 @@ namespace claujson {
 		
 		virtual bool add_object(Value key, Ptr<Structured> obj); // change to Value ? or remove?
 
-		virtual bool assign_value_element(size_t idx, Value val);
-		virtual bool assign_key_element(size_t idx, Value key);
+		virtual bool assign_value_element(uint64_t idx, Value val);
+		virtual bool assign_key_element(uint64_t idx, Value key);
 
 		virtual void erase(StringView key, bool real = false); 
 #if __cplusplus >= 202002L
 		virtual void erase(std::u8string_view key, bool real = false);
 #endif
-		virtual void erase(size_t idx, bool real = false);
+		virtual void erase(uint64_t idx, bool real = false);
 
 	private:
 		// here only used in parsing.
@@ -890,21 +890,21 @@ namespace claujson {
 namespace claujson {
 
 	// parse json file.
-	std::pair<bool, size_t> parse(const std::string& fileName, Value& ut, size_t thr_num, bool use_all_function = false);
+	std::pair<bool, uint64_t> parse(const std::string& fileName, Value& ut, uint64_t thr_num, bool use_all_function = false);
 
 	// parse json str.
-	std::pair<bool, size_t> parse_str(StringView str, Value& ut, size_t thr_num, bool use_all_function = false);
+	std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num, bool use_all_function = false);
 
 #if __cplusplus >= 202002L
 	// C++20~
-	std::pair<bool, size_t> parse_str(std::u8string_view str, Value& ut, size_t thr_num, bool use_all_function = false);
+	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num, bool use_all_function = false);
 #endif
 
 	std::string save_to_str(const Value& global, bool prettty = true);
 	
 	void save(const std::string& fileName, const Value& global, bool pretty = true);
 
-	void save_parallel(const std::string& fileName, Value& j, size_t thr_num, bool pretty = false);
+	void save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
 
 	[[nodiscard]]
 	Value diff(const Value& x, const Value& y);
