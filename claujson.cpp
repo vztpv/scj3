@@ -22,7 +22,7 @@
 #if __cpp_lib_string_view
 #else
 
-claujson::StringView operator""sv(const char* str, uint64_t sz) {
+claujson::StringView operator""sv(const char* str, size_t sz) {
 	return claujson::StringView(str, sz);
 }
 

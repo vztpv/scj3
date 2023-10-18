@@ -25,7 +25,7 @@ namespace claujson {
 	public:
 		StringView(const std::string& str) : m_str(str.data()), m_len(str.size()) { }
 		explicit StringView(const char* str) : m_str(str) { m_len = strlen(str); }
-		explicit StringView(const char* str, uint64_t len) : m_str(str), m_len(len) { }
+		explicit StringView(const char* str, size_t len) : m_str(str), m_len(len) { }
 		StringView(const StringView& other) {
 			m_str = other.m_str;
 			m_len = other.m_len;
@@ -74,7 +74,7 @@ namespace claujson {
 		}
 	private:
 		const char* m_str;
-		uint64_t m_len;
+		size_t m_len;
 	public:
 		static uint64_t npos;
 
@@ -86,7 +86,7 @@ namespace claujson {
 }
 
 
-claujson::StringView operator""sv(const char* str, uint64_t sz);
+claujson::StringView operator""sv(const char* str, size_t sz);
 bool operator==(const std::string& str, claujson::StringView sv);
 
 #endif
