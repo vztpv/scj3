@@ -40,7 +40,7 @@ void key_dup_test() {
 	x->add_object_element(Value("567"sv), Value(345));
 	x->add_object_element(Value("456"sv), Value(456));
 
-	size_t idx = 0;
+	uint64_t idx = 0;
 	bool found = false;
 
 	found = x->chk_key_dup(&idx);
