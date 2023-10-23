@@ -6,6 +6,7 @@
 #include <future>
 
 #include <set>
+#include <execution>
 
 #include "ThreadPool.h"
 
@@ -1760,7 +1761,7 @@ namespace claujson {
 	Object::~Object() {
 		for (auto& x : obj_val_vec) {
 			if (x.is_structured()) {
-				delete ((Structured*)x.as_structured_ptr());
+				delete x.as_structured_ptr();
 			}
 		}
 	}
@@ -2055,7 +2056,7 @@ namespace claujson {
 	Array::~Array() {
 		for (auto& x : arr_vec) {
 			if (x.is_structured()) {
-				delete ((Structured*)x.as_structured_ptr());
+				delete x.as_structured_ptr();
 			}
 		}
 	}
@@ -3113,13 +3114,15 @@ namespace claujson {
 			if (root == nullptr) {
 				return 0;
 			}
+			
 
 			uint64_t len = root->get_data_size();
 			uint64_t x = 0;
 
 			for (uint64_t i = 0; i < len; ++i) {
-				if (root->get_value_list(i).is_structured()) {
-					x += Size(root->get_value_list(i).as_structured_ptr());
+				auto* ptr = root->get_value_list(i).as_structured_ptr();
+				if (ptr) {
+					x += Size(ptr);
 				}
 			}
 
@@ -3212,8 +3215,14 @@ namespace claujson {
 
 				for (uint64_t i = idx + 1; i < len; ++i) {
 					if (parent->get_value_list(i).is_structured()) {
-						out->add_user_type(Ptr<Structured>((Structured*)parent->get_value_list(i).as_structured_ptr()));
+						if (parent->is_array()) {
+							out->add_user_type(Ptr<Structured>(parent->get_value_list(i).as_structured_ptr()));
+						}
+						else {
+							out->add_user_type(std::move(parent->get_key_list(i)), Ptr<Structured>(parent->get_value_list(i).as_structured_ptr()));
+						}
 					}
+
 					else {
 						if (parent->get_key_list(i).is_str() == false) {
 							out->add_array_element(std::move(parent->get_value_list(i)));
@@ -3307,12 +3316,16 @@ namespace claujson {
 
 			std::vector<claujson::Structured*> pos(n, nullptr);
 
+			a = std::chrono::steady_clock::now();
 			{
 				uint64_t idx = 0;
 				auto offset2 = offset;
 
 				claujson::LoadData2::Find2(j.as_structured_ptr(), n - 1, idx, false, len, offset, offset2, pos, hint);
 			}
+			b = std::chrono::steady_clock::now();
+			dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+			log << info << "Find2 is " << dur.count() << "ms\n";
 
 			for (uint64_t i = 0; i < n - 1; ++i) {
 				if (!pos[i]) {
@@ -3868,14 +3881,14 @@ namespace claujson {
 							uint64_t start = 0;
 							uint64_t last = pivots.size() - 1 - 1;
 
-							for (int64_t i = 0; i < pivots.size() - 1; ++i) {
+							for (uint64_t i = 0; i < pivots.size() - 1; ++i) {
 								if (chk[i] == 0) {
 									start = i;
 									break;
 								}
 							}
 
-							for (int64_t i = pivots.size() - 1 - 1; i >= 0; --i) {
+							for (uint64_t i = pivots.size() - 1 - 1; i >= 0; --i) {
 								if (chk[i] == 0) {
 									last = i;
 									break;

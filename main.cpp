@@ -379,7 +379,7 @@ int main(int argc, char* argv[])
 				}
 
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, thr_num, true); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
@@ -405,7 +405,7 @@ int main(int argc, char* argv[])
 				
 				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
-				if (0) {
+				if (1) {
 
 					claujson::Value x;
 					auto result = claujson::parse("temp.json", x, 0, true);
@@ -459,7 +459,7 @@ int main(int argc, char* argv[])
 					for (int i = 0; i < 1; ++i) {
 						if (j.is_structured()) {
 							auto& features = j[1];
-							claujson::Array* features_arr = features.as_array();
+							claujson::Array* features_arr = features.as_array(); // as_array_ptr() ?
 							if (!features_arr) {
 								continue;
 							}
@@ -492,7 +492,13 @@ int main(int argc, char* argv[])
 				std::cout << sum << " ";
 				std::cout << counter << "  ";
 				
+				c = std::chrono::steady_clock::now();
 				claujson::clean(j);
+				d = std::chrono::steady_clock::now();
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(d - c);
+				std::cout << "clean " <<  dur.count() << "ms\n";
+
+
 				return 0;
 
 				{
