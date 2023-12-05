@@ -253,6 +253,7 @@ namespace claujson {
 
 	// inline Error error;
 
+
 	template <class T>
 	using PtrWeak = T*;
 

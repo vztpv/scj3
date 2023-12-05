@@ -341,7 +341,7 @@ int main(int argc, char* argv[])
 
 	//try 
 	{
-		claujson::init(0);
+		claujson::init(8);
 
 		if (argc < 4) {
 			claujson::log.console();
@@ -379,7 +379,7 @@ int main(int argc, char* argv[])
 				}
 
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, thr_num, true); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
@@ -389,26 +389,37 @@ int main(int argc, char* argv[])
 					return 1;
 				}
 
-				
+
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
 
-				//
-				//claujson::clean(j);
+				{
+					a = std::chrono::steady_clock::now();
 
-				//return 0;
+					_simdjson::dom::parser test;
+					
+					auto x = test.load(argv[1]);
+					
+					b = std::chrono::steady_clock::now();
+					dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+					std::cout << "simdjson " << dur.count() << "ms\n";
+				}
+				//
+				claujson::clean(j);
+
+				return 0;
 				//
 				// 
 				
-				claujson::save_parallel("temp.json", j, 0, true);
+				claujson::save_parallel("temp.json", j, thr_num, true);
 				
 				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 
 				if (1) {
 
 					claujson::Value x;
-					auto result = claujson::parse("temp.json", x, 0, true);
+					auto result = claujson::parse("temp.json", x, thr_num, true);
 
 					if (!result.first) {
 						return 1;

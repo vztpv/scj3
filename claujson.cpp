@@ -13,6 +13,9 @@
 #include "rapidjson/writer.h"
 
 
+#define claujson_inline _simdjson_inline
+
+
 #define ERROR(msg) \
 	do { \
 		throw msg; \
@@ -413,14 +416,14 @@ namespace claujson {
 
 
 
-	inline StringView sub_route(StringView route, uint64_t found_idx, uint64_t new_idx) {
+	claujson_inline StringView sub_route(StringView route, uint64_t found_idx, uint64_t new_idx) {
 		if (found_idx + 1 == new_idx) {
 			return ""sv;
 		}
 		return route.substr(found_idx + 1, new_idx - found_idx - 1);
 	}
 #if __cplusplus >= 202002L
-	inline std::u8string_view sub_route(std::u8string_view route, uint64_t found_idx, uint64_t new_idx) {
+	claujson_inline std::u8string_view sub_route(std::u8string_view route, uint64_t found_idx, uint64_t new_idx) {
 		if (found_idx + 1 == new_idx) {
 			return u8""sv;
 		}
@@ -1355,7 +1358,7 @@ namespace claujson {
 		return *this;
 	}
 
-	inline bool ConvertString(claujson::Value& data, char* text, uint64_t len) {
+	claujson_inline bool ConvertString(claujson::Value& data, char* text, uint64_t len) {
 		uint8_t sbuf[1024 + 1 + _simdjson::_SIMDJSON_PADDING];
 		std::unique_ptr<uint8_t[]> ubuf;
 		uint8_t* string_buf = nullptr;
@@ -1379,7 +1382,7 @@ namespace claujson {
 		return true;
 	}
 
-	inline bool ConvertNumber(claujson::Value& data, char* text, uint64_t len, bool isFirst) {
+	claujson_inline bool ConvertNumber(claujson::Value& data, char* text, uint64_t len, bool isFirst) {
 
 		std::unique_ptr<uint8_t[]> copy;
 
@@ -1429,7 +1432,7 @@ namespace claujson {
 		return true;
 	}
 
-	inline claujson::Value& Convert(claujson::Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
+	claujson_inline claujson::Value& Convert(claujson::Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
 		char* buf, uint64_t token_idx, bool& err) {
 
 		//try {
@@ -1964,7 +1967,7 @@ namespace claujson {
 		}
 	}
 
-	void Object::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
+	claujson_inline void Object::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 		char* buf, uint64_t key_token_idx, uint64_t val_token_idx) {
 
 			{
@@ -2248,7 +2251,7 @@ namespace claujson {
 		ERROR("Error Array::add_item_type");
 	}
 
-	void Array::add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
+	claujson_inline void Array::add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
 		char* buf, uint64_t val_token_idx) {
 
 			{
@@ -2716,7 +2719,7 @@ namespace claujson {
 	}
 
 
-	inline void Object::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+	claujson_inline void Object::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
 		ValueType type, uint64_t key_token_idx) {
 
 			{
@@ -2747,7 +2750,7 @@ namespace claujson {
 				json->set_parent(this);
 			}
 	}
-	inline void Array::add_user_type(ValueType type) {
+	claujson_inline void Array::add_user_type(ValueType type) {
 
 		{
 			Structured* json = nullptr;
@@ -2767,7 +2770,7 @@ namespace claujson {
 		}
 	}
 
-	inline void PartialJson::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+	claujson_inline void PartialJson::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
 		ValueType type, uint64_t key_token_idx) {
 			{
 				if (!arr_vec.empty()) {
@@ -2805,7 +2808,7 @@ namespace claujson {
 				json->set_parent(this);
 			}
 	}
-	inline void PartialJson::add_user_type(ValueType type) {
+	claujson_inline void PartialJson::add_user_type(ValueType type) {
 		{
 			if (!obj_key_vec.empty()) {
 				ERROR("PartialJson is array or object.");
@@ -3016,7 +3019,7 @@ namespace claujson {
 , 59  , 59  , 59  , 59  , 59  , 59
 	};
 
-	/*inline unsigned char __comma_chk_table[2][256] = {{0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
+	/*claujson_inline unsigned char __comma_chk_table[2][256] = {{0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
 , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
 , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0  , 0
 , 0  , 0  , 0  , 0  , 1  , 0  , 0  , 0  , 0  , 0
@@ -3070,8 +3073,11 @@ namespace claujson {
  , 1  , 1  , 1  , 1  , 1  , 1  } }; */
 
  // not exact type! for int, uint, float. ( int, uint, float -> float )
-	inline _simdjson::internal::tape_type get_type(unsigned char x) {
-		return (_simdjson::internal::tape_type)__type_arr[x]; // more fast version..
+	claujson_inline _simdjson::internal::tape_type get_type(unsigned char x) {
+		
+		return _simdjson::internal::tape_type(x);
+		
+		//return (_simdjson::internal::tape_type)__type_arr[x]; // more fast version..
 		/*
 		switch (x) {
 		case '-':
@@ -3404,7 +3410,7 @@ namespace claujson {
 				if (ut_next && _ut == *ut_next) { // chk_next_ut
 					*ut_next = _next;
 
-					log << info << "chked in merge...\n"; // special case!
+					//log << info << "chked in merge...\n"; // special case!
 				}
 
 				if (_next->is_array() && _ut->is_object()) {
@@ -3636,10 +3642,7 @@ namespace claujson {
 					}
 					else {
 
-						bool is_key = false;
-						if (token_arr_start + i + 1 < imple->n_structural_indexes && buf[imple->structural_indexes[token_arr_start + i + 1]] == ':') {
-							is_key = true;
-						}
+						bool is_key = token_arr_start + i + 1 < imple->n_structural_indexes && buf[imple->structural_indexes[token_arr_start + i + 1]] == ':';
 
 						if (state == 0) {
 							//find {, [, }, ]
@@ -3690,9 +3693,9 @@ namespace claujson {
 							if (is_key) {
 								data.is_key = true;
 
-								if (token_arr_start + i + 2 < imple->n_structural_indexes) {
+								//if (token_arr_start + i + 2 < imple->n_structural_indexes) { // if valid string?
 									key = std::move(data);
-								}
+								//}
 								++i; // pass key
 							}
 							else {
@@ -4080,7 +4083,7 @@ namespace claujson {
 	};
 
 	// precated?
-	inline void _write_string(StrStream& stream, char ch) {
+	claujson_inline void _write_string(StrStream& stream, char ch) {
 		switch (ch) {
 		case '\\':
 			stream.add_2("\\\\");
@@ -4120,7 +4123,7 @@ namespace claujson {
 		}
 	}
 
-	inline void write_string(StrStream& stream, const std::string& str) {
+	claujson_inline void write_string(StrStream& stream, const std::string& str) {
 		stream.add_1(str.data(), str.size());
 	}
 
@@ -4132,7 +4135,7 @@ namespace claujson {
 	static   const  char* str_colon[] = { ":", " : " };
 	static   const  char* str_space[] = { "", " " };
 
-	inline void save_primitive(StrStream& stream, const Value& x) {
+	claujson_inline void save_primitive(StrStream& stream, const Value& x) {
 		if (x.type() == ValueType::STRING) {
 
 			write_string(stream, x.str_val());
