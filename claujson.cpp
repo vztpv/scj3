@@ -3760,7 +3760,7 @@ namespace claujson {
 
 			try {
 				{
-					const int pivot_num = static_cast<int>(parse_num) - 1;
+					uint64_t pivot_num = parse_num;
 					
 					{ 
 					std::set<int64_t> _pivots;
@@ -3769,7 +3769,7 @@ namespace claujson {
 
 					if (pivot_num > 0) {
 						std::vector<int64_t> pivot;
-						pivots.reserve(pivot_num);
+						pivots.reserve(pivot_num + 1);
 						pivot.reserve(pivot_num);
 
 						pivot.push_back(start[0]);

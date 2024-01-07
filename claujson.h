@@ -754,9 +754,13 @@ namespace claujson {
 
 
 		std::vector<Value>::iterator begin();
-
+		std::vector<Value>::iterator begin_key() {
+			return obj_key_vec.begin();
+		}
 		std::vector<Value>::iterator end();
-
+		std::vector<Value>::iterator end_key() {
+			return obj_key_vec.end();
+		}
 		virtual void reserve_data_list(uint64_t len);
 
 		virtual bool add_object_element(Value key, Value val);

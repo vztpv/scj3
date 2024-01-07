@@ -405,7 +405,7 @@ int main(int argc, char* argv[])
 					dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 					std::cout << "simdjson " << dur.count() << "ms\n";
 				}
-				//
+
 				claujson::clean(j);
 
 				return 0;
@@ -434,6 +434,7 @@ int main(int argc, char* argv[])
 					}
 
 					claujson::clean(x);
+					claujson::clean(_diff);
 				}
 				
 				//b = std::chrono::steady_clock::now();
