@@ -4746,13 +4746,6 @@ namespace claujson {
 		if (is_array.size() < depth) {
 			is_array.push_back(0);
 		}
-		if (depth >= dom_parser.max_depth()) {
-			log << warn << ("Exceeded max depth!");
-			if (err) {
-				*err = 1;
-			}
-			return false;
-		}
 
 		//dom_parser.is_array[depth] = false;
 		is_array[depth - 1] = 0;
@@ -4926,7 +4919,6 @@ namespace claujson {
 		state = 4;
 		//log_start_value("array");
 		depth++;
-		if (depth >= dom_parser.max_depth()) { log << warn << ("Exceeded max depth!"); return false; }
 		if (is_array.size() < depth) { is_array.push_back(1); }
 		is_array[depth - 1] = 1;
 
@@ -5112,14 +5104,7 @@ namespace claujson {
 		if (is_array.size() < depth) {
 			is_array.push_back(0);
 		}
-		if (depth >= dom_parser.max_depth()) {
-			log << warn << ("Exceeded max depth!");
-			if (err) {
-				*err = 1;
-			}
-			return false;
-		}
-
+		
 		//dom_parser.is_array[depth] = false;
 		is_array[depth - 1] = 0;
 		//SIMDJSON_TRY(visitor.visit_object_start(*this));
@@ -5237,7 +5222,6 @@ namespace claujson {
 	array_begin:
 		//log_start_value("array");
 		depth++;
-		if (depth >= dom_parser.max_depth()) { log << warn << ("Exceeded max depth!"); return false; }
 		if (is_array.size() < depth) { is_array.push_back(1); }
 		is_array[depth - 1] = 1;
 
@@ -5559,14 +5543,7 @@ namespace claujson {
 			if (is_array.size() < depth) {
 				is_array.push_back(0);
 			}
-			if (depth >= dom_parser.max_depth()) {
-				log << warn << ("Exceeded max depth!");
-				if (err) {
-					*err = 1;
-				}
-				return false;
-			}
-
+		
 			if (idx < middle) {
 				goto document_end;
 			}
@@ -6173,7 +6150,7 @@ namespace claujson {
 				for (; i < sz_x && i < sz_y; ++i) {
 					std::string new_route = route;
 					new_route += '/';
-					new_route += std::to_string(i);
+					new_route += std::to_string(i); // change? fmt?
 
 					Value inner_diff = _diff(jx->get_value_list(i), jy->get_value_list(i), std::move(new_route));
 
