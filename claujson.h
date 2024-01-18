@@ -491,7 +491,7 @@ namespace claujson {
 
 		const Value& operator[](uint64_t idx) const;
 	public:
-		void clear();
+		void clear(bool real);
 
 		std::string& get_string() {
 			return str_val();
