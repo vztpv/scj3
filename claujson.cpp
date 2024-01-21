@@ -6010,9 +6010,9 @@ namespace claujson {
 				std::vector<std::vector<int>> is_array(_set.size()), is_virtual_array(_set.size());
 				std::vector<std::future<bool>> thr_result(_set.size());
 				int err = 0;
-				count_vec = (uint64_t*)malloc(sizeof(uint64_t) * length);
+				count_vec = (uint64_t*)calloc(length, sizeof(uint64_t));
 				for (int i = 0; i < _set.size(); ++i) {
-					thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec + start[i], &err);
+					thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec, &err);
 				}
 				std::vector<int> vec(_set.size());
 
