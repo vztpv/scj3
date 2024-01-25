@@ -4527,84 +4527,209 @@ namespace claujson {
 			return;
 		}
 
-		std::vector<claujson::Structured*> temp(thr_num, nullptr); //
+		//std::vector<claujson::Structured*> temp(thr_num, nullptr); //
 		std::vector<claujson::Structured*> temp_parent(thr_num, nullptr);
-		{
-			std::vector<claujson::Structured*> result(temp.size() - 1, nullptr);
+		
+		auto a = std::chrono::steady_clock::now();
+		
+		std::vector<claujson::Structured*> result(thr_num - 1, nullptr);
 
-			std::vector<int> hint(temp.size() - 1, false);
+		std::vector<int> hint(thr_num - 1, false);
+		bool quit = false;
 
-			auto a = std::chrono::steady_clock::now();
-			temp = LoadData2::Divide2(thr_num, j, result, hint);
-			auto b = std::chrono::steady_clock::now();
-			auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+		std::vector<claujson::Structured*> pos(thr_num, nullptr);
 
-			log << info << "divide... " << dur.count() << "ms\n";
-			if (temp.size() == 1 && temp[0] == nullptr) {
-				save(fileName, j, pretty, false);
-				return;
-			}
+		std::vector<claujson::StrStream> stream(thr_num);
 
-			for (uint64_t i = 0; i < temp.size() - 1; ++i) {
-				temp_parent[i] = temp[i]->get_parent();
-			}
+		//std::vector<std::thread> thr(thr_num);
+		std::vector<std::future<void>> thr_result(thr_num);
 
-			a = std::chrono::steady_clock::now();
-
-			std::vector<claujson::StrStream> stream(thr_num);
-
-			//std::vector<std::thread> thr(thr_num);
-			std::vector<std::future<void>> thr_result(thr_num);
-
-
-			thr_result[0] = pool->enqueue(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], pretty, (false));
-
-
-			for (uint64_t i = 1; i < thr_num; ++i) {
-				thr_result[i] = pool->enqueue(save_, std::ref(stream[i]), std::cref(result[i - 1]->get_value_list(0)), temp_parent[i], pretty, (hint[i - 1]));
-			}
-
-			for (uint64_t i = 0; i < thr_num; ++i) {
-				thr_result[i].get();
-			}
-
-			b = std::chrono::steady_clock::now();
-			dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
-
-			log << info << "save_ " << dur.count() << "ms\n";
-			a = std::chrono::steady_clock::now();
-			int op = 0;
-			
-			claujson::LoadData2::Merge2(temp_parent[0], result[0], &temp_parent[1], op);
-			
-			for (uint64_t i = 1; i < temp.size() - 1; ++i) {
-				claujson::LoadData2::Merge2(temp_parent[i], result[i], &temp_parent[i + 1], op);
-				op = 0;
-			}
-			b = std::chrono::steady_clock::now();
-			dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
-
-			log << info << "merge " << dur.count() << "ms\n";
-
-			for (uint64_t i = 0; i < result.size(); ++i) {
-				if (result[i]) {
-					delete result[i];
-					result[i] = nullptr;
-				}
-			}
-			a = std::chrono::steady_clock::now();
-			std::ofstream outFile(fileName, std::ios::binary);
-			if (outFile) {
-				for (uint64_t i = 0; i < stream.size(); ++i) {
-					outFile.write(stream[i].buf(), stream[i].buf_size());
+		//temp = LoadData2::Divide2(thr_num, j, result, hint);
+		
+		{	
+			auto n = thr_num;
+			while (true) {
+				if (j.is_structured() == false) {
+					break;
 				}
 
-				outFile.close();
+				auto a = std::chrono::steady_clock::now();
+				uint64_t len = claujson::LoadData2::Size(j.as_structured_ptr());
+				auto b = std::chrono::steady_clock::now();
+				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+				log << info << "size is " << dur.count() << "ms\n";
+				if (len / n == 0) {
+					break;
+				}
+
+				std::vector<uint64_t> offset(n - 1, 0);
+
+				for (uint64_t i = 0; i < offset.size(); ++i) {
+					offset[i] = len / n;
+				}
+				offset.back() = len - len / n * (n - 1);
+
+				hint = std::vector<int>(n - 1, 0);
+
+				std::vector<claujson::Structured*> pos(n, nullptr);
+
+				a = std::chrono::steady_clock::now();
+				{
+					uint64_t idx = 0;
+					auto offset2 = offset;
+
+					claujson::LoadData2::Find2(j.as_structured_ptr(), n - 1, idx, false, len, offset, offset2, pos, hint);
+				}
+				b = std::chrono::steady_clock::now();
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+				log << info << "Find2 is " << dur.count() << "ms\n";
+
+				for (uint64_t i = 0; i < n - 1; ++i) {
+					if (!pos[i]) {
+						quit = true;
+					}
+				}
+
+				if (quit) {
+					break;
+				}
+
+				{
+					uint64_t i = 0;
+					for (; i < n - 1; ++i) {
+
+						if (i > 0 && temp_parent[i - 1] == nullptr) {
+
+							for (uint64_t j = 0; j < i; ++j) {
+								thr_result[j].get();
+							}
+
+							for (uint64_t j = 0; j < i; ++j) {
+								int op = 0;
+
+								claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+
+							}
+
+							for (uint64_t j = 0; j < result.size(); ++j) {
+								if (result[i]) {
+									delete result[i];
+									result[i] = nullptr;
+								}
+							}
+							quit = true;
+							break;
+						}
+
+						claujson::LoadData2::Divide(pos[i], result[i]);
+
+						temp_parent[i] = pos[i]->get_parent();
+
+						if (i == 0) {
+							thr_result[0] = pool->enqueue(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], pretty, (false));
+						}
+						else {
+							thr_result[i] = pool->enqueue(save_, std::ref(stream[i]), std::cref(result[i - 1]->get_value_list(0)), temp_parent[i], pretty, (hint[i - 1]));
+						}
+					}
+
+					if (quit) {
+						break;
+					}
+
+					if (i > 0 && temp_parent[i - 1] == nullptr) {
+						for (uint64_t j = 0; j < i; ++j) {
+							for (uint64_t j = 0; j < i; ++j) {
+								thr_result[j].get();
+							}
+
+							int op = 0;
+
+							claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+						}
+
+						for (uint64_t j = 0; j < result.size(); ++j) {
+							if (result[i]) {
+								delete result[i];
+								result[i] = nullptr;
+							}
+						}
+
+						break;
+					}
+
+					thr_result[i] = pool->enqueue(save_, std::ref(stream[i]), std::cref(result[i - 1]->get_value_list(0)), temp_parent[i], pretty, (hint[i - 1]));
+				}
+
+				break;
 			}
-			b = std::chrono::steady_clock::now();
-			dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
-			log << info << "write to file " << dur.count() << "ms\n";
 		}
+		if (quit) {
+			save(fileName, j, pretty, false);
+			return;
+		}
+
+		auto b = std::chrono::steady_clock::now();
+		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+
+		log << info << "divide... " << dur.count() << "ms\n";
+		//if (temp.size() == 1 && temp[0] == nullptr) {
+		//	save(fileName, j, pretty, false);
+		//	return;
+		//}
+		//auto& temp  = result;
+		//for (uint64_t i = 0; i < temp.size() - 1; ++i) {
+		//	temp_parent[i] = temp[i]->get_parent();
+		//}
+
+		a = std::chrono::steady_clock::now();
+
+	//	thr_result[0] = pool->enqueue(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], pretty, (false));
+
+	//	for (uint64_t i = 1; i < thr_num; ++i) {
+	//		thr_result[i] = pool->enqueue(save_, std::ref(stream[i]), std::cref(result[i - 1]->get_value_list(0)), temp_parent[i], pretty, (hint[i - 1]));
+	//	}
+
+		for (uint64_t i = 0; i < thr_num; ++i) {
+			thr_result[i].get();
+		}
+
+		b = std::chrono::steady_clock::now();
+		dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+
+		log << info << "save_ " << dur.count() << "ms\n";
+		a = std::chrono::steady_clock::now();
+		int op = 0;
+
+		claujson::LoadData2::Merge2(temp_parent[0], result[0], &temp_parent[1], op);
+
+		for (uint64_t i = 1; i < thr_num - 1; ++i) {
+			claujson::LoadData2::Merge2(temp_parent[i], result[i], &temp_parent[i + 1], op);
+			op = 0;
+		}
+		b = std::chrono::steady_clock::now();
+		dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+
+		log << info << "merge " << dur.count() << "ms\n";
+
+		for (uint64_t i = 0; i < result.size(); ++i) {
+			if (result[i]) {
+				delete result[i]; 
+				result[i] = nullptr;
+			}
+		}
+		a = std::chrono::steady_clock::now();
+		std::ofstream outFile(fileName, std::ios::binary);
+		if (outFile) {
+			for (uint64_t i = 0; i < stream.size(); ++i) {
+				outFile.write(stream[i].buf(), stream[i].buf_size());
+			}
+
+			outFile.close();
+		}
+		b = std::chrono::steady_clock::now();
+		dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+		log << info << "write to file " << dur.count() << "ms\n";
 	}
 
 	bool is_valid2(_simdjson::dom::parser_for_claujson& dom_parser, uint64_t start, uint64_t last,

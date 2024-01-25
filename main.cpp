@@ -406,9 +406,9 @@ int main(int argc, char* argv[])
 					std::cout << "simdjson " << dur.count() << "ms\n";
 				}
 
-				claujson::clean(j);
+				//claujson::clean(j);
 
-				return 0;
+				//return 0;
 				//
 				// 
 				
@@ -436,7 +436,8 @@ int main(int argc, char* argv[])
 					claujson::clean(x);
 					claujson::clean(_diff);
 				}
-				
+				claujson::clean(j);
+				return 0;
 				//b = std::chrono::steady_clock::now();
 				//test::save("test78.json", j);
 
