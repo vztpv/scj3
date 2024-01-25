@@ -4550,6 +4550,7 @@ namespace claujson {
 			auto n = thr_num;
 			while (true) {
 				if (j.is_structured() == false) {
+					quit = true;
 					break;
 				}
 
@@ -4559,6 +4560,7 @@ namespace claujson {
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				log << info << "size is " << dur.count() << "ms\n";
 				if (len / n == 0) {
+					quit = true;
 					break;
 				}
 
@@ -4646,6 +4648,8 @@ namespace claujson {
 							int op = 0;
 
 							claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+
+							
 						}
 
 						for (uint64_t j = 0; j < result.size(); ++j) {
@@ -4654,7 +4658,8 @@ namespace claujson {
 								result[i] = nullptr;
 							}
 						}
-
+						
+						quit = true;
 						break;
 					}
 
