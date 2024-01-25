@@ -900,14 +900,14 @@ namespace claujson {
 namespace claujson {
 
 	// parse json file.
-	std::pair<bool, uint64_t> parse(const std::string& fileName, Value& ut, uint64_t thr_num, bool use_all_function = false);
+	std::pair<bool, uint64_t> parse(const std::string& fileName, Value& ut, uint64_t thr_num);
 
 	// parse json str.
-	std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num, bool use_all_function = false);
+	std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num);
 
 #if __cplusplus >= 202002L
 	// C++20~
-	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num, bool use_all_function = false);
+	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num);
 #endif
 
 	std::string save_to_str(const Value& global, bool prettty = true);

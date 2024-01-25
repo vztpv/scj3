@@ -5705,7 +5705,7 @@ namespace claujson {
 		return true;
 	}
 
-	std::pair<bool, uint64_t> parse(const std::string& fileName, Value& ut, uint64_t thr_num, bool use_all_function)
+	std::pair<bool, uint64_t> parse(const std::string& fileName, Value& ut, uint64_t thr_num)
 	{
 		if (thr_num <= 0) {
 			thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
@@ -5778,7 +5778,8 @@ namespace claujson {
 
 				auto a = std::chrono::steady_clock::now();
 
-				if (use_all_function) {
+				//if (use_all_function) 
+				{
 
 					std::set<uint64_t> _set;
 
@@ -5822,7 +5823,10 @@ namespace claujson {
 					int err = 0;
 
 					count_vec = (uint64_t*)calloc(length, sizeof(uint64_t));
-
+					if (!count_vec) {
+						log << err << "calloc fail in parse function.";
+						return { false, -55 };
+					}
 					for (int i = 0; i < _set.size(); ++i) {
 						thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec, &err);
 					}
@@ -5872,11 +5876,11 @@ namespace claujson {
 						free(count_vec); return { false, -4 };
 					}
 				}
-				else {
-					if (!is_valid(test, length)) {
-						return { false, 0 };
-					}
-				}
+				//else {
+				//	if (!is_valid(test, length)) {
+				//		return { false, 0 };
+				//	}
+				//}
 
 				dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - a);
 				log << info << "test time " << dur.count() << "ms\n";
@@ -5904,7 +5908,7 @@ namespace claujson {
 		free(count_vec);
 		return  { true, length };
 	}
-	std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num, bool use_all_function)
+	std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num)
 	{
 
 
@@ -5968,7 +5972,8 @@ namespace claujson {
 			log << info << dur.count() << "ms\n";
 			b = std::chrono::steady_clock::now();
 
-			if (use_all_function) {
+			//if (use_all_function)
+			{
 
 				std::set<uint64_t> _set;
 
@@ -6010,7 +6015,13 @@ namespace claujson {
 				std::vector<std::vector<int>> is_array(_set.size()), is_virtual_array(_set.size());
 				std::vector<std::future<bool>> thr_result(_set.size());
 				int err = 0;
+
 				count_vec = (uint64_t*)calloc(length, sizeof(uint64_t));
+				if (!count_vec) {
+					log << err << "calloc fail in parse_str function.";
+					return { false, -55 };
+				}
+				
 				for (int i = 0; i < _set.size(); ++i) {
 					thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec, &err);
 				}
@@ -6062,11 +6073,11 @@ namespace claujson {
 
 				}
 			}
-			else {
-				if (!is_valid(test, length)) {
-					free(count_vec); return { false, 0 };
-				}
-			}
+			//else {
+			//	if (!is_valid(test, length)) {
+			//		free(count_vec); return { false, 0 };
+			//	}
+			//}
 
 			dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b);
 			log << info << dur.count() << "ms\n";
@@ -6094,8 +6105,8 @@ namespace claujson {
 
 #if __cplusplus >= 202002L
 	// C++20~
-	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num, bool use_all_function) {
-		return parse_str(StringView(reinterpret_cast<const char*>(str.data()), str.size()), ut, thr_num, use_all_function);
+	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num) {
+		return parse_str(StringView(reinterpret_cast<const char*>(str.data()), str.size()), ut, thr_num);
 	}
 #endif
 

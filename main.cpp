@@ -379,7 +379,7 @@ int main(int argc, char* argv[])
 				}
 
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, thr_num, true); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, thr_num); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";
@@ -419,7 +419,7 @@ int main(int argc, char* argv[])
 				if (1) {
 
 					claujson::Value x;
-					auto result = claujson::parse("temp.json", x, thr_num, true);
+					auto result = claujson::parse("temp.json", x, thr_num);
 
 					if (!result.first) {
 						return 1;
