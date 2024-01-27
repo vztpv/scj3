@@ -44,7 +44,11 @@ FetchContent_Declare(
   GIT_TAG "v2.0.9"
   )
 FetchContent_GetProperties(Mimalloc)
-
+if(NOT Mimalloc_POPULATED)
+	FetchContent_Populate(Mimalloc)
+	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
+ endif()
+ 
 include(FetchContent)
 FetchContent_Declare(
   RapidJSON
