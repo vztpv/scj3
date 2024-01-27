@@ -43,9 +43,6 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
   GIT_TAG "v2.0.9"
   )
-FetchContent_GetProperties(Mimalloc)
-
-
 
 include(FetchContent)
 FetchContent_Declare(
@@ -53,7 +50,8 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/Tencent/rapidjson"
   GIT_TAG "v1.1.0" # v1.1.0
   )
-FetchContent_GetProperties(RapidJSON)
+  
+FetchContent_MakeAvailable(Mimalloc RapidJSON)
 
 
 # header..
