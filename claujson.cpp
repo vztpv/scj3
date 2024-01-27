@@ -3881,9 +3881,9 @@ namespace claujson {
 								}
 							}
 
-							for (uint64_t i = pivots.size() - 1 - 1; i >= 0; --i) {
-								if (chk[i] == 0) {
-									last = i;
+							for (uint64_t i = pivots.size() - 1; i > 0; --i) {
+								if (chk[i - 1] == 0) {
+									last = i - 1;
 									break;
 								}
 							}
