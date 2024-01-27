@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.11.0)
 # 프로젝트 정보
 project(
   claujson
-  VERSION 0.17.4 #
+  VERSION 0.18.0 #
   DESCRIPTION "claujson"
   LANGUAGES CXX)
 
@@ -43,6 +43,13 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/microsoft/mimalloc"
   GIT_TAG "v2.0.9"
   )
+FetchContent_GetProperties(Mimalloc)
+if(NOT Mimalloc_POPULATED)
+	FetchContent_Populate(Mimalloc)
+	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
+	add_subdirectory(${mimalloc_SOURCE_DIR} EXCLUDE_FROM_ALL)
+endif()
+
 
 include(FetchContent)
 FetchContent_Declare(
@@ -50,24 +57,27 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/Tencent/rapidjson"
   GIT_TAG "v1.1.0" # v1.1.0
   )
-  
-FetchContent_MakeAvailable(Mimalloc RapidJSON)
-
+FetchContent_GetProperties(RapidJSON)
+if(NOT RapidJSON_POPULATED)
+	FetchContent_Populate(RapidJSON)
+	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
+	add_subdirectory(${rapidjson_SOURCE_DIR} EXCLUDE_FROM_ALL)
+endif()
 
 # header..
-target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} )
-target_include_directories(${PROGRAM_NAME2} PRIVATE ${INCLUDE_DIR})
-target_include_directories(${PROGRAM_NAME14} PRIVATE ${INCLUDE_DIR})
-target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIR} )
-target_include_directories(${LIB_NAME14} PRIVATE ${INCLUDE_DIR})
+target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${PROGRAM_NAME2} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${PROGRAM_NAME14} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${LIB_NAME14} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
 
 
 if (UNIX) 
-        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
-        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=native -pthread -Wno-narrowing -O2)
-	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing -O2)
-	target_compile_options(${PROGRAM_NAME2} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -O2)
-	target_compile_options(${PROGRAM_NAME14} PRIVATE -m64 -std=c++14 -march=native -pthread -Wno-narrowing -O2)
+        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -Wextra -Wpadding -O2)
+        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=native -pthread -Wno-narrowing -Wextra -Wpadding -O2)
+	target_compile_options(${PROGRAM_NAME} PRIVATE -m64 -std=c++17 -march=native -pthread  -Wno-narrowing -Wextra -Wpadding -O2)
+	target_compile_options(${PROGRAM_NAME2} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -Wextra -Wpadding -O2)
+	target_compile_options(${PROGRAM_NAME14} PRIVATE -m64 -std=c++14 -march=native -pthread -Wno-narrowing -Wextra -Wpadding -O2)
       
 elseif (MSVC)
 
