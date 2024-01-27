@@ -10,20 +10,7 @@ save - multi-thread
 (C++14, 64bit, Windows)
 
 # Use static lib (claujson) with CMake!
-    include(FetchContent)
-    FetchContent_Declare(
-      claujson
-      GIT_REPOSITORY "https://github.com/vztpv/scj3"
-      GIT_TAG "0.18.1" 
-      )
-    FetchContent_MakeAvailable(claujson)
-    
-    if (UNIX)
-        target_link_libraries(${PROGRAM_NAME} PRIVATE claujson mimalloc pthread)   
-
-    elseif (MSVC)
-        target_link_libraries(${PROGRAM_NAME} PRIVATE claujson mimalloc-static)
-
+https://github.com/vztpv/scj3_cmake_test
 
 # Usage... with citylots.json
 
