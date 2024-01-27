@@ -49,6 +49,7 @@ if(NOT Mimalloc_POPULATED)
 	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
 endif()
 
+find_package(mimalloc)
 
 include(FetchContent)
 FetchContent_Declare(
