@@ -44,10 +44,7 @@ FetchContent_Declare(
   GIT_TAG "v2.0.9"
   )
 FetchContent_GetProperties(Mimalloc)
-if(NOT Mimalloc_POPULATED)
-	FetchContent_Populate(Mimalloc)
-	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-endif()
+
 
 
 include(FetchContent)
@@ -57,10 +54,7 @@ FetchContent_Declare(
   GIT_TAG "v1.1.0" # v1.1.0
   )
 FetchContent_GetProperties(RapidJSON)
-if(NOT RapidJSON_POPULATED)
-	FetchContent_Populate(RapidJSON)
-	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-endif()
+
 
 # header..
 target_include_directories(${PROGRAM_NAME} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include ${mimalloc_SOURCE_DIR}/include)
