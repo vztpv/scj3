@@ -44,8 +44,8 @@ if(NOT RapidJSON_POPULATED)
 endif()
 
 # header..
-target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
-target_include_directories(${LIB_NAME14} PRIVATE ${INCLUDE_DIR} ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${LIB_NAME}  PUBLIC ${INCLUDE_DIR} PRIVATE ${rapidjson_SOURCE_DIR}/include)
+target_include_directories(${LIB_NAME14} PUBLIC ${INCLUDE_DIR} PRIVATE ${rapidjson_SOURCE_DIR}/include)
 
 
 if (UNIX) 
