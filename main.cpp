@@ -1,7 +1,7 @@
 ﻿
 // now, test only haswell..
-// need C++14, 64bit..
-
+// need C++14~, 64bit..
+// mainly tested with C++17...
 
 #include "mimalloc-new-delete.h"
 
@@ -9,7 +9,7 @@
 #include <string>
 #include <ctime>
 
-#include "claujson.h" // using simdjson 3.1.1
+#include "claujson.h" // using simdjson 3.3.0
 
 #include "_simdjson.h"
 
@@ -286,8 +286,8 @@ namespace claujson {
 
 int main(int argc, char* argv[])
 {
-	std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
-		<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
+	//std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
+	//	<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
 
 	if (argc <= 1) {
 		std::cout << "[program name] [json file name] (thr_num) \n";
@@ -345,10 +345,11 @@ int main(int argc, char* argv[])
 
 		if (argc < 4) {
 			claujson::log.console();
-			claujson::log.info();
-			claujson::log.warn();
+			claujson::log.info(); // info도 보임
+			claujson::log.warn(); // warn도 보임
 		}
 
+		// log test.
 		//claujson::log.no_print();
 		//claujson::log.console();
 		//claujson::log.info();

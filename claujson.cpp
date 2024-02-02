@@ -3592,7 +3592,7 @@ namespace claujson {
 
 						
 						if (count_vec[token_arr_start + i] > 0) {
-							nowUT->reserve_data_list(nowUT->get_data_size() + count_vec[token_arr_start + i]);
+							nowUT->reserve_data_list(count_vec[token_arr_start + i]);
 						}
 						else {
 							log << info << "chk";
@@ -3679,9 +3679,9 @@ namespace claujson {
 							}
 							else {
 
-								if (state == 0 && braceNum == 0) {
+								if (braceNum == 0 && state == 0) {
 									if (count_vec[token_arr_start + i] > 0) {
-										nowUT->reserve_data_list(nowUT->get_data_size() + count_vec[token_arr_start + i]);
+										nowUT->reserve_data_list(count_vec[token_arr_start + i]);
 									}
 									else {
 										log << info << "chk..";
