@@ -3594,9 +3594,6 @@ namespace claujson {
 						if (count_vec[token_arr_start + i] > 0) {
 							nowUT->reserve_data_list(count_vec[token_arr_start + i]);
 						}
-						else {
-							log << info << "chk";
-						}
 					}
 					// Right 2
 					else if (type == _simdjson::internal::tape_type::END_OBJECT ||
@@ -3672,22 +3669,11 @@ namespace claujson {
 							if (is_key) {
 								data.is_key = true;
 
-								//if (token_arr_start + i + 2 < imple->n_structural_indexes) { // if valid string?
-									key = std::move(data);
-								//}
+								key = std::move(data);
+
 								++i; // pass key
 							}
 							else {
-
-								if (braceNum == 0 && state == 0) {
-									if (count_vec[token_arr_start + i] > 0) {
-										nowUT->reserve_data_list(count_vec[token_arr_start + i]);
-									}
-									else {
-										log << info << "chk..";
-									}
-									state = 1;
-								}
 
 								if (key.is_key) {
 									nowUT->add_item_type(key.buf_idx, key.next_buf_idx, data.buf_idx, data.next_buf_idx, buf, key.token_idx, data.token_idx);
