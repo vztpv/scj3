@@ -286,6 +286,7 @@ namespace claujson {
 
 int main(int argc, char* argv[])
 {
+	std::cout << sizeof(std::vector<std::pair<claujson::Value, claujson::Value>>) << "\n";
 	//std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
 	//	<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
 
@@ -341,7 +342,7 @@ int main(int argc, char* argv[])
 
 	//try 
 	{
-		claujson::init(8);
+		claujson::init(22);
 
 		if (argc < 4) {
 			claujson::log.console();
@@ -369,7 +370,19 @@ int main(int argc, char* argv[])
 			claujson::Value j;
 			bool ok;
 			//try
-			{
+			{	
+				if(0){
+					auto a = std::chrono::steady_clock::now();
+
+					_simdjson::dom::parser test;
+					
+					auto x = test.load(argv[1]);
+					
+					auto b = std::chrono::steady_clock::now();
+					auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+					std::cout << "simdjson " << dur.count() << "ms\n";
+				}
+
 
 				auto a = std::chrono::steady_clock::now();
 
@@ -395,18 +408,7 @@ int main(int argc, char* argv[])
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
 
-				{
-					a = std::chrono::steady_clock::now();
-
-					_simdjson::dom::parser test;
-					
-					auto x = test.load(argv[1]);
-					
-					b = std::chrono::steady_clock::now();
-					dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
-					std::cout << "simdjson " << dur.count() << "ms\n";
-				}
-
+			
 				//claujson::clean(j);
 
 				//return 0;
@@ -437,8 +439,8 @@ int main(int argc, char* argv[])
 					claujson::clean(x);
 					claujson::clean(_diff);
 				}
-				claujson::clean(j);
-				return 0;
+				//claujson::clean(j);
+				//return 0;
 				//b = std::chrono::steady_clock::now();
 				//test::save("test78.json", j);
 

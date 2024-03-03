@@ -54,8 +54,7 @@ namespace claujson {
 	protected:
 		std::vector<Value> arr_vec;
 		//
-		std::vector<Value> obj_key_vec;
-		std::vector<Value> obj_val_vec;
+		std::vector<std::pair<Value, Value>> obj_data;
 
 		Value virtualJson;
 	public:
@@ -1708,15 +1707,15 @@ namespace claujson {
 
 	class CompKey {
 	private:
-		const std::vector<Value>* vec;
+		const std::vector<std::pair<Value, Value>>* vec;
 	public:
 
-		CompKey(const std::vector<Value>* vec) : vec(vec) {
+		CompKey(const std::vector<std::pair<Value, Value>>* vec) : vec(vec) {
 			//
 		}
 
 		bool operator()(uint64_t x, uint64_t y) const {
-			return (*vec)[x] < (*vec)[y];
+			return (*vec)[x].first < (*vec)[y].first;
 		}
 	};
 
@@ -1734,18 +1733,18 @@ namespace claujson {
 
 	bool Object::chk_key_dup(uint64_t* idx) const {
 		bool has_dup = false;
-		std::vector<uint64_t> copy_(obj_key_vec.size(), 0);
+		std::vector<uint64_t> copy_(obj_data.size(), 0);
 
 		for (uint64_t i = 0; i < copy_.size(); ++i) {
 			copy_[i] = i;
 		}
 
-		CompKey comp(&obj_key_vec);
+		CompKey comp(&obj_data);
 
 		std::stable_sort(copy_.begin(), copy_.end(), comp);
 
 		for (uint64_t i = 1; i < copy_.size(); ++i) {
-			if (obj_key_vec[copy_[i]] == obj_key_vec[copy_[i - 1]]) {
+			if (obj_data[copy_[i]] == obj_data[copy_[i - 1]]) {
 				has_dup = true;
 				if (idx) {
 					*idx = copy_[i - 1]; //
@@ -1764,9 +1763,9 @@ namespace claujson {
 	Object::Object() { }
 
 	Object::~Object() {
-		for (auto& x : obj_val_vec) {
-			if (x.is_structured()) {
-				delete x.as_structured_ptr();
+		for (auto& x : obj_data) {
+			if (x.second.is_structured()) {
+				delete x.second.as_structured_ptr();
 			}
 		}
 	}
@@ -1779,33 +1778,34 @@ namespace claujson {
 	}
 
 	claujson_inline uint64_t Object::get_data_size() const {
-		return obj_val_vec.size();
+		return obj_data.size();
 	}
 
 	Value& Object::get_value_list(uint64_t idx) {
-		return obj_val_vec[idx];
+		return obj_data[idx].second;
 	}
 
-	Value& Object::get_key_list(uint64_t idx) { // if key change then also obj_val_vec[idx].key? change??
-		return obj_key_vec[idx];
+	Value& Object::get_key_list(uint64_t idx) { // if key change then also obj_data[idx].key? change??
+		return obj_data[idx].first;
 	}
 
 	const Value& Object::get_const_key_list(uint64_t idx) {
-		return obj_key_vec[idx];
+		return obj_data[idx].first;
 	}
 	const Value& Object::get_const_key_list(uint64_t idx) const {
-		return obj_key_vec[idx];
+		return obj_data[idx].first;
 	}
 	const Value& Object::get_value_list(uint64_t idx) const {
-		return obj_val_vec[idx];
+		return obj_data[idx].second;
 	}
 
 	const Value& Object::get_key_list(uint64_t idx) const {
-		return obj_key_vec[idx];
+		return obj_data[idx].first;
 	}
 
 	void Object::clear(uint64_t idx) {
-		obj_val_vec[idx].clear(false);
+		obj_data[idx].second.clear(false);
+		obj_data[idx].first.clear(false);
 	}
 
 	bool Object::is_virtual() const {
@@ -1813,22 +1813,21 @@ namespace claujson {
 	}
 
 	void Object::clear() {
-		obj_val_vec.clear();
-		obj_key_vec.clear();
+		obj_data.clear();
 	}
 
 
-	std::vector<Value>::iterator Object::begin() {
-		return obj_val_vec.begin();
+	Object::ValueIterator Object::begin() {
+		return obj_data.begin();
 	}
 
-	std::vector<Value>::iterator Object::end() {
-		return obj_val_vec.end();
+	Object::ValueIterator Object::end() {
+		return obj_data.end();
 	}
 
 	void Object::reserve_data_list(uint64_t len) {
-		obj_val_vec.reserve(len);
-		obj_key_vec.reserve(len);
+		obj_data.reserve(len);
+		//obj_data.reserve(len);
 	}
 
 	bool Object::add_object_element(Value key, Value val) {
@@ -1840,8 +1839,7 @@ namespace claujson {
 			auto* x = (Structured*)val.as_structured_ptr();
 			x->set_parent(this);
 		}
-		obj_key_vec.push_back(std::move(key));
-		obj_val_vec.push_back(std::move(val));
+		obj_data.push_back({ std::move(key), std::move(val) });
 
 		return true;
 	}
@@ -1860,8 +1858,7 @@ namespace claujson {
 
 		if (key.is_str() && arr->is_array()) {
 			arr->set_parent(this);
-			obj_key_vec.push_back(std::move(key));
-			obj_val_vec.push_back(Value(arr.release()));
+			obj_data.push_back({ std::move(key), Value(arr.release()) });
 		}
 		else {
 			return false;
@@ -1873,8 +1870,7 @@ namespace claujson {
 	bool Object::add_object(Value key, Ptr<Structured> obj) {
 		if (key.is_str() && obj->is_object()) {
 			obj->set_parent(this);
-			obj_key_vec.push_back(std::move(key));
-			obj_val_vec.push_back(Value(obj.release()));
+			obj_data.push_back({ std::move(key), Value(obj.release()) });
 		}
 		else {
 			return false;
@@ -1883,12 +1879,12 @@ namespace claujson {
 		return false;
 	}
 
-	bool Object::assign_value_element(uint64_t idx, Value val) { this->obj_val_vec[idx] = std::move(val); return true; }
+	bool Object::assign_value_element(uint64_t idx, Value val) { this->obj_data[idx].second = std::move(val); return true; }
 	bool Object::assign_key_element(uint64_t idx, Value key) {
 		if (!key || !key.is_str()) {
 			return false;
 		}
-		this->obj_key_vec[idx] = std::move(key);
+		this->obj_data[idx].first = std::move(key);
 		return true;
 	}
 
@@ -1905,12 +1901,11 @@ namespace claujson {
 	void Object::erase(uint64_t idx, bool real) {
 
 		if (real) {
-			clean(obj_key_vec[idx]);
-			clean(obj_val_vec[idx]);
+			clean(obj_data[idx].first);
+			clean(obj_data[idx].second);
 		}
 
-		obj_key_vec.erase(obj_key_vec.begin() + idx);
-		obj_val_vec.erase(obj_val_vec.begin() + idx);
+		obj_data.erase(obj_data.begin() + idx);
 	}
 
 
@@ -1926,11 +1921,9 @@ namespace claujson {
 				}
 			}
 
-			if (x->obj_key_vec.empty() == false) {
-				obj_key_vec.insert(obj_key_vec.end(), std::make_move_iterator(x->obj_key_vec.begin()) + start_offset,
-					std::make_move_iterator(x->obj_key_vec.end()));
-				obj_val_vec.insert(obj_val_vec.end(), std::make_move_iterator(x->obj_val_vec.begin()) + start_offset,
-					std::make_move_iterator(x->obj_val_vec.end()));
+			if (x->obj_data.empty() == false) {
+				obj_data.insert(obj_data.end(), std::make_move_iterator(x->obj_data.begin()) + start_offset,
+					std::make_move_iterator(x->obj_data.end()));
 			}
 			else {
 				log << info << "test1";
@@ -1954,11 +1947,9 @@ namespace claujson {
 				start_offset = 0;
 			}
 
-			if (x->obj_key_vec.empty() == false) {
-				obj_key_vec.insert(obj_key_vec.end(), std::make_move_iterator(x->obj_key_vec.begin()) + start_offset,
-					std::make_move_iterator(x->obj_key_vec.end()));
-				obj_val_vec.insert(obj_val_vec.end(), std::make_move_iterator(x->obj_val_vec.begin()) + start_offset,
-					std::make_move_iterator(x->obj_val_vec.end()));
+			if (x->obj_data.empty() == false) {
+				obj_data.insert(obj_data.end(), std::make_move_iterator(x->obj_data.begin()) + start_offset,
+					std::make_move_iterator(x->obj_data.end()));
 			}
 			else {
 				log << info << "test2";
@@ -1992,8 +1983,7 @@ namespace claujson {
 					ERROR("Error in add_item_type, key is not string");
 				}
 
-				obj_key_vec.push_back(std::move(temp));
-				obj_val_vec.push_back(std::move(temp2));
+				obj_data.push_back({ std::move(temp), std::move(temp2) });
 			}
 	}
 
@@ -2017,8 +2007,7 @@ namespace claujson {
 		if (j->is_virtual()) {
 			j->set_parent(this);
 
-			obj_key_vec.push_back(Value());
-			obj_val_vec.emplace_back(j.release());
+			obj_data.push_back({ Value(), Value(j.release()) });
 			return true;
 		}
 
@@ -2030,8 +2019,7 @@ namespace claujson {
 		if (key.is_str() || j->is_virtual()) {
 			j->set_parent(this);
 
-			obj_key_vec.push_back(std::move(key));
-			obj_val_vec.emplace_back(j.release());
+			obj_data.push_back({ std::move(key), Value(j.release()) });
 		}
 		else {
 			log << warn << "chk..";
@@ -2214,7 +2202,7 @@ namespace claujson {
 		else if (j->is_partial_json()) {
 			auto* x = dynamic_cast<PartialJson*>(j);
 
-			if (x->obj_key_vec.empty() == false) { // not object?
+			if (x->obj_data.empty() == false) { // not object?
 				ERROR("partial json is not array");
 			}
 
@@ -2295,9 +2283,9 @@ namespace claujson {
 		// todo - rename? PartialNode ?
 
 	PartialJson::~PartialJson() {
-		for (auto& x : obj_val_vec) {
-			if (x.is_structured()) {
-				delete ((Structured*)x.as_structured_ptr());
+		for (auto& x : obj_data) {
+			if (x.second.is_structured()) {
+				delete ((Structured*)x.second.as_structured_ptr());
 			}
 		}
 
@@ -2332,7 +2320,7 @@ namespace claujson {
 			count = 1;
 		}
 
-		return arr_vec.size() + obj_val_vec.size() + count;
+		return arr_vec.size() + obj_data.size() + count;
 	}
 
 	Value& PartialJson::get_value_list(uint64_t idx) {
@@ -2348,7 +2336,7 @@ namespace claujson {
 			return arr_vec[idx];
 		}
 		else {
-			return obj_val_vec[idx];
+			return obj_data[idx].second;
 		}
 	}
 
@@ -2365,7 +2353,7 @@ namespace claujson {
 			return data_null;
 		}
 		else {
-			return obj_key_vec[idx];
+			return obj_data[idx].first;
 		}
 	}
 
@@ -2381,7 +2369,7 @@ namespace claujson {
 			return data_null;
 		}
 		else {
-			return obj_key_vec[idx];
+			return obj_data[idx].first;
 		}
 	}
 	const Value& PartialJson::get_const_key_list(uint64_t idx) const {
@@ -2396,7 +2384,7 @@ namespace claujson {
 			return data_null;
 		}
 		else {
-			return obj_key_vec[idx];
+			return obj_data[idx].first;
 		}
 	}
 	const Value& PartialJson::get_value_list(uint64_t idx) const {
@@ -2411,7 +2399,7 @@ namespace claujson {
 			return arr_vec[idx];
 		}
 		else {
-			return obj_val_vec[idx];
+			return obj_data[idx].second;
 		}
 	}
 
@@ -2428,7 +2416,7 @@ namespace claujson {
 			return data_null;
 		}
 		else {
-			return obj_key_vec[idx];
+			return obj_data[idx].first;
 		}
 	}
 
@@ -2445,7 +2433,8 @@ namespace claujson {
 			arr_vec[idx].clear(false);
 		}
 		else {
-			obj_val_vec[idx].clear(false);
+			obj_data[idx].first.clear(false);
+			obj_data[idx].second.clear(false);
 		}
 	}
 
@@ -2455,8 +2444,7 @@ namespace claujson {
 
 	void PartialJson::clear() {
 		arr_vec.clear();
-		obj_key_vec.clear();
-		obj_val_vec.clear();
+		obj_data.clear();
 		virtualJson.clear(false);
 	}
 
@@ -2464,9 +2452,8 @@ namespace claujson {
 		if (!arr_vec.empty()) {
 			arr_vec.reserve(len);
 		}
-		if (!obj_val_vec.empty()) {
-			obj_val_vec.reserve(len);
-			obj_key_vec.reserve(len);
+		if (!obj_data.empty()) {
+			obj_data.reserve(len);
 		}
 	}
 
@@ -2486,13 +2473,12 @@ namespace claujson {
 			x->set_parent(this);
 		}
 
-		obj_key_vec.push_back(std::move(key));
-		obj_val_vec.push_back(std::move(val));
+		obj_data.push_back({ std::move(key), std::move(val) });
 
 		return true;
 	}
 	bool PartialJson::add_array_element(Value val) {
-		if (!obj_key_vec.empty()) {
+		if (!obj_data.empty()) {
 			ERROR("partialJson is array or object.");
 			return false;
 		}
@@ -2634,8 +2620,7 @@ namespace claujson {
 					ERROR("partialJson is array or object.");
 				}
 
-				obj_key_vec.push_back(std::move(temp));
-				obj_val_vec.push_back(std::move(temp2));
+				obj_data.push_back({ std::move(temp), std::move(temp2) });
 			}
 	}
 
@@ -2653,7 +2638,7 @@ namespace claujson {
 					ERROR("Error in add_item_type");
 				}
 
-				if (!obj_key_vec.empty()) {
+				if (!obj_data.empty()) {
 					ERROR("partialJson is array or object.");
 				}
 
@@ -2669,7 +2654,7 @@ namespace claujson {
 			virtualJson = Value(j.release());
 		}
 		else {
-			if (!obj_key_vec.empty()) {
+			if (!obj_data.empty()) {
 				return false; //ERROR("partialJson is array or object.");
 			}
 
@@ -2690,8 +2675,7 @@ namespace claujson {
 			}
 
 			if (key.is_str()) {
-				obj_key_vec.push_back(std::move(key));
-				obj_val_vec.emplace_back(j.release());
+				obj_data.push_back({ std::move(key), Value(j.release()) });
 			}
 			else {
 				log << warn << "ERROR";
@@ -2746,8 +2730,7 @@ namespace claujson {
 					json = new Array();
 				}
 
-				obj_key_vec.push_back(std::move(temp));
-				obj_val_vec.push_back(Value(json));
+				obj_data.push_back({ std::move(temp), Value(json) });
 
 				json->set_parent(this);
 			}
@@ -2804,15 +2787,14 @@ namespace claujson {
 
 
 
-				obj_key_vec.push_back(std::move(temp));
-				obj_val_vec.push_back(Value(json));
+				obj_data.push_back({ std::move(temp), Value(json) });
 
 				json->set_parent(this);
 			}
 	}
 	claujson_inline void PartialJson::add_user_type(ValueType type) {
 		{
-			if (!obj_key_vec.empty()) {
+			if (!obj_data.empty()) {
 				ERROR("PartialJson is array or object.");
 			}
 

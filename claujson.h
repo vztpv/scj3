@@ -710,8 +710,9 @@ namespace claujson {
 
 	class Object : public Structured {
 	protected:
-		std::vector<Value> obj_key_vec;
-		std::vector<Value> obj_val_vec;
+		std::vector<std::pair<claujson::Value, claujson::Value>> obj_data;
+	public:
+		using ValueIterator = std::vector<std::pair<claujson::Value, claujson::Value>>::iterator;
 	protected:
 		//explicit Object(bool valid);
 	public:
@@ -753,14 +754,9 @@ namespace claujson {
 		virtual void clear();
 
 
-		std::vector<Value>::iterator begin();
-		std::vector<Value>::iterator begin_key() {
-			return obj_key_vec.begin();
-		}
-		std::vector<Value>::iterator end();
-		std::vector<Value>::iterator end_key() {
-			return obj_key_vec.end();
-		}
+		ValueIterator begin();
+		ValueIterator end();
+		
 		virtual void reserve_data_list(uint64_t len);
 
 		virtual bool add_object_element(Value key, Value val);
@@ -804,8 +800,8 @@ namespace claujson {
 	class Array : public Structured {
 	protected:
 		std::vector<Value> arr_vec;
-	private:
-		std::vector<Value> temp;
+	public:
+		using ValueIterator = std::vector<Value>::iterator;
 	protected:
 		//explicit Array(bool valid);
 	public:
@@ -847,9 +843,9 @@ namespace claujson {
 		virtual void reserve_data_list(uint64_t len);
 
 
-		std::vector<Value>::iterator begin();
+		ValueIterator begin();
 
-		std::vector<Value>::iterator end();
+		ValueIterator end();
 
 
 		virtual bool add_object_element(Value key, Value val);
