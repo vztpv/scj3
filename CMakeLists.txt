@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.11.0)
 # 프로젝트 정보
 project(
   claujson
-  VERSION 0.18.2 #
+  VERSION 0.19.0 #
   DESCRIPTION "claujson"
   LANGUAGES CXX)
 
