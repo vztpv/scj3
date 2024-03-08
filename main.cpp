@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
 			bool ok;
 			//try
 			{	
-				if(0){
+				if(1){
 					auto a = std::chrono::steady_clock::now();
 
 					_simdjson::dom::parser test;
@@ -418,7 +418,7 @@ int main(int argc, char* argv[])
 				claujson::save_parallel("temp.json", j, thr_num, true);
 				
 				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
-
+				
 				if (1) {
 
 					claujson::Value x;
@@ -439,6 +439,7 @@ int main(int argc, char* argv[])
 					claujson::clean(x);
 					claujson::clean(_diff);
 				}
+
 				//claujson::clean(j);
 				//return 0;
 				//b = std::chrono::steady_clock::now();
@@ -465,10 +466,13 @@ int main(int argc, char* argv[])
 
 				// json_pointer, json_pointerA <- u8string_view?
 
-				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec, false)) {
+				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
 					std::cout << "json pointer error.\n";
 					return 1;
 				}
+
+				static const auto& _geometry = claujson::Value("geometry"sv);
+				static const auto& _coordinates = claujson::Value("coordinates"sv);
 
 				double sum = 0;
 				if (true && ok) {
@@ -480,7 +484,7 @@ int main(int argc, char* argv[])
 								continue;
 							}
 							for (auto& feature : *features_arr) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
-								auto& coordinate = feature["geometry"sv]["coordinates"sv][0];  // feature.json_pointerB(vec)[0];  
+								auto& coordinate = feature[_geometry][_coordinates][0];  // feature.json_pointerB(vec)[0];  
 								claujson::Array* coordinate_arr = coordinate.as_array();
 								if (!coordinate_arr) {
 									continue;

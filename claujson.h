@@ -321,15 +321,15 @@ namespace claujson {
 		explicit Value(uint64_t x);
 		explicit Value(double x);
 
-		explicit Value(StringView x, bool convert = true); // C++17
+		explicit Value(StringView x); // C++17
 
 #if __cplusplus >= 202002L
 		// C++20~
-		explicit Value(std::u8string_view x, bool convert = true);
-		explicit Value(const char8_t* x, bool convert = true);
+		explicit Value(std::u8string_view x);
+		explicit Value(const char8_t* x);
 #endif
 		
-		explicit Value(const char* x, bool convert = true);
+		explicit Value(const char* x);
 
 		explicit Value(Value*) = delete;
 
@@ -419,22 +419,22 @@ namespace claujson {
 
 	//	Structured* ptr_val() const;
 
-		Value& json_pointer(StringView route, bool convert = true);
+		Value& json_pointer(StringView route);
 
-		const Value& json_pointer(StringView route, bool convert = true) const;
+		const Value& json_pointer(StringView route) const;
 
 		Value& json_pointer(const Value& route);
 		const Value& json_pointer(const Value& route) const;
 
-		static bool json_pointerA(StringView route, std::vector<Value>& vec, bool convert = true);
+		static bool json_pointerA(StringView route, std::vector<Value>& vec);
 #if __cplusplus >= 202002L
 
-		Value& json_pointer(std::u8string_view route, bool convert = true);
+		Value& json_pointer(std::u8string_view route);
 
-		const Value& json_pointer(std::u8string_view route, bool convert = true) const;
+		const Value& json_pointer(std::u8string_view route) const;
 
 
-		static bool json_pointerA(std::u8string_view route, std::vector<Value>& vec, bool convert = true);
+		static bool json_pointerA(std::u8string_view route, std::vector<Value>& vec);
 #endif
 
 		Value& json_pointerB(const std::vector<Value>& routeDataVec);
@@ -447,36 +447,13 @@ namespace claujson {
 		const Object* as_object()const;
 		const Structured* as_structured_ptr()const;
 
-
-		// with convert...
-		const Value& at(StringView key) const;
-		Value& at(StringView key);
-
-
-		uint64_t find(StringView key, bool convert) {
-			if (convert) {
-				return find(key);
-			}
-			return find_(key);
-		}
+		/// \overload
 		uint64_t find(StringView key) const;
-
-		uint64_t find_(StringView key) const; // find without key`s converting?
+		/// \overload
+		uint64_t find(const Value& key) const; // find without key`s converting?
 #if __cplusplus >= 202002L
-		const Value& at(std::u8string_view key) const;
-
-		Value& at(std::u8string_view key);
 
 		uint64_t find(std::u8string_view key) const;
-
-		uint64_t find_(std::u8string_view key) const; // find without key`s converting?
-
-		uint64_t find(std::u8string_view key, bool convert) {
-			if (convert) {
-				return find(key);
-			}
-			return find_(key);
-		}
 
 		// without covnert
 		Value& operator[](std::u8string_view key); // if not exist key, then nothing.
@@ -486,6 +463,10 @@ namespace claujson {
 		// at vs [] (at <- convert key to key_in_json.) ([] <- do not convert.)
 		Value& operator[](StringView key); // if not exist key, then nothing.
 		const Value& operator[](StringView key) const; // if not exist key, then nothing.
+
+		Value& operator[](const Value& key); // if not exist key, then nothing.
+		const Value& operator[](const Value& key) const; // if not exist key, then nothing.
+
 
 		Value& operator[](uint64_t idx);
 
@@ -512,7 +493,7 @@ namespace claujson {
 
 		void set_float(double x);
 
-		bool set_str(const char* str, uint64_t len, bool convert);
+		bool set_str(const char* str, uint64_t len);
 	private:
 		void set_str_in_parse(const char* str, uint64_t len);
 	public:
@@ -579,38 +560,17 @@ namespace claujson {
 		const Value& at(StringView key) const;
 		Value& at(StringView key);
 
+		/// \overload
 		uint64_t find(StringView key) const;
 
-		uint64_t find_(StringView key) const; // find without key`s converting ( \uxxxx )
-
-
-		uint64_t find(StringView key, bool convert) {
-			if (convert) {
-				return find(key);
-			}
-			return find_(key);
-		}
+		/// \overload
+		uint64_t find(const Value& key) const; // find without key`s converting ( \uxxxx )
 
 
 #if __cplusplus >= 202002L
-		const Value& at(std::u8string_view key) const;
-
-		Value& at(std::u8string_view key);
 
 		uint64_t find(std::u8string_view key) const;
 
-		uint64_t find_(std::u8string_view key) const; // find without key`s converting
-
-
-		uint64_t find(std::u8string_view key, bool convert) {
-			if (convert) {
-				return find(key);
-			}
-			return find_(key);
-		}
-
-
-		// without covnert
 		Value& operator[](std::u8string_view key); // if not exist key, then Value <- is not valid.
 		const Value& operator[](std::u8string_view key) const; // if not exist key, then Value <- is not valid.
 #endif
@@ -618,6 +578,9 @@ namespace claujson {
 		// at vs [] (at <- convert key to key_in_json.) ([] <- do not convert.)
 		Value& operator[](StringView key); // if not exist key, then Value <- is not valid.
 		const Value& operator[](StringView key) const; // if not exist key, then Value <- is not valid.
+
+		Value& operator[](const Value& key); // if not exist key, then Value <- is not valid.
+		const Value& operator[](const Value& key) const; // if not exist key, then Value <- is not valid.
 
 		Value& operator[](uint64_t idx);
 
@@ -674,10 +637,7 @@ namespace claujson {
 		virtual bool assign_value_element(uint64_t idx, Value val) = 0;
 		virtual bool assign_key_element(uint64_t idx, Value key) = 0;
 
-		virtual void erase(StringView key, bool real = false) = 0;
-#if __cplusplus >= 202002L
-		virtual void erase(std::u8string_view key, bool real = false) = 0;
-#endif
+		virtual void erase(const Value& key, bool real = false) = 0;
 		virtual void erase(uint64_t idx, bool real = false) = 0;
 
 	private:
@@ -771,11 +731,7 @@ namespace claujson {
 		virtual bool assign_value_element(uint64_t idx, Value val);
 		virtual bool assign_key_element(uint64_t idx, Value key);
 
-		virtual void erase(StringView key, bool real = false);
-
-#if __cplusplus >= 202002L
-		virtual void erase(std::u8string_view key, bool real = false);
-#endif
+		virtual void erase(const Value& key, bool real = false);
 		virtual void erase(uint64_t idx, bool real = false);
 
 	private:
@@ -863,10 +819,7 @@ namespace claujson {
 		virtual bool assign_value_element(uint64_t idx, Value val);
 		virtual bool assign_key_element(uint64_t idx, Value key);
 
-		virtual void erase(StringView key, bool real = false); 
-#if __cplusplus >= 202002L
-		virtual void erase(std::u8string_view key, bool real = false);
-#endif
+		virtual void erase(const Value& key, bool real = false); 
 		virtual void erase(uint64_t idx, bool real = false);
 
 	private:
