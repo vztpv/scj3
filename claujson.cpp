@@ -3957,7 +3957,7 @@ namespace claujson {
 		}
 	}
 
-	claujson_inline void write_string(StrStream& stream, const StringView& str) {
+	claujson_inline void write_string(StrStream& stream, const StringView str) {
 		stream.add_1(str.data(), str.size());
 	}
 

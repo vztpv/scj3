@@ -310,7 +310,7 @@ namespace claujson {
 
 			this->str = new char[other.sz + 1];
 			this->sz = other.sz;
-			memcpy_s(this->str, this->sz, other.str, other.sz);
+			memcpy(this->str, other.str, other.sz);
 			this->str[this->sz] = '\0';
 			this->type = other.type;
 
@@ -336,14 +336,14 @@ namespace claujson {
 		}
 
 
-		String clone() {
+		String clone() const {
 			if (is_valid() == false) { not_valid_str; }
 			String obj;
 
 			obj.sz = this->sz;
 			obj.str = new char[this->sz + 1];
 
-			memcpy_s(obj.str, obj.sz, this->str, this->sz);
+			memcpy(obj.str, this->str, this->sz);
 			obj.str[obj.sz] = '\0';
 
 			return obj;
@@ -362,7 +362,7 @@ namespace claujson {
 			if (str) {
 				this->sz = strlen(str);
 				this->str = new char[this->sz + 1];
-				memcpy_s(this->str, this->sz, str, this->sz);
+				memcpy(this->str, str, this->sz);
 				this->str[this->sz] = '\0';
 				this->type = ValueType::STRING;
 			}
@@ -372,7 +372,7 @@ namespace claujson {
 			if (str) {
 				this->sz = sz;
 				this->str = new char[this->sz + 1];
-				memcpy_s(this->str, this->sz, str, sz);
+				memcpy(this->str, str, sz);
 				this->str[this->sz] = '\0';
 				this->type = ValueType::STRING;
 			}
