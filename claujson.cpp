@@ -178,7 +178,7 @@ namespace claujson {
 			stream << data._float_val;
 			break;
 		case claujson::ValueType::STRING:
-			stream << "\"" << (*data._str_val) << "\"";
+			stream << "\"" << (data._str_val.data()) << "\"";
 			break;
 		case claujson::ValueType::BOOL:
 			stream << data._bool_val;
@@ -235,7 +235,7 @@ namespace claujson {
 		x._type = this->_type;
 
 		if (x._type == ValueType::STRING) {
-			x._str_val = new std::string(this->_str_val->data(), this->_str_val->size());
+			x._str_val = (this->_str_val);
 
 		}
 		else {
@@ -249,32 +249,46 @@ namespace claujson {
 		return x;
 	}
 	Value::operator bool() const {
-		return this->_valid;
+		return this->is_valid();
 	}
 
 	Value::Value(Structured* x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		set_ptr(x);
 	}
 	Value::Value(int x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		set_int(x);
 	}
 
 	Value::Value(unsigned int x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		set_uint(x);
 	}
 
 	Value::Value(int64_t x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		set_int(x);
 	}
 	Value::Value(uint64_t x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		set_uint(x);
 	}
 	Value::Value(double x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		set_float(x);
 	}
 	Value::Value(StringView x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		if (!set_str(x.data(), x.size())) {
-			this->_valid = false;
+			set_type(ValueType::NOT_VALID);
 		}
 	}
 
@@ -282,7 +296,7 @@ namespace claujson {
 	// C++20~
 	Value::Value(std::u8string_view x) {
 		if (!set_str(reinterpret_cast<const char*>(x.data()), x.size())) {
-			this->_valid = false;
+			set_type(ValueType::NOT_VALID);
 		}
 	}
 
@@ -290,7 +304,7 @@ namespace claujson {
 		std::u8string_view sv(x);
 
 		if (!set_str(reinterpret_cast<const char*>(sv.data()), sv.size())) {
-			this->_valid = false;
+			set_type(ValueType::NOT_VALID);
 		}
 	}
 
@@ -298,7 +312,7 @@ namespace claujson {
 
 	Value::Value(const char* x) {
 		if (!set_str(x, strlen(x))) {
-			this->_valid = false;
+			set_type(ValueType::NOT_VALID);
 		}
 	}
 
@@ -311,7 +325,9 @@ namespace claujson {
 
 	Value::Value(nullptr_t, bool valid) {
 		set_type(ValueType::NULL_);
-		this->_valid = valid;
+		if (!valid) {
+			set_type(ValueType::NOT_VALID);
+		}
 	}
 
 	ValueType Value::type() const {
@@ -319,7 +335,7 @@ namespace claujson {
 	}
 
 	bool Value::is_valid() const {
-		return this->_valid;
+		return type() != ValueType::NOT_VALID;
 	}
 
 	bool Value::is_null() const {
@@ -684,7 +700,7 @@ namespace claujson {
 				//bool found = false;
 				//uint64_t arr_size = j->get_data_size();
 
-				bool chk = to_uint_for_json_pointer(x.str_val(), &idx, simdjson_imple);
+				bool chk = to_uint_for_json_pointer(StringView(x.str_val().data(), x.str_val().size()), &idx, simdjson_imple);
 
 				if (!chk) {
 					return unvalid_data;
@@ -693,7 +709,7 @@ namespace claujson {
 				data = &j->get_value_list(idx);
 			}
 			else if (j->is_object()) { // object -> with key
-				StringView str = x.str_val();
+				StringView str(x._str_val.data(), x._str_val.size());
 				std::string result(str.data(), str.size());
 
 				uint64_t count = 0;
@@ -809,7 +825,7 @@ namespace claujson {
 			if (j->is_array()) { // array -> with idx
 				uint64_t idx = 0;
 
-				bool chk = to_uint_for_json_pointer(x.str_val(), &idx, simdjson_imple);
+				bool chk = to_uint_for_json_pointer(StringView(x.str_val().data(), x.str_val().size()), &idx, simdjson_imple);
 
 				if (!chk) {
 					return unvalid_data;
@@ -818,7 +834,7 @@ namespace claujson {
 				data = &j->get_value_list(idx);
 			}
 			else if (j->is_object()) { // object -> with key
-				StringView str = x.str_val();
+				StringView str(x.str_val().data(), x.str_val().size());
 				std::string result;
 
 				result.reserve(str.size());
@@ -928,7 +944,7 @@ namespace claujson {
 				//bool found = false;
 				//uint64_t arr_size = j->get_data_size();
 
-				bool chk = to_uint_for_json_pointer(x.str_val(), &idx, simdjson_imple);
+				bool chk = to_uint_for_json_pointer(StringView(x.str_val().data(), x.str_val().size()), &idx, simdjson_imple);
 
 				if (!chk) {
 					return unvalid_data;
@@ -937,7 +953,7 @@ namespace claujson {
 				data = &j->get_value_list(idx);
 			}
 			else if (j->is_object()) { // object -> with key
-				StringView str = x.str_val();
+				StringView str(x.str_val().data(), x.str_val().size());
 				std::string result;
 
 				result.reserve(str.size());
@@ -976,10 +992,10 @@ namespace claujson {
 
 	// need refactoring...
 	Value& Value::json_pointer(const Value& route) {
-		return json_pointer(route.get_string());
+		return json_pointer(StringView(route.get_string().data(), route.get_string().size()));
 	}
 	const Value& Value::json_pointer(const Value& route) const {
-		return json_pointer(route.get_string());
+		return json_pointer(StringView(route.get_string().data(), route.get_string().size()));
 	}
 
 #if __cplusplus >= 202002L
@@ -997,7 +1013,7 @@ namespace claujson {
 	void Value::clear(bool real) {
 
 		if (real && _type == ValueType::STRING) {
-			delete _str_val; _str_val = nullptr;
+			_str_val.clear(); 
 			_type = ValueType::NONE;
 		}
 		else if (_type == ValueType::STRING) {
@@ -1010,14 +1026,14 @@ namespace claujson {
 		}
 	}
 
-	std::string& Value::str_val() {
+	String& Value::str_val() {
 		// type check...
-		return *_str_val;
+		return _str_val;
 	}
 
-	const std::string& Value::str_val() const {
+	const String& Value::str_val() const {
 		// type check...
-		return *_str_val;
+		return _str_val;
 	}
 
 	void Value::set_ptr(Structured* x) {
@@ -1026,7 +1042,7 @@ namespace claujson {
 		}
 
 		if (_type == ValueType::STRING) {
-			delete _str_val;
+			_str_val.clear();
 		}
 
 		_array_or_object_ptr = x;
@@ -1040,7 +1056,7 @@ namespace claujson {
 		}
 
 		if (_type == ValueType::STRING) {
-			delete _str_val;
+			_str_val.clear();
 		}
 		_int_val = x;
 		_type = ValueType::INT;
@@ -1051,7 +1067,7 @@ namespace claujson {
 			return;
 		}
 		if (_type == ValueType::STRING) {
-			delete _str_val;
+			_str_val.clear();
 		}
 		_uint_val = x;
 		_type = ValueType::UINT;
@@ -1062,7 +1078,7 @@ namespace claujson {
 			return;
 		}
 		if (_type == ValueType::STRING) {
-			delete _str_val;
+			_str_val.clear();
 		}
 		_float_val = x;
 
@@ -1079,10 +1095,10 @@ namespace claujson {
 
 		if (!convert) {
 			if (_type != ValueType::STRING) {
-				_str_val = new std::string(str, len);
+				_str_val = String(str, len);
 			}
 			else {
-				_str_val->assign(str, len);
+				_str_val = String(str, len);
 			}
 
 			_type = ValueType::STRING;
@@ -1137,10 +1153,10 @@ namespace claujson {
 				uint64_t string_length = uint32_t(x - buf_dest);
 
 				if (_type != ValueType::STRING) {
-					_str_val = new std::string((char*)buf_dest, string_length);
+					_str_val = String((char*)buf_dest, string_length);
 				}
 				else {
-					_str_val->assign((char*)buf_dest, string_length);
+					_str_val = String((char*)buf_dest, string_length);
 				}
 			}
 
@@ -1173,10 +1189,10 @@ namespace claujson {
 				uint64_t string_length = uint32_t(x - buf_dest);
 
 				if (_type != ValueType::STRING) {
-					_str_val = new std::string((char*)buf_dest, string_length);
+					_str_val = String((char*)buf_dest, string_length);
 				}
 				else {
-					_str_val->assign((char*)buf_dest, string_length);
+					_str_val = String((char*)buf_dest, string_length);
 				}
 			}
 		}
@@ -1186,14 +1202,13 @@ namespace claujson {
 		return true;
 	}
 
-	void Value::set_str_in_parse(const char* str, uint64_t len) {
+	void Value::set_str_in_parse(char* str, uint64_t len) {
 		if (_type != ValueType::STRING) {
-			_str_val = new std::string(str, len);
+			_str_val = String(str, len);
 		}
 		else {
-			_str_val->assign(str, len);
+			_str_val = String(str, len);
 		}
-		_type = ValueType::STRING;
 	}
 
 	void Value::set_bool(bool x) {
@@ -1201,7 +1216,7 @@ namespace claujson {
 			return;
 		}
 		if (_type == ValueType::STRING) {
-			delete _str_val;
+			_str_val.clear();
 		}
 
 		_bool_val = x;
@@ -1216,7 +1231,7 @@ namespace claujson {
 			return;
 		}
 		if (_type == ValueType::STRING) {
-			delete _str_val;
+			_str_val.clear();
 		}
 
 		set_type(ValueType::NULL_);
@@ -1227,24 +1242,22 @@ namespace claujson {
 	}
 
 	Value::~Value() {
-		if (_type == ValueType::STRING && _str_val) {
+		if (_type == ValueType::STRING) {
 			//log << warn  << "chk";
-			delete _str_val;
-			_str_val = nullptr;
+			//_str_val.clear();
+			
 		}
 	}
 
 	Value::Value(Value&& other) noexcept
-		: _type(other._type), _valid(other._valid)
+		: _type(other._type)
 	{
 		if (!other.is_valid()) {
 			return;
 		}
 
 		if (_type == ValueType::STRING) {
-			_str_val = other._str_val;
-			other._str_val = nullptr;
-			other._type = ValueType::NONE;
+			_str_val = std::move(other._str_val);
 		}
 		else {
 			std::swap(_int_val, other._int_val);
@@ -1252,13 +1265,13 @@ namespace claujson {
 		}
 	}
 
-	Value::Value() : _int_val(0), _valid(true), _type(ValueType::NONE) { }
+	Value::Value() : _int_val(0), _type(ValueType::NONE) { }
 
 	bool Value::operator==(const Value& other) const { // chk array or object?
 		if (this->_type == other._type) {
 			switch (this->_type) {
 			case ValueType::STRING:
-				return (*this->_str_val) == (*other._str_val);
+				return (this->_str_val) == (other._str_val);
 				break;
 			case ValueType::INT:
 				return this->_int_val == other._int_val;
@@ -1321,7 +1334,7 @@ namespace claujson {
 		if (this->_type == other._type) {
 			switch (this->_type) {
 			case ValueType::STRING:
-				return (*this->_str_val) < (*other._str_val);
+				return (this->_str_val) < (other._str_val);
 				break;
 			case ValueType::INT:
 				return this->_int_val < other._int_val;
@@ -1359,7 +1372,8 @@ namespace claujson {
 		return *this;
 	}
 
-	claujson_inline bool ConvertString(claujson::Value& data, char* text, uint64_t len) {
+	//claujson_inline 
+	bool ConvertString(claujson::Value& data, char* text, uint64_t len) {
 		uint8_t sbuf[1024 + 1 + _simdjson::_SIMDJSON_PADDING];
 		std::unique_ptr<uint8_t[]> ubuf;
 		uint8_t* string_buf = nullptr;
@@ -1433,7 +1447,8 @@ namespace claujson {
 		return true;
 	}
 
-	claujson_inline claujson::Value& Convert(claujson::Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
+	//claujson_inline
+		claujson::Value& Convert(claujson::Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
 		char* buf, uint64_t token_idx, bool& err) {
 
 		//try {
@@ -1524,50 +1539,6 @@ namespace claujson {
 
 	}
 
-
-
-	const Value& Structured::at(StringView key) const {
-		if (!is_object()) {
-			return data_null;
-		}
-
-		// is valid utf-8 and no \\~ ?? //
-		auto key_in_json = claujson::convert_to_string_in_json(key);
-		if (!key_in_json.first) {
-			return data_null;
-		}
-
-		uint64_t len = get_data_size();
-		for (uint64_t i = 0; i < len; ++i) {
-			if (get_key_list(i).str_val().compare(key_in_json.second) == 0) {
-				return get_value_list(i);
-			}
-		}
-
-		return data_null;
-	}
-
-	Value& Structured::at(StringView key) {
-		if (!is_object()) { //} || !is_valid()) {
-			return data_null;
-		}
-
-		// is valid utf-8 and no \\~ ?? //
-		auto key_in_json = claujson::convert_to_string_in_json(key);
-		if (!key_in_json.first) {
-			return data_null;
-		}
-
-		uint64_t len = get_data_size();
-		for (uint64_t i = 0; i < len; ++i) {
-			if (get_key_list(i).str_val().compare(key_in_json.second) == 0) {
-				return get_value_list(i);
-			}
-		}
-
-		return data_null;
-	}
-
 	uint64_t Structured::find(StringView key) const {
 		if (!is_object()) { //} || !is_valid()) {
 			return npos;
@@ -1581,7 +1552,7 @@ namespace claujson {
 
 		uint64_t len = get_data_size();
 		for (uint64_t i = 0; i < len; ++i) {
-			if (get_key_list(i).str_val().compare(key_in_json.second) == 0) {
+			if (get_key_list(i).str_val() == (key_in_json.second)) {
 				return i;
 			}
 		}
@@ -3986,7 +3957,7 @@ namespace claujson {
 		}
 	}
 
-	claujson_inline void write_string(StrStream& stream, const std::string& str) {
+	claujson_inline void write_string(StrStream& stream, const StringView& str) {
 		stream.add_1(str.data(), str.size());
 	}
 
@@ -4001,7 +3972,7 @@ namespace claujson {
 	claujson_inline void save_primitive(StrStream& stream, const Value& x) {
 		if (x.type() == ValueType::STRING) {
 
-			write_string(stream, x.str_val());
+			write_string(stream, StringView(x.str_val().data(), x.str_val().size()));
 
 		}
 		else if (x.type() == ValueType::BOOL) {
@@ -4067,7 +4038,7 @@ namespace claujson {
 
 					if (x.type() == ValueType::STRING) {
 
-						write_string(stream, x.str_val());
+						write_string(stream, StringView(x.str_val().data(), x.str_val().size()));
 
 						{
 							stream.add_2(str_colon[pretty ? 1 : 0]);
@@ -4099,7 +4070,7 @@ namespace claujson {
 					auto& x = ut->get_key_list(i);
 
 					if (x.type() == ValueType::STRING) {
-						write_string(stream, x.str_val());
+						write_string(stream, StringView(x.str_val().data(), x.str_val().size()));
 
 						{
 							stream.add_2(str_colon[pretty ? 1 : 0]); // " : ";
@@ -4182,7 +4153,7 @@ namespace claujson {
 
 						uint64_t len = x.str_val().size();
 
-						write_string(stream, x.str_val());
+						write_string(stream, StringView(x.str_val().data(), x.str_val().size()));
 
 
 						{
@@ -4218,7 +4189,7 @@ namespace claujson {
 				
 
 						uint64_t len = x.str_val().size();
-						write_string(stream, x.str_val());
+						write_string(stream, StringView(x.str_val().data(), x.str_val().size()));
 
 
 
@@ -6251,7 +6222,7 @@ namespace claujson {
 					const Value& key = jx->get_key_list(i - 1);
 					std::string new_route = route;
 					new_route += '/';
-					new_route += escape_for_json_pointer(key.get_string());
+					new_route += escape_for_json_pointer(key.get_string().data());
 					uint64_t idx = jy->find(key);
 					if (idx != Structured::npos) {
 						Value inner_diff = _diff((jx->get_value_list(i - 1)), jy->get_value_list(idx), new_route);

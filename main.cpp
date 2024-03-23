@@ -24,7 +24,7 @@ void utf_8_test() {
 	Value x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
 	if (x) { // if before string is not valid utf-8, then x is not valid. x -> false
 		auto& y = x.str_val();
-		std::cout << y << "\n";
+		std::cout << y.data() << "\n";
 	}
 }
 
@@ -409,6 +409,8 @@ int main(int argc, char* argv[])
 				std::cout << "total " << dur.count() << "ms\n";
 
 			
+				//debug test
+				//std::cout << j << "\n";
 				//claujson::clean(j);
 
 				//return 0;

@@ -82,12 +82,21 @@ namespace claujson {
 			stream << sv.data();
 			return stream;
 		}
+
+		bool operator==(const StringView view) {
+			return 0 == strcmp(this->data(), view.data());
+		}
+
+		bool operator<(const StringView view) {
+			return strcmp(this->data(), view.data()) < 0;
+		}
 	};
 }
 
 
 claujson::StringView operator""sv(const char* str, size_t sz);
 bool operator==(const std::string& str, claujson::StringView sv);
+
 
 #endif
 
@@ -266,7 +275,7 @@ namespace claujson {
 	class Array;
 	class Object;
 
-	enum class ValueType : int8_t {
+	enum class ValueType : int32_t {
 		NONE = 1,
 		ARRAY, // ARRAY_OBJECT -> ARRAY, OBJECT
 		OBJECT, 
@@ -275,8 +284,152 @@ namespace claujson {
 		BOOL,
 		NULL_,
 		STRING,
+		NOT_VALID,
 		ERROR // private class?
 	};
+
+	// sz`s type is uint32_t, not uint64_t.
+	class String {
+	private: // do not change of order. do not add variable.
+		char* str = nullptr;
+		uint32_t sz = 0;
+	private:
+		ValueType type = ValueType::STRING; // STRING or NOT_VALID
+	public:
+		enum class STR_OPTION { GENERAL, NOT_VALID_STR, MOVED_STR }; 
+	private:
+		static const String not_valid_str;
+	
+	public:
+		String& operator=(const String& other) {
+			if (!is_valid() || !other.is_valid() || this == &other) { return *this; }
+
+			if (type == ValueType::STRING) {
+				clear();
+			}
+
+			this->str = new char[other.sz + 1];
+			this->sz = other.sz;
+			memcpy_s(this->str, this->sz, other.str, other.sz);
+			this->str[this->sz] = '\0';
+			this->type = other.type;
+
+			return *this;
+		}
+	protected:
+		String(const String&) = default;
+
+	public:
+
+		// not valid String. used like null?
+		explicit String(STR_OPTION opt = STR_OPTION::GENERAL/* not valid str */) : type(opt == STR_OPTION::GENERAL? ValueType::STRING : ValueType::NOT_VALID) {
+			//
+		}
+		
+		~String() {
+			if (type == ValueType::STRING && str) {
+				delete[] str; // has bug, todo - cancell moved str?
+				str = nullptr;
+			}
+			
+			type = ValueType::NONE;
+		}
+
+
+		String clone() {
+			if (is_valid() == false) { not_valid_str; }
+			String obj;
+
+			obj.sz = this->sz;
+			obj.str = new char[this->sz + 1];
+
+			memcpy_s(obj.str, obj.sz, this->str, this->sz);
+			obj.str[obj.sz] = '\0';
+
+			return obj;
+		}
+
+		String& operator=(String&& other) noexcept {
+			if (this->is_valid() == false || other.is_valid() == false || this == &other) { return *this; }
+			std::swap(this->str, other.str);
+			std::swap(this->sz, other.sz);
+			std::swap(this->type, other.type);
+			return *this;
+		}
+
+
+		explicit String(const char* str) {
+			if (str) {
+				this->sz = strlen(str);
+				this->str = new char[this->sz + 1];
+				memcpy_s(this->str, this->sz, str, this->sz);
+				this->str[this->sz] = '\0';
+				this->type = ValueType::STRING;
+			}
+		}
+
+		explicit String(const char* str, uint32_t sz) {
+			if (str) {
+				this->sz = sz;
+				this->str = new char[this->sz + 1];
+				memcpy_s(this->str, this->sz, str, sz);
+				this->str[this->sz] = '\0';
+				this->type = ValueType::STRING;
+			}
+		}
+
+	public:
+		bool is_valid() const {
+			return type != ValueType::NOT_VALID;
+		}
+
+		char* data() {
+			return str;
+		}
+
+		const char* data() const {
+			return str;
+		}
+		uint64_t size() const {
+			return sz;
+		}
+
+		// remove data.
+		void clear() {
+			if (type == ValueType::STRING && str) {
+				delete[] str;
+			}
+			sz = 0;
+			str = nullptr;
+			type = ValueType::NONE;
+		}
+
+		bool operator<(const String& other) const {
+			if (!this->is_valid() || !other.is_valid()) { return false; }
+			return StringView(str, sz) < StringView(other.str, other.sz);
+		}
+		bool operator<(const StringView other) const {
+			if (!this->is_valid()) { return false; }
+			return StringView(str, sz) < other;
+		}
+		bool operator==(const StringView other) const {
+			if (!this->is_valid()) { return false; }
+			return StringView(str, sz) == other;
+		}
+
+		bool operator==(const String& other) const {
+			if (!this->is_valid() || !other.is_valid()) { return false; }
+			return StringView(str, sz) == StringView(other.str, other.sz);
+		}
+
+		std::string get_std_string() const {
+			if (!str) { return std::string(); }
+			return std::string(str, sz);
+		}
+	};
+
+	const String not_valid_str(String::STR_OPTION::NOT_VALID_STR);
+
 
 	class Value {
 
@@ -294,17 +447,34 @@ namespace claujson {
 		friend bool ConvertString(Value& data, char* text, uint64_t len);
 
 	private:
+
 		union {
-			int64_t _int_val = 0;
-			uint64_t _uint_val;
-			double _float_val;
-			std::string* _str_val;
-			Structured* _array_or_object_ptr;
-			bool _bool_val;
+			struct {
+				union {
+					int64_t _int_val;
+					uint64_t _uint_val;
+					double _float_val;
+					Structured* _array_or_object_ptr;
+					bool _bool_val;
+				};
+				uint32_t temp;
+				ValueType _type;
+			};
+			String _str_val;
 		};
 
-		ValueType _type = ValueType::NONE; 
-		bool _valid = true;
+
+		//union {
+		//	int64_t _int_val = 0;
+		//	uint64_t _uint_val;
+		//	double _float_val;
+		//	std::string* _str_val;
+		//	Structured* _array_or_object_ptr;
+		//	bool _bool_val;
+		//};
+
+		//ValueType _type = ValueType::NONE; 
+		//bool _valid = true;
 
 	public:
 
@@ -455,7 +625,7 @@ namespace claujson {
 
 		uint64_t find(std::u8string_view key) const;
 
-		// without covnert
+		// without convert
 		Value& operator[](std::u8string_view key); // if not exist key, then nothing.
 		const Value& operator[](std::u8string_view key) const; // if not exist key, then nothing.
 #endif
@@ -474,17 +644,17 @@ namespace claujson {
 	public:
 		void clear(bool real);
 
-		std::string& get_string() {
+		String& get_string() {
 			return str_val();
 		}
 
-		std::string& str_val();
+		String& str_val();
 
-		const std::string& get_string() const {
+		const String& get_string() const {
 			return str_val();
 		}
 
-		const std::string& str_val() const;
+		const String& str_val() const;
 
 		void set_ptr(Structured* x);
 		void set_int(long long x);
@@ -495,7 +665,7 @@ namespace claujson {
 
 		bool set_str(const char* str, uint64_t len);
 	private:
-		void set_str_in_parse(const char* str, uint64_t len);
+		void set_str_in_parse(char* str, uint64_t len);
 	public:
 		void set_bool(bool x);
 
@@ -555,10 +725,6 @@ namespace claujson {
 		explicit Structured();
 
 		virtual ~Structured();
-
-		// with convert...
-		const Value& at(StringView key) const;
-		Value& at(StringView key);
 
 		/// \overload
 		uint64_t find(StringView key) const;
@@ -886,4 +1052,3 @@ namespace claujson {
 	bool is_valid_string_in_json(std::u8string_view x);
 #endif
 }
-
