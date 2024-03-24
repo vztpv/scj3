@@ -300,7 +300,7 @@ namespace claujson {
 			};
 			struct {
 				char buf[BUF_SIZE];
-				std::byte buf_sz;
+				uint8_t buf_sz;
 				ValueType type_;
 			};
 		};
@@ -390,7 +390,7 @@ namespace claujson {
 			
 			this->sz = strlen(str);
 			if (this->sz < BUF_SIZE) {
-				this->buf_sz = (std::byte)this->sz;
+				this->buf_sz = (uint8_t)this->sz;
 				memcpy(this->buf, str, (uint64_t)this->buf_sz);
 				this->buf[(uint64_t)this->buf_sz] = '\0';
 				this->type = ValueType::SHORT_STRING;
@@ -408,7 +408,7 @@ namespace claujson {
 
 			this->sz = sz;
 			if (this->sz < BUF_SIZE) {
-				this->buf_sz = (std::byte)this->sz;
+				this->buf_sz = (uint8_t)this->sz;
 				memcpy(this->buf, str, (uint64_t)this->buf_sz);
 				this->buf[(uint64_t)this->buf_sz] = '\0';
 				this->type = ValueType::SHORT_STRING;
