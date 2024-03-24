@@ -283,7 +283,7 @@ namespace claujson {
 		FLOAT,
 		BOOL,
 		NULL_,
-		STRING,
+		STRING, SHORT_STRING,
 		NOT_VALID,
 		ERROR // private class?
 	};
@@ -291,10 +291,20 @@ namespace claujson {
 	// sz`s type is uint32_t, not uint64_t.
 	class String {
 	private: // do not change of order. do not add variable.
-		char* str = nullptr;
-		uint32_t sz = 0;
-	private:
-		ValueType type = ValueType::STRING; // STRING or NOT_VALID
+		static const int BUF_SIZE = 11;
+		union {
+			struct {
+				char* str;
+				uint32_t sz;
+				ValueType type; // STRING or NOT_VALID
+			};
+			struct {
+				char buf[BUF_SIZE];
+				std::byte buf_sz;
+				ValueType type_;
+			};
+		};
+
 	public:
 		enum class STR_OPTION { GENERAL, NOT_VALID_STR, MOVED_STR }; 
 	private:
@@ -304,15 +314,22 @@ namespace claujson {
 		String& operator=(const String& other) {
 			if (!is_valid() || !other.is_valid() || this == &other) { return *this; }
 
-			if (type == ValueType::STRING) {
+			if (is_str()) {
 				clear();
 			}
 
-			this->str = new char[other.sz + 1];
-			this->sz = other.sz;
-			memcpy(this->str, other.str, other.sz);
-			this->str[this->sz] = '\0';
-			this->type = other.type;
+			if (other.type == ValueType::STRING) {
+				this->str = new char[other.sz + 1];
+				this->sz = other.sz;
+				memcpy(this->str, other.str, other.sz);
+				this->str[this->sz] = '\0';
+				this->type = other.type;
+			}
+			else if (other.type == ValueType::SHORT_STRING) {
+				memcpy(buf, other.buf, BUF_SIZE);
+				this->buf_sz = other.buf_sz;
+				this->type_ = other.type_;
+			}
 
 			return *this;
 		}
@@ -323,15 +340,17 @@ namespace claujson {
 
 		// not valid String. used like null?
 		explicit String(STR_OPTION opt = STR_OPTION::GENERAL/* not valid str */) : type(opt == STR_OPTION::GENERAL? ValueType::STRING : ValueType::NOT_VALID) {
-			//
+			str = nullptr;
+			sz = 0;
 		}
 		
 		~String() {
 			if (type == ValueType::STRING && str) {
 				delete[] str; // has bug, todo - cancell moved str?
-				str = nullptr;
 			}
-			
+
+			str = nullptr;
+			sz = 0;
 			type = ValueType::NONE;
 		}
 
@@ -340,11 +359,19 @@ namespace claujson {
 			if (is_valid() == false) { not_valid_str; }
 			String obj;
 
-			obj.sz = this->sz;
-			obj.str = new char[this->sz + 1];
+			if (this->type == ValueType::STRING) {
+				obj.sz = this->sz;
+				obj.str = new char[this->sz + 1];
 
-			memcpy(obj.str, this->str, this->sz);
-			obj.str[obj.sz] = '\0';
+				memcpy(obj.str, this->str, this->sz);
+				obj.str[obj.sz] = '\0';
+			}
+			else if (this->type == ValueType::SHORT_STRING) {
+				obj.buf_sz = this->buf_sz;
+				memcpy(obj.buf, this->buf, BUF_SIZE);
+			}
+			
+			obj.type = this->type;
 
 			return obj;
 		}
@@ -359,8 +386,16 @@ namespace claujson {
 
 
 		explicit String(const char* str) {
-			if (str) {
-				this->sz = strlen(str);
+			if (!str) { this->type = ValueType::ERROR; return; }
+			
+			this->sz = strlen(str);
+			if (this->sz < BUF_SIZE) {
+				this->buf_sz = (std::byte)this->sz;
+				memcpy(this->buf, str, (uint64_t)this->buf_sz);
+				this->buf[(uint64_t)this->buf_sz] = '\0';
+				this->type = ValueType::SHORT_STRING;
+			}
+			else {
 				this->str = new char[this->sz + 1];
 				memcpy(this->str, str, this->sz);
 				this->str[this->sz] = '\0';
@@ -369,10 +404,18 @@ namespace claujson {
 		}
 
 		explicit String(const char* str, uint32_t sz) {
-			if (str) {
-				this->sz = sz;
+			if (!str) { this->type = ValueType::ERROR; return; }
+
+			this->sz = sz;
+			if (this->sz < BUF_SIZE) {
+				this->buf_sz = (std::byte)this->sz;
+				memcpy(this->buf, str, (uint64_t)this->buf_sz);
+				this->buf[(uint64_t)this->buf_sz] = '\0';
+				this->type = ValueType::SHORT_STRING;
+			}
+			else {
 				this->str = new char[this->sz + 1];
-				memcpy(this->str, str, sz);
+				memcpy(this->str, str, this->sz);
 				this->str[this->sz] = '\0';
 				this->type = ValueType::STRING;
 			}
@@ -383,15 +426,43 @@ namespace claujson {
 			return type != ValueType::NOT_VALID;
 		}
 
+		bool is_str() const {
+			return type == ValueType::STRING || type == ValueType::SHORT_STRING;
+		}
+
 		char* data() {
-			return str;
+			if (type == ValueType::STRING) {
+				return str;
+			}
+			else if (type == ValueType::SHORT_STRING) {
+				return buf;
+			}
+			else {
+				return nullptr;
+			}
 		}
 
 		const char* data() const {
-			return str;
+			if (type == ValueType::STRING) {
+				return str;
+			}
+			else if (type == ValueType::SHORT_STRING) {
+				return buf;
+			}
+			else {
+				return nullptr;
+			}
 		}
 		uint64_t size() const {
-			return sz;
+			if (type == ValueType::STRING) {
+				return sz;
+			}
+			else if (type == ValueType::SHORT_STRING) {
+				return (uint64_t)buf_sz; // static_cast?
+			}
+			else {
+				return 0;
+			}
 		}
 
 		// remove data.
@@ -406,25 +477,25 @@ namespace claujson {
 
 		bool operator<(const String& other) const {
 			if (!this->is_valid() || !other.is_valid()) { return false; }
-			return StringView(str, sz) < StringView(other.str, other.sz);
+			return StringView(data(), size()) < StringView(other.data(), other.size());
 		}
 		bool operator<(const StringView other) const {
 			if (!this->is_valid()) { return false; }
-			return StringView(str, sz) < other;
+			return StringView(data(), size()) < other;
 		}
 		bool operator==(const StringView other) const {
 			if (!this->is_valid()) { return false; }
-			return StringView(str, sz) == other;
+			return StringView(data(), size()) == other;
 		}
 
 		bool operator==(const String& other) const {
 			if (!this->is_valid() || !other.is_valid()) { return false; }
-			return StringView(str, sz) == StringView(other.str, other.sz);
+			return StringView(data(), size()) == StringView(other.data(), other.size());
 		}
 
 		std::string get_std_string() const {
 			if (!str) { return std::string(); }
-			return std::string(str, sz);
+			return std::string(data(), size());
 		}
 	};
 

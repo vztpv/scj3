@@ -180,6 +180,9 @@ namespace claujson {
 		case claujson::ValueType::STRING:
 			stream << "\"" << (data._str_val.data()) << "\"";
 			break;
+		case ValueType::SHORT_STRING:
+			stream << "\"" << (data._str_val.data()) << "\"";
+			break;
 		case claujson::ValueType::BOOL:
 			stream << data._bool_val;
 			break;
@@ -234,7 +237,7 @@ namespace claujson {
 
 		x._type = this->_type;
 
-		if (x._type == ValueType::STRING) {
+		if (x.is_str()) {
 			x._str_val = (this->_str_val);
 
 		}
@@ -387,7 +390,7 @@ namespace claujson {
 	}
 
 	bool Value::is_str() const {
-		return is_valid() && type() == ValueType::STRING;
+		return is_valid() && (type() == ValueType::STRING || type() == ValueType::SHORT_STRING);
 	}
 
 	int64_t Value::int_val() const {
@@ -1012,11 +1015,11 @@ namespace claujson {
 
 	void Value::clear(bool real) {
 
-		if (real && _type == ValueType::STRING) {
+		if (real && is_str()) {
 			_str_val.clear(); 
 			_type = ValueType::NONE;
 		}
-		else if (_type == ValueType::STRING) {
+		else if (is_str()) {
 			//
 		}
 		else {
@@ -1041,7 +1044,7 @@ namespace claujson {
 			return;
 		}
 
-		if (_type == ValueType::STRING) {
+		if (is_str()) {
 			_str_val.clear();
 		}
 
@@ -1055,7 +1058,7 @@ namespace claujson {
 			return;
 		}
 
-		if (_type == ValueType::STRING) {
+		if (is_str()) {
 			_str_val.clear();
 		}
 		_int_val = x;
@@ -1066,7 +1069,7 @@ namespace claujson {
 		if (!is_valid()) {
 			return;
 		}
-		if (_type == ValueType::STRING) {
+		if (is_str()) {
 			_str_val.clear();
 		}
 		_uint_val = x;
@@ -1077,7 +1080,7 @@ namespace claujson {
 		if (!is_valid()) {
 			return;
 		}
-		if (_type == ValueType::STRING) {
+		if (is_str()) {
 			_str_val.clear();
 		}
 		_float_val = x;
@@ -1094,14 +1097,14 @@ namespace claujson {
 		}
 
 		if (!convert) {
-			if (_type != ValueType::STRING) {
+			if (is_str() == false) {
 				_str_val = String(str, len);
 			}
 			else {
 				_str_val = String(str, len);
 			}
 
-			_type = ValueType::STRING;
+			//_type = ValueType::STRING;
 			return true;
 		}
 
@@ -1152,7 +1155,7 @@ namespace claujson {
 				*x = '\0';
 				uint64_t string_length = uint32_t(x - buf_dest);
 
-				if (_type != ValueType::STRING) {
+				if (is_str() == false) {
 					_str_val = String((char*)buf_dest, string_length);
 				}
 				else {
@@ -1188,7 +1191,7 @@ namespace claujson {
 				*x = '\0';
 				uint64_t string_length = uint32_t(x - buf_dest);
 
-				if (_type != ValueType::STRING) {
+				if (!is_str()) {
 					_str_val = String((char*)buf_dest, string_length);
 				}
 				else {
@@ -1197,13 +1200,13 @@ namespace claujson {
 			}
 		}
 
-		_type = ValueType::STRING;
+		//_type = ValueType::STRING;
 
 		return true;
 	}
 
 	void Value::set_str_in_parse(char* str, uint64_t len) {
-		if (_type != ValueType::STRING) {
+		if (!is_str()) {
 			_str_val = String(str, len);
 		}
 		else {
@@ -1215,7 +1218,7 @@ namespace claujson {
 		if (!is_valid()) {
 			return;
 		}
-		if (_type == ValueType::STRING) {
+		if (is_str()) {
 			_str_val.clear();
 		}
 
@@ -1230,7 +1233,7 @@ namespace claujson {
 		if (!is_valid()) {
 			return;
 		}
-		if (_type == ValueType::STRING) {
+		if (is_str()) {
 			_str_val.clear();
 		}
 
@@ -1242,7 +1245,7 @@ namespace claujson {
 	}
 
 	Value::~Value() {
-		if (_type == ValueType::STRING) {
+		if (is_str()) {
 			//log << warn  << "chk";
 			//_str_val.clear();
 			
@@ -1256,7 +1259,7 @@ namespace claujson {
 			return;
 		}
 
-		if (_type == ValueType::STRING) {
+		if (is_str()) {
 			_str_val = std::move(other._str_val);
 		}
 		else {
@@ -1272,6 +1275,9 @@ namespace claujson {
 			switch (this->_type) {
 			case ValueType::STRING:
 				return (this->_str_val) == (other._str_val);
+				break;
+			case ValueType::SHORT_STRING:
+				return this->_str_val == other._str_val;
 				break;
 			case ValueType::INT:
 				return this->_int_val == other._int_val;
@@ -1335,6 +1341,9 @@ namespace claujson {
 			switch (this->_type) {
 			case ValueType::STRING:
 				return (this->_str_val) < (other._str_val);
+				break;
+			case ValueType::SHORT_STRING:
+				return this->_str_val < other._str_val;
 				break;
 			case ValueType::INT:
 				return this->_int_val < other._int_val;
@@ -1943,7 +1952,7 @@ namespace claujson {
 					ERROR("Error in add_item_type");
 				}
 
-				if (temp.type() != ValueType::STRING) {
+				if (!temp.is_str()) {
 					ERROR("Error in add_item_type, key is not string");
 				}
 
@@ -2563,7 +2572,7 @@ namespace claujson {
 					ERROR("Error in add_item_type");
 				}
 
-				if (temp.type() != ValueType::STRING) {
+				if (temp.is_str() == false) {
 					ERROR("Error in add_item_type, key is not string");
 				}
 
@@ -2669,7 +2678,7 @@ namespace claujson {
 					ERROR("Error in add_user_type");
 				}
 
-				if (temp.type() != ValueType::STRING) {
+				if (temp.is_str() == false) {
 					ERROR("Error in add_item_type, key is not string");
 				}
 
@@ -2723,7 +2732,7 @@ namespace claujson {
 					ERROR("Error in add_user_type");
 				}
 
-				if (temp.type() != ValueType::STRING) {
+				if (temp.is_str() == false) {
 					ERROR("Error in add_item_type, key is not string");
 				}
 
@@ -3970,7 +3979,7 @@ namespace claujson {
 	static   const  char* str_space[] = { "", " " };
 
 	claujson_inline void save_primitive(StrStream& stream, const Value& x) {
-		if (x.type() == ValueType::STRING) {
+		if (x.is_str()) {
 
 			write_string(stream, StringView(x.str_val().data(), x.str_val().size()));
 
@@ -4036,7 +4045,7 @@ namespace claujson {
 				if (ut->get_value_list(i).is_structured()) {
 					auto& x = ut->get_key_list(i);
 
-					if (x.type() == ValueType::STRING) {
+					if (x.is_str()) {
 
 						write_string(stream, StringView(x.str_val().data(), x.str_val().size()));
 
@@ -4069,7 +4078,7 @@ namespace claujson {
 				else {
 					auto& x = ut->get_key_list(i);
 
-					if (x.type() == ValueType::STRING) {
+					if (x.is_str()) {
 						write_string(stream, StringView(x.str_val().data(), x.str_val().size()));
 
 						{
@@ -4148,7 +4157,7 @@ namespace claujson {
 				if (ut->get_value_list(i).is_structured()) {
 					auto& x = ut->get_key_list(i);
 
-					if (x.type() == ValueType::STRING) {
+					if (x.is_str()) {
 
 
 						uint64_t len = x.str_val().size();
@@ -4185,7 +4194,7 @@ namespace claujson {
 				else {
 					auto& x = ut->get_key_list(i);
 
-					if (x.type() == ValueType::STRING) {
+					if (x.is_str()) {
 				
 
 						uint64_t len = x.str_val().size();
@@ -6274,6 +6283,7 @@ namespace claujson {
 		case ValueType::INT:
 		case ValueType::UINT:
 		case ValueType::STRING:
+		case ValueType::SHORT_STRING:
 		{
 			Object* obj = new Object();
 
