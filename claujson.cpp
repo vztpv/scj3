@@ -295,7 +295,7 @@ namespace claujson {
 		}
 	}
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	// C++20~
 	Value::Value(std::u8string_view x) {
 		if (!set_str(reinterpret_cast<const char*>(x.data()), x.size())) {
@@ -437,7 +437,7 @@ namespace claujson {
 		}
 		return route.substr(found_idx + 1, new_idx - found_idx - 1);
 	}
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	claujson_inline std::u8string_view sub_route(std::u8string_view route, uint64_t found_idx, uint64_t new_idx) {
 		if (found_idx + 1 == new_idx) {
 			return u8""sv;
@@ -503,7 +503,7 @@ namespace claujson {
 
 		return false;
 	}
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	bool to_uint_for_json_pointer(std::u8string_view x, uint64_t* val, _simdjson::internal::dom_parser_implementation* simdjson_imple) {
 		auto* buf = x.data();
 		uint64_t idx = 0;
@@ -614,7 +614,7 @@ namespace claujson {
 
 		return true;
 	}
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	bool Value::json_pointerA(std::u8string_view route, std::vector<Value>& vec) {
 		std::vector<std::u8string_view> routeVec;
 		std::vector<Value> routeDataVec;
@@ -1001,7 +1001,7 @@ namespace claujson {
 		return json_pointer(StringView(route.get_string().data(), route.get_string().size()));
 	}
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	Value& Value::json_pointer(std::u8string_view route) {
 		return json_pointer(StringView(reinterpret_cast<const char*>(route.data(), route.size())));
 	}
@@ -1584,7 +1584,7 @@ namespace claujson {
 		return -1;
 	}
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	
 	uint64_t Structured::find(std::u8string_view key) const { // chk (uint64_t)-1 == (maximum)....-> eof?
 		return find(StringView(reinterpret_cast<const char*>(key.data()), key.size()));
@@ -2854,7 +2854,7 @@ namespace claujson {
 
 		return Structured::npos;
 	}
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 
 	uint64_t Value::find(std::u8string_view key) const {
 		return find(StringView(reinterpret_cast<const char*>(key.data(), key.size())));
@@ -6086,7 +6086,7 @@ namespace claujson {
 		return  { true, length };
 	}
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	// C++20~
 	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num) {
 		return parse_str(StringView(reinterpret_cast<const char*>(str.data()), str.size()), ut, thr_num);
@@ -6625,7 +6625,7 @@ namespace claujson {
 
 	}
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	bool is_valid_string_in_json(std::u8string_view x) {
 		return is_valid_string_in_json(StringView((const char*)x.data(), x.size()));
 	}

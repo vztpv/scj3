@@ -564,7 +564,7 @@ namespace claujson {
 
 		explicit Value(StringView x); // C++17
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 		// C++20~
 		explicit Value(std::u8string_view x);
 		explicit Value(const char8_t* x);
@@ -668,7 +668,7 @@ namespace claujson {
 		const Value& json_pointer(const Value& route) const;
 
 		static bool json_pointerA(StringView route, std::vector<Value>& vec);
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 
 		Value& json_pointer(std::u8string_view route);
 
@@ -692,7 +692,7 @@ namespace claujson {
 		uint64_t find(StringView key) const;
 		/// \overload
 		uint64_t find(const Value& key) const; // find without key`s converting?
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 
 		uint64_t find(std::u8string_view key) const;
 
@@ -804,7 +804,7 @@ namespace claujson {
 		uint64_t find(const Value& key) const; // find without key`s converting ( \uxxxx )
 
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 
 		uint64_t find(std::u8string_view key) const;
 
@@ -1091,7 +1091,7 @@ namespace claujson {
 	// parse json str.
 	std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num);
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	// C++20~
 	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num);
 #endif
@@ -1117,7 +1117,7 @@ namespace claujson {
 
 	bool is_valid_string_in_json(StringView x);
 
-#if __cplusplus >= 202002L
+#if __cpp_lib_char8_t
 	std::pair<bool, std::string> convert_to_string_in_json(std::u8string_view x);
 
 	bool is_valid_string_in_json(std::u8string_view x);
