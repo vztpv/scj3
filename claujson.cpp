@@ -1381,7 +1381,7 @@ namespace claujson {
 		return *this;
 	}
 
-	//claujson_inline 
+	claujson_inline 
 	bool ConvertString(claujson::Value& data, char* text, uint64_t len) {
 		uint8_t sbuf[1024 + 1 + _simdjson::_SIMDJSON_PADDING];
 		std::unique_ptr<uint8_t[]> ubuf;
@@ -1456,7 +1456,7 @@ namespace claujson {
 		return true;
 	}
 
-	//claujson_inline
+	claujson_inline
 		claujson::Value& Convert(claujson::Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
 		char* buf, uint64_t token_idx, bool& err) {
 
@@ -3416,6 +3416,7 @@ namespace claujson {
 
 				// token_arr_len >= 1
 
+				uint64_t left_no = token_arr_start;
 
 				class Structured* global = _global.get();
 
@@ -3458,8 +3459,8 @@ namespace claujson {
 						nowUT = pTemp;
 
 						
-						if (count_vec[token_arr_start + i] > 0) {
-							nowUT->reserve_data_list(count_vec[token_arr_start + i]);
+						if (count_vec[left_no] > 0) {
+							nowUT->reserve_data_list(count_vec[left_no++]);
 						}
 					}
 					// Right 2
@@ -4603,14 +4604,14 @@ namespace claujson {
 		std::vector<int> is_array;
 		std::vector<int> is_virtual_array;
 		std::vector<uint64_t> _stack; _stack.reserve(1024);
-		uint64_t virtual_count = 0;
-		uint64_t virtual_idx = 0;
+		//uint64_t virtual_count = 0;
+		//uint64_t virtual_idx = 0;
 
 		is_array.reserve(1024);
 		is_virtual_array.reserve(1024);
 
 		int state = 0;
-
+		uint64_t no = start;
 
 		if (start > last) {
 			return false;
@@ -4665,10 +4666,10 @@ namespace claujson {
 			switch (value) { // start == 0
 			case '{': { if (buf[simdjson_imple->structural_indexes[idx]] == '}') {
 				++idx; log << warn << ("empty object"); break;
-			} *_start_state = 0; _stack.push_back(idx - 1); goto object_begin;  }
+			} *_start_state = 0; _stack.push_back(no++); goto object_begin;  }
 			case '[': { if (buf[simdjson_imple->structural_indexes[idx]] == ']') {
 				++idx; log << warn << ("empty array"); break;
-			} *_start_state = 4;  _stack.push_back(idx - 1); goto array_begin; }
+			} *_start_state = 4;  _stack.push_back(no++); goto array_begin; }
 
 			default: break;
 			}
@@ -4723,7 +4724,7 @@ namespace claujson {
 			is_array.push_back(0);
 		}
 
-		_stack.push_back(idx - 1); 
+		_stack.push_back(no++); 
 		//dom_parser.is_array[depth] = false;
 		is_array[depth - 1] = 0;
 		//SIMDJSON_TRY(visitor.visit_object_start(*this));
@@ -4792,10 +4793,10 @@ namespace claujson {
 			count[_stack.back()]++; 
 		}
 		else {
-			if (virtual_count == 0) {
-				virtual_idx = idx - 1;
-			}
-			virtual_count++;
+			//if (virtual_count == 0) {
+			//	virtual_idx = idx - 1;
+			//}
+			//virtual_count++;
 		}
 
 		{
@@ -4835,16 +4836,16 @@ namespace claujson {
 		{
 			state = 3;
 			if (depth > 0) {
-				depth--; is_array.pop_back(); _stack.pop_back(); if (_stack.empty()) { virtual_count = 0; }
+				depth--; is_array.pop_back(); _stack.pop_back(); // if (_stack.empty()) { virtual_count = 0; }
 			}
 			else {
 				// depth <= 0.. virtual array or virtual object..
 				switch (buf[simdjson_imple->structural_indexes[idx - 1]]) {
 				case ']': 
-					is_virtual_array.push_back(1); count[virtual_idx] = virtual_count; virtual_count = 0;
+					is_virtual_array.push_back(1); //count[virtual_idx] = virtual_count; virtual_count = 0;
 					break;
 				case '}':
-					is_virtual_array.push_back(0); count[virtual_idx] = virtual_count;  virtual_count = 0;
+					is_virtual_array.push_back(0); //count[virtual_idx] = virtual_count;  virtual_count = 0;
 					break;
 				}
 			}
@@ -4910,7 +4911,7 @@ namespace claujson {
 		if (is_array.size() < depth) { is_array.push_back(1); }
 		is_array[depth - 1] = 1;
 
-		_stack.push_back(idx - 1);
+		_stack.push_back(no++);
 
 		//SIMDJSON_TRY(visitor.visit_array_start(*this));
 	//	SIMDJSON_TRY(visitor.increment_count(*this));
@@ -4960,10 +4961,10 @@ namespace claujson {
 			count[_stack.back()]++;
 		}
 		else {
-			if (virtual_count == 0) {
-				virtual_idx = idx - 1;
-			}
-			virtual_count++;
+			//if (virtual_count == 0) {
+			//	virtual_idx = idx - 1;
+			//}
+			//virtual_count++;
 		}
 
 		{
