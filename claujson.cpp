@@ -3458,10 +3458,8 @@ namespace claujson {
 						/// initial new nestedUT.
 						nowUT = pTemp;
 
+						nowUT->reserve_data_list(count_vec[left_no++]);
 						
-						if (count_vec[left_no] > 0) {
-							nowUT->reserve_data_list(count_vec[left_no++]);
-						}
 					}
 					// Right 2
 					else if (type == _simdjson::internal::tape_type::END_OBJECT ||
