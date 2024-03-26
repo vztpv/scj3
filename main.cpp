@@ -58,12 +58,12 @@ void json_pointer_test() {
 		   "c%d" : 2,
 		   "e^f" : 3,
 		   "g|h" : 4,
-		   "i\\\\j" : 5,
+		   "i\\j" : 5,
 		   "k\"l" : 6,
 		   " " : 7,
 		   "m~n" : 8
 		})"sv;
-
+	std::cout << test << "\n";
 	auto test2 = u8R"({
 		   "foo": ["bar2", "baz"] ,
 		   "" : 0,
@@ -71,7 +71,7 @@ void json_pointer_test() {
 		   "c%d" : 2,
 		   "e^f" : 3,
 		   "g|h" : 45,
-		   "i\\\\j" : 5,
+		   "i\\j" : 5,
 		   "k\"l" : 6,
 		   " " : 7,
 		   "m~n" : 8,
@@ -148,11 +148,11 @@ void json_pointer_test() {
 		std::cout << y << " ";
 	}
 	{
-		Value& y = x.json_pointer(R"(/i\\\\j)"sv); // chk R
+		Value& y = x.json_pointer(u8R"(/i\\j)"sv); // chk R
 		std::cout << y << " ";
 	}
 	{
-		Value& y = x.json_pointer(R"(/k\"l)"sv); // chk R
+		Value& y = x.json_pointer(u8R"(/k\"l)"sv); // chk R
 		std::cout << y << " ";
 	}
 	{
@@ -358,13 +358,13 @@ int main(int argc, char* argv[])
 		//claujson::log.info(true);
 		//claujson::log.warn(true);
 
-		//utf_8_test();
+		utf_8_test();
 
 		key_dup_test();
 
-		//json_pointer_test();
+		json_pointer_test();
 
-		//str_test();
+		str_test();
 
 		for (int i = 0; i < 10; ++i) {
 			claujson::Value j;

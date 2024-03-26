@@ -757,6 +757,8 @@ namespace claujson {
 
 	// race condition..? not support multi-thread  access...
 	Value& Value::json_pointer(StringView route) {
+		log << warn << route << "\n";
+
 		static Value unvalid_data(nullptr, false);
 
 		if (is_structured() == false) {
@@ -769,10 +771,8 @@ namespace claujson {
 		}
 
 		std::vector<StringView> routeVec;
-		std::vector<Value> routeDataVec;
 
 		routeVec.reserve(route.size());
-		routeDataVec.reserve(route.size());
 
 		if (route[0] != '/') {
 			return unvalid_data;
@@ -798,10 +798,12 @@ namespace claujson {
 		// 3. using simdjson util, check valid for string in routeVec.
 
 		for (auto& x : routeVec) {
-			Value temp(x);
+			//Value temp(x);
 
-			if (temp.is_valid()) {
-				routeDataVec.push_back(std::move(temp));
+			if (claujson::is_valid_string_in_json(x)) {
+				
+			//}
+			//if (temp.is_valid()) {
 			}
 			else {
 				return unvalid_data;
@@ -811,11 +813,11 @@ namespace claujson {
 		// 4. find Data with route. and return
 		Value* data = this;
 
-		for (uint64_t i = 0; i < routeDataVec.size(); ++i) {
-			Value& x = routeDataVec[i];
+		for (uint64_t i = 0; i < routeVec.size(); ++i) {
+			auto& x = routeVec[i];
 
 			if (data->is_primitive()) {
-				if (i == routeDataVec.size() - 1) {
+				if (i == routeVec.size() - 1) {
 					return *data;
 				}
 				else {
@@ -828,7 +830,7 @@ namespace claujson {
 			if (j->is_array()) { // array -> with idx
 				uint64_t idx = 0;
 
-				bool chk = to_uint_for_json_pointer(StringView(x.str_val().data(), x.str_val().size()), &idx, simdjson_imple);
+				bool chk = to_uint_for_json_pointer(x, &idx, simdjson_imple);
 
 				if (!chk) {
 					return unvalid_data;
@@ -837,7 +839,7 @@ namespace claujson {
 				data = &j->get_value_list(idx);
 			}
 			else if (j->is_object()) { // object -> with key
-				StringView str(x.str_val().data(), x.str_val().size());
+				StringView str(x);
 				std::string result;
 
 				result.reserve(str.size());
@@ -867,7 +869,7 @@ namespace claujson {
 					}
 				}
 
-				data = &j->operator[](result);
+				data = &j->operator[](result); // in inner, run conversion... StringView -> Value
 			}
 		}
 
@@ -886,10 +888,8 @@ namespace claujson {
 		}
 
 		std::vector<StringView> routeVec;
-		std::vector<Value> routeDataVec;
 
 		routeVec.reserve(route.size());
-		routeDataVec.reserve(route.size());
 
 		if (route[0] != '/') {
 			return unvalid_data;
@@ -915,10 +915,12 @@ namespace claujson {
 		// 3. using simdjson util, check valid for string in routeVec.
 
 		for (auto& x : routeVec) {
-			Value temp(x);
+			//Value temp(x);
 
-			if (temp.is_valid()) {
-				routeDataVec.push_back(std::move(temp));
+			if (claujson::is_valid_string_in_json(x)) {
+
+				//}
+				//if (temp.is_valid()) {
 			}
 			else {
 				return unvalid_data;
@@ -928,11 +930,11 @@ namespace claujson {
 		// 4. find Data with route. and return
 		const Value* data = this;
 
-		for (uint64_t i = 0; i < routeDataVec.size(); ++i) {
-			Value& x = routeDataVec[i];
+		for (uint64_t i = 0; i < routeVec.size(); ++i) {
+			auto& x = routeVec[i];
 
 			if (data->is_primitive()) {
-				if (i == routeDataVec.size() - 1) {
+				if (i == routeVec.size() - 1) {
 					return *data;
 				}
 				else {
@@ -947,7 +949,7 @@ namespace claujson {
 				//bool found = false;
 				//uint64_t arr_size = j->get_data_size();
 
-				bool chk = to_uint_for_json_pointer(StringView(x.str_val().data(), x.str_val().size()), &idx, simdjson_imple);
+				bool chk = to_uint_for_json_pointer(x, &idx, simdjson_imple);
 
 				if (!chk) {
 					return unvalid_data;
@@ -956,7 +958,7 @@ namespace claujson {
 				data = &j->get_value_list(idx);
 			}
 			else if (j->is_object()) { // object -> with key
-				StringView str(x.str_val().data(), x.str_val().size());
+				StringView str(x);
 				std::string result;
 
 				result.reserve(str.size());
@@ -986,7 +988,7 @@ namespace claujson {
 					}
 				}
 
-				data = &((*j)[result]); // chk at vs []
+				data = &((*j)[result]); // in inner, run conversion... StringView -> Value
 			}
 		}
 
