@@ -360,13 +360,13 @@ int main(int argc, char* argv[])
 
 		//utf_8_test();
 
-		//key_dup_test();
+		key_dup_test();
 
 		//json_pointer_test();
 
 		//str_test();
 
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < 10; ++i) {
 			claujson::Value j;
 			bool ok;
 			//try
@@ -412,7 +412,7 @@ int main(int argc, char* argv[])
 				//debug test
 				//std::cout << j << "\n";
 				//claujson::clean(j);
-
+				//continue;
 				//return 0;
 				//
 				// 

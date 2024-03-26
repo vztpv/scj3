@@ -1722,7 +1722,7 @@ namespace claujson {
 		std::stable_sort(copy_.begin(), copy_.end(), comp);
 
 		for (uint64_t i = 1; i < copy_.size(); ++i) {
-			if (obj_data[copy_[i]] == obj_data[copy_[i - 1]]) {
+			if (obj_data[copy_[i]].first == obj_data[copy_[i - 1]].first) {
 				has_dup = true;
 				if (idx) {
 					*idx = copy_[i - 1]; //
@@ -1956,7 +1956,7 @@ namespace claujson {
 					ERROR("Error in add_item_type, key is not string");
 				}
 
-				obj_data.push_back({ std::move(temp), std::move(temp2) });
+				obj_data.emplace_back(std::move(temp), std::move(temp2));
 			}
 	}
 
@@ -2219,7 +2219,7 @@ namespace claujson {
 
 					ERROR("Error in add_item_type");
 				}
-				arr_vec.push_back(std::move(temp2));
+				arr_vec.emplace_back(std::move(temp2));
 			}
 	}
 
@@ -2691,7 +2691,7 @@ namespace claujson {
 					json = new Array();
 				}
 
-				obj_data.push_back({ std::move(temp), Value(json) });
+				obj_data.emplace_back(std::move(temp), Value(json));
 
 				json->set_parent(this);
 			}
