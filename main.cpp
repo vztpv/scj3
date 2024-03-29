@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
 			bool ok;
 			//try
 			{	
-				if (0) {
+				if (1) {
 					auto a = std::chrono::steady_clock::now();
 					
 						_simdjson::dom::parser test;
@@ -661,4 +661,17 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+/* result.
+simdjson 236ms
 
+[INFO] simdjson - stage1 start
+[INFO] 83ms
+[INFO] valid1 0ms
+[INFO] test time 7ms
+[INFO] 7ms
+[INFO] parse1 42ms
+[INFO] test6[INFO] parse2 4ms
+[INFO] chk 0ms
+[INFO] 46ms
+[INFO] 138ms
+total 139ms */
