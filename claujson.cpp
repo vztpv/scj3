@@ -39,6 +39,7 @@ bool operator==(const std::string& str, claujson::StringView sv) {
 #endif
 
 namespace claujson {
+	// todo? make Document class? like simdjson?
 
 	Value Structured::data_null{ nullptr, false }; // valid is false..
 	uint64_t Structured::npos = -1; // 
@@ -178,9 +179,7 @@ namespace claujson {
 			stream << data._float_val;
 			break;
 		case claujson::ValueType::STRING:
-			stream << "\"" << (data._str_val.data()) << "\"";
-			break;
-		case ValueType::SHORT_STRING:
+		case claujson::ValueType::SHORT_STRING:
 			stream << "\"" << (data._str_val.data()) << "\"";
 			break;
 		case claujson::ValueType::BOOL:
@@ -445,7 +444,7 @@ namespace claujson {
 		return route.substr(found_idx + 1, new_idx - found_idx - 1);
 	}
 #endif
-	bool to_uint_for_json_pointer(StringView x, uint64_t* val, _simdjson::internal::dom_parser_implementation* simdjson_imple) {
+	claujson_inline bool to_uint_for_json_pointer(StringView x, uint64_t* val, _simdjson::internal::dom_parser_implementation* simdjson_imple) {
 		const char* buf = x.data();
 		uint64_t idx = 0;
 		uint64_t idx2 = x.size();
@@ -563,7 +562,7 @@ namespace claujson {
 		return false;
 	}
 #endif
-	bool Value::json_pointerA(StringView route, std::vector<Value>& vec) {
+	bool Value::json_pointerA(StringView route, std::vector<StringView>& vec) {
 		std::vector<StringView> routeVec;
 		std::vector<Value> routeDataVec;
 
@@ -599,77 +598,29 @@ namespace claujson {
 		// 2. using simdjson util, check utf-8 for string in routeVec.
 		// 3. using simdjson util, check valid for string in routeVec.
 
-		for (auto& x : routeVec) {
-			Value temp(x); // do 2, 3.
+		//for (auto& x : routeVec) {
+			//Value temp(x); // do 2, 3.
 
-			if (temp.is_valid()) {
-				routeDataVec.push_back(std::move(temp));
-			}
-			else {
-				return false;
-			}
-		}
+		//	if (temp.is_valid()) {
+		//		routeDataVec.push_back(std::move(temp));
+		//	}
+		//	else {
+		//		return false;
+		//	}
+		//}
 
-		vec = std::move(routeDataVec);
+		vec = std::move(routeVec);
 
 		return true;
 	}
 #if __cpp_lib_char8_t
-	bool Value::json_pointerA(std::u8string_view route, std::vector<Value>& vec) {
-		std::vector<std::u8string_view> routeVec;
-		std::vector<Value> routeDataVec;
-
-
-		if (route.empty()) {
-			vec.clear();
-			return true;
-		}
-
-		routeVec.reserve(route.size());
-		routeDataVec.reserve(route.size());
-
-		if (route[0] != '/') {
-			return false;
-		}
-
-		// 1. route -> split with '/'  to routeVec.
-		uint64_t found_idx = 0; // first found_idx is 0, found '/'
-
-		while (found_idx != StringView::npos) {
-			uint64_t new_idx = route.find('/', found_idx + 1);
-
-			if (new_idx == StringView::npos) {
-				routeVec.push_back(sub_route(route, found_idx, route.size()));
-				break;
-			}
-			// else {... }
-			routeVec.push_back(sub_route(route, found_idx, new_idx));
-
-			found_idx = new_idx;
-		}
-
-		// 2. using simdjson util, check utf-8 for string in routeVec.
-		// 3. using simdjson util, check valid for string in routeVec.
-
-		for (auto& x : routeVec) {
-			Value temp(x); // do 2, 3.
-
-			if (temp.is_valid()) {
-				routeDataVec.push_back(std::move(temp));
-			}
-			else {
-				return false;
-			}
-		}
-
-		vec = std::move(routeDataVec);
-
-		return true;
+	bool Value::json_pointerA(std::u8string_view route, std::vector<StringView>& vec) {
+		return json_pointerA(StringView(reinterpret_cast<const char*>(route.data()), route.size()), vec);
 	}
 #endif
 
 
-	Value& Value::json_pointerB(const std::vector<Value>& routeDataVec) { // option-> StringView route?
+	Value& Value::json_pointerB(const std::vector<StringView>& routeVec) { // option-> StringView route?
 		static Value unvalid_data(nullptr, false);
 
 		if (is_structured() == false) {
@@ -677,18 +628,18 @@ namespace claujson {
 		}
 
 		// the whole document.
-		if (routeDataVec.empty()) {
+		if (routeVec.empty()) {
 			return *this;
 		}
 
 		// 4. find Data with route. and return
 		Value* data = this;
 
-		for (uint64_t i = 0; i < routeDataVec.size(); ++i) {
-			const Value& x = routeDataVec[i];
+		for (uint64_t i = 0; i < routeVec.size(); ++i) {
+			const StringView x = routeVec[i];
 
 			if (data->is_primitive()) {
-				if (i == routeDataVec.size() - 1) {
+				if (i == routeVec.size() - 1) {
 					return *data;
 				}
 				else {
@@ -703,7 +654,7 @@ namespace claujson {
 				//bool found = false;
 				//uint64_t arr_size = j->get_data_size();
 
-				bool chk = to_uint_for_json_pointer(StringView(x.str_val().data(), x.str_val().size()), &idx, simdjson_imple);
+				bool chk = to_uint_for_json_pointer(x, &idx, simdjson_imple);
 
 				if (!chk) {
 					return unvalid_data;
@@ -712,7 +663,7 @@ namespace claujson {
 				data = &j->get_value_list(idx);
 			}
 			else if (j->is_object()) { // object -> with key
-				StringView str(x._str_val.data(), x._str_val.size());
+				StringView str(x);
 				std::string result(str.data(), str.size());
 
 				uint64_t count = 0;
@@ -1015,9 +966,9 @@ namespace claujson {
 #endif
 
 
-	void Value::clear(bool real) {
+	void Value::clear(bool remove_str) {
 
-		if (real && is_str()) {
+		if (remove_str && is_str()) {
 			_str_val.clear(); 
 			_type = ValueType::NONE;
 		}
@@ -1026,7 +977,7 @@ namespace claujson {
 		}
 		else {
 			_int_val = 0;
-
+			temp = 0;
 			_type = ValueType::NONE;
 		}
 	}
@@ -1046,7 +997,7 @@ namespace claujson {
 			return;
 		}
 
-		if (is_str()) {
+		if (this->is_str()) {
 			_str_val.clear();
 		}
 
@@ -1099,14 +1050,7 @@ namespace claujson {
 		}
 
 		if (!convert) {
-			if (is_str() == false) {
-				_str_val = String(str, len);
-			}
-			else {
-				_str_val = String(str, len);
-			}
-
-			//_type = ValueType::STRING;
+			_str_val = String(str, len);
 			return true;
 		}
 
@@ -1208,12 +1152,7 @@ namespace claujson {
 	}
 
 	void Value::set_str_in_parse(char* str, uint64_t len) {
-		if (!is_str()) {
-			_str_val = String(str, len);
-		}
-		else {
-			_str_val = String(str, len);
-		}
+		_str_val = String(str, len);
 	}
 
 	void Value::set_bool(bool x) {
@@ -1248,25 +1187,23 @@ namespace claujson {
 
 	Value::~Value() {
 		if (is_str()) {
-			//log << warn  << "chk";
-			//_str_val.clear();
-			
+			_str_val.clear();
 		}
 	}
 
 	Value::Value(Value&& other) noexcept
-		: _type(other._type)
+		: _type(ValueType::NONE)
 	{
 		if (!other.is_valid()) {
 			return;
 		}
 
-		if (is_str()) {
+		if (other.is_str()) {
 			_str_val = std::move(other._str_val);
 		}
 		else {
 			std::swap(_int_val, other._int_val);
-			other._type = ValueType::NONE;
+			std::swap(this->_type, other._type);
 		}
 	}
 
@@ -1276,8 +1213,6 @@ namespace claujson {
 		if (this->_type == other._type) {
 			switch (this->_type) {
 			case ValueType::STRING:
-				return (this->_str_val) == (other._str_val);
-				break;
 			case ValueType::SHORT_STRING:
 				return this->_str_val == other._str_val;
 				break;
@@ -1342,8 +1277,6 @@ namespace claujson {
 		if (this->_type == other._type) {
 			switch (this->_type) {
 			case ValueType::STRING:
-				return (this->_str_val) < (other._str_val);
-				break;
 			case ValueType::SHORT_STRING:
 				return this->_str_val < other._str_val;
 				break;
@@ -1377,6 +1310,7 @@ namespace claujson {
 
 		std::swap(this->_type, other._type);
 		std::swap(this->_int_val, other._int_val);
+		std::swap(this->temp, other.temp);
 
 		clean(other);
 
@@ -1807,7 +1741,6 @@ namespace claujson {
 
 	void Object::reserve_data_list(uint64_t len) {
 		obj_data.reserve(len);
-		//obj_data.reserve(len);
 	}
 
 	bool Object::add_object_element(Value key, Value val) {
@@ -2910,45 +2843,11 @@ namespace claujson {
 		return empty_value;
 	}
 
-	// todo - as_array, as_object.
-// as_array
-// if (valid && ((Json*)_array_or_object_ptr)->is_array()) { return ~~ } return 
-
-	unsigned char __type_arr[256] = {
-59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 34  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 44  , 100  , 59  , 59  , 100  , 100
-, 100  , 100  , 100  , 100  , 100  , 100  , 100  , 100  , 58  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 91  , 59  , 93  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 102  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 110  , 59  , 59  , 59  , 59  , 59  , 116  , 59  , 59  , 59
-, 59  , 59  , 59  , 123  , 59  , 125  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59  , 59
-, 59  , 59  , 59  , 59  , 59  , 59
-	};
-	
 	// not exact type! for int, uint, float. ( int, uint, float -> float )
 	claujson_inline _simdjson::internal::tape_type get_type(unsigned char x) {
 		
 		return _simdjson::internal::tape_type(x);
 		
-		//return (_simdjson::internal::tape_type)__type_arr[x]; // more fast version..
 		/*
 		switch (x) {
 		case '-':

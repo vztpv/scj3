@@ -296,7 +296,7 @@ namespace claujson {
 			struct {
 				char* str;
 				uint32_t sz;
-				ValueType type; // STRING or NOT_VALID
+				ValueType type; // STRING or SHORT_STRING or NOT_VALID
 			};
 			struct {
 				char buf[BUF_SIZE];
@@ -304,17 +304,12 @@ namespace claujson {
 				ValueType type_;
 			};
 		};
-
-	public:
-		enum class STR_OPTION { GENERAL, NOT_VALID_STR, MOVED_STR }; 
-	private:
-		static const String not_valid_str;
 	
 	public:
 		String& operator=(const String& other) {
 			if (!is_valid() || !other.is_valid() || this == &other) { return *this; }
 
-			if (is_str()) {
+			if (this->is_str()) {
 				clear();
 			}
 
@@ -334,19 +329,37 @@ namespace claujson {
 			return *this;
 		}
 	protected:
-		String(const String&) = default;
+		String(const String& other) {
+			if (other.type == ValueType::STRING) {
+				this->str = new char[other.sz + 1];
+				this->sz = other.sz;
+				memcpy(this->str, other.str, other.sz);
+				this->str[this->sz] = '\0';
+				this->type = other.type;
+			}
+			else if (other.type == ValueType::SHORT_STRING) {
+				memcpy(buf, other.buf, BUF_SIZE);
+				this->buf_sz = other.buf_sz;
+				this->type_ = other.type_;
+			}
+		}
+		String(String&& other) noexcept {
+			this->type = ValueType::NONE;
+			std::swap(this->str, other.str);
+			std::swap(this->sz, other.sz);
+			std::swap(this->type, other.type);
+		}
 
 	public:
 
-		// not valid String. used like null?
-		explicit String(STR_OPTION opt = STR_OPTION::GENERAL/* not valid str */) : type(opt == STR_OPTION::GENERAL? ValueType::STRING : ValueType::NOT_VALID) {
+		explicit String() : type(ValueType::NONE) {
 			str = nullptr;
 			sz = 0;
 		}
 		
 		~String() {
 			if (type == ValueType::STRING && str) {
-				delete[] str; // has bug, todo - cancell moved str?
+				delete[] str; 
 			}
 
 			str = nullptr;
@@ -356,7 +369,7 @@ namespace claujson {
 
 
 		String clone() const {
-			if (is_valid() == false) { not_valid_str; }
+			if (is_valid() == false) { String temp; temp.type = ValueType::NOT_VALID; return temp; }
 			String obj;
 
 			if (this->type == ValueType::STRING) {
@@ -391,7 +404,7 @@ namespace claujson {
 			this->sz = strlen(str);
 			if (this->sz < BUF_SIZE) {
 				this->buf_sz = (uint8_t)this->sz;
-				memcpy(this->buf, str, (uint64_t)this->buf_sz);
+				memcpy(this->buf, str, static_cast<uint64_t>(this->buf_sz));
 				this->buf[(uint64_t)this->buf_sz] = '\0';
 				this->type = ValueType::SHORT_STRING;
 			}
@@ -409,7 +422,7 @@ namespace claujson {
 			this->sz = sz;
 			if (this->sz < BUF_SIZE) {
 				this->buf_sz = (uint8_t)this->sz;
-				memcpy(this->buf, str, (uint64_t)this->buf_sz);
+				memcpy(this->buf, str, static_cast<uint64_t>(this->buf_sz));
 				this->buf[(uint64_t)this->buf_sz] = '\0';
 				this->type = ValueType::SHORT_STRING;
 			}
@@ -423,7 +436,7 @@ namespace claujson {
 
 	public:
 		bool is_valid() const {
-			return type != ValueType::NOT_VALID;
+			return type != ValueType::NOT_VALID && type != ValueType::ERROR;
 		}
 
 		bool is_str() const {
@@ -458,7 +471,7 @@ namespace claujson {
 				return sz;
 			}
 			else if (type == ValueType::SHORT_STRING) {
-				return (uint64_t)buf_sz; // static_cast?
+				return static_cast<uint64_t>(buf_sz); 
 			}
 			else {
 				return 0;
@@ -493,13 +506,12 @@ namespace claujson {
 			return StringView(data(), size()) == StringView(other.data(), other.size());
 		}
 
-		std::string get_std_string() const {
-			if (!str) { return std::string(); }
+		std::string get_std_string(bool& fail) const {
+			if (!is_str()) { fail = true; return std::string(); }
+			fail = false;
 			return std::string(data(), size());
 		}
 	};
-
-	const String not_valid_str(String::STR_OPTION::NOT_VALID_STR);
 
 
 	class Value {
@@ -519,6 +531,7 @@ namespace claujson {
 
 	private:
 
+		// do not change!
 		union {
 			struct {
 				union {
@@ -534,7 +547,7 @@ namespace claujson {
 			String _str_val;
 		};
 
-
+		/// before version..
 		//union {
 		//	int64_t _int_val = 0;
 		//	uint64_t _uint_val;
@@ -543,7 +556,6 @@ namespace claujson {
 		//	Structured* _array_or_object_ptr;
 		//	bool _bool_val;
 		//};
-
 		//ValueType _type = ValueType::NONE; 
 		//bool _valid = true;
 
@@ -562,7 +574,7 @@ namespace claujson {
 		explicit Value(uint64_t x);
 		explicit Value(double x);
 
-		explicit Value(StringView x); // C++17
+		explicit Value(StringView x); 
 
 #if __cpp_lib_char8_t
 		// C++20~
@@ -603,8 +615,6 @@ namespace claujson {
 		bool is_bool() const;
 
 		bool is_str() const;
-
-		//bool is_ptr() const; // check is_structured()
 
 		int64_t get_integer() const {
 			return int_val();
@@ -658,8 +668,6 @@ namespace claujson {
 			return _array_or_object_ptr;
 		}
 
-	//	Structured* ptr_val() const;
-
 		Value& json_pointer(StringView route);
 
 		const Value& json_pointer(StringView route) const;
@@ -667,7 +675,7 @@ namespace claujson {
 		Value& json_pointer(const Value& route);
 		const Value& json_pointer(const Value& route) const;
 
-		static bool json_pointerA(StringView route, std::vector<Value>& vec);
+		static bool json_pointerA(StringView route, std::vector<StringView>& vec);
 #if __cpp_lib_char8_t
 
 		Value& json_pointer(std::u8string_view route);
@@ -675,10 +683,10 @@ namespace claujson {
 		const Value& json_pointer(std::u8string_view route) const;
 
 
-		static bool json_pointerA(std::u8string_view route, std::vector<Value>& vec);
+		static bool json_pointerA(std::u8string_view route, std::vector<StringView>& vec);
 #endif
 
-		Value& json_pointerB(const std::vector<Value>& routeDataVec);
+		Value& json_pointerB(const std::vector<StringView>& routeDataVec);
 
 		Array* as_array();
 		Object* as_object();
@@ -696,24 +704,22 @@ namespace claujson {
 
 		uint64_t find(std::u8string_view key) const;
 
-		// without convert
 		Value& operator[](std::u8string_view key); // if not exist key, then nothing.
 		const Value& operator[](std::u8string_view key) const; // if not exist key, then nothing.
 #endif
-
-		// at vs [] (at <- convert key to key_in_json.) ([] <- do not convert.)
-		Value& operator[](StringView key); // if not exist key, then nothing.
+		// StringView -> need utf8, unicode check..
+		Value& operator[](StringView key); // if not exist key, then returns not-valid Value.
 		const Value& operator[](StringView key) const; // if not exist key, then nothing.
 
+		// Value (type is String or Short_String) -> no need utf8, unicode check.
 		Value& operator[](const Value& key); // if not exist key, then nothing.
 		const Value& operator[](const Value& key) const; // if not exist key, then nothing.
 
 
 		Value& operator[](uint64_t idx);
-
 		const Value& operator[](uint64_t idx) const;
 	public:
-		void clear(bool real);
+		void clear(bool remove_str); 
 
 		String& get_string() {
 			return str_val();
@@ -1111,7 +1117,7 @@ namespace claujson {
 
 	void init(int thr_num); // call first, before use claujson..
 
-	void clean(Value& x);
+	void clean(Value& x); //
 
 	std::pair<bool, std::string> convert_to_string_in_json(StringView x);
 

@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
 	//	<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
 
 	if (argc <= 1) {
-		std::cout << "[program name] [json file name] (thr_num) \n";
+		std::cout << "[program name] [json file name] (number of thread) \n";
 		return 2;
 	}
 
@@ -371,12 +371,12 @@ int main(int argc, char* argv[])
 			bool ok;
 			//try
 			{	
-				if (1) {
+				if (0) {
 					auto a = std::chrono::steady_clock::now();
-
-					_simdjson::dom::parser test;
 					
-					auto x = test.load(argv[1]);
+						_simdjson::dom::parser test;
+
+						auto x = test.load(argv[1]);
 					
 					auto b = std::chrono::steady_clock::now();
 					auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
@@ -411,8 +411,8 @@ int main(int argc, char* argv[])
 			
 				//debug test
 				//std::cout << j << "\n";
-				//claujson::clean(j);
-				//continue;
+				///claujson::clean(j);
+				///continue;
 				//return 0;
 				//
 				// 
@@ -464,7 +464,7 @@ int main(int argc, char* argv[])
 				int counter = 0;
 				ok = x.first;
 
-				std::vector<claujson::Value> vec;
+				std::vector<StringView> vec;
 
 				// json_pointer, json_pointerA <- u8string_view?
 
