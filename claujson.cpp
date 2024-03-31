@@ -2643,7 +2643,6 @@ namespace claujson {
 				json = new Array();
 			}
 
-
 			arr_vec.push_back(Value(json));
 
 
@@ -3310,11 +3309,12 @@ namespace claujson {
 			class Structured** next, uint64_t* count_vec, int* err, uint64_t no)
 		{
 			try {
+				 
 				if (token_arr_len <= 0) {
 					*next = nullptr;
 					return false;
 				}
-
+				
 				// token_arr_len >= 1
 
 				uint64_t left_no = token_arr_start;
@@ -3339,7 +3339,6 @@ namespace claujson {
 					if (type == _simdjson::internal::tape_type::START_OBJECT ||
 						type == _simdjson::internal::tape_type::START_ARRAY) { // object start, array start
 
-
 						state = 0;
 
 						if (key.is_key) {
@@ -3358,7 +3357,6 @@ namespace claujson {
 
 						/// initial new nestedUT.
 						nowUT = pTemp;
-
 						nowUT->reserve_data_list(count_vec[left_no++]);
 						
 					}
@@ -3379,6 +3377,7 @@ namespace claujson {
 							}
 
 							uint64_t len = nowUT->get_data_size();
+							ut->reserve_data_list(len);
 
 							for (uint64_t i = 0; i < len; ++i) {
 								if (nowUT->get_value_list(i).is_structured()) {
@@ -4564,11 +4563,15 @@ namespace claujson {
 
 			switch (value) { // start == 0
 			case '{': { if (buf[simdjson_imple->structural_indexes[idx]] == '}') {
-				++idx; log << warn << ("empty object"); break;
-			} *_start_state = 0; _stack.push_back(no++); goto object_begin;  }
+				++idx; log << warn << ("empty object"); count[no++] = 0;
+				break;
+			} *_start_state = 0;  goto object_begin;
+			}
 			case '[': { if (buf[simdjson_imple->structural_indexes[idx]] == ']') {
-				++idx; log << warn << ("empty array"); break;
-			} *_start_state = 4;  _stack.push_back(no++); goto array_begin; }
+				++idx; log << warn << ("empty array"); count[no++] = 0; 
+				break;
+			} *_start_state = 4;  goto array_begin;
+			}
 
 			default: break;
 			}
@@ -4658,8 +4661,16 @@ namespace claujson {
 		{
 			auto value = buf[simdjson_imple->structural_indexes[idx++]];
 			switch (value) {
-			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
-			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
+			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') {
+				++idx; count[no++] = 0;
+				break;
+			}
+					goto object_begin;
+			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') {
+				++idx; count[no++] = 0; 
+				break;
+			} 
+					goto array_begin;
 			case ',': { log << warn << "wrong comma.";
 				if (err) {
 					*err = 1;
@@ -4689,7 +4700,7 @@ namespace claujson {
 
 
 		if (!_stack.empty()) {
-			count[_stack.back()]++; 
+			count[_stack.back()]++;
 		}
 		else {
 			//if (virtual_count == 0) {
@@ -4829,8 +4840,10 @@ namespace claujson {
 		{
 			auto value = buf[simdjson_imple->structural_indexes[idx++]];
 			switch (value) {
-			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; break; } goto object_begin;
-			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; break; } goto array_begin;
+			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') { ++idx; count[no++] = 0; 
+				break; } goto object_begin;
+			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; count[no++] = 0;
+				break; } goto array_begin;
 			case ',': { log << warn << "wrong comma.";
 				if (err) {
 					*err = 1;

@@ -358,20 +358,20 @@ int main(int argc, char* argv[])
 		//claujson::log.info(true);
 		//claujson::log.warn(true);
 
-		utf_8_test();
+	//	utf_8_test();
 
-		key_dup_test();
+	//	key_dup_test();
 
-		json_pointer_test();
+	//	json_pointer_test();
 
-		str_test();
+	//	str_test();
 
 		for (int i = 0; i < 10; ++i) {
 			claujson::Value j;
 			bool ok;
 			//try
 			{	
-				if (1) {
+				if (0) {
 					auto a = std::chrono::steady_clock::now();
 					
 						_simdjson::dom::parser test;
@@ -387,6 +387,7 @@ int main(int argc, char* argv[])
 				auto a = std::chrono::steady_clock::now();
 
 				int thr_num = 0;
+
 
 				if (argc > 2) {
 					thr_num = std::atoi(argv[2]);
@@ -411,8 +412,8 @@ int main(int argc, char* argv[])
 			
 				//debug test
 				//std::cout << j << "\n";
-				///claujson::clean(j);
-				///continue;
+				claujson::clean(j);
+				continue;
 				//return 0;
 				//
 				// 
