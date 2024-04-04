@@ -291,7 +291,7 @@ namespace claujson {
 	// sz`s type is uint32_t, not uint64_t.
 	class String {
 	private: // do not change of order. do not add variable.
-		static const int BUF_SIZE = 11;
+		#define BUF_SIZE 11
 		union {
 			struct {
 				char* str;

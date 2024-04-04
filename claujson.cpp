@@ -1,7 +1,7 @@
 
 #include "claujson.h"
 
-#include "_simdjson.h" // modified simdjson // using simdjson 3.3.0
+#include "_simdjson.h" // modified simdjson // using simdjson 3.9.0
 
 #include <future>
 
@@ -1078,7 +1078,7 @@ namespace claujson {
 
 			// chk... fallback..
 			{
-				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					free(buf_src);
@@ -1120,7 +1120,7 @@ namespace claujson {
 			buf_src[len] = '"';
 
 			{
-				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					log << warn << "not valid utf8" << "\n";
@@ -6393,7 +6393,7 @@ namespace claujson {
 
 			// chk... fallback..
 			{
-				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					free(buf_src);
@@ -6427,7 +6427,7 @@ namespace claujson {
 			buf_src[len] = '"';
 
 			{
-				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					log << warn << "not valid utf8" << "\n";
@@ -6476,7 +6476,7 @@ namespace claujson {
 
 			// chk... fallback..
 			{
-				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					free(buf_src);
@@ -6515,7 +6515,7 @@ namespace claujson {
 			buf_src[len] = '"';
 
 			{
-				bool valid = _simdjson::String::validate_utf8(reinterpret_cast<char*>(buf_src), len);
+				bool valid = _simdjson::validate_utf8(reinterpret_cast<char*>(buf_src), len);
 
 				if (!valid) {
 					log << warn << "not valid utf8" << "\n";

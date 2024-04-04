@@ -4,12 +4,11 @@
 // mainly tested with C++17...
 
 #include "mimalloc-new-delete.h"
-
 #include <iostream>
 #include <string>
 #include <ctime>
 
-#include "claujson.h" // using simdjson 3.3.0
+#include "claujson.h" // using simdjson 3.9.0
 
 #include "_simdjson.h"
 
@@ -371,10 +370,10 @@ int main(int argc, char* argv[])
 			bool ok;
 			//try
 			{	
-				if (0) {
+				if (1) {
 					auto a = std::chrono::steady_clock::now();
 					
-						_simdjson::dom::parser test;
+					static	_simdjson::dom::parser test;
 
 						auto x = test.load(argv[1]);
 					
@@ -387,7 +386,6 @@ int main(int argc, char* argv[])
 				auto a = std::chrono::steady_clock::now();
 
 				int thr_num = 0;
-
 
 				if (argc > 2) {
 					thr_num = std::atoi(argv[2]);
@@ -412,8 +410,8 @@ int main(int argc, char* argv[])
 			
 				//debug test
 				//std::cout << j << "\n";
-				claujson::clean(j);
-				continue;
+				///claujson::clean(j);
+				///continue;
 				//return 0;
 				//
 				// 
