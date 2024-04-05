@@ -12,6 +12,8 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0079 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
+
 #set(CMAKE_CXX_STANDARD 17) # C++17
 set(CMAKE_BUILD_TYPE "Release")
 
@@ -49,8 +51,8 @@ target_include_directories(${LIB_NAME14} PUBLIC ${INCLUDE_DIR} PRIVATE ${rapidjs
 
 
 if (UNIX) 
-        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -mavx2 -mfma -pthread -Wno-narrowing -Wextra -O2)
-        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=native  -mavx2 -mfma -pthread -Wno-narrowing -Wextra -O2)
+        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20  -pthread -Wno-narrowing -Wextra -O2)
+        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14  -pthread -Wno-narrowing -Wextra -O2)
       
 elseif (MSVC)
 
