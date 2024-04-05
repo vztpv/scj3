@@ -25175,7 +25175,7 @@ _simdjson_inline void tape_writer::append_u64(uint64_t value) noexcept {
 }
 
 /** Write a double value to tape. */
-_simdjson_inline void tape_writer::append_double(double value) noexcept {
+void tape_writer::append_double(double value) noexcept {
   append2(0, value, internal::tape_type::DOUBLE);
 }
 
