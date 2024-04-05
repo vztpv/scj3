@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.11.0)
 # 프로젝트 정보
 project(
   claujson
-  VERSION 0.20.2 #
+  VERSION 0.21.0 #
   DESCRIPTION "claujson"
   LANGUAGES CXX)
 
@@ -49,8 +49,8 @@ target_include_directories(${LIB_NAME14} PUBLIC ${INCLUDE_DIR} PRIVATE ${rapidjs
 
 
 if (UNIX) 
-        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -Wextra -O2)
-        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=native -pthread -Wno-narrowing -Wextra -O2)
+        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -mavx -pthread -Wno-narrowing -Wextra -O2)
+        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=native -mavx -pthread -Wno-narrowing -Wextra -O2)
       
 elseif (MSVC)
 
