@@ -49,8 +49,8 @@ target_include_directories(${LIB_NAME14} PUBLIC ${INCLUDE_DIR} PRIVATE ${rapidjs
 
 
 if (UNIX) 
-        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -mavx512 -pthread -Wno-narrowing -Wextra -O2)
-        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=native -mavx512 -pthread -Wno-narrowing -Wextra -O2)
+        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -mavx512f -mavx512dq -mavxcd -pthread -Wno-narrowing -Wextra -O2)
+        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=native -mavx512f -mavx512dq -mavxcd -pthread -Wno-narrowing -Wextra -O2)
       
 elseif (MSVC)
 
