@@ -155,7 +155,7 @@
 // Our fast kernels require 64-bit systems.
 //
 // On 32-bit x86, we lack 64-bit popcnt, lzcnt, blsr instructions.
-// Furthermore, the number of SIMD registers is reduced.
+// Furthermore, the number of _SIMD registers is reduced.
 //
 // On 32-bit ARM, we would have smaller registers.
 //
@@ -4337,7 +4337,7 @@ namespace internal {
             { UNEXPECTED_ERROR, "UNEXPECTED_ERROR: Unexpected error, consider reporting this problem as you may have found a bug in simdjson" },
             { PARSER_IN_USE, "PARSER_IN_USE: Cannot parse a new document while a document is still in use." },
             { OUT_OF_ORDER_ITERATION, "OUT_OF_ORDER_ITERATION: Objects and arrays can only be iterated when they are first encountered." },
-            { INSUFFICIENT_PADDING, "INSUFFICIENT_PADDING: simdjson requires the input JSON string to have at least SIMDJSON_PADDING extra bytes allocated, beyond the string's length. Consider using the simdjson::padded_string class if needed." },
+            { INSUFFICIENT_PADDING, "INSUFFICIENT_PADDING: simdjson requires the input JSON string to have at least _SIMDJSON_PADDING extra bytes allocated, beyond the string's length. Consider using the simdjson::padded_string class if needed." },
             { INCOMPLETE_ARRAY_OR_OBJECT, "INCOMPLETE_ARRAY_OR_OBJECT: JSON document ended early in the middle of an object or array." },
             { SCALAR_DOCUMENT_AS_VALUE, "SCALAR_DOCUMENT_AS_VALUE: A JSON document made of a scalar (number, Boolean, null or string) is treated as a value. Use get_bool(), get_double(), etc. on the document instead. "},
             { OUT_OF_BOUNDS, "OUT_OF_BOUNDS: Attempt to access location outside of document."},
@@ -5469,8 +5469,6 @@ _SIMDJSON_DLLIMPORTEXPORT const uint64_t _simdjson::internal::power_of_five_128[
 #ifndef _SIMDJSON_IMPLEMENTATION_DETECTION_H
 #define _SIMDJSON_IMPLEMENTATION_DETECTION_H
 
-/* skipped duplicate #include "_simdjson/base.h" */
-
 // 0 is reserved, because undefined _SIMDJSON_IMPLEMENTATION equals 0 in preprocessor macros.
 #define _SIMDJSON_IMPLEMENTATION_ID_arm64 1
 #define _SIMDJSON_IMPLEMENTATION_ID_fallback 2
@@ -5494,7 +5492,11 @@ _SIMDJSON_DLLIMPORTEXPORT const uint64_t _simdjson::internal::power_of_five_128[
 #ifndef _SIMDJSON_IMPLEMENTATION_ARM64
 #define _SIMDJSON_IMPLEMENTATION_ARM64 (_SIMDJSON_IS_ARM64)
 #endif
-#define _SIMDJSON_CAN_ALWAYS_RUN_ARM64 _SIMDJSON_IMPLEMENTATION_ARM64 && _SIMDJSON_IS_ARM64
+#if _SIMDJSON_IMPLEMENTATION_ARM64 && _SIMDJSON_IS_ARM64
+#define _SIMDJSON_CAN_ALWAYS_RUN_ARM64 1
+#else
+#define _SIMDJSON_CAN_ALWAYS_RUN_ARM64 0
+#endif
 
 // Default Icelake to on if this is x86-64. Even if we're not compiled for it, it could be selected
 // at runtime.
@@ -5504,10 +5506,21 @@ _SIMDJSON_DLLIMPORTEXPORT const uint64_t _simdjson::internal::power_of_five_128[
 
 #ifdef _MSC_VER
 // To see why  (__BMI__) && (__PCLMUL__) && (__LZCNT__) are not part of this next line, see
-// https://github.com/_simdjson/_simdjson/issues/1247
-#define _SIMDJSON_CAN_ALWAYS_RUN_ICELAKE ((_SIMDJSON_IMPLEMENTATION_ICELAKE) && (__AVX2__) && (__AVX512F__) && (__AVX512DQ__) && (__AVX512CD__) && (__AVX512BW__) && (__AVX512VL__) && (__AVX512VBMI2__))
+// https://github.com/simdjson/simdjson/issues/1247
+#if ((_SIMDJSON_IMPLEMENTATION_ICELAKE) && (__AVX2__) && (__AVX512F__) && (__AVX512DQ__) && (__AVX512CD__) && (__AVX512BW__) && (__AVX512VL__) && (__AVX512VBMI2__))
+#define _SIMDJSON_CAN_ALWAYS_RUN_ICELAKE 1
 #else
-#define _SIMDJSON_CAN_ALWAYS_RUN_ICELAKE ((_SIMDJSON_IMPLEMENTATION_ICELAKE) && (__AVX2__) && (__BMI__) && (__PCLMUL__) && (__LZCNT__) && (__AVX512F__) && (__AVX512DQ__) && (__AVX512CD__) && (__AVX512BW__) && (__AVX512VL__) && (__AVX512VBMI2__))
+#define _SIMDJSON_CAN_ALWAYS_RUN_ICELAKE 0
+#endif
+
+#else
+
+#if ((_SIMDJSON_IMPLEMENTATION_ICELAKE) && (__AVX2__) && (__BMI__) && (__PCLMUL__) && (__LZCNT__) && (__AVX512F__) && (__AVX512DQ__) && (__AVX512CD__) && (__AVX512BW__) && (__AVX512VL__) && (__AVX512VBMI2__))
+#define _SIMDJSON_CAN_ALWAYS_RUN_ICELAKE 1
+#else
+#define _SIMDJSON_CAN_ALWAYS_RUN_ICELAKE 0
+#endif
+
 #endif
 
 // Default Haswell to on if this is x86-64. Even if we're not compiled for it, it could be selected
@@ -5522,10 +5535,21 @@ _SIMDJSON_DLLIMPORTEXPORT const uint64_t _simdjson::internal::power_of_five_128[
 #endif
 #ifdef _MSC_VER
 // To see why  (__BMI__) && (__PCLMUL__) && (__LZCNT__) are not part of this next line, see
-// https://github.com/_simdjson/_simdjson/issues/1247
-#define _SIMDJSON_CAN_ALWAYS_RUN_HASWELL ((_SIMDJSON_IMPLEMENTATION_HASWELL) && (_SIMDJSON_IS_X86_64) && (__AVX2__))
+// https://github.com/simdjson/simdjson/issues/1247
+#if ((_SIMDJSON_IMPLEMENTATION_HASWELL) && (_SIMDJSON_IS_X86_64) && (__AVX2__))
+#define _SIMDJSON_CAN_ALWAYS_RUN_HASWELL 1
 #else
-#define _SIMDJSON_CAN_ALWAYS_RUN_HASWELL ((_SIMDJSON_IMPLEMENTATION_HASWELL) && (_SIMDJSON_IS_X86_64) && (__AVX2__) && (__BMI__) && (__PCLMUL__) && (__LZCNT__))
+#define _SIMDJSON_CAN_ALWAYS_RUN_HASWELL 0
+#endif
+
+#else
+
+#if ((_SIMDJSON_IMPLEMENTATION_HASWELL) && (_SIMDJSON_IS_X86_64) && (__AVX2__) && (__BMI__) && (__PCLMUL__) && (__LZCNT__))
+#define _SIMDJSON_CAN_ALWAYS_RUN_HASWELL 1
+#else
+#define _SIMDJSON_CAN_ALWAYS_RUN_HASWELL 0
+#endif
+
 #endif
 
 // Default Westmere to on if this is x86-64.
@@ -5537,12 +5561,22 @@ _SIMDJSON_DLLIMPORTEXPORT const uint64_t _simdjson::internal::power_of_five_128[
 #define _SIMDJSON_IMPLEMENTATION_WESTMERE _SIMDJSON_IS_X86_64
 #endif
 #endif
-#define _SIMDJSON_CAN_ALWAYS_RUN_WESTMERE (_SIMDJSON_IMPLEMENTATION_WESTMERE && _SIMDJSON_IS_X86_64 && __SSE4_2__ && __PCLMUL__)
+
+#if (_SIMDJSON_IMPLEMENTATION_WESTMERE && _SIMDJSON_IS_X86_64 && __SSE4_2__ && __PCLMUL__)
+#define _SIMDJSON_CAN_ALWAYS_RUN_WESTMERE 1
+#else
+#define _SIMDJSON_CAN_ALWAYS_RUN_WESTMERE 0
+#endif
+
 
 #ifndef _SIMDJSON_IMPLEMENTATION_PPC64
 #define _SIMDJSON_IMPLEMENTATION_PPC64 (_SIMDJSON_IS_PPC64 && _SIMDJSON_IS_PPC64_VMX)
 #endif
-#define _SIMDJSON_CAN_ALWAYS_RUN_PPC64 _SIMDJSON_IMPLEMENTATION_PPC64 && _SIMDJSON_IS_PPC64 && _SIMDJSON_IS_PPC64_VMX
+#if _SIMDJSON_IMPLEMENTATION_PPC64 && _SIMDJSON_IS_PPC64 && _SIMDJSON_IS_PPC64_VMX
+#define _SIMDJSON_CAN_ALWAYS_RUN_PPC64 1
+#else
+#define _SIMDJSON_CAN_ALWAYS_RUN_PPC64 0
+#endif
 
 #ifndef _SIMDJSON_IMPLEMENTATION_LASX
 #define _SIMDJSON_IMPLEMENTATION_LASX (_SIMDJSON_IS_LOONGARCH64 && __loongarch_asx)
@@ -5589,7 +5623,7 @@ _SIMDJSON_DLLIMPORTEXPORT const uint64_t _simdjson::internal::power_of_five_128[
 #elif _SIMDJSON_CAN_ALWAYS_RUN_FALLBACK
 #define _SIMDJSON_BUILTIN_IMPLEMENTATION fallback
 #else
-#error "All possible implementations (including fallback) have been disabled! _simdjson will not run."
+#error "All possible implementations (including fallback) have been disabled! simdjson will not run."
 #endif
 
 #endif // _SIMDJSON_BUILTIN_IMPLEMENTATION
@@ -6848,7 +6882,7 @@ static inline uint32_t detect_supported_architectures() {
 }
 
 
-#endif // end SIMD extension detection code
+#endif // end _SIMD extension detection code
 
 } // namespace internal
 } // namespace _simdjson
@@ -7382,7 +7416,7 @@ public:
     // what are the chances that the programmer has a fallback? Given that *we* provide the
     // fallback, it implies that the programmer would need a fallback for our fallback.
   }
-  unsupported_implementation() : implementation("unsupported", "Unsupported CPU (no detected SIMD instructions)", 0) {}
+  unsupported_implementation() : implementation("unsupported", "Unsupported CPU (no detected _SIMD instructions)", 0) {}
 };
 
 const unsupported_implementation* get_unsupported_singleton() {
@@ -7832,7 +7866,7 @@ namespace {
     uint8x16_t value;
     static const int SIZE = sizeof(value);
 
-    // Conversion from/to SIMD register
+    // Conversion from/to _SIMD register
     _simdjson_inline base_u8(const uint8x16_t _value) : value(_value) {}
     _simdjson_inline operator const uint8x16_t&() const { return this->value; }
     _simdjson_inline operator uint8x16_t&() { return this->value; }
@@ -7855,7 +7889,7 @@ namespace {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base_u8<bool> {
     typedef uint16_t bitmask_t;
@@ -8067,7 +8101,7 @@ namespace {
     static _simdjson_inline simd8<int8_t> zero() { return vdupq_n_s8(0); }
     static _simdjson_inline simd8<int8_t> load(const int8_t values[16]) { return vld1q_s8(values); }
 
-    // Conversion from/to SIMD register
+    // Conversion from/to _SIMD register
     _simdjson_inline simd8(const int8x16_t _value) : value{_value} {}
     _simdjson_inline operator const int8x16_t&() const { return this->value; }
     _simdjson_inline operator int8x16_t&() { return this->value; }
@@ -10593,7 +10627,7 @@ namespace {
     uint8x16_t value;
     static const int SIZE = sizeof(value);
 
-    // Conversion from/to SIMD register
+    // Conversion from/to _SIMD register
     _simdjson_inline base_u8(const uint8x16_t _value) : value(_value) {}
     _simdjson_inline operator const uint8x16_t&() const { return this->value; }
     _simdjson_inline operator uint8x16_t&() { return this->value; }
@@ -10616,7 +10650,7 @@ namespace {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base_u8<bool> {
     typedef uint16_t bitmask_t;
@@ -10828,7 +10862,7 @@ namespace {
     static _simdjson_inline simd8<int8_t> zero() { return vdupq_n_s8(0); }
     static _simdjson_inline simd8<int8_t> load(const int8_t values[16]) { return vld1q_s8(values); }
 
-    // Conversion from/to SIMD register
+    // Conversion from/to _SIMD register
     _simdjson_inline simd8(const int8x16_t _value) : value{_value} {}
     _simdjson_inline operator const int8x16_t&() const { return this->value; }
     _simdjson_inline operator int8x16_t&() { return this->value; }
@@ -14280,10 +14314,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m256i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m256i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m256i&() const { return this->value; }
     _simdjson_inline operator __m256i&() { return this->value; }
 
@@ -14319,7 +14353,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return _mm256_set1_epi8(uint8_t(-(!!_value))); }
@@ -14418,7 +14452,7 @@ namespace simd {
       __m256i almostthere =  _mm256_shuffle_epi8(pruned, compactmask);
       // We just need to write out the result.
       // This is the tricky bit that is hard to do
-      // if we want to return a SIMD register, since there
+      // if we want to return a _SIMD register, since there
       // is no single-instruction approach to recombine
       // the two 128-bit lanes with an offset.
       __m128i v128;
@@ -16919,10 +16953,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m256i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m256i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m256i&() const { return this->value; }
     _simdjson_inline operator __m256i&() { return this->value; }
 
@@ -16958,7 +16992,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return _mm256_set1_epi8(uint8_t(-(!!_value))); }
@@ -17057,7 +17091,7 @@ namespace simd {
       __m256i almostthere =  _mm256_shuffle_epi8(pruned, compactmask);
       // We just need to write out the result.
       // This is the tricky bit that is hard to do
-      // if we want to return a SIMD register, since there
+      // if we want to return a _SIMD register, since there
       // is no single-instruction approach to recombine
       // the two 128-bit lanes with an offset.
       __m128i v128;
@@ -20483,10 +20517,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m512i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m512i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m512i&() const { return this->value; }
     _simdjson_inline operator __m512i&() { return this->value; }
 
@@ -20526,7 +20560,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return _mm512_set1_epi8(uint8_t(-(!!_value))); }
@@ -23119,10 +23153,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m512i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m512i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m512i&() const { return this->value; }
     _simdjson_inline operator __m512i&() { return this->value; }
 
@@ -23162,7 +23196,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return _mm512_set1_epi8(uint8_t(-(!!_value))); }
@@ -26796,10 +26830,10 @@ template <typename Child> struct base {
   // Zero constructor
   _simdjson_inline base() : value{__m128i()} {}
 
-  // Conversion from SIMD register
+  // Conversion from _SIMD register
   _simdjson_inline base(const __m128i _value) : value(_value) {}
 
-  // Conversion to SIMD register
+  // Conversion to _SIMD register
   _simdjson_inline operator const __m128i &() const {
     return this->value;
   }
@@ -26864,7 +26898,7 @@ struct base8 : base<simd8<T>> {
   }
 };
 
-// SIMD byte mask type (returned by things like eq and gt)
+// _SIMD byte mask type (returned by things like eq and gt)
 template <> struct simd8<bool> : base8<bool> {
   static _simdjson_inline simd8<bool> splat(bool _value) {
     return (__m128i)vec_splats((unsigned char)(-(!!_value)));
@@ -29545,10 +29579,10 @@ template <typename Child> struct base {
   // Zero constructor
   _simdjson_inline base() : value{__m128i()} {}
 
-  // Conversion from SIMD register
+  // Conversion from _SIMD register
   _simdjson_inline base(const __m128i _value) : value(_value) {}
 
-  // Conversion to SIMD register
+  // Conversion to _SIMD register
   _simdjson_inline operator const __m128i &() const {
     return this->value;
   }
@@ -29613,7 +29647,7 @@ struct base8 : base<simd8<T>> {
   }
 };
 
-// SIMD byte mask type (returned by things like eq and gt)
+// _SIMD byte mask type (returned by things like eq and gt)
 template <> struct simd8<bool> : base8<bool> {
   static _simdjson_inline simd8<bool> splat(bool _value) {
     return (__m128i)vec_splats((unsigned char)(-(!!_value)));
@@ -33285,10 +33319,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m128i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m128i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m128i&() const { return this->value; }
     _simdjson_inline operator __m128i&() { return this->value; }
 
@@ -33320,7 +33354,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return _mm_set1_epi8(uint8_t(-(!!_value))); }
@@ -33713,10 +33747,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m128i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m128i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m128i&() const { return this->value; }
     _simdjson_inline operator __m128i&() { return this->value; }
 
@@ -33748,7 +33782,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return _mm_set1_epi8(uint8_t(-(!!_value))); }
@@ -36355,10 +36389,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m128i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m128i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m128i&() const { return this->value; }
     _simdjson_inline operator __m128i&() { return this->value; }
 
@@ -36390,7 +36424,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return _mm_set1_epi8(uint8_t(-(!!_value))); }
@@ -36783,10 +36817,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m128i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m128i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m128i&() const { return this->value; }
     _simdjson_inline operator __m128i&() { return this->value; }
 
@@ -36818,7 +36852,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return _mm_set1_epi8(uint8_t(-(!!_value))); }
@@ -40267,10 +40301,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m128i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m128i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m128i&() const { return this->value; }
     _simdjson_inline operator __m128i&() { return this->value; }
     _simdjson_inline operator const v16i8&() const { return (v16i8&)this->value; }
@@ -40305,7 +40339,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) {
@@ -42801,10 +42835,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m128i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m128i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m128i&() const { return this->value; }
     _simdjson_inline operator __m128i&() { return this->value; }
     _simdjson_inline operator const v16i8&() const { return (v16i8&)this->value; }
@@ -42839,7 +42873,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) {
@@ -46273,10 +46307,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m256i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m256i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m256i&() const { return this->value; }
     _simdjson_inline operator __m256i&() { return this->value; }
     _simdjson_inline operator const v32i8&() const { return (v32i8&)this->value; }
@@ -46315,7 +46349,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return __lasx_xvreplgr2vr_b(uint8_t(-(!!_value))); }
@@ -48823,10 +48857,10 @@ namespace simd {
     // Zero constructor
     _simdjson_inline base() : value{__m256i()} {}
 
-    // Conversion from SIMD register
+    // Conversion from _SIMD register
     _simdjson_inline base(const __m256i _value) : value(_value) {}
 
-    // Conversion to SIMD register
+    // Conversion to _SIMD register
     _simdjson_inline operator const __m256i&() const { return this->value; }
     _simdjson_inline operator __m256i&() { return this->value; }
     _simdjson_inline operator const v32i8&() const { return (v32i8&)this->value; }
@@ -48865,7 +48899,7 @@ namespace simd {
     }
   };
 
-  // SIMD byte mask type (returned by things like eq and gt)
+  // _SIMD byte mask type (returned by things like eq and gt)
   template<>
   struct simd8<bool>: base8<bool> {
     static _simdjson_inline simd8<bool> splat(bool _value) { return __lasx_xvreplgr2vr_b(uint8_t(-(!!_value))); }
