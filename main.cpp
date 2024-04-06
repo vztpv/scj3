@@ -8,7 +8,7 @@
 #include <string>
 #include <ctime>
 
-#include "claujson.h" // using simdjson 3.9.0
+#include "claujson.h" // using simdjson 3.9.1
 
 #include "_simdjson.h"
 

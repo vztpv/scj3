@@ -1,7 +1,7 @@
 
 #include "claujson.h"
 
-#include "_simdjson.h" // modified simdjson // using simdjson 3.9.0
+#include "_simdjson.h" // modified simdjson // using simdjson 3.9.1
 
 #include <future>
 
