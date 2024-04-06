@@ -51,8 +51,8 @@ target_include_directories(${LIB_NAME14} PUBLIC ${INCLUDE_DIR} PRIVATE ${rapidjs
 
 
 if (UNIX) 
-        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=haswell -pthread -Wno-narrowing -Wextra -O2)
-        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=haswell -pthread -Wno-narrowing -Wextra -O2)
+        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -Wextra -O2)
+        target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=native -pthread -Wno-narrowing -Wextra -O2)
       
 elseif (MSVC)
 
@@ -74,7 +74,7 @@ target_compile_definitions(${LIB_NAME} PRIVATE
             /permissive-;
             /sdl;
             /W3;
-	    /Zc:__cplusplus; /arch:AVX2 
+	    /Zc:__cplusplus; 
             ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
             ${DEFAULT_CXX_EXCEPTION_HANDLING}
         )
@@ -98,7 +98,7 @@ target_compile_definitions(${LIB_NAME} PRIVATE
             /permissive-;
             /sdl;
             /W3;
-	    /Zc:__cplusplus;   /arch:AVX2 
+	    /Zc:__cplusplus; 
             ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
             ${DEFAULT_CXX_EXCEPTION_HANDLING}
         )
