@@ -26502,7 +26502,7 @@ _simdjson_warn_unused bool dom_parser_implementation::is_valid_null_atom(const u
 _simdjson_warn_unused error_code dom_parser_implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
     stage2::tape_writer writer{ buf };
 
-    return haswell::numberparsing::parse_number(src, writer);
+    return icelake::numberparsing::parse_number(src, writer);
 }
 
 _simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t* _buf, size_t _len, dom::document& _doc, bool all) noexcept {
