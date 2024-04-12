@@ -23,6 +23,8 @@
 	} while (false) 
 
 
+
+
 #if __cpp_lib_string_view
 #else
 
@@ -337,7 +339,7 @@ namespace claujson {
 	}
 
 	bool Value::is_valid() const {
-		return type() != ValueType::NOT_VALID;
+		return type() != ValueType::NOT_VALID && type() != ValueType::ERROR;
 	}
 
 	bool Value::is_null() const {
@@ -1050,7 +1052,7 @@ namespace claujson {
 		}
 
 		if (!convert) {
-			_str_val = String(str, len);
+			_str_val = String(str, Static_Cast<uint64_t, uint32_t>(len));
 			return true;
 		}
 
@@ -1099,7 +1101,7 @@ namespace claujson {
 			}
 			else {
 				*x = '\0';
-				uint64_t string_length = uint32_t(x - buf_dest);
+				uint32_t string_length = uint32_t(x - buf_dest);
 
 				if (is_str() == false) {
 					_str_val = String((char*)buf_dest, string_length);
@@ -1135,7 +1137,7 @@ namespace claujson {
 			}
 			else {
 				*x = '\0';
-				uint64_t string_length = uint32_t(x - buf_dest);
+				uint32_t string_length = uint32_t(x - buf_dest);
 
 				if (!is_str()) {
 					_str_val = String((char*)buf_dest, string_length);
@@ -1152,7 +1154,7 @@ namespace claujson {
 	}
 
 	void Value::set_str_in_parse(char* str, uint64_t len) {
-		_str_val = String(str, len);
+		_str_val = String(str, Static_Cast<uint64_t, uint32_t>(len));
 	}
 
 	void Value::set_bool(bool x) {
@@ -1634,8 +1636,10 @@ namespace claujson {
 	};
 
 	Structured* Object::clone() const {
-		Structured* result = new Object();
-
+		Structured* result = new (std::nothrow) Object();
+		if (result == nullptr) {
+			return nullptr;
+		}
 		uint64_t sz = this->get_data_size();
 
 		for (uint64_t i = 0; i < sz; ++i) {
@@ -1671,7 +1675,15 @@ namespace claujson {
 	}
 
 	Value Object::Make() {
-		return Value(new Object());
+		Object* obj = new (std::nothrow) Object();
+		
+		if (obj == nullptr) {
+			Value v;
+			v._type = ValueType::ERROR;
+			return v;
+		}
+
+		return Value(obj);
 	}
 
 	Object::Object() { }
@@ -1938,7 +1950,11 @@ namespace claujson {
 	}
 
 	Structured* Array::clone() const {
-		Structured* result = new Array();
+		Structured* result = new (std::nothrow) Array();
+
+		if (result == nullptr) {
+			return nullptr;
+		}
 
 		uint64_t sz = this->get_data_size();
 		for (uint64_t i = 0; i < sz; ++i) {
@@ -1949,7 +1965,15 @@ namespace claujson {
 	}
 
 	Value Array::Make() {
-		return Value(new Array());
+		Array* temp = (new (std::nothrow) Array());
+		
+		if (temp == nullptr) {
+			Value v;
+			v._type = ValueType::ERROR;
+			return v;
+		}
+
+		return Value(temp);
 	}
 
 	Array::Array() { }
@@ -2620,10 +2644,18 @@ namespace claujson {
 				Structured* json = nullptr;
 
 				if (type == ValueType::OBJECT) {
-					json = new Object();
+					json = new (std::nothrow) Object();
+					if (json == nullptr) {
+						log << warn << "new error";
+						return;
+					}
 				}
 				else if (type == ValueType::ARRAY) {
-					json = new Array();
+					json = new (std::nothrow) Array();
+					if (json == nullptr) {
+						log << warn << "new error";
+						return;
+					}
 				}
 
 				obj_data.emplace_back(std::move(temp), Value(json));
@@ -2637,10 +2669,15 @@ namespace claujson {
 			Structured* json = nullptr;
 
 			if (type == ValueType::OBJECT) {
-				json = new Object();
+				json = new (std::nothrow) Object();
 			}
 			else if (type == ValueType::ARRAY) {
-				json = new Array();
+				json = new (std::nothrow) Array();
+			}
+
+			if (json == nullptr) {
+				log << warn << "new error";
+				return;
 			}
 
 			arr_vec.push_back(Value(json));
@@ -2674,13 +2711,16 @@ namespace claujson {
 				Structured* json = nullptr;
 
 				if (type == ValueType::OBJECT) {
-					json = new Object();
+					json = new (std::nothrow) Object();
 				}
 				else if (type == ValueType::ARRAY) {
-					json = new Array();
+					json = new (std::nothrow) Array();
 				}
-
-
+ 
+				if (json == nullptr) {
+					log << warn << "new error";
+					return;
+				}
 
 				obj_data.push_back({ std::move(temp), Value(json) });
 
@@ -2696,10 +2736,15 @@ namespace claujson {
 			Structured* json = nullptr;
 
 			if (type == ValueType::OBJECT) {
-				json = new Object();
+				json = new (std::nothrow) Object();
 			}
 			else if (type == ValueType::ARRAY) {
-				json = new Array();
+				json = new (std::nothrow) Array();
+			}
+
+			if (json == nullptr) {
+				log << warn << "new error";
+				return;
 			}
 
 			arr_vec.push_back(Value(json));
@@ -2975,8 +3020,12 @@ namespace claujson {
 			Structured* pos_ = pos;
 			Structured* parent = pos_->get_parent();
 
-			Structured* out = new PartialJson(); //
+			Structured* out = new (std::nothrow) PartialJson(); //
 
+			if (out == nullptr) {
+				log << warn << "new error";
+				return;
+			}
 
 			while (parent && parent->is_partial_json() == false) {
 				long long idx = 0;
@@ -3011,14 +3060,27 @@ namespace claujson {
 				{
 					Structured* temp = nullptr;
 					if (parent->is_object()) {
-						temp = new VirtualObject();
+						temp = new (std::nothrow) VirtualObject();
+						
+						if (temp == nullptr) {
+							delete[] out;
+							log << warn << "new error";
+							return;
+						}
 					}
 					else if (parent->is_array()) { // parent->is_array()
-						temp = new VirtualArray();
+						temp = new (std::nothrow) VirtualArray();
+					
+						if (temp == nullptr) {
+							delete[] out;
+							log << warn << "new error";
+							return;
+						}
 					}
 					else { // PartialJson
 						// none
 					}
+
 
 					uint64_t len = out->get_data_size();
 
@@ -3370,10 +3432,12 @@ namespace claujson {
 							Ptr<Structured> ut; // is v_array or v_object.
 
 							if (type == _simdjson::internal::tape_type::END_OBJECT) {
-								ut = Ptr<Structured>(new VirtualObject());
+								Object* temp = new VirtualObject();
+								ut = Ptr<Structured>(temp);
 							}
 							else {
-								ut = Ptr<Structured>(new VirtualArray());
+								Array* temp = new VirtualArray();
+								ut = Ptr<Structured>(temp);
 							}
 
 							uint64_t len = nowUT->get_data_size();
@@ -3496,11 +3560,12 @@ namespace claujson {
 
 			_simdjson::internal::dom_parser_implementation* imple, int64_t& length,
 			std::vector<int64_t>& start, uint64_t* count_vec, uint64_t parse_num) // first, strVec.empty() must be true!!
-		{
-			Ptr<Structured> _global = Ptr<Structured>(new PartialJson());
-			std::vector<Ptr<Structured>> __global;
-
+		{	
 			try {
+				Ptr<Structured> _global = Ptr<Structured>(new PartialJson());
+				std::vector<Ptr<Structured>> __global;
+
+		
 				{
 					uint64_t pivot_num = parse_num;
 					
@@ -3734,12 +3799,12 @@ namespace claujson {
 
 				return false;
 			}
-			//catch (...) {
+			catch (...) {
 
-			//	log << warn  << "internal error\n";
+				log << warn  << "internal error or new error \n";
 				//ERROR("Internal Error"sv);
-			//	return false;
-			//}
+				return false;
+			}
 
 		}
 		static bool parse(Value& global, char* buf, uint64_t buf_len,
@@ -3767,7 +3832,7 @@ namespace claujson {
 			return m_buffer.GetSize();
 		}
 
-		StrStream& add_1(const char* x, uint64_t sz) {
+		StrStream& add_1(const char* x, uint32_t sz) {
 			m_writer.String(x, sz); // fmt::format_to(std::back_inserter(out), "{}", x);
 			return *this;
 		}
@@ -3866,7 +3931,7 @@ namespace claujson {
 	}
 
 	claujson_inline void write_string(StrStream& stream, const StringView str) {
-		stream.add_1(str.data(), str.size());
+		stream.add_1(str.data(), Static_Cast<uint64_t, uint32_t>(str.size()));
 	}
 
 	static  const char* str_open_array[] = { "[", " [ \n",  };
@@ -5679,7 +5744,7 @@ namespace claujson {
 
 					std::set<uint64_t> _set;
 
-					std::vector<uint64_t> start(thr_num + 1);
+				//	std::vector<uint64_t> start(thr_num + 1);
 					std::vector<uint64_t> last(thr_num);
 
 					std::vector<int> start_state(thr_num, -1);
@@ -5873,7 +5938,7 @@ namespace claujson {
 
 				std::set<uint64_t> _set;
 
-				std::vector<uint64_t> start(thr_num + 1);
+				//std::vector<uint64_t> start(thr_num + 1);
 				std::vector<uint64_t> last(thr_num);
 
 				std::vector<int> start_state(thr_num, -1);
@@ -6047,7 +6112,14 @@ namespace claujson {
 
 	// cf) /- -> / in array.
 	static Value _diff(const Value& x, const Value& y, std::string route) {
-		Value result(new Array());
+		Value result;
+		{
+			Array* temp = new (std::nothrow) Array;
+			if (temp == nullptr) {
+				return Value(nullptr, false);
+			}
+			result = Value(temp);
+		}
 		Structured* j = result.as_structured_ptr();
 
 		if (x == y) {
@@ -6066,7 +6138,12 @@ namespace claujson {
 	
 
 		if (x.type() != y.type()) {
-			Object* obj = new Object();
+			Object* obj = new (std::nothrow) Object();
+			
+			if (obj == nullptr) {
+				clean(result);
+				return Value(nullptr, false);
+			}
 
 			obj->add_object_element(_op_str.clone(), _replace_str.clone());
 			obj->add_object_element(_path_str.clone(), Value(route));
@@ -6112,7 +6189,12 @@ namespace claujson {
 
 				if (i < sz_x) {
 					for (uint64_t _i = sz_x; _i > i; --i) {
-						Object* obj = new Object();
+						Object* obj = new (std::nothrow) Object();
+
+						if (obj == nullptr) {
+							clean(result);
+							return Value(nullptr, false);
+						}
 
 						obj->add_object_element(_op_str.clone(), _remove_str.clone());
 
@@ -6124,7 +6206,12 @@ namespace claujson {
 				}
 				else {
 					for (; i < sz_y; ++i) {
-						Object* obj = new Object();
+						Object* obj = new (std::nothrow) Object();
+
+						if (obj == nullptr) {
+							clean(result);
+							return Value(nullptr, false);
+						}
 
 						obj->add_object_element(_op_str.clone(), _add_str.clone());
 
@@ -6162,8 +6249,12 @@ namespace claujson {
 						}
 					}
 					else {
-						Object* obj = new Object();
+						Object* obj = new (std::nothrow) Object();
 
+						if (obj == nullptr) {
+							clean(result);
+							return Value(nullptr, false);
+						}
 						obj->add_object_element(_op_str.clone(), _remove_str.clone());
 						obj->add_object_element(_path_str.clone(), Value(route));
 						obj->add_object_element(_last_key_str.clone(), key.clone());
@@ -6176,7 +6267,12 @@ namespace claujson {
 					const Value& key = jy->get_key_list(i);
 					uint64_t idx = jx->find(key);
 					if (idx == Structured::npos) {
-						Object* obj = new Object();
+						Object* obj = new (std::nothrow) Object();
+
+						if (obj == nullptr) {
+							clean(result);
+							return Value(nullptr, false);
+						}
 
 						obj->add_object_element(_op_str.clone(), _add_str.clone());
 						obj->add_object_element(_path_str.clone(), Value(route));
@@ -6198,7 +6294,12 @@ namespace claujson {
 		case ValueType::STRING:
 		case ValueType::SHORT_STRING:
 		{
-			Object* obj = new Object();
+			Object* obj = new (std::nothrow) Object();
+
+			if (obj == nullptr) {
+				clean(result);
+				return Value(nullptr, false);
+			}
 
 			obj->add_object_element(_op_str.clone(), _replace_str.clone());
 			obj->add_object_element(_path_str.clone(), Value(route));

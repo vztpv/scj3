@@ -13,6 +13,19 @@
 #include <cstring>
 
 
+
+template <class From, class To>
+inline To Static_Cast(From x) {
+	To temp = static_cast<To>(x);
+	bool valid = static_cast<From>(temp) == x;
+	if (!valid) {
+		throw std::runtime_error("static cast error");
+	}
+	return temp;
+}
+
+
+
 #if __cpp_lib_string_view
 #include <string_view>
 using namespace std::literals::string_view_literals;
@@ -99,6 +112,10 @@ bool operator==(const std::string& str, claujson::StringView sv);
 
 
 #endif
+
+
+
+
 
 namespace claujson {
 
@@ -291,7 +308,7 @@ namespace claujson {
 	// sz`s type is uint32_t, not uint64_t.
 	class String {
 	private: // do not change of order. do not add variable.
-		#define BUF_SIZE 11
+		#define CLAUJSON_STRING_BUF_SIZE 11
 		union {
 			struct {
 				char* str;
@@ -299,7 +316,7 @@ namespace claujson {
 				ValueType type; // STRING or SHORT_STRING or NOT_VALID
 			};
 			struct {
-				char buf[BUF_SIZE];
+				char buf[CLAUJSON_STRING_BUF_SIZE];
 				uint8_t buf_sz;
 				ValueType type_;
 			};
@@ -314,14 +331,19 @@ namespace claujson {
 			}
 
 			if (other.type == ValueType::STRING) {
-				this->str = new char[other.sz + 1];
+				this->str = new (std::nothrow) char[other.sz + 1];
+				if (this->str == nullptr) {
+					this->type = ValueType::ERROR;
+					log << warn << "new error";
+					return *this;
+				}
 				this->sz = other.sz;
 				memcpy(this->str, other.str, other.sz);
 				this->str[this->sz] = '\0';
 				this->type = other.type;
 			}
 			else if (other.type == ValueType::SHORT_STRING) {
-				memcpy(buf, other.buf, BUF_SIZE);
+				memcpy(buf, other.buf, CLAUJSON_STRING_BUF_SIZE);
 				this->buf_sz = other.buf_sz;
 				this->type_ = other.type_;
 			}
@@ -331,14 +353,18 @@ namespace claujson {
 	protected:
 		String(const String& other) {
 			if (other.type == ValueType::STRING) {
-				this->str = new char[other.sz + 1];
+				this->str = new (std::nothrow) char[other.sz + 1];
+				if (this->str == nullptr) {
+					log << warn << "new error";
+					this->type = ValueType::ERROR; return;
+				}
 				this->sz = other.sz;
 				memcpy(this->str, other.str, other.sz);
 				this->str[this->sz] = '\0';
 				this->type = other.type;
 			}
 			else if (other.type == ValueType::SHORT_STRING) {
-				memcpy(buf, other.buf, BUF_SIZE);
+				memcpy(buf, other.buf, CLAUJSON_STRING_BUF_SIZE);
 				this->buf_sz = other.buf_sz;
 				this->type_ = other.type_;
 			}
@@ -374,14 +400,20 @@ namespace claujson {
 
 			if (this->type == ValueType::STRING) {
 				obj.sz = this->sz;
-				obj.str = new char[this->sz + 1];
-
+				obj.str = new (std::nothrow) char[this->sz + 1];
+				if (obj.str == nullptr) {
+					log << warn << "new error";
+					obj.type = ValueType::ERROR;
+					String result;
+					result.type = ValueType::ERROR;
+					return result;
+				}
 				memcpy(obj.str, this->str, this->sz);
 				obj.str[obj.sz] = '\0';
 			}
 			else if (this->type == ValueType::SHORT_STRING) {
 				obj.buf_sz = this->buf_sz;
-				memcpy(obj.buf, this->buf, BUF_SIZE);
+				memcpy(obj.buf, this->buf, CLAUJSON_STRING_BUF_SIZE);
 			}
 			
 			obj.type = this->type;
@@ -401,15 +433,19 @@ namespace claujson {
 		explicit String(const char* str) {
 			if (!str) { this->type = ValueType::ERROR; return; }
 			
-			this->sz = strlen(str);
-			if (this->sz < BUF_SIZE) {
+			this->sz = Static_Cast<uint64_t, uint32_t>(strlen(str));
+			if (this->sz < CLAUJSON_STRING_BUF_SIZE) {
 				this->buf_sz = (uint8_t)this->sz;
 				memcpy(this->buf, str, static_cast<uint64_t>(this->buf_sz));
 				this->buf[(uint64_t)this->buf_sz] = '\0';
 				this->type = ValueType::SHORT_STRING;
 			}
 			else {
-				this->str = new char[this->sz + 1];
+				this->str = new (std::nothrow) char[this->sz + 1];
+				if (this->str == nullptr) {
+					log << warn << "new error";
+					this->type = ValueType::ERROR; return;
+				}
 				memcpy(this->str, str, this->sz);
 				this->str[this->sz] = '\0';
 				this->type = ValueType::STRING;
@@ -420,14 +456,19 @@ namespace claujson {
 			if (!str) { this->type = ValueType::ERROR; return; }
 
 			this->sz = sz;
-			if (this->sz < BUF_SIZE) {
+			if (this->sz < CLAUJSON_STRING_BUF_SIZE) {
 				this->buf_sz = (uint8_t)this->sz;
 				memcpy(this->buf, str, static_cast<uint64_t>(this->buf_sz));
 				this->buf[(uint64_t)this->buf_sz] = '\0';
 				this->type = ValueType::SHORT_STRING;
 			}
 			else {
-				this->str = new char[this->sz + 1];
+				this->str = new (std::nothrow) char[this->sz + 1];
+				if (this->str == nullptr) {
+					this->type = ValueType::ERROR;
+					log << warn << "new error";
+					return;
+				}
 				memcpy(this->str, str, this->sz);
 				this->str[this->sz] = '\0';
 				this->type = ValueType::STRING;
@@ -528,7 +569,8 @@ namespace claujson {
 		friend std::ostream& operator<<(std::ostream& stream, const Value& data);
 
 		friend bool ConvertString(Value& data, char* text, uint64_t len);
-
+		friend class Object;
+		friend class Array;
 	private:
 
 		// do not change!
