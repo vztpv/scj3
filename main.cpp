@@ -166,7 +166,9 @@ void json_pointer_test() {
 	claujson::Value diff = claujson::diff(x, y);
 	std::cout << diff << "\n";
 
-	claujson::Value result = claujson::patch(x, diff);
+	claujson::Value result = x.clone();
+
+	claujson::patch(result, diff);
 
 	std::cout << result << "\n";
 
@@ -392,7 +394,7 @@ int main(int argc, char* argv[])
 				}
 
 				// not-thread-safe..
-				auto x = claujson::parse(argv[1], j, thr_num); // argv[1], j, 64 ??
+				auto x = claujson::parse(argv[1], j, 0); // argv[1], j, 64 ??
 
 				if (!x.first) {
 					std::cout << "fail\n";

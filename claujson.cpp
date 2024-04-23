@@ -1603,6 +1603,19 @@ namespace claujson {
 		return false;
 	}
 
+	bool Structured::change_key(uint64_t idx, const Value& new_key) {
+		if (this->is_object() && new_key.is_str()) {
+			if (idx == npos) {
+				return false;
+			}
+
+			get_key_list(idx) = new_key.clone();
+
+			return true;
+		}
+		return false;
+	}
+
 	Value& Structured::get_value() {
 		return data_null;
 	}
@@ -4444,6 +4457,11 @@ namespace claujson {
 
 						temp_parent[i] = pos[i]->get_parent();
 
+						// chk....-2024.04.21 with json explorer?
+						if (pos[i] == j.as_structured_ptr()) {
+							temp_parent[i] = nullptr;
+						}
+
 						if (i == 0) {
 							thr_result[0] = pool->enqueue(save_, std::ref(stream[0]), std::cref(j), temp_parent[0], pretty, (false));
 						}
@@ -6188,7 +6206,7 @@ namespace claujson {
 				}
 
 				if (i < sz_x) {
-					for (uint64_t _i = sz_x; _i > i; --i) {
+					for (uint64_t _i = sz_x; _i > i; --_i) {
 						Object* obj = new (std::nothrow) Object();
 
 						if (obj == nullptr) {
@@ -6318,7 +6336,7 @@ namespace claujson {
 		return _diff(x, y, "");
 	}
 
-	Value patch(const Value& x, const Value& diff) {
+	Value& patch(Value& x, const Value& diff) {
 		Value unvalid_data(nullptr, false);
 
 		const Structured* j_diff = diff.as_structured_ptr();
@@ -6334,7 +6352,7 @@ namespace claujson {
 		static const Value _last_key_str = Value("last_key"sv);
 		static const Value _last_idx_str = Value("last_idx"sv);
 
-		Value result = x.clone();
+		Value& result = x;
 
 		uint64_t sz_diff = j_diff->get_data_size();
 
@@ -6389,7 +6407,7 @@ namespace claujson {
 
 					uint64_t last_idx = obj->get_value_list(last_idx_idx).uint_val();
 
-					delete parent->get_value_list(last_idx).as_structured_ptr(); // chk!
+					claujson::clean(parent->get_value_list(last_idx));
 					parent->erase(last_idx);
 				}
 				else {
@@ -6401,7 +6419,7 @@ namespace claujson {
 
 					const Value& last_key = obj->get_value_list(last_key_idx);
 					uint64_t _idx = parent->find(last_key);
-					delete parent->get_value_list(_idx).as_structured_ptr();
+					claujson::clean(parent->get_value_list(_idx));
 					parent->erase(_idx);
 				}
 			}

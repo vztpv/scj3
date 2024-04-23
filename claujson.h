@@ -875,6 +875,7 @@ namespace claujson {
 
 	public:
 		bool change_key(const Value& key, const Value& new_key);
+		bool change_key(uint64_t idx, const Value& new_key);
 
 		virtual Value& get_value();
 
@@ -1153,8 +1154,7 @@ namespace claujson {
 	[[nodiscard]]
 	Value diff(const Value& x, const Value& y);
 
-	[[nodiscard]]
-	Value patch(const Value& x, const Value& diff);
+	Value& patch(Value& x, const Value& diff);
 
 
 	void init(int thr_num); // call first, before use claujson..
