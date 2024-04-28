@@ -12755,12 +12755,6 @@ _simdjson_inline void tape_writer::write(uint64_t &tape_loc, uint64_t val, inter
 } // namespace stage2
 } // unnamed namespace
 
-_simdjson_warn_unused _simdjson::error_code dom_parser_implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
-    stage2::tape_writer writer{ buf };
-
-    return arm64::numberparsing::parse_number(src, writer);
-}
-
 
 } // namespace arm64
 } // namespace _simdjson
