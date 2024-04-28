@@ -13978,11 +13978,10 @@ _simdjson_warn_unused error_code dom_parser_implementation::parse_number(const u
     return arm64::numberparsing::parse_number(src, writer);
 }
 
-
-_simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *_buf, size_t _len, dom::document &_doc) noexcept {
-  auto error = stage1(_buf, _len, stage1_mode::regular);
-  if (error) { return error; }
-  return stage2(_doc);
+_simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t* _buf, size_t _len, dom::document& _doc, bool all) noexcept {
+    auto error = stage1(_buf, _len, stage1_mode::regular);
+    if (error) { return error; } if (!all) { return error_code(); }
+    return stage2(_doc);
 }
 
 } // namespace arm64
