@@ -1589,27 +1589,27 @@ namespace claujson {
 		return parent;
 	}
 
-	bool Structured::change_key(const Value& key, const Value& new_key) { // chk test...
+	bool Structured::change_key(const Value& key, Value new_key) { // chk test...
 		if (this->is_object() && key.is_str() && new_key.is_str()) {
 			auto idx = find(key);
 			if (idx == npos) {
 				return false;
 			}
 
-			get_key_list(idx) = new_key.clone();
+			get_key_list(idx) = std::move(new_key);
 
 			return true;
 		}
 		return false;
 	}
 
-	bool Structured::change_key(uint64_t idx, const Value& new_key) {
+	bool Structured::change_key(uint64_t idx, Value new_key) {
 		if (this->is_object() && new_key.is_str()) {
 			if (idx == npos) {
 				return false;
 			}
 
-			get_key_list(idx) = new_key.clone();
+			get_key_list(idx) = std::move(new_key);
 
 			return true;
 		}

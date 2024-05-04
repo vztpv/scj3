@@ -874,8 +874,8 @@ namespace claujson {
 		PtrWeak<Structured> get_parent() const;
 
 	public:
-		bool change_key(const Value& key, const Value& new_key);
-		bool change_key(uint64_t idx, const Value& new_key);
+		bool change_key(const Value& key, Value new_key);
+		bool change_key(uint64_t idx, Value new_key);
 
 		virtual Value& get_value();
 

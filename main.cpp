@@ -372,7 +372,7 @@ int main(int argc, char* argv[])
 			bool ok;
 			//try
 			{	
-				if (1) {
+				if (0) {
 					auto a = std::chrono::steady_clock::now();
 					
 					static	_simdjson::dom::parser test;
