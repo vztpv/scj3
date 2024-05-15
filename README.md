@@ -42,35 +42,39 @@ if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
 }
 
 double sum = 0;
+
+static const auto& _geometry = claujson::Value("geometry"sv);
+static const auto& _coordinates = claujson::Value("coordinates"sv);
+
 if (true && ok) {
-	if (j.is_structured()) {
-		auto& features = j[1];
-		claujson::Array* features_arr = features.as_array();
-		if (!features_arr) {
-			continue;
-		}
-		for (auto& feature : *features_arr) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
-			auto& coordinate = feature["geometry"sv]["coordinates"sv][0];  // feature.json_pointerB(vec)[0];  
-			claujson::Array* coordinate_arr = coordinate.as_array();
-			if (!coordinate_arr) {
-				continue;
-			}
-			for (auto& coordinate_ : *coordinate_arr) {
-				claujson::Array* coordinate__arr = coordinate_.as_array();
-				if (!coordinate__arr) {
-					continue;
-				}
-				for (auto& x : *coordinate__arr) {
-					if (x.is_float()) {
-						sum += x.float_val();
-						counter++;
-						chk++;
-					}
-				}
-			}
-		}
-	}
-	
+    for (int i = 0; i < 1; ++i) {
+        if (j.is_structured()) {
+            auto& features = j[1];
+            claujson::Array* features_arr = features.as_array(); // as_array_ptr() ?
+            if (!features_arr) {
+                continue;
+            }
+            for (auto& feature : *features_arr) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
+                auto& coordinate = feature[_geometry][_coordinates][0];  // feature.json_pointerB(vec)[0];  
+                claujson::Array* coordinate_arr = coordinate.as_array();
+                if (!coordinate_arr) {
+                    continue;
+                }
+                for (auto& coordinate_ : *coordinate_arr) {
+                    claujson::Array* coordinate__arr = coordinate_.as_array();
+                    if (!coordinate__arr) {
+                        continue;
+                    }
+                    for (auto& x : *coordinate__arr) {
+                        if (x.is_float()) {
+                            sum += x.float_val();
+                            counter++;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 std::cout << sum << " ";
