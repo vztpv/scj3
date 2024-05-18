@@ -418,7 +418,7 @@ int main(int argc, char* argv[])
 				//
 				// 
 				
-				claujson::save_parallel("temp.json", j, thr_num, true);
+				claujson::save_parallel2("temp.json", j, thr_num, true);
 				
 				std::cout << "save_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 				

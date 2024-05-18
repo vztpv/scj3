@@ -1145,11 +1145,13 @@ namespace claujson {
 	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num);
 #endif
 
-	std::string save_to_str(const Value& global, bool prettty = true);
-	
-	void save(const std::string& fileName, const Value& global, bool pretty = true);
+	std::string save_to_str(const Value& global, bool prettty = false);
+	std::string save_to_str2(const Value& global, bool prettty = false);
+
+	void save(const std::string& fileName, const Value& global, bool pretty = false);
 
 	void save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
+	void save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
 
 	[[nodiscard]]
 	Value diff(const Value& x, const Value& y);
