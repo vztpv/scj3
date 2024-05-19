@@ -299,6 +299,8 @@ namespace claujson {
 #if __cpp_lib_char8_t
 	// C++20~
 	Value::Value(std::u8string_view x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		if (!set_str(reinterpret_cast<const char*>(x.data()), x.size())) {
 			set_type(ValueType::NOT_VALID);
 		}
@@ -306,7 +308,8 @@ namespace claujson {
 
 	Value::Value(const char8_t* x) {
 		std::u8string_view sv(x);
-
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		if (!set_str(reinterpret_cast<const char*>(sv.data()), sv.size())) {
 			set_type(ValueType::NOT_VALID);
 		}
@@ -315,19 +318,27 @@ namespace claujson {
 #endif
 
 	Value::Value(const char* x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		if (!set_str(x, strlen(x))) {
 			set_type(ValueType::NOT_VALID);
 		}
 	}
 
 	Value::Value(bool x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		set_bool(x);
 	}
 	Value::Value(nullptr_t x) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		set_type(ValueType::NULL_);
 	}
 
 	Value::Value(nullptr_t, bool valid) {
+		this->_int_val = 0;
+		this->_type = ValueType::NONE;
 		set_type(ValueType::NULL_);
 		if (!valid) {
 			set_type(ValueType::NOT_VALID);
