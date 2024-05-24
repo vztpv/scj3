@@ -4845,9 +4845,6 @@ namespace claujson {
 		{
 			std::set<uint64_t> _set; // remove dup.
 
-			std::vector<int> start_state(thr_num, -1);
-			std::vector<int> last_state(thr_num, -1);
-
 			for (uint64_t i = 1; i < thr_num; ++i) {
 				uint64_t middle = size / thr_num * i;
 				_set.insert(middle);
