@@ -2995,6 +2995,7 @@ namespace claujson {
 			for (uint64_t i = 0; i < len; ++i) {
 				auto* ptr = root->get_value_list(i).as_structured_ptr();
 				if (ptr) {
+					x -= 1;
 					x += Size2(ptr);
 				}
 			}
@@ -4820,30 +4821,64 @@ namespace claujson {
 		auto b = std::chrono::steady_clock::now();
 
 		std::vector<claujson::StrStream> stream(thr_num);
-		
-		a = std::chrono::steady_clock::now();
-		uint64_t size = LoadData2::Size2(j.as_structured_ptr()) + 1;
-		b = std::chrono::steady_clock::now();
-		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
-		log << info << "Size2 " << dur.count() << "\n";
 
 		a = std::chrono::steady_clock::now();
-		JsonView* view_arr = (JsonView*)calloc(size, sizeof(JsonView));
+		uint64_t size = LoadData2::Size2(j.as_structured_ptr());
+		b = std::chrono::steady_clock::now();
+		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
+		log << info << "Size2 " << size << " " << dur.count() << "\n";
+
+		a = std::chrono::steady_clock::now();
+		JsonView* view_arr = (JsonView*)calloc(size + 1, sizeof(JsonView));
 		JsonView* view_end = run(view_arr, &j);
 		b = std::chrono::steady_clock::now();
 		dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 		log << info << "run " << dur.count() << "\n";
-		
-		size = view_end - view_arr;
 
+		size = view_end - view_arr;
+		log << info << "size... " << size << "\n";
 		a = std::chrono::steady_clock::now();
+		
+		std::vector<uint64_t> start(thr_num + 1);
+		std::vector<uint64_t> last(thr_num);
+		
+		{
+			std::set<uint64_t> _set; // remove dup.
+
+			std::vector<int> start_state(thr_num, -1);
+			std::vector<int> last_state(thr_num, -1);
+
+			for (uint64_t i = 1; i < thr_num; ++i) {
+				uint64_t middle = size / thr_num * i;
+				_set.insert(middle);
+			}
+
+			_set.insert(0);
+			
+			start.resize(1 + _set.size());
+			last.resize(_set.size());
+
+			int count = 0;
+			for (auto x : _set) { // order is important.
+				start[count] = x;
+				++count;
+			}
+			
+			start.back() = size;
+
+			for (uint64_t i = 0; i < count; ++i) {
+				last[i] = start[i + 1];
+			}
+
+			thr_num = start.size() - 1;
+		}
+
 		if (pretty) {
 			std::vector<std::thread> thread_print(thr_num);
 
-			for (uint64_t i = 0; i < thread_print.size() - 1; ++i) {
-				thread_print[i] = std::thread(print_pretty, view_arr + size / thr_num * i, view_arr + size / thr_num * (i + 1), std::ref(stream[i]));
+			for (uint64_t i = 0; i < thread_print.size(); ++i) {
+				thread_print[i] = std::thread(print_pretty, view_arr + start[i], view_arr + last[i], std::ref(stream[i]));
 			}
-			thread_print.back() = std::thread(print_pretty, view_arr + size / thr_num * (thr_num - 1), view_arr + size, std::ref(stream[stream.size() - 1]));
 
 			for (uint64_t i = 0; i < thread_print.size(); ++i) {
 				thread_print[i].join();
@@ -4852,11 +4887,10 @@ namespace claujson {
 		else {
 			std::vector<std::thread> thread_print(thr_num);
 			
-			for (uint64_t i = 0; i < thread_print.size() - 1; ++i) {
-				thread_print[i] = std::thread(print, view_arr + size / thr_num * i, view_arr + size / thr_num * (i + 1), std::ref(stream[i]));
+			for (uint64_t i = 0; i < thread_print.size(); ++i) {
+				thread_print[i] = std::thread(print, view_arr + start[i], view_arr + last[i], std::ref(stream[i]));
 			}
-			thread_print.back() = std::thread(print, view_arr + size / thr_num * (thr_num - 1), view_arr + size, std::ref(stream[stream.size() - 1]));
-
+			
 			for (uint64_t i = 0; i < thread_print.size(); ++i) {
 				thread_print[i].join();
 			}
@@ -4868,7 +4902,7 @@ namespace claujson {
 		a = std::chrono::steady_clock::now();
 		std::ofstream outFile(fileName, std::ios::binary);
 		if (outFile) {
-			for (uint64_t i = 0; i < stream.size(); ++i) {
+			for (uint64_t i = 0; i < thr_num; ++i) {
 				outFile.write(stream[i].buf(), stream[i].buf_size());
 			}
 
@@ -4892,13 +4926,13 @@ namespace claujson {
 		claujson::StrStream stream;
 
 		a = std::chrono::steady_clock::now();
-		uint64_t size = LoadData2::Size2(j.as_structured_ptr()) + 1;
+		uint64_t size = LoadData2::Size2(j.as_structured_ptr());
 		b = std::chrono::steady_clock::now();
 		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 		log << info << "Size2 " << dur.count() << "\n";
 
 		a = std::chrono::steady_clock::now();
-		JsonView* view_arr = (JsonView*)calloc(size, sizeof(JsonView));
+		JsonView* view_arr = (JsonView*)calloc(size + 1, sizeof(JsonView));
 		JsonView* view_end = run(view_arr, &j);
 		b = std::chrono::steady_clock::now();
 		dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
@@ -4918,6 +4952,8 @@ namespace claujson {
 		log << info << "print " << dur.count() << "\n";
 
 		free(view_arr);
+
+		return std::string(stream.buf(), stream.buf_size());
 	}
 
 	bool is_valid2(_simdjson::dom::parser_for_claujson& dom_parser, uint64_t start, uint64_t last,
