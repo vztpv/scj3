@@ -465,7 +465,7 @@ int main(int argc, char* argv[])
 				int counter = 0;
 				ok = x.first;
 
-				std::vector<StringView> vec;
+				std::vector<claujson::Value> vec;
 
 				// json_pointer, json_pointerA <- u8string_view?
 
@@ -524,40 +524,7 @@ int main(int argc, char* argv[])
 
 				return 0;
 
-				{
-					double sum = 0;
-					counter = 0;
-					
-					if (true && ok) {
-						int chk = 0;
-						for (int i = 0; i < 1; ++i) {
-							claujson::JsonIterator iter(j[1].as_structured_ptr()); // features
-							while (iter.is_valid()) {
-								auto& x = iter.now()["geometry"sv]["coordinates"sv][0]; // coordinate
-								claujson::JsonIterator iter2(x.as_structured_ptr());
-								iter2.iterate([&](claujson::Value& v) {
-									claujson::JsonIterator iter3(v.as_structured_ptr());
-									iter3.iterate([&](claujson::Value& v) {
-										if (v.is_float()) {
-											sum += v.get_floating();
-											counter++;
-											chk++;
-										}
-										}
-									);
-									}
-								);
-								iter.next();
-							}
-						}
-					}
-
-					auto d = std::chrono::steady_clock::now();
-					dur = std::chrono::duration_cast<std::chrono::milliseconds>(d - c);
-					std::cout << dur.count() << "ms\n";
-					std::cout << sum << " ";
-					std::cout << counter << "  ";
-				}
+				
 				claujson::clean(j);
 				return 0;
 

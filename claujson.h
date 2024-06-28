@@ -552,6 +552,27 @@ namespace claujson {
 			fail = false;
 			return std::string(data(), size());
 		}
+
+	public:
+		explicit String(const std::string& str) {
+			if (str.size() <= CLAUJSON_STRING_BUF_SIZE) {
+				memcpy(buf, str.data(), str.size());
+				this->sz = str.size();
+				this->type = ValueType::SHORT_STRING;
+			}
+			else {
+				char* temp = new (std::nothrow) char[str.size()];
+				if (!temp) {
+					// log << warn ...
+					this->type = ValueType::NONE;
+					return;
+				}
+				memcpy(temp, str.data(), str.size());
+				this->str = temp;
+				this->sz = str.size();
+				this->type = ValueType::STRING;
+			}
+		}
 	};
 
 
@@ -633,6 +654,9 @@ namespace claujson {
 
 		explicit Value(nullptr_t, bool valid);
 
+		explicit Value(String&& x) {
+			this->_str_val = std::move(x);
+		}
 	public:
 		ValueType type() const;
 
@@ -717,7 +741,7 @@ namespace claujson {
 		Value& json_pointer(const Value& route);
 		const Value& json_pointer(const Value& route) const;
 
-		static bool json_pointerA(StringView route, std::vector<StringView>& vec);
+		static bool json_pointerA(StringView route, std::vector<Value>& vec);
 #if __cpp_lib_char8_t
 
 		Value& json_pointer(std::u8string_view route);
@@ -725,10 +749,10 @@ namespace claujson {
 		const Value& json_pointer(std::u8string_view route) const;
 
 
-		static bool json_pointerA(std::u8string_view route, std::vector<StringView>& vec);
+		static bool json_pointerA(std::u8string_view route, std::vector<Value>& vec);
 #endif
 
-		Value& json_pointerB(const std::vector<StringView>& routeDataVec);
+		Value& json_pointerB(const std::vector<Value>& routeDataVec);
 
 		Array* as_array();
 		Object* as_object();
@@ -738,20 +762,7 @@ namespace claujson {
 		const Object* as_object()const;
 		const Structured* as_structured_ptr()const;
 
-		/// \overload
-		uint64_t find(StringView key) const;
-		/// \overload
 		uint64_t find(const Value& key) const; // find without key`s converting?
-#if __cpp_lib_char8_t
-
-		uint64_t find(std::u8string_view key) const;
-
-		Value& operator[](std::u8string_view key); // if not exist key, then nothing.
-		const Value& operator[](std::u8string_view key) const; // if not exist key, then nothing.
-#endif
-		// StringView -> need utf8, unicode check..
-		Value& operator[](StringView key); // if not exist key, then returns not-valid Value.
-		const Value& operator[](StringView key) const; // if not exist key, then nothing.
 
 		// Value (type is String or Short_String) -> no need utf8, unicode check.
 		Value& operator[](const Value& key); // if not exist key, then nothing.
@@ -845,24 +856,7 @@ namespace claujson {
 
 		virtual ~Structured();
 
-		/// \overload
-		uint64_t find(StringView key) const;
-
-		/// \overload
 		uint64_t find(const Value& key) const; // find without key`s converting ( \uxxxx )
-
-
-#if __cpp_lib_char8_t
-
-		uint64_t find(std::u8string_view key) const;
-
-		Value& operator[](std::u8string_view key); // if not exist key, then Value <- is not valid.
-		const Value& operator[](std::u8string_view key) const; // if not exist key, then Value <- is not valid.
-#endif
-
-		// at vs [] (at <- convert key to key_in_json.) ([] <- do not convert.)
-		Value& operator[](StringView key); // if not exist key, then Value <- is not valid.
-		const Value& operator[](StringView key) const; // if not exist key, then Value <- is not valid.
 
 		Value& operator[](const Value& key); // if not exist key, then Value <- is not valid.
 		const Value& operator[](const Value& key) const; // if not exist key, then Value <- is not valid.

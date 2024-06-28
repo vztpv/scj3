@@ -575,7 +575,7 @@ namespace claujson {
 		return false;
 	}
 #endif
-	bool Value::json_pointerA(StringView route, std::vector<StringView>& vec) {
+	bool Value::json_pointerA(StringView route, std::vector<Value>& vec) {
 		std::vector<StringView> routeVec;
 		std::vector<Value> routeDataVec;
 
@@ -611,29 +611,29 @@ namespace claujson {
 		// 2. using simdjson util, check utf-8 for string in routeVec.
 		// 3. using simdjson util, check valid for string in routeVec.
 
-		//for (auto& x : routeVec) {
-			//Value temp(x); // do 2, 3.
+		for (auto& x : routeVec) {
+			Value temp(x); // do 2, 3.
 
-		//	if (temp.is_valid()) {
-		//		routeDataVec.push_back(std::move(temp));
-		//	}
-		//	else {
-		//		return false;
-		//	}
-		//}
+			if (temp.is_valid()) {
+				routeDataVec.push_back(std::move(temp));
+			}
+			else {
+				return false;
+			}
+		}
 
-		vec = std::move(routeVec);
+		vec = std::move(routeDataVec);
 
 		return true;
 	}
 #if __cpp_lib_char8_t
-	bool Value::json_pointerA(std::u8string_view route, std::vector<StringView>& vec) {
+	bool Value::json_pointerA(std::u8string_view route, std::vector<Value>& vec) {
 		return json_pointerA(StringView(reinterpret_cast<const char*>(route.data()), route.size()), vec);
 	}
 #endif
 
 
-	Value& Value::json_pointerB(const std::vector<StringView>& routeVec) { // option-> StringView route?
+	Value& Value::json_pointerB(const std::vector<Value>& routeVec) { // option-> StringView route?
 		static Value unvalid_data(nullptr, false);
 
 		if (is_structured() == false) {
@@ -649,7 +649,12 @@ namespace claujson {
 		Value* data = this;
 
 		for (uint64_t i = 0; i < routeVec.size(); ++i) {
-			const StringView x = routeVec[i];
+			bool fail = false;
+			auto x = routeVec[i].get_string().get_std_string(fail);
+			if (fail) {
+				// log << warn..
+				return unvalid_data;
+			}
 
 			if (data->is_primitive()) {
 				if (i == routeVec.size() - 1) {
@@ -677,7 +682,7 @@ namespace claujson {
 			}
 			else if (j->is_object()) { // object -> with key
 				StringView str(x);
-				std::string result(str.data(), str.size());
+				std::string& result = x;
 
 				uint64_t count = 0;
 
@@ -712,7 +717,7 @@ namespace claujson {
 				}
 
 				result.resize(result.size() - count);
-				data = &((*j)[result]);
+				data = &((*j)[Value(String(result))]);
 			}
 		}
 
@@ -721,123 +726,14 @@ namespace claujson {
 
 	// race condition..? not support multi-thread  access...
 	Value& Value::json_pointer(StringView route) {
-		log << warn << route << "\n";
-
 		static Value unvalid_data(nullptr, false);
 
-		if (is_structured() == false) {
+		log << warn << route << "\n";
+		std::vector<Value> vec;
+		if (!json_pointerA(route, vec)) {
 			return unvalid_data;
 		}
-
-		// the whole document.
-		if (route.empty()) {
-			return *this;
-		}
-
-		std::vector<StringView> routeVec;
-
-		routeVec.reserve(route.size());
-
-		if (route[0] != '/') {
-			return unvalid_data;
-		}
-
-		// 1. route -> split with '/'  to routeVec.
-		uint64_t found_idx = 0; // first found_idx is 0, found '/'
-
-		while (found_idx != StringView::npos) {
-			uint64_t new_idx = route.find('/', found_idx + 1);
-
-			if (new_idx == StringView::npos) {
-				routeVec.push_back(sub_route(route, found_idx, route.size()));
-				break;
-			}
-			// else {... }
-			routeVec.push_back(sub_route(route, found_idx, new_idx));
-
-			found_idx = new_idx;
-		}
-
-		// 2. using simdjson util, check utf-8 for string in routeVec.
-		// 3. using simdjson util, check valid for string in routeVec.
-
-		for (auto& x : routeVec) {
-			//Value temp(x);
-
-			if (claujson::is_valid_string_in_json(x)) {
-				
-			//}
-			//if (temp.is_valid()) {
-			}
-			else {
-				return unvalid_data;
-			}
-		}
-
-		// 4. find Data with route. and return
-		Value* data = this;
-
-		for (uint64_t i = 0; i < routeVec.size(); ++i) {
-			auto& x = routeVec[i];
-
-			if (data->is_primitive()) {
-				if (i == routeVec.size() - 1) {
-					return *data;
-				}
-				else {
-					return unvalid_data;
-				}
-			}
-
-			Structured* j = data->as_structured_ptr();
-
-			if (j->is_array()) { // array -> with idx
-				uint64_t idx = 0;
-
-				bool chk = to_uint_for_json_pointer(x, &idx, simdjson_imple);
-
-				if (!chk) {
-					return unvalid_data;
-				}
-
-				data = &j->get_value_list(idx);
-			}
-			else if (j->is_object()) { // object -> with key
-				StringView str(x);
-				std::string result;
-
-				result.reserve(str.size());
-
-				// chk ~0 -> ~, ~1 -> /
-				for (uint64_t k = 0; k < str.size(); ++k) {
-					if (str[k] == '~') {
-						if (k + 1 < str.size()) {
-							if (str[k + 1] == '0') {
-								result.push_back('~');
-								++k;
-							}
-							else if (str[k + 1] == '1') {
-								result.push_back('/');
-								++k;
-							}
-							else {
-								return unvalid_data;
-							}
-						}
-						else {
-							return unvalid_data;
-						}
-					}
-					else {
-						result.push_back(str[k]);
-					}
-				}
-
-				data = &j->operator[](result); // in inner, run conversion... StringView -> Value
-			}
-		}
-
-		return *data;
+		return json_pointerB(vec);
 	}
 	const Value& Value::json_pointer(StringView route) const {
 		static const Value unvalid_data(nullptr, false);
@@ -952,7 +848,7 @@ namespace claujson {
 					}
 				}
 
-				data = &((*j)[result]); // in inner, run conversion... StringView -> Value
+				data = &((*j)[Value(String(result))]); // in inner, run conversion... StringView -> Value
 			}
 		}
 
@@ -1497,27 +1393,7 @@ namespace claujson {
 
 	}
 
-	uint64_t Structured::find(StringView key) const {
-		if (!is_object()) { //} || !is_valid()) {
-			return npos;
-		}
-
-		// is valid utf-8 and no \\~ ?? //
-		auto key_in_json = claujson::convert_to_string_in_json(key);
-		if (!key_in_json.first) {
-			return npos;
-		}
-
-		uint64_t len = get_data_size();
-		for (uint64_t i = 0; i < len; ++i) {
-			if (get_key_list(i).str_val() == (key_in_json.second)) {
-				return i;
-			}
-		}
-
-		return -1;
-	}
-
+	
 	uint64_t Structured::find(const Value& key) const {
 		if (!is_object() || !key.is_str()) { // } || !is_valid()) {
 			return npos;
@@ -1533,20 +1409,6 @@ namespace claujson {
 		return -1;
 	}
 
-#if __cpp_lib_char8_t
-	
-	uint64_t Structured::find(std::u8string_view key) const { // chk (uint64_t)-1 == (maximum)....-> eof?
-		return find(StringView(reinterpret_cast<const char*>(key.data()), key.size()));
-	}
-
-	Value& Structured::operator[](std::u8string_view key) { // if not exist key, then nothing.
-		return operator[](StringView(reinterpret_cast<const char*>(key.data()), key.size()));
-	}
-	const Value& Structured::operator[](std::u8string_view key) const { // if not exist key, then nothing.
-		return operator[](StringView(reinterpret_cast<const char*>(key.data()), key.size()));
-	}
-#endif
-
 	Value& Structured::operator[](uint64_t idx) {
 		if (idx >= get_data_size()) {
 			return data_null;
@@ -1558,24 +1420,6 @@ namespace claujson {
 		if (idx >= get_data_size()) {
 			return data_null;
 		}
-		return get_value_list(idx);
-	}
-
-
-	Value& Structured::operator[](StringView key) { // if not exist key, then nothing.
-		uint64_t idx = npos;
-		if ((idx = find(key)) == npos) {
-			return data_null;
-		}
-
-		return get_value_list(idx);
-	}
-	const Value& Structured::operator[](StringView key) const { // if not exist key, then nothing.
-		uint64_t idx = npos;
-		if ((idx = find(key)) == npos) {
-			return data_null;
-		}
-
 		return get_value_list(idx);
 	}
 
@@ -2840,55 +2684,12 @@ namespace claujson {
 		return empty_value;
 	}
 
-	uint64_t Value::find(StringView key) const // find with key`s convert.
-	{
-
-		if (is_structured()) {
-			return as_structured_ptr()->find(key);
-		}
-
-		return Structured::npos;
-	}
-
 	uint64_t Value::find(const Value& key) const { // find without key`s converting?
 		if (is_structured()) {
 			return as_structured_ptr()->find(key);
 		}
 
 		return Structured::npos;
-	}
-#if __cpp_lib_char8_t
-
-	uint64_t Value::find(std::u8string_view key) const {
-		return find(StringView(reinterpret_cast<const char*>(key.data(), key.size())));
-	}
-
-	//
-	Value& Value::operator[](std::u8string_view key) { // if not exist key, then nothing.
-		return operator[](StringView(reinterpret_cast<const char*>(key.data(), key.size())));
-	}
-	const Value& Value::operator[](std::u8string_view key) const { // if not exist key, then nothing.
-		return operator[](StringView(reinterpret_cast<const char*>(key.data(), key.size())));
-	}
-#endif
-
-	Value& Value::operator[](StringView key) { // if not exist key, then nothing.
-		static Value empty_value(nullptr, false);
-
-		if (is_structured()) {
-			return as_structured_ptr()->operator[](key);
-		}
-
-		return empty_value;
-	}
-	const Value& Value::operator[](StringView key) const { // if not exist key, then nothing.
-		static Value empty_value(nullptr, false);
-
-		if (is_structured()) {
-			return as_structured_ptr()->operator[](key);
-		}
-
-		return empty_value;
 	}
 
 
@@ -3596,8 +3397,6 @@ namespace claujson {
 			for (int64_t a = start; a <= last; ++a) {
 				auto& x = imple->structural_indexes[a]; //  token_arr[a];
 				const _simdjson::internal::tape_type type = (_simdjson::internal::tape_type)buf[x];
-				//bool key = false;
-				//bool next_is_valid = false;
 
 				switch ((int)type) {
 				case ',':
@@ -4873,7 +4672,7 @@ namespace claujson {
 		if (pretty) {
 			std::vector<std::thread> thread_print(thr_num);
 
-			for (uint64_t i = 0; i < thread_print.size(); ++i) {
+			for (uint64_t i = 0; i < thread_print.size(); ++i) {  // end[i] ?
 				thread_print[i] = std::thread(print_pretty, view_arr + start[i], view_arr + last[i], std::ref(stream[i]));
 			}
 
@@ -4980,7 +4779,7 @@ namespace claujson {
 		}
 
 		if (start > 0 && start == last) {
-			return false;
+			return false; // 
 		}
 		//
 // Start the document
