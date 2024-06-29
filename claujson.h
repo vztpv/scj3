@@ -735,21 +735,6 @@ namespace claujson {
 			return _array_or_object_ptr;
 		}
 
-		Value& json_pointer(StringView route);
-
-		const Value& json_pointer(StringView route) const;
-
-		static bool json_pointerA(StringView route, std::vector<Value>& vec);
-#if __cpp_lib_char8_t
-
-		Value& json_pointer(std::u8string_view route);
-
-		const Value& json_pointer(std::u8string_view route) const;
-
-
-		static bool json_pointerA(std::u8string_view route, std::vector<Value>& vec);
-#endif
-
 		Value& json_pointerB(const std::vector<Value>& routeDataVec);
 		const Value& json_pointerB(const std::vector<Value>& routeVec) const;
 

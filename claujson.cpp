@@ -575,65 +575,10 @@ namespace claujson {
 		return false;
 	}
 #endif
-	bool Value::json_pointerA(StringView route, std::vector<Value>& vec) {
-		std::vector<StringView> routeVec;
-		std::vector<Value> routeDataVec;
 
 
-		if (route.empty()) {
-			vec.clear();
-			return true;
-		}
-
-		routeVec.reserve(route.size());
-		routeDataVec.reserve(route.size());
-
-		if (route[0] != '/') {
-			return false;
-		}
-
-		// 1. route -> split with '/'  to routeVec.
-		uint64_t found_idx = 0; // first found_idx is 0, found '/'
-
-		while (found_idx != StringView::npos) {
-			uint64_t new_idx = route.find('/', found_idx + 1);
-
-			if (new_idx == StringView::npos) {
-				routeVec.push_back(sub_route(route, found_idx, route.size()));
-				break;
-			}
-			// else {... }
-			routeVec.push_back(sub_route(route, found_idx, new_idx));
-
-			found_idx = new_idx;
-		}
-
-		// 2. using simdjson util, check utf-8 for string in routeVec.
-		// 3. using simdjson util, check valid for string in routeVec.
-
-		for (auto& x : routeVec) {
-			Value temp(x); // do 2, 3.
-
-			if (temp.is_valid()) {
-				routeDataVec.push_back(std::move(temp));
-			}
-			else {
-				return false;
-			}
-		}
-
-		vec = std::move(routeDataVec);
-
-		return true;
-	}
-#if __cpp_lib_char8_t
-	bool Value::json_pointerA(std::u8string_view route, std::vector<Value>& vec) {
-		return json_pointerA(StringView(reinterpret_cast<const char*>(route.data()), route.size()), vec);
-	}
-#endif
-
-
-	Value& Value::json_pointerB(const std::vector<Value>& routeVec) { // option-> StringView route?
+	// this Value is Array or Object.
+	Value& Value::json_pointerB(const std::vector<Value>& routeVec) { 
 		static Value unvalid_data(nullptr, false);
 
 		if (is_structured() == false) {
@@ -650,79 +595,33 @@ namespace claujson {
 
 		for (uint64_t i = 0; i < routeVec.size(); ++i) {
 			bool fail = false;
-			auto x = routeVec[i].get_string().get_std_string(fail);
+			auto& x = routeVec[i];
 			if (fail) {
 				// log << warn..
 				return unvalid_data;
 			}
 
 			if (data->is_primitive()) {
-				if (i == routeVec.size() - 1) {
-					return *data;
-				}
-				else {
-					return unvalid_data;
-				}
+				return unvalid_data;
 			}
 
 			Structured* j = data->as_structured_ptr();
 
 			if (j->is_array()) { // array -> with idx
-				uint64_t idx = 0;
+				uint64_t idx = x.get_unsigned_integer();
 				//bool found = false;
 				//uint64_t arr_size = j->get_data_size();
-
-				bool chk = to_uint_for_json_pointer(x, &idx, simdjson_imple);
-
-				if (!chk) {
-					return unvalid_data;
-				}
 
 				data = &j->get_value_list(idx);
 			}
 			else if (j->is_object()) { // object -> with key
-				StringView str(x);
-				std::string& result = x;
-
-				uint64_t count = 0;
-
-				// chk ~0 -> ~, ~1 -> /
-				uint64_t idx = 0;
-
-				idx = str.find('~');
-
-				while (idx != std::string::npos) {
-					uint64_t k = idx;
-
-					if (k + 1 < str.size()) {
-						if (str[k + 1] == '0') {
-							result[k] = '~';
-							result.erase(result.begin() + k + 1);
-							count++;
-						}
-						else if (str[k + 1] == '1') {
-							result[k] = '/';
-							result.erase(result.begin() + k + 1);
-							count++;
-						}
-						else {
-							return unvalid_data;
-						}
-					}
-					else {
-						return unvalid_data;
-					}
-
-					idx = str.find('~');
-				}
-
-				result.resize(result.size() - count);
-				data = &((*j)[Value(String(result))]);
+				data = &((*j)[x]);
 			}
 		}
 
 		return *data;
 	}
+
 	const Value& Value::json_pointerB(const std::vector<Value>& routeVec) const { // option-> StringView route?
 		static Value unvalid_data(nullptr, false);
 
@@ -740,111 +639,32 @@ namespace claujson {
 
 		for (uint64_t i = 0; i < routeVec.size(); ++i) {
 			bool fail = false;
-			auto x = routeVec[i].get_string().get_std_string(fail);
+			auto& x = routeVec[i];
 			if (fail) {
 				// log << warn..
 				return unvalid_data;
 			}
 
 			if (data->is_primitive()) {
-				if (i == routeVec.size() - 1) {
-					return *data;
-				}
-				else {
-					return unvalid_data;
-				}
+				return unvalid_data;
 			}
 
 			const Structured* j = data->as_structured_ptr();
 
 			if (j->is_array()) { // array -> with idx
-				uint64_t idx = 0;
+				uint64_t idx = x.get_unsigned_integer();
 				//bool found = false;
 				//uint64_t arr_size = j->get_data_size();
-
-				bool chk = to_uint_for_json_pointer(x, &idx, simdjson_imple);
-
-				if (!chk) {
-					return unvalid_data;
-				}
 
 				data = &j->get_value_list(idx);
 			}
 			else if (j->is_object()) { // object -> with key
-				StringView str(x);
-				std::string& result = x;
-
-				uint64_t count = 0;
-
-				// chk ~0 -> ~, ~1 -> /
-				uint64_t idx = 0;
-
-				idx = str.find('~');
-
-				while (idx != std::string::npos) {
-					uint64_t k = idx;
-
-					if (k + 1 < str.size()) {
-						if (str[k + 1] == '0') {
-							result[k] = '~';
-							result.erase(result.begin() + k + 1);
-							count++;
-						}
-						else if (str[k + 1] == '1') {
-							result[k] = '/';
-							result.erase(result.begin() + k + 1);
-							count++;
-						}
-						else {
-							return unvalid_data;
-						}
-					}
-					else {
-						return unvalid_data;
-					}
-
-					idx = str.find('~');
-				}
-
-				result.resize(result.size() - count);
-				data = &((*j)[Value(String(result))]);
+				data = &((*j)[x]);
 			}
 		}
 
 		return *data;
 	}
-
-	Value& Value::json_pointer(StringView route) {
-		static Value unvalid_data(nullptr, false);
-
-		log << info << route << "\n";
-		std::vector<Value> vec;
-		if (!json_pointerA(route, vec)) {
-			return unvalid_data;
-		}
-		return json_pointerB(vec);
-	}
-	const Value& Value::json_pointer(StringView route) const {
-		static Value unvalid_data(nullptr, false);
-
-		log << info << route << "\n";
-		std::vector<Value> vec;
-		if (!json_pointerA(route, vec)) {
-			return unvalid_data;
-		}
-		return json_pointerB(vec);
-	}
-
-#if __cpp_lib_char8_t
-	Value& Value::json_pointer(std::u8string_view route) {
-		return json_pointer(StringView(reinterpret_cast<const char*>(route.data(), route.size())));
-	}
-	const Value& Value::json_pointer(std::u8string_view route) const {
-		return json_pointer(StringView(reinterpret_cast<const char*>(route.data(), route.size())));
-	}
-
-
-#endif
 
 
 	void Value::clear(bool remove_str) {

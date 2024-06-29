@@ -47,149 +47,6 @@ void key_dup_test() {
 	std::cout << found << " " << "idx is " << idx << "\n";
 }
 
-void json_pointer_test() {
-	//	For example, given the JSON document
-
-	auto test = u8R"({
-		   "foo": ["bar", "baz"] ,
-		   "" : 0,
-		   "a/b" : 1,
-		   "c%d" : 2,
-		   "e^f" : 3,
-		   "g|h" : 4,
-		   "i\\j" : 5,
-		   "k\"l" : 6,
-		   " " : 7,
-		   "m~n" : 8
-		})"sv;
-	std::cout << test << "\n";
-	auto test2 = u8R"({
-		   "foo": ["bar2", "baz"] ,
-		   "" : 0,
-		  
-		   "c%d" : 2,
-		   "e^f" : 3,
-		   "g|h" : 45,
-		   "i\\j" : 5,
-		   "k\"l" : 6,
-		   " " : 7,
-		   "m~n" : 8,
-		   "zzz": 9
-		})"sv;
-
-	//	The following JSON strings evaluate to the accompanying values :
-
-//	""           // the whole document
-//		"/foo"    ["bar", "baz"]
-//		"/foo/0"     "bar"
-//		"/"          0
-//		"/a~1b"      1
-//		"/c%d"       2
-//		"/e^f"       3
-//		"/g|h"       4
-//		"/i\\j"      5
-//		"/k\"l"      6
-//		"/ "         7
-//		"/m~0n"      8
-	using claujson::Value;
-
-	Value x;
-	if (!claujson::parse_str(test, x, 1).first) {
-		std::cout << "fail\n";
-
-		claujson::Ptr<claujson::Structured> clean(x.as_structured_ptr());
-
-		return;
-	}
-
-	Value y;
-	if (!claujson::parse_str(test2, y, 1).first) {
-		std::cout << "fail\n";
-
-		claujson::Ptr<claujson::Structured> clean(y.as_structured_ptr());
-
-		return;
-	}
-
-
-	std::cout << x << "\n";
-
-	{
-		Value& y = x.json_pointer(""sv); // whole document...
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer("/foo"sv);
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer("/foo/0"sv);
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer("/"sv);
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer("/a~1b"sv);
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer("/c%d"sv);
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer("/e^f"sv);
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer("/g|h"sv);
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer(u8R"(/i\\j)"sv); // chk R
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer(u8R"(/k\"l)"sv); // chk R
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer("/ "sv);
-		std::cout << y << " ";
-	}
-	{
-		Value& y = x.json_pointer("/m~0n"sv);
-		std::cout << y << " ";
-	}
-
-	claujson::Value diff = claujson::diff(x, y);
-	std::cout << diff << "\n";
-
-	claujson::Value result = x.clone();
-
-	claujson::patch(result, diff);
-
-	std::cout << result << "\n";
-
-	if (result == y) {
-		std::cout << "success\n";
-	}
-
-	{
-		claujson::Ptr<claujson::Structured> clean(x.as_structured_ptr());
-	}
-	{
-		claujson::Ptr<claujson::Structured> clean2(y.as_structured_ptr());
-	}
-	{
-		claujson::Ptr<claujson::Structured> clean3(diff.as_structured_ptr());
-	}
-	{
-		claujson::Ptr<claujson::Structured> clean4(result.as_structured_ptr());
-	}
-}
-
 void str_test() {
 	auto x = u8"한글 Test";
 
@@ -214,6 +71,29 @@ void str_test() {
 		std::cout << "ERROR3 ";
 	}
 	
+}
+
+void diff_test() {
+	std::cout << "diff test\n";
+	claujson::init(22);
+	claujson::log.console();
+	claujson::log.warn();
+	claujson::log.info();
+	std::string json1 = "{ \"abc\" : [ 1,2,3] }";
+	std::string json2 = "{ \"abc\" : [ 2,4,5] }";
+
+	claujson::Value x, y;
+	claujson::parse_str(json1, x, 0);
+	claujson::parse_str(json2, y, 1);
+
+	auto z = claujson::diff(x, y);
+	std::cout << z << "\n";
+
+	auto& k = claujson::patch(x, z);
+	std::cout << k << "\n";
+
+	claujson::clean(x);
+	claujson::clean(y);
 }
 
 // iterator test.
@@ -295,6 +175,8 @@ int main(int argc, char* argv[])
 		std::cout << "[program name] [json file name] (number of thread) \n";
 		return 2;
 	}
+
+	diff_test();
 
 	/*
 	std::cout << sizeof(claujson::Value) << "\n";
@@ -468,11 +350,6 @@ int main(int argc, char* argv[])
 				std::vector<claujson::Value> vec;
 
 				// json_pointer, json_pointerA <- u8string_view?
-
-				if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
-					std::cout << "json pointer error.\n";
-					return 1;
-				}
 
 				static const auto& _geometry = claujson::Value("geometry"sv);
 				static const auto& _coordinates = claujson::Value("coordinates"sv);
