@@ -723,75 +723,28 @@ namespace claujson {
 
 		return *data;
 	}
-
-	// race condition..? not support multi-thread  access...
-	Value& Value::json_pointer(StringView route) {
+	const Value& Value::json_pointerB(const std::vector<Value>& routeVec) const { // option-> StringView route?
 		static Value unvalid_data(nullptr, false);
-
-		log << warn << route << "\n";
-		std::vector<Value> vec;
-		if (!json_pointerA(route, vec)) {
-			return unvalid_data;
-		}
-		return json_pointerB(vec);
-	}
-	const Value& Value::json_pointer(StringView route) const {
-		static const Value unvalid_data(nullptr, false);
 
 		if (is_structured() == false) {
 			return unvalid_data;
 		}
 
 		// the whole document.
-		if (route.empty()) {
+		if (routeVec.empty()) {
 			return *this;
-		}
-
-		std::vector<StringView> routeVec;
-
-		routeVec.reserve(route.size());
-
-		if (route[0] != '/') {
-			return unvalid_data;
-		}
-
-		// 1. route -> split with '/'  to routeVec.
-		uint64_t found_idx = 0; // first found_idx is 0, found '/'
-
-		while (found_idx != StringView::npos) {
-			uint64_t new_idx = route.find('/', found_idx + 1);
-
-			if (new_idx == StringView::npos) {
-				routeVec.push_back(sub_route(route, found_idx, route.size()));
-				break;
-			}
-			// else {... }
-			routeVec.push_back(sub_route(route, found_idx, new_idx));
-
-			found_idx = new_idx;
-		}
-
-		// 2. using simdjson util, check utf-8 for string in routeVec.
-		// 3. using simdjson util, check valid for string in routeVec.
-
-		for (auto& x : routeVec) {
-			//Value temp(x);
-
-			if (claujson::is_valid_string_in_json(x)) {
-
-				//}
-				//if (temp.is_valid()) {
-			}
-			else {
-				return unvalid_data;
-			}
 		}
 
 		// 4. find Data with route. and return
 		const Value* data = this;
 
 		for (uint64_t i = 0; i < routeVec.size(); ++i) {
-			auto& x = routeVec[i];
+			bool fail = false;
+			auto x = routeVec[i].get_string().get_std_string(fail);
+			if (fail) {
+				// log << warn..
+				return unvalid_data;
+			}
 
 			if (data->is_primitive()) {
 				if (i == routeVec.size() - 1) {
@@ -819,48 +772,67 @@ namespace claujson {
 			}
 			else if (j->is_object()) { // object -> with key
 				StringView str(x);
-				std::string result;
+				std::string& result = x;
 
-				result.reserve(str.size());
+				uint64_t count = 0;
 
 				// chk ~0 -> ~, ~1 -> /
-				for (uint64_t k = 0; k < str.size(); ++k) {
-					if (str[k] == '~') {
-						if (k + 1 < str.size()) {
-							if (str[k + 1] == '0') {
-								result.push_back('~');
-								++k;
-							}
-							else if (str[k + 1] == '1') {
-								result.push_back('/');
-								++k;
-							}
-							else {
-								return unvalid_data;
-							}
+				uint64_t idx = 0;
+
+				idx = str.find('~');
+
+				while (idx != std::string::npos) {
+					uint64_t k = idx;
+
+					if (k + 1 < str.size()) {
+						if (str[k + 1] == '0') {
+							result[k] = '~';
+							result.erase(result.begin() + k + 1);
+							count++;
+						}
+						else if (str[k + 1] == '1') {
+							result[k] = '/';
+							result.erase(result.begin() + k + 1);
+							count++;
 						}
 						else {
 							return unvalid_data;
 						}
 					}
 					else {
-						result.push_back(str[k]);
+						return unvalid_data;
 					}
+
+					idx = str.find('~');
 				}
 
-				data = &((*j)[Value(String(result))]); // in inner, run conversion... StringView -> Value
+				result.resize(result.size() - count);
+				data = &((*j)[Value(String(result))]);
 			}
 		}
 
 		return *data;
 	}
 
-	// need refactoring...
-	Value& Value::json_pointer(const Value& route) {
-		return json_pointer(StringView(route.get_string().data(), route.get_string().size()));
+	Value& Value::json_pointer(StringView route) {
+		static Value unvalid_data(nullptr, false);
+
+		log << info << route << "\n";
+		std::vector<Value> vec;
+		if (!json_pointerA(route, vec)) {
+			return unvalid_data;
+		}
+		return json_pointerB(vec);
 	}
-	const Value& Value::json_pointer(const Value& route) const {
-		return json_pointer(StringView(route.get_string().data(), route.get_string().size()));
+	const Value& Value::json_pointer(StringView route) const {
+		static Value unvalid_data(nullptr, false);
+
+		log << info << route << "\n";
+		std::vector<Value> vec;
+		if (!json_pointerA(route, vec)) {
+			return unvalid_data;
+		}
+		return json_pointerB(vec);
 	}
 
 #if __cpp_lib_char8_t
@@ -6291,7 +6263,7 @@ namespace claujson {
 	static std::string escape_for_json_pointer(std::string str) {
 		// 1. ~ -> ~0
 		// 2. / -> ~1
-		// 1->2 ok, 2->1 no ok.
+		
 		{
 			uint64_t idx = 0;
 			idx = str.find('~');
@@ -6313,9 +6285,7 @@ namespace claujson {
 		return str;
 	}
 
-
-	// cf) /- -> / in array.
-	static Value _diff(const Value& x, const Value& y, std::string route) {
+	static Value _diff(const Value& x, const Value& y, std::vector<Value>& route) {
 		Value result;
 		{
 			Array* temp = new (std::nothrow) Array;
@@ -6350,7 +6320,19 @@ namespace claujson {
 			}
 
 			obj->add_object_element(_op_str.clone(), _replace_str.clone());
-			obj->add_object_element(_path_str.clone(), Value(route));
+			{
+				Array* temp = new (std::nothrow) Array();
+				if (temp == nullptr) {
+					clean(result);
+					delete obj;
+					return Value(nullptr, false);
+				}
+				for (uint64_t i = 0; i < route.size(); ++i) {
+					temp->add_array_element(route[i].clone());
+				}
+				obj->add_object_element(_path_str.clone(), Value(temp));
+			}
+			
 			obj->add_object_element(_value_str.clone(), Value(y.clone()));
 
 			j->add_object(Ptr<Structured>(obj));
@@ -6372,11 +6354,11 @@ namespace claujson {
 				uint64_t sz_y = jy->get_data_size();
 
 				for (; i < sz_x && i < sz_y; ++i) {
-					std::string new_route = route;
-					new_route += '/';
-					new_route += std::to_string(i); // change? fmt?
+					route.push_back(Value(i));
 
-					Value inner_diff = _diff(jx->get_value_list(i), jy->get_value_list(i), std::move(new_route));
+					Value inner_diff = _diff(jx->get_value_list(i), jy->get_value_list(i), route);
+
+					route.pop_back();
 
 					{
 						Structured* w = inner_diff.as_structured_ptr();
@@ -6402,7 +6384,21 @@ namespace claujson {
 
 						obj->add_object_element(_op_str.clone(), _remove_str.clone());
 
-						obj->add_object_element(_path_str.clone(), Value(route));
+						{
+							Array* temp = new (std::nothrow) Array();
+							if (temp == nullptr) {
+								clean(result);
+								delete obj;
+								return Value(nullptr, false);
+							}
+							for (uint64_t i = 0; i < route.size(); ++i) {
+								temp->add_array_element(route[i].clone());
+							}
+							obj->add_object_element(_path_str.clone(), Value(temp));
+						}
+
+						//obj->add_object_element(_path_str.clone(), Value(route));
+
 						obj->add_object_element(_last_idx_str.clone(), Value(_i - 1));
 
 						j->add_object(Ptr<Structured>(obj));
@@ -6419,7 +6415,19 @@ namespace claujson {
 
 						obj->add_object_element(_op_str.clone(), _add_str.clone());
 
-						obj->add_object_element(_path_str.clone(), Value(route));
+						{
+							Array* temp = new (std::nothrow) Array();
+							if (temp == nullptr) {
+								clean(result);
+								delete obj;
+								return Value(nullptr, false);
+							}
+							for (uint64_t i = 0; i < route.size(); ++i) {
+								temp->add_array_element(route[i].clone());
+							}
+							obj->add_object_element(_path_str.clone(), Value(temp));
+						}
+						//obj->add_object_element(_path_str.clone(), Value(route));
 
 						obj->add_object_element(_value_str.clone(), Value(jy->get_value_list(i).clone()));
 
@@ -6433,12 +6441,13 @@ namespace claujson {
 
 				for (uint64_t i = sz_x; i > 0; --i) {
 					const Value& key = jx->get_key_list(i - 1);
-					std::string new_route = route;
-					new_route += '/';
-					new_route += escape_for_json_pointer(key.get_string().data());
 					uint64_t idx = jy->find(key);
 					if (idx != Structured::npos) {
-						Value inner_diff = _diff((jx->get_value_list(i - 1)), jy->get_value_list(idx), new_route);
+						route.push_back(key.clone());
+						
+						Value inner_diff = _diff((jx->get_value_list(i - 1)), jy->get_value_list(idx), route);
+
+						route.pop_back();
 
 						{
 							Structured* w = inner_diff.as_structured_ptr();
@@ -6460,7 +6469,22 @@ namespace claujson {
 							return Value(nullptr, false);
 						}
 						obj->add_object_element(_op_str.clone(), _remove_str.clone());
-						obj->add_object_element(_path_str.clone(), Value(route));
+
+						{
+							Array* temp = new (std::nothrow) Array();
+							if (temp == nullptr) {
+								clean(result);
+								delete obj;
+								return Value(nullptr, false);
+							}
+							for (uint64_t i = 0; i < route.size(); ++i) {
+								temp->add_array_element(route[i].clone());
+							}
+							obj->add_object_element(_path_str.clone(), Value(temp));
+						}
+						
+						//obj->add_object_element(_path_str.clone(), Value(route));
+						
 						obj->add_object_element(_last_key_str.clone(), key.clone());
 
 						j->add_object(Ptr<Structured>(obj));
@@ -6479,7 +6503,23 @@ namespace claujson {
 						}
 
 						obj->add_object_element(_op_str.clone(), _add_str.clone());
-						obj->add_object_element(_path_str.clone(), Value(route));
+
+
+						{
+							Array* temp = new (std::nothrow) Array();
+							if (temp == nullptr) {
+								clean(result);
+								delete obj;
+								return Value(nullptr, false);
+							}
+							for (uint64_t i = 0; i < route.size(); ++i) {
+								temp->add_array_element(route[i].clone());
+							}
+							obj->add_object_element(_path_str.clone(), Value(temp));
+						}
+						
+						//obj->add_object_element(_path_str.clone(), Value(route));
+						
 						obj->add_object_element(_key_str.clone(), Value(jy->get_key_list(i).clone()));
 						obj->add_object_element(_value_str.clone(), Value(jy->get_value_list(i).clone()));
 
@@ -6506,7 +6546,22 @@ namespace claujson {
 			}
 
 			obj->add_object_element(_op_str.clone(), _replace_str.clone());
-			obj->add_object_element(_path_str.clone(), Value(route));
+
+			{
+				Array* temp = new (std::nothrow) Array();
+				if (temp == nullptr) {
+					clean(result);
+					delete obj;
+					return Value(nullptr, false);
+				}
+				for (uint64_t i = 0; i < route.size(); ++i) {
+					temp->add_array_element(route[i].clone());
+				}
+				obj->add_object_element(_path_str.clone(), Value(temp));
+			}
+
+			//obj->add_object_element(_path_str.clone(), Value(route));
+			
 			obj->add_object_element(_value_str.clone(), Value(y.clone()));
 
 			j->add_object(Ptr<Structured>(obj));
@@ -6519,7 +6574,8 @@ namespace claujson {
 
 
 	Value diff(const Value& x, const Value& y) {
-		return _diff(x, y, "");
+		std::vector<Value> vec;
+		return _diff(x, y, vec);
 	}
 
 	Value& patch(Value& x, const Value& diff) {
@@ -6565,17 +6621,31 @@ namespace claujson {
 					return unvalid_data;
 				}
 
-				Value& value = result.json_pointer(obj->get_value_list(path_idx));
-				{
-					if (value.is_structured()) {
-						clean(value);
-						value.clear(false);
-					}
+				std::vector<Value> vec;
+				const Array* arr = obj->get_value_list(path_idx).as_array();
+				if (arr == nullptr) {
+					clean(result);
+					return unvalid_data;
 				}
+				for (uint64_t i = 0; i < arr->size(); ++i) {
+					vec.push_back(arr->get_value_list(i).clone());
+				}
+				Value& value = result.json_pointerB(vec);
+
 				value = obj->get_value_list(value_idx).clone();
 			}
 			else if (obj->get_value_list(op_idx).str_val() == "remove"sv) {
-				Structured* parent = result.json_pointer(obj->get_value_list(path_idx)).as_structured_ptr();
+				std::vector<Value> vec;
+				const Array* arr = obj->get_value_list(path_idx).as_array();
+				if (arr == nullptr) {
+					clean(result);
+					return unvalid_data;
+				}
+				for (uint64_t i = 0; i < arr->size(); ++i) {
+					vec.push_back(arr->get_value_list(i).clone());
+				}
+				Value& value = result.json_pointerB(vec);
+				Structured* parent = value.as_structured_ptr();
 
 				// case : result.json_pointer returns root?
 				if (!parent) {
@@ -6615,7 +6685,17 @@ namespace claujson {
 					return unvalid_data;
 				}
 
-				Value& _ = result.json_pointer(obj->get_value_list(path_idx));
+				std::vector<Value> vec;
+				const Array* arr = obj->get_value_list(path_idx).as_array();
+				if (arr == nullptr) {
+					clean(result);
+					return unvalid_data;
+				}
+				for (uint64_t i = 0; i < arr->size(); ++i) {
+					vec.push_back(arr->get_value_list(i).clone());
+				}
+
+				Value& _ = result.json_pointerB(vec);
 
 				Structured* parent = _.as_structured_ptr();
 

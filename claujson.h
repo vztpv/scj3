@@ -307,6 +307,7 @@ namespace claujson {
 
 	// sz`s type is uint32_t, not uint64_t.
 	class String {
+		friend class Value;
 	private: // do not change of order. do not add variable.
 		#define CLAUJSON_STRING_BUF_SIZE 11
 		union {
@@ -553,7 +554,7 @@ namespace claujson {
 			return std::string(data(), size());
 		}
 
-	public:
+	private:
 		explicit String(const std::string& str) {
 			if (str.size() <= CLAUJSON_STRING_BUF_SIZE) {
 				memcpy(buf, str.data(), str.size());
@@ -738,9 +739,6 @@ namespace claujson {
 
 		const Value& json_pointer(StringView route) const;
 
-		Value& json_pointer(const Value& route);
-		const Value& json_pointer(const Value& route) const;
-
 		static bool json_pointerA(StringView route, std::vector<Value>& vec);
 #if __cpp_lib_char8_t
 
@@ -753,6 +751,7 @@ namespace claujson {
 #endif
 
 		Value& json_pointerB(const std::vector<Value>& routeDataVec);
+		const Value& json_pointerB(const std::vector<Value>& routeVec) const;
 
 		Array* as_array();
 		Object* as_object();
