@@ -7,7 +7,7 @@ parsing - multi-thread(used in clauparser),
 
 save - multi-thread
   
-(C++14, 64bit, Windows)
+(C++14~, 64bit)
 
 # Use static lib (claujson) with CMake!
 https://github.com/vztpv/scj3_cmake_test
@@ -20,7 +20,7 @@ claujson::init(0); // must call.
 claujson::Value j;
 bool ok;
   
-auto x = claujson::parse(argv[1], j, 0, true); // argv[1], j, 64 ??
+auto x = claujson::parse(argv[1], j, 0, true); // filename, Value, thread_num...
 
 if (!x.first) {
 	std::cout << "fail\n";
