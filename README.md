@@ -15,7 +15,7 @@ https://github.com/vztpv/scj3_cmake_test
 # Usage... with citylots.json
 
 ```c++
-claujson::init(0);
+claujson::init(0); // must call.
 
 claujson::Value j;
 bool ok;
@@ -34,13 +34,6 @@ claujson::save_parallel("test34.json", j, 0);
 int counter = 0;
 ok = x.first;
 
-std::vector<claujson::Value> vec;
-if (false == claujson::Value::json_pointerA("/geometry/coordinates"sv, vec)) {
-	std::cout << "json pointer error.\n";
-	claujson::clean(j);
-	return 1;
-}
-
 double sum = 0;
 
 static const auto& _geometry = claujson::Value("geometry"sv);
@@ -55,7 +48,7 @@ if (true && ok) {
                 continue;
             }
             for (auto& feature : *features_arr) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
-                auto& coordinate = feature[_geometry][_coordinates][0];  // feature.json_pointerB(vec)[0];  
+                auto& coordinate = feature[_geometry][_coordinates][0]; 
                 claujson::Array* coordinate_arr = coordinate.as_array();
                 if (!coordinate_arr) {
                     continue;
