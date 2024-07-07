@@ -6408,7 +6408,7 @@ namespace claujson {
 	}
 
 	Value& patch(Value& x, const Value& diff) {
-		Value unvalid_data(nullptr, false);
+		static Value unvalid_data(nullptr, false);
 
 		const Structured* j_diff = diff.as_structured_ptr();
 

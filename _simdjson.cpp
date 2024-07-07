@@ -7419,19 +7419,19 @@ public:
       return set_best()->parse_string(src, dst, allow_replacement);
   }
 
-  _simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
       return  set_best()->is_valid_true_atom(src, len);
   }
 
-  _simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
       return  set_best()->is_valid_false_atom(src, len);
   }
 
-  _simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
       return set_best()->is_valid_null_atom(src, len);
   }
 
-  _simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
       return set_best()->parse_number(src, buf);
   }
 
