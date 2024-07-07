@@ -15,12 +15,13 @@ https://github.com/vztpv/scj3_cmake_test
 # Usage... with citylots.json
 
 ```c++
-claujson::init(0); // must call.
-
+//claujson::init(0); // //
+claujson::parser p;
+claujson::writer w;
 claujson::Value j;
 bool ok;
   
-auto x = claujson::parse(argv[1], j, 0); // filename, Value, thread_num...
+auto x = p.parse(argv[1], j, 0); // filename, Value, thread_num...
 
 if (!x.first) {
 	std::cout << "fail\n";
@@ -29,7 +30,7 @@ if (!x.first) {
 }
 
 //claujson::save("test12.txt", j);
-claujson::save_parallel("test34.json", j, 0);
+w.save_parallel("test34.json", j, 0);
 
 int counter = 0;
 ok = x.first;
