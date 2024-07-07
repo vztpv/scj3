@@ -13,6 +13,10 @@
 #include <cstring>
 
 
+#include "ThreadPool.h"
+
+#include "_simdjson.h" // modified simdjson // using simdjson 3.9.1
+
 
 template <class From, class To>
 inline To Static_Cast(From x) {
@@ -1112,32 +1116,43 @@ namespace claujson {
 
 namespace claujson {
 
-	// parse json file.
-	std::pair<bool, uint64_t> parse(const std::string& fileName, Value& ut, uint64_t thr_num);
+	class parser {
+	private:
+		_simdjson::dom::parser_for_claujson test_;
+		std::unique_ptr<ThreadPool> pool;
+	public:
+		parser(int thr_num = 0);
+	public:
+		// parse json file.
+		std::pair<bool, uint64_t> parse(const std::string& fileName, Value& ut, uint64_t thr_num);
 
-	// parse json str.
-	std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num);
+		// parse json str.
+		std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num);
 
 #if __cpp_lib_char8_t
-	// C++20~
-	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num);
+		// C++20~
+		std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num);
 #endif
+	};
 
-	std::string save_to_str(const Value& global, bool prettty = false);
-	std::string save_to_str2(const Value& global, bool prettty = false);
+	class writer {
+	private:
+		std::unique_ptr<ThreadPool> pool;
+	public:
+		std::string save_to_str(const Value& global, bool prettty = false);
+		std::string save_to_str2(const Value& global, bool prettty = false);
 
-	void save(const std::string& fileName, const Value& global, bool pretty = false);
+		void save(const std::string& fileName, const Value& global, bool pretty = false);
 
-	void save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
-	void save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
+		void save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
+		void save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
+	};
+
 
 	[[nodiscard]]
 	Value diff(const Value& x, const Value& y);
 
 	Value& patch(Value& x, const Value& diff);
-
-
-	void init(int thr_num); // call first, before use claujson..
 
 	void clean(Value& x); //
 

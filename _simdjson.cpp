@@ -6209,6 +6209,14 @@ public:
    */
   _simdjson_warn_unused virtual bool validate_utf8(const char *buf, size_t len) const noexcept = 0;
 
+  _simdjson_warn_unused virtual uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept = 0;
+
+  _simdjson_warn_unused virtual bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept = 0;
+  _simdjson_warn_unused virtual bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept = 0;
+
+  _simdjson_warn_unused virtual bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept = 0;
+  _simdjson_warn_unused virtual error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept = 0;
+
 protected:
   /** @private Construct an implementation with the given name and description. For subclasses. */
   _simdjson_inline implementation(
@@ -6933,6 +6941,13 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace arm64
@@ -6981,6 +6996,12 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace fallback
@@ -7032,6 +7053,12 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace haswell
@@ -7082,6 +7109,12 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace icelake
@@ -7136,6 +7169,12 @@ public:
                                          size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf,
                                           size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace ppc64
@@ -7182,6 +7221,12 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace westmere
@@ -7227,6 +7272,12 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace lsx
@@ -7272,6 +7323,12 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace lasx
@@ -7358,6 +7415,27 @@ public:
   _simdjson_warn_unused bool validate_utf8(const char * buf, size_t len) const noexcept final override {
     return set_best()->validate_utf8(buf, len);
   }
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
+      return set_best()->parse_string(src, dst, allow_replacement);
+  }
+
+  _simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+      return  set_best()->is_valid_true_atom(src, len);
+  }
+
+  _simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+      return  set_best()->is_valid_false_atom(src, len);
+  }
+
+  _simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+      return set_best()->is_valid_null_atom(src, len);
+  }
+
+  _simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+      return set_best()->parse_number(src, buf);
+  }
+
+
   _simdjson_inline detect_best_supported_implementation_on_first_use() noexcept : implementation("best_supported_detector", "Detects the best supported implementation and sets it", 0) {}
 private:
   const implementation *set_best() const noexcept;
@@ -7416,6 +7494,27 @@ public:
     // what are the chances that the programmer has a fallback? Given that *we* provide the
     // fallback, it implies that the programmer would need a fallback for our fallback.
   }
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
+      return nullptr;
+  }
+
+
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+      return false;
+  }
+
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+      return false;
+  }
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+      return false;
+  }
+
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+      return error_code{};
+  }
+
   unsupported_implementation() : implementation("unsupported", "Unsupported CPU (no detected _SIMD instructions)", 0) {}
 };
 
@@ -7487,6 +7586,27 @@ _simdjson_warn_unused error_code minify(const char *buf, size_t len, char *dst, 
 _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) noexcept {
   return get_active_implementation()->validate_utf8(buf, len);
 }
+_simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) noexcept {
+    return get_active_implementation()->parse_string(src, dst, allow_replacement);
+}
+
+
+_simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len)  noexcept {
+    return get_active_implementation()->is_valid_true_atom(src, len);
+}
+
+_simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len)  noexcept {
+    return get_active_implementation()->is_valid_false_atom(src, len);
+}
+
+_simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len)  noexcept {
+    return get_active_implementation()->is_valid_null_atom(src, len);
+}
+
+_simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf)  noexcept {
+    return get_active_implementation()->parse_number(src, buf);
+}
+
 const implementation * builtin_implementation() {
   static const implementation * builtin_impl = get_available_implementations()[_SIMDJSON_STRINGIFY(_SIMDJSON_BUILTIN_IMPLEMENTATION)];
   assert(builtin_impl);
@@ -10269,6 +10389,7 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
 };
 
 } // namespace arm64
@@ -13941,7 +14062,9 @@ _simdjson_warn_unused error_code dom_parser_implementation::stage1(const uint8_t
 _simdjson_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return arm64::stage1::generic_validate_utf8(buf,len);
 }
-
+_simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
+    return arm64::stringparsing::parse_string(src, dst, allow_replacement);
+}
 _simdjson_warn_unused error_code dom_parser_implementation::stage2(dom::document &_doc) noexcept {
   return stage2::tape_builder::parse_document<false>(*this, _doc);
 }
@@ -16647,6 +16770,8 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
 };
 
 } // namespace haswell
@@ -20183,6 +20308,26 @@ _simdjson_warn_unused error_code dom_parser_implementation::stage1(const uint8_t
 _simdjson_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return haswell::stage1::generic_validate_utf8(buf,len);
 }
+_simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool replacement_char) const noexcept {
+    return haswell::stringparsing::parse_string(src, dst, replacement_char);
+}
+_simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+    return haswell::atomparsing::is_valid_true_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+    return haswell::atomparsing::is_valid_false_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+    return haswell::atomparsing::is_valid_null_atom(src, len);
+}
+
+_simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+    stage2::tape_writer writer{ buf };
+
+    return haswell::numberparsing::parse_number(src, writer);
+}
 
 _simdjson_warn_unused error_code dom_parser_implementation::stage2(dom::document &_doc) noexcept {
   return stage2::tape_builder::parse_document<false>(*this, _doc);
@@ -22885,6 +23030,8 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+
+  _simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
 };
 
 } // namespace icelake
@@ -26463,6 +26610,29 @@ _simdjson_warn_unused bool implementation::validate_utf8(const char *buf, size_t
   return icelake::stage1::generic_validate_utf8(buf,len);
 }
 
+_simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
+    return icelake::stringparsing::parse_string(src, dst, allow_replacement);
+}
+
+
+_simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+    return icelake::atomparsing::is_valid_true_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+    return icelake::atomparsing::is_valid_false_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+    return icelake::atomparsing::is_valid_null_atom(src, len);
+}
+
+_simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+    stage2::tape_writer writer{ buf };
+
+    return icelake::numberparsing::parse_number(src, writer);
+}
+
 _simdjson_warn_unused error_code dom_parser_implementation::stage2(dom::document &_doc) noexcept {
   return stage2::tape_builder::parse_document<false>(*this, _doc);
 }
@@ -29281,6 +29451,17 @@ public:
                                          size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf,
                                           size_t len) const noexcept final;
+
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+
+
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace ppc64
@@ -32901,6 +33082,31 @@ _simdjson_warn_unused bool implementation::validate_utf8(const char *buf, size_t
   return ppc64::stage1::generic_validate_utf8(buf,len);
 }
 
+_simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
+    return ppc64::stringparsing::parse_string(src, dst, allow_replacement);
+}
+
+
+
+_simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+    return ppc64::atomparsing::is_valid_true_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+    return ppc64::atomparsing::is_valid_false_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+    return ppc64::atomparsing::is_valid_null_atom(src, len);
+}
+
+_simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+    stage2::tape_writer writer{ buf };
+
+    return ppc64::numberparsing::parse_number(src, writer);
+}
+
+
 _simdjson_warn_unused error_code dom_parser_implementation::stage2(dom::document &_doc) noexcept {
   return stage2::tape_builder::parse_document<false>(*this, _doc);
 }
@@ -36035,6 +36241,16 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+
+
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
+
 };
 
 } // namespace westmere
@@ -40013,6 +40229,27 @@ _simdjson_warn_unused bool implementation::validate_utf8(const char *buf, size_t
   return westmere::stage1::generic_validate_utf8(buf,len);
 }
 
+_simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
+    return westmere::stringparsing::parse_string(src, dst, allow_replacement);
+}
+_simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+    return westmere::atomparsing::is_valid_true_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+    return westmere::atomparsing::is_valid_false_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+    return westmere::atomparsing::is_valid_null_atom(src, len);
+}
+
+_simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+    stage2::tape_writer writer{ buf };
+
+    return westmere::numberparsing::parse_number(src, writer);
+}
+
 _simdjson_warn_unused error_code dom_parser_implementation::stage2(dom::document &_doc) noexcept {
   return stage2::tape_builder::parse_document<false>(*this, _doc);
 }
@@ -42615,6 +42852,14 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
+
 };
 
 } // namespace lsx
@@ -46023,6 +46268,27 @@ _simdjson_warn_unused bool implementation::validate_utf8(const char *buf, size_t
   return lsx::stage1::generic_validate_utf8(buf,len);
 }
 
+_simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
+    return lsx::stringparsing::parse_string(src, dst, allow_replacement);
+}
+_simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+    return lsx::atomparsing::is_valid_true_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+    return lsx::atomparsing::is_valid_false_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+    return lsx::atomparsing::is_valid_null_atom(src, len);
+}
+
+_simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+    stage2::tape_writer writer{ buf };
+
+    return lsx::numberparsing::parse_number(src, writer);
+}
+
 _simdjson_warn_unused error_code dom_parser_implementation::stage2(dom::document &_doc) noexcept {
   return stage2::tape_builder::parse_document<false>(*this, _doc);
 }
@@ -48637,6 +48903,13 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace lasx
@@ -52056,6 +52329,27 @@ _simdjson_warn_unused error_code dom_parser_implementation::stage1(const uint8_t
 _simdjson_warn_unused bool implementation::validate_utf8(const char *buf, size_t len) const noexcept {
   return lasx::stage1::generic_validate_utf8(buf,len);
 }
+_simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
+    return lasx::stringparsing::parse_string(src, dst, allow_replacement);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+    return lasx::atomparsing::is_valid_true_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+    return lasx::atomparsing::is_valid_false_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+    return lasx::atomparsing::is_valid_null_atom(src, len);
+}
+
+_simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+    stage2::tape_writer writer{ buf };
+
+    return lasx::numberparsing::parse_number(src, writer);
+}
 
 _simdjson_warn_unused error_code dom_parser_implementation::stage2(dom::document &_doc) noexcept {
   return stage2::tape_builder::parse_document<false>(*this, _doc);
@@ -54260,6 +54554,12 @@ public:
   ) const noexcept final;
   _simdjson_warn_unused error_code minify(const uint8_t *buf, size_t len, uint8_t *dst, size_t &dst_len) const noexcept final;
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
+  _simdjson_warn_unused uint8_t* parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace fallback
@@ -56031,6 +56331,29 @@ _simdjson_warn_unused bool implementation::validate_utf8(const char *buf, size_t
   }
   return true;
 }
+_simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
+   return fallback::stringparsing::parse_string(src, dst, allow_replacement);
+}
+
+
+_simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+    return fallback::atomparsing::is_valid_true_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+    return fallback::atomparsing::is_valid_false_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+    return fallback::atomparsing::is_valid_null_atom(src, len);
+}
+
+_simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+    stage2::tape_writer writer{ buf };
+
+    return fallback::numberparsing::parse_number(src, writer);
+}
+
 
 } // namespace fallback
 } // namespace _simdjson

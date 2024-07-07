@@ -1,14 +1,10 @@
 
 #include "claujson.h"
 
-#include "_simdjson.h" // modified simdjson // using simdjson 3.9.1
-
 #include <future>
 
 #include <set>
 #include <execution>
-
-#include "ThreadPool.h"
 
 #include "rapidjson/writer.h"
 
@@ -47,10 +43,6 @@ namespace claujson {
 	uint64_t Structured::npos = -1; // 
 
 	Log log;
-
-	static _simdjson::dom::parser_for_claujson test_;
-	_simdjson::internal::dom_parser_implementation* simdjson_imple = nullptr;
-	static std::unique_ptr<ThreadPool> pool;
 
 	// class PartialJson, only used in class LoadData.
 	class PartialJson : public Structured {
@@ -790,7 +782,8 @@ namespace claujson {
 					return false;
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
+
+			auto* x = _simdjson::parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				free(buf_src);
 				free(buf_dest);
@@ -829,7 +822,7 @@ namespace claujson {
 					return false;
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
+			auto* x = _simdjson::parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				log << warn << "Error in Convert for string";
 				return false;
@@ -1031,7 +1024,7 @@ namespace claujson {
 			ubuf = std::make_unique<uint8_t[]>(len + _simdjson::_SIMDJSON_PADDING);
 			string_buf = &ubuf[0];
 		}
-		auto* x = simdjson_imple->parse_string((uint8_t*)text + 1, string_buf, false);
+		auto* x = _simdjson::parse_string((uint8_t*)text + 1, string_buf, false);
 		if (x == nullptr) {
 			return false; // ERROR("Error in Convert for string");
 		}
@@ -1059,7 +1052,7 @@ namespace claujson {
 			value = copy.get();
 		}
 
-		auto x = simdjson_imple->parse_number(value, temp);
+		auto x = _simdjson::parse_number(value, temp);
 
 		if (x != _simdjson::SUCCESS) {
 			log << warn << StringView((char*)value, 20) << "\n";
@@ -1121,7 +1114,7 @@ namespace claujson {
 		}
 		case 't':
 		{
-			if (!simdjson_imple->is_valid_true_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
+			if (!_simdjson::is_valid_true_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
 				goto ERR; //ERROR("Error in Convert for true");
 			}
 
@@ -1129,14 +1122,14 @@ namespace claujson {
 		}
 		break;
 		case 'f':
-			if (!simdjson_imple->is_valid_false_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
+			if (!_simdjson::is_valid_false_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
 				goto ERR; //ERROR("Error in Convert for false");
 			}
 
 			data.set_bool(false);
 			break;
 		case 'n':
-			if (!simdjson_imple->is_valid_null_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
+			if (!_simdjson::is_valid_null_atom(reinterpret_cast<uint8_t*>(&buf[buf_idx]), next_buf_idx - buf_idx)) {
 				goto ERR; //ERROR("Error in Convert for null");
 			}
 
@@ -2536,19 +2529,72 @@ namespace claujson {
 		return _simdjson::internal::tape_type::NONE;*/
 	}
 
-	class LoadData;
+	// using rapidjson, for speed.
+	class StrStream {
+	private:
+		rapidjson::StringBuffer m_buffer;
+		rapidjson::Writer<rapidjson::StringBuffer> m_writer{m_buffer};
 
-	class LoadData2 {
 	public:
 
+		const char* buf() const {
+			return m_buffer.GetString();
+		}
+		uint64_t buf_size() const {
+			return m_buffer.GetSize();
+		}
+
+		StrStream& add_1(const char* x, uint32_t sz) {
+			m_writer.String(x, sz); // fmt::format_to(std::back_inserter(out), "{}", x);
+			return *this;
+		}
+
+		StrStream& add_char(char x) {
+			m_buffer.Put(x);
+			return *this;
+		}
+
+		StrStream& add_float(double x) {
+			m_writer.Double(x); // fmt::format_to(std::back_inserter(out), "{:f}", x);
+			return *this;
+		}
+
+		StrStream& add_int(int64_t x) {
+			m_writer.Int64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
+			return *this;
+		}
+
+		StrStream& add_uint(uint64_t x) {
+			m_writer.Uint64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
+			return *this;
+		}
+
+		StrStream& add_2(const char* str) {
+			while (*str != '\0') {
+				add_char(*str);
+				++str;
+			}
+
+			return *this;
+		}
+	};
+
+	class LoadData2 {
+	private:
+		ThreadPool* pool;
+	public:
+		LoadData2(ThreadPool* pool) : pool(pool) {
+			//
+		}
+	public:
 		friend class LoadData;
 
-		static uint64_t Size(Structured* root) {
+		 uint64_t Size(Structured* root) {
 			if (root == nullptr) { return 0; }
 			return _Size(root) + 1;
 		}
 
-		static uint64_t _Size(Structured* root) {
+		 uint64_t _Size(Structured* root) {
 			if (root == nullptr) {
 				return 0;
 			}
@@ -2567,7 +2613,7 @@ namespace claujson {
 			return x;
 
 		}
-		static uint64_t Size2(const Structured* root) {
+		 uint64_t Size2(const Structured* root) {
 			if (root == nullptr) {
 				return 0;
 			}
@@ -2597,7 +2643,7 @@ namespace claujson {
 		}
 
 		// find n node.. , need rename..
-		static void Find2(Structured* root, const uint64_t n, uint64_t& idx, bool chk_hint, uint64_t& _len, std::vector<uint64_t>& offset, std::vector<uint64_t>& offset2, std::vector<Structured*>& out, std::vector<int>& hint) {
+		 void Find2(Structured* root, const uint64_t n, uint64_t& idx, bool chk_hint, uint64_t& _len, std::vector<uint64_t>& offset, std::vector<uint64_t>& offset2, std::vector<Structured*>& out, std::vector<int>& hint) {
 			if (idx >= n) {
 				return;
 			}
@@ -2657,7 +2703,7 @@ namespace claujson {
 		}
 
 
-		static void Divide(Structured* pos, Structured*& result) { // after pos.. -> to result.
+		 void Divide(Structured* pos, Structured*& result) { // after pos.. -> to result.
 			if (pos == nullptr) {
 				return;
 			}
@@ -2771,7 +2817,7 @@ namespace claujson {
 			result = out;
 		}
 
-		static std::vector<claujson::Structured*> Divide2(uint64_t n, claujson::Value& j, std::vector<claujson::Structured*>& result, std::vector<int>& hint) {
+		 std::vector<claujson::Structured*> Divide2(uint64_t n, claujson::Value& j, std::vector<claujson::Structured*>& result, std::vector<int>& hint) {
 			if (j.is_structured() == false) {
 				return { nullptr };
 			}
@@ -2780,7 +2826,7 @@ namespace claujson {
 				return { nullptr };
 			}
 			auto a = std::chrono::steady_clock::now();
-			uint64_t len = claujson::LoadData2::Size(j.as_structured_ptr());
+			uint64_t len = Size(j.as_structured_ptr());
 			auto b= std::chrono::steady_clock::now();
 			auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a); 
 			log << info << "size is " << dur.count() << "ms\n";
@@ -2804,7 +2850,7 @@ namespace claujson {
 				uint64_t idx = 0;
 				auto offset2 = offset;
 
-				claujson::LoadData2::Find2(j.as_structured_ptr(), n - 1, idx, false, len, offset, offset2, pos, hint);
+				Find2(j.as_structured_ptr(), n - 1, idx, false, len, offset, offset2, pos, hint);
 			}
 			b = std::chrono::steady_clock::now();
 			dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
@@ -2826,7 +2872,7 @@ namespace claujson {
 						for (uint64_t j = 0; j < i; ++j) {
 							int op = 0;
 							
-							claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+							Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 
 						}
 
@@ -2840,7 +2886,7 @@ namespace claujson {
 						return { nullptr };
 					}
 
-					claujson::LoadData2::Divide(pos[i], result[i]);
+					Divide(pos[i], result[i]);
 
 					temp_parent[i] = pos[i]->get_parent();
 
@@ -2850,7 +2896,7 @@ namespace claujson {
 					for (uint64_t j = 0; j < i; ++j) {
 						int op = 0;
 						
-						claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+						Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 					}
 
 					for (uint64_t j = 0; j < result.size(); ++j) {
@@ -2868,7 +2914,7 @@ namespace claujson {
 			return pos;
 		}
 
-		static int Merge(Structured* next, Structured* ut, Structured** ut_next)
+		 int Merge(Structured* next, Structured* ut, Structured** ut_next)
 		{
 
 			// check!!
@@ -2931,7 +2977,7 @@ namespace claujson {
 			}
 		}
 
-		static int Merge2(Structured* next, Structured* ut, Structured** ut_next, int& op)
+		 int Merge2(Structured* next, Structured* ut, Structured** ut_next, int& op)
 		{
 
 			if (!ut) {
@@ -3010,7 +3056,7 @@ namespace claujson {
 			bool is_key = false;
 		};
 
-		static bool __LoadData(char* buf, uint64_t buf_len,
+		 static bool __LoadData(char* buf, uint64_t buf_len,
 			_simdjson::internal::dom_parser_implementation* imple,
 			int64_t token_arr_start, uint64_t token_arr_len, Ptr<Structured>& _global,
 			int start_state, int last_state, // this line : now not used..
@@ -3184,7 +3230,7 @@ namespace claujson {
 			}
 		}
 
-		static int64_t FindDivisionPlace(char* buf, _simdjson::internal::dom_parser_implementation* imple, int64_t start, int64_t last)
+		 int64_t FindDivisionPlace(char* buf, _simdjson::internal::dom_parser_implementation* imple, int64_t start, int64_t last)
 		{
 			for (int64_t a = start; a <= last; ++a) {
 				auto& x = imple->structural_indexes[a]; //  token_arr[a];
@@ -3200,7 +3246,7 @@ namespace claujson {
 			return -1;
 		}
 
-		static bool _LoadData(Value& global, char* buf, uint64_t buf_len,
+		 bool _LoadData(Value& global, char* buf, uint64_t buf_len,
 
 			_simdjson::internal::dom_parser_implementation* imple, int64_t& length,
 			std::vector<int64_t>& start, uint64_t* count_vec, uint64_t parse_num) // first, strVec.empty() must be true!!
@@ -3451,87 +3497,32 @@ namespace claujson {
 			}
 
 		}
-		static bool parse(Value& global, char* buf, uint64_t buf_len,
+		 bool parse(Value& global, char* buf, uint64_t buf_len,
 
 			_simdjson::internal::dom_parser_implementation* imple,
 			int64_t length, std::vector<int64_t>& start, uint64_t* count_vec, uint64_t thr_num) {
 
-			return LoadData2::_LoadData(global, buf, buf_len, imple, length, start, count_vec, thr_num);
-		}
-	};
-
-	
-	// using rapidjson, for speed.
-	class StrStream {
-	private:
-		rapidjson::StringBuffer m_buffer;
-		rapidjson::Writer<rapidjson::StringBuffer> m_writer{m_buffer};
-
-	public:
-
-		const char* buf() const {
-			return m_buffer.GetString();
-		}
-		uint64_t buf_size() const {
-			return m_buffer.GetSize();
+			return _LoadData(global, buf, buf_len, imple, length, start, count_vec, thr_num);
 		}
 
-		StrStream& add_1(const char* x, uint32_t sz) {
-			m_writer.String(x, sz); // fmt::format_to(std::back_inserter(out), "{}", x);
-			return *this;
-		}
-
-		StrStream& add_char(char x) {
-			m_buffer.Put(x);
-			return *this;
-		}
-
-		StrStream& add_float(double x) {
-			m_writer.Double(x); // fmt::format_to(std::back_inserter(out), "{:f}", x);
-			return *this;
-		}
-
-		StrStream& add_int(int64_t x) {
-			m_writer.Int64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
-			return *this;
-		}
-
-		StrStream& add_uint(uint64_t x) {
-			m_writer.Uint64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
-			return *this;
-		}
-
-		StrStream& add_2(const char* str) {
-			while (*str != '\0') {
-				add_char(*str);
-				++str;
-			}
-
-			return *this;
-		}
-	};
-
-
-	class LoadData // Save? -> Write?
-	{
 	private:
 		//                         
-		static void _save(StrStream& stream, const Value& data, std::vector<Structured*>& chk_list, const int depth, bool pretty);
-		static void _save(StrStream& stream, const Value& data, const int depth, bool pretty);
+		 static void _save(StrStream& stream, const Value& data, std::vector<Structured*>& chk_list, const int depth, bool pretty);
+		 static void _save(StrStream& stream, const Value& data, const int depth, bool pretty);
 
-		static void save_(StrStream& stream, const Value& global, Structured* temp, bool pretty, bool hint);
+		 static void save_(StrStream& stream, const Value& global, Structured* temp, bool pretty, bool hint);
 
 	public:
 		// test?... just Data has one element 
-		static void save(const std::string& fileName, const Value& global, bool pretty, bool hint = false);
+		 void save(const std::string& fileName, const Value& global, bool pretty, bool hint = false);
 
-		static void save(std::ostream& stream, const Value& data, bool pretty);
+		 void save(std::ostream& stream, const Value& data, bool pretty);
 
-		static std::string save_to_str(const Value& data, bool pretty);
-		static std::string save_to_str2(const Value& data, bool pretty);
+		 std::string save_to_str(const Value& data, bool pretty);
+		 std::string save_to_str2(const Value& data, bool pretty);
 
-		static void save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty);
-		static void save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty);
+		 void save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty);
+		 void save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty);
 
 	};
 
@@ -3610,7 +3601,7 @@ namespace claujson {
 			stream.add_2("null");
 		}
 	}
-	std::string LoadData::save_to_str(const Value& global, bool pretty) {
+	std::string LoadData2::save_to_str(const Value& global, bool pretty) {
 		StrStream stream;
 
 		if (global.is_structured()) {
@@ -3642,7 +3633,7 @@ namespace claujson {
 	}
 
 		//                           
-	void LoadData::_save(StrStream& stream, const Value& data, std::vector<Structured*>& chk_list, const int depth, bool pretty) {
+	void LoadData2::_save(StrStream& stream, const Value& data, std::vector<Structured*>& chk_list, const int depth, bool pretty) {
 		const Structured* ut = nullptr;
 
 		if (data.is_structured()) {
@@ -3754,7 +3745,7 @@ namespace claujson {
 		}
 	}
 
-	void LoadData::_save(StrStream& stream, const Value& data, const int depth, bool pretty) {
+	void LoadData2::_save(StrStream& stream, const Value& data, const int depth, bool pretty) {
 		const Structured* ut = nullptr;
 
 		if (data.is_structured()) {
@@ -3876,7 +3867,7 @@ namespace claujson {
 	}
 
 	// todo... just Data has one element 
-	void LoadData::save(const std::string& fileName, const Value& global, bool pretty, bool hint) {
+	void LoadData2::save(const std::string& fileName, const Value& global, bool pretty, bool hint) {
 		StrStream stream;
 
 		if (global.is_structured()) {
@@ -3917,13 +3908,13 @@ namespace claujson {
 		outFile.close();
 	}
 
-	void LoadData::save(std::ostream& stream, const Value& data, bool pretty) {
+	void LoadData2::save(std::ostream& stream, const Value& data, bool pretty) {
 		StrStream str_stream;
 		_save(str_stream, data, 0, pretty);
 		stream << StringView(str_stream.buf(), str_stream.buf_size());
 	}
 
-	void LoadData::save_(StrStream& stream, const Value& global, Structured* temp, bool pretty, bool hint) {
+	void LoadData2::save_(StrStream& stream, const Value& global, Structured* temp, bool pretty, bool hint) {
 
 		std::vector<Structured*> chk_list; // point for division?, virtual nodes? }}}?
 
@@ -3970,7 +3961,7 @@ namespace claujson {
 	}
 
 
-	void LoadData::save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty) {
+	void LoadData2::save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty) {
 
 		if (!j.is_structured()) {
 			save(fileName, j, pretty, false);
@@ -4007,7 +3998,7 @@ namespace claujson {
 		//std::vector<std::thread> thr(thr_num);
 		std::vector<std::future<void>> thr_result(thr_num);
 
-		//temp = LoadData2::Divide2(thr_num, j, result, hint);
+		//temp = Divide2(thr_num, j, result, hint);
 		
 		{	
 			auto n = thr_num;
@@ -4018,7 +4009,7 @@ namespace claujson {
 				}
 
 				auto a = std::chrono::steady_clock::now();
-				uint64_t len = claujson::LoadData2::Size(j.as_structured_ptr());
+				uint64_t len = Size(j.as_structured_ptr());
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				log << info << "size is " << dur.count() << "ms\n";
@@ -4043,7 +4034,7 @@ namespace claujson {
 					uint64_t idx = 0;
 					auto offset2 = offset;
 
-					claujson::LoadData2::Find2(j.as_structured_ptr(), n - 1, idx, false, len, offset, offset2, pos, hint);
+					Find2(j.as_structured_ptr(), n - 1, idx, false, len, offset, offset2, pos, hint);
 				}
 				b = std::chrono::steady_clock::now();
 				dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
@@ -4072,7 +4063,7 @@ namespace claujson {
 							for (uint64_t j = 0; j < i; ++j) {
 								int op = 0;
 
-								claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+								Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 
 							}
 
@@ -4086,7 +4077,7 @@ namespace claujson {
 							break;
 						}
 
-						claujson::LoadData2::Divide(pos[i], result[i]);
+						Divide(pos[i], result[i]);
 
 						temp_parent[i] = pos[i]->get_parent();
 
@@ -4115,7 +4106,7 @@ namespace claujson {
 
 							int op = 0;
 
-							claujson::LoadData2::Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
+							Merge2(temp_parent[j], result[j], &temp_parent[j + 1], op);
 
 
 						}
@@ -4174,10 +4165,10 @@ namespace claujson {
 		a = std::chrono::steady_clock::now();
 		int op = 0;
 
-		claujson::LoadData2::Merge2(temp_parent[0], result[0], &temp_parent[1], op);
+		Merge2(temp_parent[0], result[0], &temp_parent[1], op);
 
 		for (uint64_t i = 1; i < thr_num - 1; ++i) {
-			claujson::LoadData2::Merge2(temp_parent[i], result[i], &temp_parent[i + 1], op);
+			Merge2(temp_parent[i], result[i], &temp_parent[i + 1], op);
 			op = 0;
 		}
 		b = std::chrono::steady_clock::now();
@@ -4389,7 +4380,7 @@ namespace claujson {
 		}
 	}
 
-	void LoadData::save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty) {
+	void LoadData2::save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty) {
 		if (!j.is_structured()) {
 			save(fileName, j, pretty, false);
 			return;
@@ -4414,7 +4405,7 @@ namespace claujson {
 		std::vector<claujson::StrStream> stream(thr_num);
 
 		a = std::chrono::steady_clock::now();
-		uint64_t size = LoadData2::Size2(j.as_structured_ptr());
+		uint64_t size = Size2(j.as_structured_ptr());
 		b = std::chrono::steady_clock::now();
 		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 		log << info << "Size2 " << size << " " << dur.count() << "\n";
@@ -4503,7 +4494,7 @@ namespace claujson {
 		free(view_arr);
 	}
 
-	std::string LoadData::save_to_str2(const Value& j, bool pretty) {
+	std::string LoadData2::save_to_str2(const Value& j, bool pretty) {
 		if (j.is_primitive()) {
 			return save_to_str(j, pretty);
 		}
@@ -4514,7 +4505,7 @@ namespace claujson {
 		claujson::StrStream stream;
 
 		a = std::chrono::steady_clock::now();
-		uint64_t size = LoadData2::Size2(j.as_structured_ptr());
+		uint64_t size = Size2(j.as_structured_ptr());
 		b = std::chrono::steady_clock::now();
 		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 		log << info << "Size2 " << dur.count() << "\n";
@@ -5656,7 +5647,14 @@ namespace claujson {
 		return true;
 	}
 
-	std::pair<bool, uint64_t> parse(const std::string& fileName, Value& ut, uint64_t thr_num)
+	[[nodiscard]]
+	std::unique_ptr<ThreadPool> init(_simdjson::dom::parser_for_claujson& test_, int thr_num);
+
+	parser::parser(int thr_num) {
+		pool = init(test_, thr_num);
+	}
+
+	std::pair<bool, uint64_t> parser::parse(const std::string& fileName, Value& ut, uint64_t thr_num)
 	{
 		if (thr_num <= 0) {
 			thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
@@ -5674,9 +5672,7 @@ namespace claujson {
 
 			log << info << "simdjson-stage1 start\n";
 			// not static??
-			static _simdjson::dom::parser_for_claujson test;
-
-			auto x = test.load(fileName);
+			auto x = test_.load(fileName);
 
 			if (x.error() != _simdjson::error_code::SUCCESS) {
 				log << warn << "stage1 error : ";
@@ -5687,10 +5683,10 @@ namespace claujson {
 				return { false, 0 };
 			}
 
-			const auto& buf = test.raw_buf();
-			const auto buf_len = test.raw_len();
+			const auto& buf = test_.raw_buf();
+			const auto buf_len = test_.raw_len();
 
-			auto* simdjson_imple_ = test.raw_implementation().get();
+			auto* simdjson_imple_ = test_.raw_implementation().get();
 
 			std::vector<int64_t> start(thr_num + 1, 0);
 			//std::vector<int> key;
@@ -5721,6 +5717,7 @@ namespace claujson {
 
 			b = std::chrono::steady_clock::now();
 
+				std::set<uint64_t> _set;
 			//if (!is_valid(test, length - 1)) {
 			//	return { false, 0 };
 			//}
@@ -5729,10 +5726,11 @@ namespace claujson {
 
 				auto a = std::chrono::steady_clock::now();
 
+
+					
+				
 				//if (use_all_function) 
 				{
-
-					std::set<uint64_t> _set;
 
 				//	std::vector<uint64_t> start(thr_num + 1);
 					std::vector<uint64_t> last(thr_num);
@@ -5779,7 +5777,7 @@ namespace claujson {
 						return { false, -55 };
 					}
 					for (int i = 0; i < _set.size(); ++i) {
-						thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec, &err);
+						thr_result[i] = pool->enqueue(is_valid2, std::ref(test_), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec, &err);
 					}
 					std::vector<int> result(_set.size());
 
@@ -5841,8 +5839,10 @@ namespace claujson {
 
 			b = std::chrono::steady_clock::now();
 
-			start[thr_num] = length;
-			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, thr_num)) // 0 : use all thread..
+			start[_set.size()] = length;
+			LoadData2 p(pool.get());
+
+			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, thr_num)) // 0 : use all thread..
 			{
 				free(count_vec);
 				return { false, 0 };
@@ -5859,7 +5859,7 @@ namespace claujson {
 		free(count_vec);
 		return  { true, length };
 	}
-	std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num)
+	std::pair<bool, uint64_t> parser::parse_str(StringView str, Value& ut, uint64_t thr_num)
 	{
 
 
@@ -5924,9 +5924,11 @@ namespace claujson {
 			b = std::chrono::steady_clock::now();
 
 			//if (use_all_function)
+			
+			std::set<uint64_t> _set;
 			{
 
-				std::set<uint64_t> _set;
+				
 
 				//std::vector<uint64_t> start(thr_num + 1);
 				std::vector<uint64_t> last(thr_num);
@@ -6035,9 +6037,11 @@ namespace claujson {
 
 			b = std::chrono::steady_clock::now();
 
-			start[thr_num] = length;
+			start[_set.size()] = length;
 
-			if (false == claujson::LoadData2::parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, thr_num)) // 0 : use all thread..
+			LoadData2 p(pool.get());
+
+			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, thr_num)) // 0 : use all thread..
 			{
 				free(count_vec);
 				return { false, 0 };
@@ -6056,28 +6060,33 @@ namespace claujson {
 
 #if __cpp_lib_char8_t
 	// C++20~
-	std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num) {
+	std::pair<bool, uint64_t> parser::parse_str(std::u8string_view str, Value& ut, uint64_t thr_num) {
 		return parse_str(StringView(reinterpret_cast<const char*>(str.data()), str.size()), ut, thr_num);
 	}
 #endif
 
-	std::string save_to_str(const Value& global, bool pretty) {
-		return LoadData::save_to_str(global, pretty);
+	std::string writer::save_to_str(const Value& global, bool pretty) {
+		LoadData2 p(pool.get()); 
+		return p.save_to_str(global, pretty);
 	}
 
-	std::string save_to_str2(const Value& global, bool pretty) {
-		return LoadData::save_to_str2(global, pretty);
+	std::string writer::save_to_str2(const Value& global, bool pretty) {
+		LoadData2 p(pool.get());
+		return p.save_to_str2(global, pretty);
 	}
 
-	void save(const std::string& fileName, const Value& global, bool pretty) {
-		LoadData::save(fileName, global, pretty, false);
+	void writer::save(const std::string& fileName, const Value& global, bool pretty) {
+		LoadData2 p(pool.get());
+		p.save(fileName, global, pretty, false);
 	}
 
-	void save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty) {
-		LoadData::save_parallel(fileName, j, thr_num, pretty);
+	void writer::save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty) {
+		LoadData2 p(pool.get()); 
+		p.save_parallel(fileName, j, thr_num, pretty);
 	}
-	void save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty) {
-		LoadData::save_parallel2(fileName, j, thr_num, pretty);
+	void writer::save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty) {
+		LoadData2 p(pool.get()); 
+		p.save_parallel2(fileName, j, thr_num, pretty);
 	}
 
 	static std::string escape_for_json_pointer(std::string str) {
@@ -6547,27 +6556,18 @@ namespace claujson {
 	}
 
 
-	void init(int thr_num) {
-		if (!simdjson_imple) {
-			log.no_print();
+	std::unique_ptr<ThreadPool> init(_simdjson::dom::parser_for_claujson& test_, int thr_num) {
+		log.no_print();
 
-			StringView str = "{}"sv;
+		if (thr_num <= 0) {
+			thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
 
-			auto x = test_.parse(str.data(), str.length());
-			simdjson_imple = test_.raw_implementation().get();
+		}
+		if (thr_num <= 0) {
+			thr_num = 1;
 		}
 
-		if (!pool) {
-			if (thr_num <= 0) {
-				thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
-
-			}
-			if (thr_num <= 0) {
-				thr_num = 1;
-			}
-
-			pool = std::make_unique<ThreadPool>(thr_num);
-		}
+		return std::make_unique<ThreadPool>(thr_num);
 	}
 
 
@@ -6609,7 +6609,7 @@ namespace claujson {
 					return false;
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
+			auto* x = _simdjson::parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				free(buf_src);
 				free(buf_dest);
@@ -6640,7 +6640,7 @@ namespace claujson {
 					return false;
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
+			auto* x = _simdjson::parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				log << warn << "Error in Convert for string";
 				return false;
@@ -6692,7 +6692,7 @@ namespace claujson {
 					return { false, "" };
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
+			auto* x = _simdjson::parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				free(buf_src);
 				free(buf_dest);
@@ -6728,7 +6728,7 @@ namespace claujson {
 					return { false, "" };
 				}
 			}
-			auto* x = simdjson_imple->parse_string(buf_src, buf_dest, false);
+			auto* x = _simdjson::parse_string(buf_src, buf_dest, false);
 			if (x == nullptr) {
 				log << warn << "Error in Convert for string";
 				return { false, "" };
