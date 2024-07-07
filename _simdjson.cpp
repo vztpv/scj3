@@ -14065,6 +14065,28 @@ _simdjson_warn_unused bool implementation::validate_utf8(const char *buf, size_t
 _simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept {
     return arm64::stringparsing::parse_string(src, dst, allow_replacement);
 }
+
+
+_simdjson_warn_unused bool implementation::is_valid_true_atom(const uint8_t* src, size_t len) const noexcept {
+    return arm64::atomparsing::is_valid_true_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_false_atom(const uint8_t* src, size_t len) const noexcept {
+    return arm64::atomparsing::is_valid_false_atom(src, len);
+}
+
+_simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src, size_t len) const noexcept {
+    return arm64::atomparsing::is_valid_null_atom(src, len);
+}
+
+_simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
+    stage2::tape_writer writer{ buf };
+
+    return ppc64::numberparsing::parse_number(src, writer);
+}
+
+
+
 _simdjson_warn_unused error_code dom_parser_implementation::stage2(dom::document &_doc) noexcept {
   return stage2::tape_builder::parse_document<false>(*this, _doc);
 }
@@ -23032,6 +23054,12 @@ public:
   _simdjson_warn_unused bool validate_utf8(const char *buf, size_t len) const noexcept final;
 
   _simdjson_warn_unused uint8_t* implementation::parse_string(const uint8_t* src, uint8_t* dst, bool allow_replacement) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_true_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused bool is_valid_false_atom(const uint8_t* src, size_t len) const noexcept;
+
+  _simdjson_warn_unused bool is_valid_null_atom(const uint8_t* src, size_t len) const noexcept;
+  _simdjson_warn_unused error_code parse_number(const uint8_t* src, uint64_t* buf) const noexcept;
 };
 
 } // namespace icelake
