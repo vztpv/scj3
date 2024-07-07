@@ -14082,7 +14082,7 @@ _simdjson_warn_unused bool implementation::is_valid_null_atom(const uint8_t* src
 _simdjson_warn_unused error_code implementation::parse_number(const uint8_t* src, uint64_t* buf) const noexcept {
     stage2::tape_writer writer{ buf };
 
-    return ppc64::numberparsing::parse_number(src, writer);
+    return arm64::numberparsing::parse_number(src, writer);
 }
 
 
