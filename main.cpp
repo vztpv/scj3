@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
 	{
 		//claujson::init(24);
 
-		
+
 
 		// log test.
 		//claujson::log.no_print();
@@ -245,6 +245,15 @@ int main(int argc, char* argv[])
 	//	json_pointer_test();
 
 	//	str_test();
+
+
+		{
+			claujson::StringView s{ "abc", 3 };
+			claujson::StringView x{ "abcg", 4 };
+
+			std::cout << s.compare(x) << "\n";
+			std::cout << x.compare(s) << "\n";
+		}
 
 
 		claujson::parser p;

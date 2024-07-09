@@ -33,13 +33,17 @@ inline To Static_Cast(From x) {
 #if __cpp_lib_string_view
 #include <string_view>
 using namespace std::literals::string_view_literals;
+namespace claujson {
+	using StringView = std::string_view;
+}
 
-using StringView = std::string_view;
 #else
 
 namespace claujson {
 	class StringView {
 	public:
+		explicit StringView() : m_str(nullptr), m_len(0) { }
+
 		StringView(const std::string& str) : m_str(str.data()), m_len(str.size()) { }
 		explicit StringView(const char* str) : m_str(str) { m_len = strlen(str); }
 		explicit StringView(const char* str, size_t len) : m_str(str), m_len(len) { }
@@ -101,11 +105,35 @@ namespace claujson {
 		}
 
 		bool operator==(const StringView view) {
-			return 0 == strcmp(this->data(), view.data());
+			return this->compare(view) == 0;
+		}
+
+		bool operator!=(const StringView view) {
+			return this->compare(view) != 0;
+		}
+
+		int compare(const StringView view) {
+			int idx1 = 0, idx2 = 0;
+			for (; idx1 < this->length() && idx2 < view.length(); ++idx1, ++idx2) {
+				uint8_t diff = this->data()[idx1] - view.data()[idx2];
+				if (diff < 0) {
+					return -1;
+				}
+				else if (diff > 0) {
+					return 1;
+				}
+			}
+			if (idx1 < this->length()) {
+				return 1;
+			}
+			else if (idx2 < view.length()) {
+				return -1;
+			}
+			return 0;
 		}
 
 		bool operator<(const StringView view) {
-			return strcmp(this->data(), view.data()) < 0;
+			return this->compare(view) < 0;
 		}
 	};
 }
@@ -556,6 +584,11 @@ namespace claujson {
 			if (!is_str()) { fail = true; return std::string(); }
 			fail = false;
 			return std::string(data(), size());
+		}
+		StringView get_string_view(bool& fail) const {
+			if (!is_str()) { fail = true; return StringView(); }
+			fail = false;
+			return StringView(data(), size());
 		}
 
 	private:
