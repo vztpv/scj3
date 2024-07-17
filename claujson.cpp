@@ -1067,7 +1067,7 @@ namespace claujson {
 
 		switch (static_cast<_simdjson::internal::tape_type>(temp[0] >> 56)) {
 		case _simdjson::internal::tape_type::INT64:
-			memcpy(&int_val, &temp[1], sizeof(uint64_t));
+			memcpy(&int_val, &temp[1], sizeof(int64_t));
 
 			data.set_int(int_val);
 			break;
@@ -1077,7 +1077,7 @@ namespace claujson {
 			data.set_uint(uint_val);
 			break;
 		case _simdjson::internal::tape_type::DOUBLE:
-			memcpy(&float_val, &temp[1], sizeof(uint64_t));
+			memcpy(&float_val, &temp[1], sizeof(double));
 
 			data.set_float(float_val);
 			break;
@@ -5840,6 +5840,8 @@ namespace claujson {
 			b = std::chrono::steady_clock::now();
 
 			start[_set.size()] = length;
+			thr_num = _set.size();
+
 			LoadData2 p(pool.get());
 
 			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, thr_num)) // 0 : use all thread..
@@ -6038,6 +6040,7 @@ namespace claujson {
 			b = std::chrono::steady_clock::now();
 
 			start[_set.size()] = length;
+			thr_num = _set.size();
 
 			LoadData2 p(pool.get());
 
