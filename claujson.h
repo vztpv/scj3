@@ -187,7 +187,7 @@ namespace claujson {
 		std::string fileName;
 	public:
 
-		Log() : state(0), opt(Option::CONSOLE), opt2(Option2::INFO | Option2::WARN), fileName("log.txt") {
+		Log() : state(0), opt(Option::NO_PRINT), opt2(Option2::CLEAR), fileName("log.txt") {
 			//
 		}
 
@@ -845,6 +845,23 @@ namespace claujson {
 
 		Value& operator=(Value&& other) noexcept;
 	};
+
+	class Document {
+	private:
+		Value x;
+	public:
+		Document(Value&& x) noexcept : x(std::move(x))  {
+			//
+		}
+
+		~Document() noexcept;
+	public:
+		Document& operator=(const Document&) = delete;
+
+	public:
+		Value& Get() { return x; }
+		const Value& Get() const { return x; }
+	};
 }
 
 namespace claujson {
@@ -1172,13 +1189,15 @@ namespace claujson {
 	private:
 		std::unique_ptr<ThreadPool> pool;
 	public:
-		std::string save_to_str(const Value& global, bool prettty = false);
-		std::string save_to_str2(const Value& global, bool prettty = false);
+		writer(int thr_num = 0);
+	public:
+		std::string write_to_str(const Value& global, bool prettty = false);
+		std::string write_to_str2(const Value& global, bool prettty = false);
 
-		void save(const std::string& fileName, const Value& global, bool pretty = false);
+		void write(const std::string& fileName, const Value& global, bool pretty = false);
 
-		void save_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
-		void save_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
+		void write_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
+		void write_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
 	};
 
 
