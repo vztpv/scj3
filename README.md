@@ -18,9 +18,10 @@ https://github.com/vztpv/scj3_cmake_test
 //claujson::init(0); // //
 claujson::parser p;
 claujson::writer w;
-claujson::Value j;
+claujson::Document d;
 bool ok;
-  
+
+claujson::Value& j = d.Get();
 auto x = p.parse(argv[1], j, 0); // filename, Value, thread_num...
 
 if (!x.first) {
