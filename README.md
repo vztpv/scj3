@@ -21,8 +21,9 @@ claujson::writer w;
 claujson::Document d;
 bool ok;
 
+auto x = p.parse(argv[1], d, 0); // filename, Value, thread_num...
+
 claujson::Value& j = d.Get();
-auto x = p.parse(argv[1], j, 0); // filename, Value, thread_num...
 
 if (!x.first) {
 	std::cout << "fail\n";
