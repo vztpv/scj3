@@ -30,7 +30,7 @@ if (!x.first) {
 }
 
 //claujson::save("test12.txt", j);
-w.save_parallel("test34.json", j, 0);
+w.write_parallel("test34.json", j, 0);
 
 int counter = 0;
 ok = x.first;
