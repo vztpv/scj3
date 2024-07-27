@@ -850,6 +850,8 @@ namespace claujson {
 	private:
 		Value x;
 	public:
+		Document() noexcept { }
+
 		Document(Value&& x) noexcept : x(std::move(x))  {
 			//
 		}
@@ -857,10 +859,10 @@ namespace claujson {
 		~Document() noexcept;
 	public:
 		Document& operator=(const Document&) = delete;
-
+		Document(const Value&) = delete;
 	public:
-		Value& Get() { return x; }
-		const Value& Get() const { return x; }
+		Value& Get() noexcept { return x; }
+		const Value& Get() const noexcept { return x; }
 	};
 }
 
@@ -1174,14 +1176,14 @@ namespace claujson {
 		parser(int thr_num = 0);
 	public:
 		// parse json file.
-		std::pair<bool, uint64_t> parse(const std::string& fileName, Value& ut, uint64_t thr_num);
+		std::pair<bool, uint64_t> parse(const std::string& fileName, Document& d, uint64_t thr_num);
 
 		// parse json str.
-		std::pair<bool, uint64_t> parse_str(StringView str, Value& ut, uint64_t thr_num);
+		std::pair<bool, uint64_t> parse_str(StringView str, Document& d, uint64_t thr_num);
 
 #if __cpp_lib_char8_t
 		// C++20~
-		std::pair<bool, uint64_t> parse_str(std::u8string_view str, Value& ut, uint64_t thr_num);
+		std::pair<bool, uint64_t> parse_str(std::u8string_view str, Document& d, uint64_t thr_num);
 #endif
 	};
 

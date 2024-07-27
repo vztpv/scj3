@@ -4233,7 +4233,7 @@ namespace claujson {
 					view_arr = _run(view_arr, &x->as_array()->get_value_list(i));
 				}
 				else {
-					(*view_arr) = JsonView{ &x->as_array()->get_value_list(i), 3};
+					(*view_arr) = JsonView{ &x->as_array()->get_value_list(i), 3 };
 					++view_arr;
 				}
 			}
@@ -5660,7 +5660,7 @@ namespace claujson {
 		pool = pool_init(thr_num);
 	}
 
-	std::pair<bool, uint64_t> parser::parse(const std::string& fileName, Value& ut, uint64_t thr_num)
+	std::pair<bool, uint64_t> parser::parse(const std::string& fileName, Document& d, uint64_t thr_num)
 	{
 		if (thr_num <= 0) {
 			thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
@@ -5668,6 +5668,8 @@ namespace claujson {
 		if (thr_num <= 0) {
 			thr_num = 1;
 		}
+
+		Value& ut = d.Get();
 
 		uint64_t length = 0;
 
@@ -5867,9 +5869,9 @@ namespace claujson {
 		free(count_vec);
 		return  { true, length };
 	}
-	std::pair<bool, uint64_t> parser::parse_str(StringView str, Value& ut, uint64_t thr_num)
+	std::pair<bool, uint64_t> parser::parse_str(StringView str, Document& d, uint64_t thr_num)
 	{
-
+		Value& ut = d.Get();
 
 		log << info << str << "\n";
 
@@ -6069,8 +6071,8 @@ namespace claujson {
 
 #if __cpp_lib_char8_t
 	// C++20~
-	std::pair<bool, uint64_t> parser::parse_str(std::u8string_view str, Value& ut, uint64_t thr_num) {
-		return parse_str(StringView(reinterpret_cast<const char*>(str.data()), str.size()), ut, thr_num);
+	std::pair<bool, uint64_t> parser::parse_str(std::u8string_view str, Document& d, uint64_t thr_num) {
+		return parse_str(StringView(reinterpret_cast<const char*>(str.data()), str.size()), d, thr_num);
 	}
 #endif
 
