@@ -6,7 +6,8 @@
 #include <set>
 #include <execution>
 
-#include "rapidjson/writer.h"
+#include "fmt/format.h"
+//#include "rapidjson/writer.h"
 
 
 #define claujson_inline _simdjson_inline
@@ -2533,53 +2534,46 @@ namespace claujson {
 		return _simdjson::internal::tape_type::NONE;*/
 	}
 
-	// using rapidjson, for speed.
 	class StrStream {
 	private:
-		rapidjson::StringBuffer m_buffer;
-		rapidjson::Writer<rapidjson::StringBuffer> m_writer{m_buffer};
-
+		fmt::memory_buffer m_buffer;
 	public:
 
 		const char* buf() const {
-			return m_buffer.GetString();
+			return m_buffer.data();
 		}
 		uint64_t buf_size() const {
-			return m_buffer.GetSize();
-		}
-
-		// 1 is one.
-		StrStream& add_1(const char* x, uint32_t sz) {
-			m_writer.String(x, sz); // fmt::format_to(std::back_inserter(out), "{}", x);
-			return *this;
+			return m_buffer.size();
 		}
 
 		StrStream& add_char(char x) {
-			m_buffer.Put(x);
+			m_buffer.push_back(x);
 			return *this;
 		}
 
 		StrStream& add_float(double x) {
-			m_writer.Double(x); // fmt::format_to(std::back_inserter(out), "{:f}", x);
+			fmt::format_to(std::back_inserter(m_buffer), "{:f}", x);
+			//m_buffer.Double(x); // fmt::format_to(std::back_inserter(out), "{:f}", x);
 			return *this;
 		}
 
 		StrStream& add_int(int64_t x) {
-			m_writer.Int64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
+			fmt::format_to(std::back_inserter(m_buffer), "{}", x);
+			//m_buffer.Int64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
 			return *this;
 		}
 
 		StrStream& add_uint(uint64_t x) {
-			m_writer.Uint64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
+			fmt::format_to(std::back_inserter(m_buffer), "{}", x);
+			//m_buffer.Uint64(x); // fmt::format_to(std::back_inserter(out), "{}", x);
 			return *this;
 		}
 
 		StrStream& add_2(const char* str) {
-			while (*str != '\0') {
-				add_char(*str);
+			while (str[0] != '\0') {
+				add_char(str[0]);
 				++str;
 			}
-
 			return *this;
 		}
 	};
@@ -3531,7 +3525,6 @@ namespace claujson {
 
 	};
 
-	// precated?
 	claujson_inline void _write_string(StrStream& stream, char ch) {
 		switch (ch) {
 		case '\\':
@@ -3573,7 +3566,11 @@ namespace claujson {
 	}
 
 	claujson_inline void write_string(StrStream& stream, const StringView str) {
-		stream.add_1(str.data(), Static_Cast<uint64_t, uint32_t>(str.size()));
+		stream.add_char('\"');
+		for (uint64_t i = 0; i < str.size(); ++i) {
+			_write_string(stream, str[i]);
+		}
+		stream.add_char('\"');
 	}
 
 	static  const char* str_open_array[] = { "[", " [ \n",  };
@@ -4286,7 +4283,7 @@ namespace claujson {
 				//strStream.add_char(' ');
 				break;
 			case 2: // KEY
-				strStream.add_1(json_view->value->get_string().data(), json_view->value->get_string().size());
+				write_primitive(strStream, *json_view->value); //strStream.add_1(json_view->value->get_string().data(), json_view->value->get_string().size());
 				//strStream.add_char(' '); 
 				strStream.add_char(':');
 				//strStream.add_char(' '); 
@@ -4344,7 +4341,7 @@ namespace claujson {
 				strStream.add_char(' ');
 				break;
 			case 2: // KEY
-				strStream.add_1(json_view->value->get_string().data(), json_view->value->get_string().size());
+				write_primitive(strStream, *json_view->value);
 				strStream.add_char(' '); 
 				strStream.add_char(':');
 				strStream.add_char(' '); 

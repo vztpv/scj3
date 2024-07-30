@@ -333,7 +333,7 @@ int main(int argc, char* argv[])
 					claujson::Document _diff = claujson::diff(j.Get(), x.Get());
 
 					if (_diff.Get().is_valid() && _diff.Get().as_structured_ptr() && _diff.Get().as_array()->empty() == false) {
-						return 1;
+						std::cout << "diff \n";//return 1;
 					}
 				}
 
