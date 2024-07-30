@@ -76,7 +76,7 @@ if (true && ok) {
 std::cout << sum << " ";
 std::cout << counter << "  ";
 
-claujson::clean(j);
+//claujson::clean(j);
 
 ```
 
