@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.11.0)
 # 프로젝트 정보
 project(
   claujson
-  VERSION 0.23.1 #
+  VERSION 0.23.2 #
   DESCRIPTION "claujson"
   LANGUAGES CXX)
 
@@ -34,16 +34,12 @@ add_library(${LIB_NAME} STATIC ${SOURCE_DIR}/claujson.cpp ${SOURCE_DIR}/_simdjso
 add_library(${LIB_NAME14} STATIC ${SOURCE_DIR}/claujson.cpp ${SOURCE_DIR}/_simdjson.cpp) 
  
 include(FetchContent)
+
 FetchContent_Declare(
-  RapidJSON
-  GIT_REPOSITORY "https://github.com/Tencent/rapidjson"
-  GIT_TAG "v1.1.0" # v1.1.0
-  )
-FetchContent_GetProperties(RapidJSON)
-if(NOT RapidJSON_POPULATED)
-	FetchContent_Populate(RapidJSON)
-	set(gtest_build_test OFF CACHE BOOL "Enable gtest tests" FORCE)
-endif()
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG        e69e5f977d458f2650bb346dadf2ad30c5320281) # 10.2.1
+FetchContent_MakeAvailable(fmt)
 
 # header..
 target_include_directories(${LIB_NAME}  PUBLIC ${INCLUDE_DIR} PRIVATE ${rapidjson_SOURCE_DIR}/include)
