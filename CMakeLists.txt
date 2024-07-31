@@ -109,8 +109,8 @@ if (UNIX)
 	target_link_libraries(${LIB_NAME14} PRIVATE fmt::fmt pthread)
 	
 elseif (MSVC)
-	target_link_libraries(${LIB_NAME} fmt::fmt PRIVATE )
-	target_link_libraries(${LIB_NAME14} fmt::fmt PRIVATE )
+	target_link_libraries(${LIB_NAME} PRIVATE fmt::fmt  )
+	target_link_libraries(${LIB_NAME14} PRIVATE fmt::fmt  )
   
 	
 endif()
