@@ -319,12 +319,12 @@ namespace claujson {
 	using Ptr = std::unique_ptr<T>;
 	// Ptr - use std::move
 
-	class Value;
+	class _Value;
 	class Structured;
 	class Array;
 	class Object;
 
-	enum class ValueType : int32_t {
+	enum class _ValueType : int32_t {
 		NONE = 1,
 		ARRAY, // ARRAY_OBJECT -> ARRAY, OBJECT
 		OBJECT, 
@@ -339,19 +339,19 @@ namespace claujson {
 
 	// sz`s type is uint32_t, not uint64_t.
 	class String {
-		friend class Value;
+		friend class _Value;
 	private: // do not change of order. do not add variable.
 		#define CLAUJSON_STRING_BUF_SIZE 11
 		union {
 			struct {
 				char* str;
 				uint32_t sz;
-				ValueType type; // STRING or SHORT_STRING or NOT_VALID
+				_ValueType type; // STRING or SHORT_STRING or NOT_VALID
 			};
 			struct {
 				char buf[CLAUJSON_STRING_BUF_SIZE];
 				uint8_t buf_sz;
-				ValueType type_;
+				_ValueType type_;
 			};
 		};
 	
@@ -363,10 +363,10 @@ namespace claujson {
 				clear();
 			}
 
-			if (other.type == ValueType::STRING) {
+			if (other.type == _ValueType::STRING) {
 				this->str = new (std::nothrow) char[other.sz + 1];
 				if (this->str == nullptr) {
-					this->type = ValueType::ERROR;
+					this->type = _ValueType::ERROR;
 					log << warn << "new error";
 					return *this;
 				}
@@ -375,7 +375,7 @@ namespace claujson {
 				this->str[this->sz] = '\0';
 				this->type = other.type;
 			}
-			else if (other.type == ValueType::SHORT_STRING) {
+			else if (other.type == _ValueType::SHORT_STRING) {
 				memcpy(buf, other.buf, CLAUJSON_STRING_BUF_SIZE);
 				this->buf_sz = other.buf_sz;
 				this->type_ = other.type_;
@@ -385,25 +385,25 @@ namespace claujson {
 		}
 	protected:
 		String(const String& other) {
-			if (other.type == ValueType::STRING) {
+			if (other.type == _ValueType::STRING) {
 				this->str = new (std::nothrow) char[other.sz + 1];
 				if (this->str == nullptr) {
 					log << warn << "new error";
-					this->type = ValueType::ERROR; return;
+					this->type = _ValueType::ERROR; return;
 				}
 				this->sz = other.sz;
 				memcpy(this->str, other.str, other.sz);
 				this->str[this->sz] = '\0';
 				this->type = other.type;
 			}
-			else if (other.type == ValueType::SHORT_STRING) {
+			else if (other.type == _ValueType::SHORT_STRING) {
 				memcpy(buf, other.buf, CLAUJSON_STRING_BUF_SIZE);
 				this->buf_sz = other.buf_sz;
 				this->type_ = other.type_;
 			}
 		}
 		String(String&& other) noexcept {
-			this->type = ValueType::NONE;
+			this->type = _ValueType::NONE;
 			std::swap(this->str, other.str);
 			std::swap(this->sz, other.sz);
 			std::swap(this->type, other.type);
@@ -411,40 +411,40 @@ namespace claujson {
 
 	public:
 
-		explicit String() : type(ValueType::NONE) {
+		explicit String() : type(_ValueType::NONE) {
 			str = nullptr;
 			sz = 0;
 		}
 		
 		~String() {
-			if (type == ValueType::STRING && str) {
+			if (type == _ValueType::STRING && str) {
 				delete[] str; 
 			}
 
 			str = nullptr;
 			sz = 0;
-			type = ValueType::NONE;
+			type = _ValueType::NONE;
 		}
 
 
 		String clone() const {
-			if (is_valid() == false) { String temp; temp.type = ValueType::NOT_VALID; return temp; }
+			if (is_valid() == false) { String temp; temp.type = _ValueType::NOT_VALID; return temp; }
 			String obj;
 
-			if (this->type == ValueType::STRING) {
+			if (this->type == _ValueType::STRING) {
 				obj.sz = this->sz;
 				obj.str = new (std::nothrow) char[this->sz + 1];
 				if (obj.str == nullptr) {
 					log << warn << "new error";
-					obj.type = ValueType::ERROR;
+					obj.type = _ValueType::ERROR;
 					String result;
-					result.type = ValueType::ERROR;
+					result.type = _ValueType::ERROR;
 					return result;
 				}
 				memcpy(obj.str, this->str, this->sz);
 				obj.str[obj.sz] = '\0';
 			}
-			else if (this->type == ValueType::SHORT_STRING) {
+			else if (this->type == _ValueType::SHORT_STRING) {
 				obj.buf_sz = this->buf_sz;
 				memcpy(obj.buf, this->buf, CLAUJSON_STRING_BUF_SIZE);
 			}
@@ -464,64 +464,64 @@ namespace claujson {
 
 
 		explicit String(const char* str) {
-			if (!str) { this->type = ValueType::ERROR; return; }
+			if (!str) { this->type = _ValueType::ERROR; return; }
 			
 			this->sz = Static_Cast<uint64_t, uint32_t>(strlen(str));
 			if (this->sz < CLAUJSON_STRING_BUF_SIZE) {
 				this->buf_sz = (uint8_t)this->sz;
 				memcpy(this->buf, str, static_cast<uint64_t>(this->buf_sz));
 				this->buf[(uint64_t)this->buf_sz] = '\0';
-				this->type = ValueType::SHORT_STRING;
+				this->type = _ValueType::SHORT_STRING;
 			}
 			else {
 				this->str = new (std::nothrow) char[this->sz + 1];
 				if (this->str == nullptr) {
 					log << warn << "new error";
-					this->type = ValueType::ERROR; return;
+					this->type = _ValueType::ERROR; return;
 				}
 				memcpy(this->str, str, this->sz);
 				this->str[this->sz] = '\0';
-				this->type = ValueType::STRING;
+				this->type = _ValueType::STRING;
 			}
 		}
 
 		explicit String(const char* str, uint32_t sz) {
-			if (!str) { this->type = ValueType::ERROR; return; }
+			if (!str) { this->type = _ValueType::ERROR; return; }
 
 			this->sz = sz;
 			if (this->sz < CLAUJSON_STRING_BUF_SIZE) {
 				this->buf_sz = (uint8_t)this->sz;
 				memcpy(this->buf, str, static_cast<uint64_t>(this->buf_sz));
 				this->buf[(uint64_t)this->buf_sz] = '\0';
-				this->type = ValueType::SHORT_STRING;
+				this->type = _ValueType::SHORT_STRING;
 			}
 			else {
 				this->str = new (std::nothrow) char[this->sz + 1];
 				if (this->str == nullptr) {
-					this->type = ValueType::ERROR;
+					this->type = _ValueType::ERROR;
 					log << warn << "new error";
 					return;
 				}
 				memcpy(this->str, str, this->sz);
 				this->str[this->sz] = '\0';
-				this->type = ValueType::STRING;
+				this->type = _ValueType::STRING;
 			}
 		}
 
 	public:
 		bool is_valid() const {
-			return type != ValueType::NOT_VALID && type != ValueType::ERROR;
+			return type != _ValueType::NOT_VALID && type != _ValueType::ERROR;
 		}
 
 		bool is_str() const {
-			return type == ValueType::STRING || type == ValueType::SHORT_STRING;
+			return type == _ValueType::STRING || type == _ValueType::SHORT_STRING;
 		}
 
 		char* data() {
-			if (type == ValueType::STRING) {
+			if (type == _ValueType::STRING) {
 				return str;
 			}
-			else if (type == ValueType::SHORT_STRING) {
+			else if (type == _ValueType::SHORT_STRING) {
 				return buf;
 			}
 			else {
@@ -530,10 +530,10 @@ namespace claujson {
 		}
 
 		const char* data() const {
-			if (type == ValueType::STRING) {
+			if (type == _ValueType::STRING) {
 				return str;
 			}
-			else if (type == ValueType::SHORT_STRING) {
+			else if (type == _ValueType::SHORT_STRING) {
 				return buf;
 			}
 			else {
@@ -541,10 +541,10 @@ namespace claujson {
 			}
 		}
 		uint64_t size() const {
-			if (type == ValueType::STRING) {
+			if (type == _ValueType::STRING) {
 				return sz;
 			}
-			else if (type == ValueType::SHORT_STRING) {
+			else if (type == _ValueType::SHORT_STRING) {
 				return static_cast<uint64_t>(buf_sz); 
 			}
 			else {
@@ -554,12 +554,12 @@ namespace claujson {
 
 		// remove data.
 		void clear() {
-			if (type == ValueType::STRING && str) {
+			if (type == _ValueType::STRING && str) {
 				delete[] str;
 			}
 			sz = 0;
 			str = nullptr;
-			type = ValueType::NONE;
+			type = _ValueType::NONE;
 		}
 
 		bool operator<(const String& other) const {
@@ -596,25 +596,25 @@ namespace claujson {
 			if (str.size() <= CLAUJSON_STRING_BUF_SIZE) {
 				memcpy(buf, str.data(), str.size());
 				this->sz = str.size();
-				this->type = ValueType::SHORT_STRING;
+				this->type = _ValueType::SHORT_STRING;
 			}
 			else {
 				char* temp = new (std::nothrow) char[str.size()];
 				if (!temp) {
 					// log << warn ...
-					this->type = ValueType::NONE;
+					this->type = _ValueType::NONE;
 					return;
 				}
 				memcpy(temp, str.data(), str.size());
 				this->str = temp;
 				this->sz = str.size();
-				this->type = ValueType::STRING;
+				this->type = _ValueType::STRING;
 			}
 		}
 	};
 
 
-	class Value {
+	class _Value {
 
 	public:
 		// todo - check type of Data....
@@ -625,9 +625,9 @@ namespace claujson {
 		// using BOOL_t = bool;
 		
 	public:
-		friend std::ostream& operator<<(std::ostream& stream, const Value& data);
+		friend std::ostream& operator<<(std::ostream& stream, const _Value& data);
 
-		friend bool ConvertString(Value& data, char* text, uint64_t len);
+		friend bool ConvertString(_Value& data, char* text, uint64_t len);
 		friend class Object;
 		friend class Array;
 	private:
@@ -643,7 +643,7 @@ namespace claujson {
 					bool _bool_val;
 				};
 				uint32_t temp;
-				ValueType _type;
+				_ValueType _type;
 			};
 			String _str_val;
 		};
@@ -657,46 +657,46 @@ namespace claujson {
 		//	Structured* _array_or_object_ptr;
 		//	bool _bool_val;
 		//};
-		//ValueType _type = ValueType::NONE; 
+		//_ValueType _type = _ValueType::NONE; 
 		//bool _valid = true;
 
 	public:
 
-		Value clone() const;
+		_Value clone() const;
 
 		explicit operator bool() const;
 
-		explicit Value(Structured* x);
-		explicit Value(int x);
+		explicit _Value(Structured* x);
+		explicit _Value(int x);
 
-		explicit Value(unsigned int x);
+		explicit _Value(unsigned int x);
 
-		explicit Value(int64_t x);
-		explicit Value(uint64_t x);
-		explicit Value(double x);
+		explicit _Value(int64_t x);
+		explicit _Value(uint64_t x);
+		explicit _Value(double x);
 
-		explicit Value(StringView x); 
+		explicit _Value(StringView x); 
 
 #if __cpp_lib_char8_t
 		// C++20~
-		explicit Value(std::u8string_view x);
-		explicit Value(const char8_t* x);
+		explicit _Value(std::u8string_view x);
+		explicit _Value(const char8_t* x);
 #endif
 		
-		explicit Value(const char* x);
+		explicit _Value(const char* x);
 
-		explicit Value(Value*) = delete;
+		explicit _Value(_Value*) = delete;
 
-		explicit Value(bool x);
-		explicit Value(nullptr_t x);
+		explicit _Value(bool x);
+		explicit _Value(nullptr_t x);
 
-		explicit Value(nullptr_t, bool valid);
+		explicit _Value(nullptr_t, bool valid);
 
-		explicit Value(String&& x) {
+		explicit _Value(String&& x) {
 			this->_str_val = std::move(x);
 		}
 	public:
-		ValueType type() const;
+		_ValueType type() const;
 
 		bool is_valid() const;
 
@@ -772,8 +772,8 @@ namespace claujson {
 			return _array_or_object_ptr;
 		}
 
-		Value& json_pointerB(const std::vector<Value>& routeDataVec);
-		const Value& json_pointerB(const std::vector<Value>& routeVec) const;
+		_Value& json_pointerB(const std::vector<_Value>& routeDataVec);
+		const _Value& json_pointerB(const std::vector<_Value>& routeVec) const;
 
 		Array* as_array();
 		Object* as_object();
@@ -783,15 +783,15 @@ namespace claujson {
 		const Object* as_object()const;
 		const Structured* as_structured_ptr()const;
 
-		uint64_t find(const Value& key) const; // find without key`s converting?
+		uint64_t find(const _Value& key) const; // find without key`s converting?
 
-		// Value (type is String or Short_String) -> no need utf8, unicode check.
-		Value& operator[](const Value& key); // if not exist key, then nothing.
-		const Value& operator[](const Value& key) const; // if not exist key, then nothing.
+		// _Value (type is String or Short_String) -> no need utf8, unicode check.
+		_Value& operator[](const _Value& key); // if not exist key, then nothing.
+		const _Value& operator[](const _Value& key) const; // if not exist key, then nothing.
 
 
-		Value& operator[](uint64_t idx);
-		const Value& operator[](uint64_t idx) const;
+		_Value& operator[](uint64_t idx);
+		const _Value& operator[](uint64_t idx) const;
 	public:
 		void clear(bool remove_str); 
 
@@ -823,46 +823,65 @@ namespace claujson {
 		void set_null();
 
 	private:
-		void set_type(ValueType type);
+		void set_type(_ValueType type);
 
 	public:
-		~Value();
+		~_Value();
 
-		Value(const Value& other) = delete;
+		_Value(const _Value& other) = delete;
 
-		Value(Value&& other) noexcept;
+		_Value(_Value&& other) noexcept;
 
-		Value();
+		_Value();
 
-		bool operator==(const Value& other) const;
+		bool operator==(const _Value& other) const;
 
-		bool operator!=(const Value& other) const;
+		bool operator!=(const _Value& other) const;
 
-		bool operator<(const Value& other) const;
+		bool operator<(const _Value& other) const;
 
-		Value& operator=(const Value& other) = delete;
+		_Value& operator=(const _Value& other) = delete;
 
 
-		Value& operator=(Value&& other) noexcept;
+		_Value& operator=(_Value&& other) noexcept;
+	};
+
+	class Value {
+	private:
+		_Value x;
+	public:
+		Value() noexcept { }
+
+		Value(_Value&& x) noexcept : x(std::move(x)) {
+			//
+		}
+
+		~Value() noexcept;
+	public:
+		Value& operator=(const Value&) = delete;
+		Value(const _Value&) = delete;
+	public:
+		_Value& Get() noexcept { return x; }
+		const _Value& Get() const noexcept { return x; }
 	};
 
 	class Document {
 	private:
-		Value x;
+		_Value x;
 	public:
 		Document() noexcept { }
 
-		Document(Value&& x) noexcept : x(std::move(x))  {
+		Document(_Value&& x) noexcept : x(std::move(x))  {
 			//
 		}
 
 		~Document() noexcept;
 	public:
 		Document& operator=(const Document&) = delete;
-		Document(const Value&) = delete;
+		Document(const _Value&) = delete;
 	public:
-		Value& Get() noexcept { return x; }
-		const Value& Get() const noexcept { return x; }
+		_Value& Get() noexcept { return x; }
+		const _Value& Get() const noexcept { return x; }
 	};
 }
 
@@ -883,7 +902,7 @@ namespace claujson {
 	protected:
 		PtrWeak<Structured> parent = nullptr;
 	protected:
-		static Value data_null; // valid is false..
+		static _Value data_null; // valid is false..
 	public:
 		static uint64_t npos; // 
 	public:
@@ -896,22 +915,22 @@ namespace claujson {
 
 		virtual ~Structured();
 
-		uint64_t find(const Value& key) const; // find without key`s converting ( \uxxxx )
+		uint64_t find(const _Value& key) const; // find without key`s converting ( \uxxxx )
 
-		Value& operator[](const Value& key); // if not exist key, then Value <- is not valid.
-		const Value& operator[](const Value& key) const; // if not exist key, then Value <- is not valid.
+		_Value& operator[](const _Value& key); // if not exist key, then _Value <- is not valid.
+		const _Value& operator[](const _Value& key) const; // if not exist key, then _Value <- is not valid.
 
-		Value& operator[](uint64_t idx);
+		_Value& operator[](uint64_t idx);
 
-		const Value& operator[](uint64_t idx) const;
+		const _Value& operator[](uint64_t idx) const;
 
 		PtrWeak<Structured> get_parent() const;
 
 	public:
-		bool change_key(const Value& key, Value new_key);
+		bool change_key(const _Value& key, Value new_key);
 		bool change_key(uint64_t idx, Value new_key);
 
-		virtual Value& get_value();
+		virtual _Value& get_value();
 
 		virtual void reserve_data_list(uint64_t len) = 0; // if object, reserve key_list and value_list, if array, reserve value_list.
 
@@ -930,15 +949,15 @@ namespace claujson {
 		}
 
 		virtual uint64_t get_data_size() const = 0; // data_size == key_list_size (if object), and data_size == value_list_size.
-		virtual Value& get_value_list(uint64_t idx) = 0;
+		virtual _Value& get_value_list(uint64_t idx) = 0;
 	private:
-		virtual Value& get_key_list(uint64_t idx) = 0;
+		virtual _Value& get_key_list(uint64_t idx) = 0;
 	public:
-		virtual const Value& get_value_list(uint64_t idx) const = 0;
-		virtual const Value& get_key_list(uint64_t idx) const = 0;
+		virtual const _Value& get_value_list(uint64_t idx) const = 0;
+		virtual const _Value& get_key_list(uint64_t idx) const = 0;
 
-		virtual const Value& get_const_key_list(uint64_t idx) = 0;
-		virtual const Value& get_const_key_list(uint64_t idx) const = 0;
+		virtual const _Value& get_const_key_list(uint64_t idx) = 0;
+		virtual const _Value& get_const_key_list(uint64_t idx) const = 0;
 
 		virtual void clear(uint64_t idx) = 0;
 		virtual void clear() = 0;
@@ -948,16 +967,16 @@ namespace claujson {
 		// todo return type void -> bool.
 		virtual bool add_object_element(Value key, Value val) = 0;
 		virtual bool add_array_element(Value val) = 0;
-		virtual bool add_array(Ptr<Structured> arr) = 0;  // change to Value ? or remove?
-		virtual bool add_object(Ptr<Structured> obj) = 0; // change to Value ? or remove?
+		virtual bool add_array(Ptr<Structured> arr) = 0;  // change to _Value ? or remove?
+		virtual bool add_object(Ptr<Structured> obj) = 0; // change to _Value ? or remove?
 
-		virtual bool add_array(Value key, Ptr<Structured> arr) = 0;  // change to Value ? or remove?
-		virtual bool add_object(Value key, Ptr<Structured> obj) = 0; // change to Value ? or remove?
+		virtual bool add_array(Value key, Ptr<Structured> arr) = 0;  // change to _Value ? or remove?
+		virtual bool add_object(Value key, Ptr<Structured> obj) = 0; // change to _Value ? or remove?
 
 		virtual bool assign_value_element(uint64_t idx, Value val) = 0;
 		virtual bool assign_key_element(uint64_t idx, Value key) = 0;
 
-		virtual void erase(const Value& key, bool real = false) = 0;
+		virtual void erase(const _Value& key, bool real = false) = 0;
 		virtual void erase(uint64_t idx, bool real = false) = 0;
 
 	private:
@@ -976,11 +995,11 @@ namespace claujson {
 			char* buf,  uint64_t val_token_idx) = 0;
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			 ValueType type, uint64_t key_token_idx) = 0;
+			 _ValueType type, uint64_t key_token_idx) = 0;
 
 		//
 
-		virtual void add_user_type(ValueType type) = 0; // int type -> enum?
+		virtual void add_user_type(_ValueType type) = 0; // int type -> enum?
 
 
 		virtual bool add_user_type(Value key, Ptr<Structured> j) = 0;
@@ -990,20 +1009,20 @@ namespace claujson {
 
 	class Object : public Structured {
 	protected:
-		std::vector<std::pair<claujson::Value, claujson::Value>> obj_data;
+		std::vector<std::pair<claujson::_Value, claujson::_Value>> obj_data;
 	public:
-		using ValueIterator = std::vector<std::pair<claujson::Value, claujson::Value>>::iterator;
+		using _ValueIterator = std::vector<std::pair<claujson::_Value, claujson::_Value>>::iterator;
 	protected:
 		//explicit Object(bool valid);
 	public:
-		friend class Value;
+		friend class _Value;
 
 		Structured* clone() const;
 
 		bool chk_key_dup(uint64_t* idx) const;  // chk dupplication of key. only Object, Virtual Object..
 
 		[[nodiscard]]
-		static Value Make();
+		static _Value Make();
 
 		explicit Object();
 
@@ -1014,18 +1033,18 @@ namespace claujson {
 
 		virtual uint64_t get_data_size() const;
 
-		virtual Value& get_value_list(uint64_t idx);
+		virtual _Value& get_value_list(uint64_t idx);
 	private:
-		virtual Value& get_key_list(uint64_t idx);
+		virtual _Value& get_key_list(uint64_t idx);
 	public:
 
-		virtual const Value& get_value_list(uint64_t idx) const;
+		virtual const _Value& get_value_list(uint64_t idx) const;
 
-		virtual const Value& get_key_list(uint64_t idx) const;
+		virtual const _Value& get_key_list(uint64_t idx) const;
 
-		virtual const Value& get_const_key_list(uint64_t idx);
+		virtual const _Value& get_const_key_list(uint64_t idx);
 
-		virtual const Value& get_const_key_list(uint64_t idx) const;
+		virtual const _Value& get_const_key_list(uint64_t idx) const;
 
 		virtual void clear(uint64_t idx);
 
@@ -1034,8 +1053,8 @@ namespace claujson {
 		virtual void clear();
 
 
-		ValueIterator begin();
-		ValueIterator end();
+		_ValueIterator begin();
+		_ValueIterator end();
 		
 		virtual void reserve_data_list(uint64_t len);
 
@@ -1044,14 +1063,14 @@ namespace claujson {
 		virtual bool add_array(Ptr<Structured> arr);
 		virtual bool add_object(Ptr<Structured> obj);
 
-		virtual bool add_array(Value key, Ptr<Structured> arr);  // change to Value ? or remove?
-		virtual bool add_object(Value key, Ptr<Structured> obj); // change to Value ? or remove?
+		virtual bool add_array(Value key, Ptr<Structured> arr);  // change to _Value ? or remove?
+		virtual bool add_object(Value key, Ptr<Structured> obj); // change to _Value ? or remove?
 
 
 		virtual bool assign_value_element(uint64_t idx, Value val);
 		virtual bool assign_key_element(uint64_t idx, Value key);
 
-		virtual void erase(const Value& key, bool real = false);
+		virtual void erase(const _Value& key, bool real = false);
 		virtual void erase(uint64_t idx, bool real = false);
 
 	private:
@@ -1064,9 +1083,9 @@ namespace claujson {
 			char* buf,  uint64_t val_token_idx);
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			 ValueType type, uint64_t key_token_idx);
+			 _ValueType type, uint64_t key_token_idx);
 
-		virtual void add_user_type(ValueType type);
+		virtual void add_user_type(_ValueType type);
 
 		virtual bool add_user_type(Value key, Ptr<Structured> j);
 
@@ -1075,19 +1094,19 @@ namespace claujson {
 
 	class Array : public Structured {
 	protected:
-		std::vector<Value> arr_vec;
+		std::vector<_Value> arr_vec;
 	public:
-		using ValueIterator = std::vector<Value>::iterator;
+		using _ValueIterator = std::vector<_Value>::iterator;
 	protected:
 		//explicit Array(bool valid);
 	public:
-		friend class Value;
+		friend class _Value;
 		friend class PartialJson;
 
 		Structured* clone() const;
 
 		[[nodiscard]]
-		static Value Make();
+		static _Value Make();
 
 		explicit Array();
 
@@ -1098,17 +1117,17 @@ namespace claujson {
 
 		virtual uint64_t get_data_size() const;
 
-		virtual Value& get_value_list(uint64_t idx);
+		virtual _Value& get_value_list(uint64_t idx);
 	private:
-		virtual Value& get_key_list(uint64_t idx);
+		virtual _Value& get_key_list(uint64_t idx);
 	public:
-		virtual const Value& get_value_list(uint64_t idx) const;
+		virtual const _Value& get_value_list(uint64_t idx) const;
 
-		virtual const Value& get_key_list(uint64_t idx) const;
+		virtual const _Value& get_key_list(uint64_t idx) const;
 
-		virtual const Value& get_const_key_list(uint64_t idx);
+		virtual const _Value& get_const_key_list(uint64_t idx);
 
-		virtual const Value& get_const_key_list(uint64_t idx) const;
+		virtual const _Value& get_const_key_list(uint64_t idx) const;
 
 		virtual void clear(uint64_t idx);
 
@@ -1119,9 +1138,9 @@ namespace claujson {
 		virtual void reserve_data_list(uint64_t len);
 
 
-		ValueIterator begin();
+		_ValueIterator begin();
 
-		ValueIterator end();
+		_ValueIterator end();
 
 
 		virtual bool add_object_element(Value key, Value val);
@@ -1132,14 +1151,14 @@ namespace claujson {
 
 		virtual bool add_object(Ptr<Structured> obj);
 
-		virtual bool add_array(Value key, Ptr<Structured> arr);  // change to Value ? or remove?
+		virtual bool add_array(Value key, Ptr<Structured> arr);  // change to _Value ? or remove?
 		
-		virtual bool add_object(Value key, Ptr<Structured> obj); // change to Value ? or remove?
+		virtual bool add_object(Value key, Ptr<Structured> obj); // change to _Value ? or remove?
 
 		virtual bool assign_value_element(uint64_t idx, Value val);
 		virtual bool assign_key_element(uint64_t idx, Value key);
 
-		virtual void erase(const Value& key, bool real = false); 
+		virtual void erase(const _Value& key, bool real = false); 
 		virtual void erase(uint64_t idx, bool real = false);
 
 	private:
@@ -1154,9 +1173,9 @@ namespace claujson {
 			char* buf,  uint64_t val_token_idx);
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			 ValueType type, uint64_t key_token_idx);
+			 _ValueType type, uint64_t key_token_idx);
 
-		virtual void add_user_type(ValueType type);
+		virtual void add_user_type(_ValueType type);
 
 		virtual bool add_user_type(Value key, Ptr<Structured> j);
 
@@ -1193,22 +1212,22 @@ namespace claujson {
 	public:
 		writer(int thr_num = 0);
 	public:
-		std::string write_to_str(const Value& global, bool prettty = false);
-		std::string write_to_str2(const Value& global, bool prettty = false);
+		std::string write_to_str(const _Value& global, bool prettty = false);
+		std::string write_to_str2(const _Value& global, bool prettty = false);
 
-		void write(const std::string& fileName, const Value& global, bool pretty = false);
+		void write(const std::string& fileName, const _Value& global, bool pretty = false);
 
-		void write_parallel(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
-		void write_parallel2(const std::string& fileName, Value& j, uint64_t thr_num, bool pretty = false);
+		void write_parallel(const std::string& fileName, _Value& j, uint64_t thr_num, bool pretty = false);
+		void write_parallel2(const std::string& fileName, _Value& j, uint64_t thr_num, bool pretty = false);
 	};
 
 
 	[[nodiscard]]
-	Value diff(const Value& x, const Value& y);
+	_Value diff(const _Value& x, const _Value& y);
 
-	Value& patch(Value& x, const Value& diff);
+	_Value& patch(_Value& x, const _Value& diff);
 
-	void clean(Value& x); //
+	void clean(_Value& x); //
 
 	std::pair<bool, std::string> convert_to_string_in_json(StringView x);
 

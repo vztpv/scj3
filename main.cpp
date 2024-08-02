@@ -17,10 +17,10 @@
 // using namespace std::literals::u8string_view_literals; // ?? 
 
 void utf_8_test() {
-	using claujson::Value;
+	using claujson::_Value;
 
 	// C++17 - stringview, C++20~ - u8string_view
-	Value x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
+	_Value x(u8"こんにちは \\n wow hihi"sv); // no sv -> Data(bool)
 	if (x) { // if before string is not valid utf-8, then x is not valid. x -> false
 		auto& y = x.str_val();
 		std::cout << y.data() << "\n";
@@ -29,15 +29,15 @@ void utf_8_test() {
 
 void key_dup_test() {
 	using claujson::Object;
-	using claujson::Value;
+	using claujson::_Value;
 	using claujson::Ptr;
 
 	Ptr<Object> x = Ptr<Object>(new Object());
 
-	x->add_object_element(Value("456"sv), Value(123));
-	x->add_object_element(Value("123"sv), Value(234));
-	x->add_object_element(Value("567"sv), Value(345));
-	x->add_object_element(Value("456"sv), Value(456));
+	x->add_object_element(_Value("456"sv), _Value(123));
+	x->add_object_element(_Value("123"sv), _Value(234));
+	x->add_object_element(_Value("567"sv), _Value(345));
+	x->add_object_element(_Value("456"sv), _Value(456));
 
 	uint64_t idx = 0;
 	bool found = false;
@@ -50,7 +50,7 @@ void key_dup_test() {
 void str_test() {
 	auto x = u8"한글 Test";
 
-	claujson::Value A(x);
+	claujson::_Value A(x);
 
 	if (!A.is_str()) {
 		std::cout << "ERROR ";
@@ -58,14 +58,14 @@ void str_test() {
 
 	auto y = "test";
 
-	claujson::Value B(y);
+	claujson::_Value B(y);
 
 	if (!B.is_str()) {
 		std::cout << "ERROR2 ";
 	}
 
 	std::string z = "test";
-	claujson::Value C(z);
+	claujson::_Value C(z);
 
 	if (!C.is_str()) {
 		std::cout << "ERROR3 ";
@@ -134,7 +134,7 @@ namespace claujson {
 			return *this;
 		}
 
-		JsonIterator& iterate(std::function<void(Value&)> func) {
+		JsonIterator& iterate(std::function<void(_Value&)> func) {
 			if (_m_now) {
 				size_t len = _m_now->get_data_size();
 				for (size_t i = _m_child_pos_in_parent.back(); i < len; ++i) {
@@ -148,11 +148,11 @@ namespace claujson {
 			return _m_now && _m_child_pos_in_parent.empty() == false && _m_child_pos_in_parent.back() < _m_now->get_data_size();
 		}
 
-		Value& now() {
+		_Value& now() {
 			if (_m_now) {
 				return _m_now->get_value_list(_m_child_pos_in_parent.back());
 			}
-			static Value null_data(nullptr, false);
+			static _Value null_data(nullptr, false);
 			return null_data;
 		}
 
@@ -168,9 +168,9 @@ namespace claujson {
 
 int main(int argc, char* argv[])
 {
-	std::cout << sizeof(std::vector<std::pair<claujson::Value, claujson::Value>>) << "\n";
+	std::cout << sizeof(std::vector<std::pair<claujson::_Value, claujson::_Value>>) << "\n";
 	//std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
-	//	<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::Value) << "\n";
+	//	<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::_Value) << "\n";
 
 	if (argc <= 1) {
 		std::cout << "[program name] [json file name] (number of thread) \n";
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 	diff_test();
 
 	/*
-	std::cout << sizeof(claujson::Value) << "\n";
+	std::cout << sizeof(claujson::_Value) << "\n";
 	std::cout << sizeof(claujson::Array) << "\n";
 	std::cout << sizeof(claujson::Object) << "\n";
 	{
@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 
 		claujson::init(0);
 
-		claujson::Value ut;
+		claujson::_Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
 	}
 
@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 
 		claujson::init(0);
 
-		claujson::Value ut;
+		claujson::_Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
 	}
 
@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
 
 		claujson::init(0);
 
-		claujson::Value ut;
+		claujson::_Value ut;
 		std::cout << claujson::parse_str(str, ut, 1).first << "\n";
 	}
 
@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
 				// 
 				
 				claujson::writer w;
-				w.write_parallel2("temp.json", j.Get(), thr_num, false);
+				w.write_parallel2("temp.json", j.Get(), thr_num, true);
 				
 				std::cout << "write_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 				
@@ -359,12 +359,12 @@ int main(int argc, char* argv[])
 				int counter = 0;
 				ok = x.first;
 
-				std::vector<claujson::Value> vec;
+				std::vector<claujson::_Value> vec;
 
 				// json_pointer, json_pointerA <- u8string_view?
 
-				static const auto& _geometry = claujson::Value("geometry"sv);
-				static const auto& _coordinates = claujson::Value("coordinates"sv);
+				static const auto _geometry = claujson::_Value("geometry"sv);
+				static const auto _coordinates = claujson::_Value("coordinates"sv);
 
 				double sum = 0;
 				if (true && ok) {
@@ -435,8 +435,8 @@ int main(int argc, char* argv[])
 
 				std::cout << "\nwrite " << dur.count() << "ms\n";
 
-				claujson::Value X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
-				claujson::Value Y("coordinates"sv); // use claujson::Value.
+				claujson::_Value X("geometry"sv); // in here, utf_8, unicode(\uxxxx) are checked..
+				claujson::_Value Y("coordinates"sv); // use claujson::_Value.
 
 				sum = 0; counter = 0;
 				/*if (true && ok) {
