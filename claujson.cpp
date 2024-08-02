@@ -2758,7 +2758,7 @@ namespace claujson {
 						temp = new (std::nothrow) VirtualObject();
 						
 						if (temp == nullptr) {
-							delete[] out;
+							delete out;
 							log << warn << "new error";
 							return;
 						}
@@ -2767,7 +2767,7 @@ namespace claujson {
 						temp = new (std::nothrow) VirtualArray();
 					
 						if (temp == nullptr) {
-							delete[] out;
+							delete out;
 							log << warn << "new error";
 							return;
 						}

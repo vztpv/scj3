@@ -855,11 +855,14 @@ namespace claujson {
 		Value(_Value&& x) noexcept : x(std::move(x)) {
 			//
 		}
+		Value(Value&& x) noexcept : x(std::move(x.x)) {
+			//
+		}
 
 		~Value() noexcept;
 	public:
 		Value& operator=(const Value&) = delete;
-		Value(const _Value&) = delete;
+		Value(const _Value& other) = delete;
 	public:
 		_Value& Get() noexcept { return x; }
 		const _Value& Get() const noexcept { return x; }
