@@ -23,7 +23,7 @@ bool ok;
 
 auto x = p.parse(argv[1], d, 0); // filename, Value, thread_num...
 
-claujson::Value& j = d.Get();
+claujson::_Value& j = d.Get();
 
 if (!x.first) {
 	std::cout << "fail\n";
@@ -39,8 +39,8 @@ ok = x.first;
 
 double sum = 0;
 
-static const auto& _geometry = claujson::Value("geometry"sv);
-static const auto& _coordinates = claujson::Value("coordinates"sv);
+static const auto& _geometry = claujson::_Value("geometry"sv);
+static const auto& _coordinates = claujson::_Value("coordinates"sv);
 
 if (true && ok) {
     for (int i = 0; i < 1; ++i) {
