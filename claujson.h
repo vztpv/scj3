@@ -862,7 +862,7 @@ namespace claujson {
 		~Value() noexcept;
 	public:
 		Value& operator=(const Value&) = delete;
-		Value(const _Value& other) = delete;
+		Value(const Value& other) = delete;
 	public:
 		_Value& Get() noexcept { return x; }
 		const _Value& Get() const noexcept { return x; }
