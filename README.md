@@ -79,7 +79,9 @@ std::cout << counter << "  ";
 //claujson::clean(j);
 
 ```
-# 
+# Tested on Intel 13th generation i7 CPU 13700
+	( /n <- n: number of threads, but if n is 0, the maximum number of CPU threads - 2 )
+	( parsing time + data deletion time related to ast, etc. ) ( with mimalloc )
 ![image](https://github.com/user-attachments/assets/4d240dea-06d2-4b1d-a3a8-f1c233e7c3e2)
 
 
