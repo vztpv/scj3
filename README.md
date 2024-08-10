@@ -79,6 +79,9 @@ std::cout << counter << "  ";
 //claujson::clean(j);
 
 ```
+# 
+![image](https://github.com/user-attachments/assets/4d240dea-06d2-4b1d-a3a8-f1c233e7c3e2)
+
 
 # Use CMake, (msvc -> use Release, 64bit)
 
