@@ -4,6 +4,7 @@
 // mainly tested with C++17...
 
 #include "mimalloc-new-delete.h"
+
 #include <iostream>
 #include <string>
 #include <ctime>
@@ -309,10 +310,9 @@ int main(int argc, char* argv[])
 
 			
 				//debug test
-				//std::cout << j << "\n";
-				///claujson::clean(j);
-				//continue;
-				//return 0;
+			//	//std::cout << j << "\n";
+			//	std::cout << "chk\n";
+			//	return 0;
 				//
 				// 
 				

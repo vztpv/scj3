@@ -1221,7 +1221,7 @@ namespace claujson {
 		void write(const std::string& fileName, const _Value& global, bool pretty = false);
 
 		void write_parallel(const std::string& fileName, _Value& j, uint64_t thr_num, bool pretty = false);
-		void write_parallel2(const std::string& fileName, _Value& j, uint64_t thr_num, bool pretty = false);
+		void write_parallel2(const std::string& fileName, const _Value& j, uint64_t thr_num, bool pretty = false);
 	};
 
 

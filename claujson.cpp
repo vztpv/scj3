@@ -7,7 +7,6 @@
 #include <execution>
 
 #include "fmt/format.h"
-//#include "rapidjson/writer.h"
 
 
 #define claujson_inline _simdjson_inline
@@ -1305,7 +1304,11 @@ namespace claujson {
 		uint64_t sz = this->get_data_size();
 
 		for (uint64_t i = 0; i < sz; ++i) {
-			result->add_object_element(this->get_key_list(i).clone(), this->get_value_list(i).clone());
+			auto x = this->get_value_list(i).clone();
+			if (x.as_structured_ptr()) {
+				x.as_structured_ptr()->set_parent(dynamic_cast<Structured*>(const_cast<Object*>(this)));
+			}
+			result->add_object_element(this->get_key_list(i).clone(), std::move(x));
 		}
 
 		return result;
@@ -1620,7 +1623,11 @@ namespace claujson {
 
 		uint64_t sz = this->get_data_size();
 		for (uint64_t i = 0; i < sz; ++i) {
-			result->add_array_element(this->get_value_list(i).clone());
+			auto x = this->get_value_list(i).clone();
+			if (x.as_structured_ptr()) {
+				x.as_structured_ptr()->set_parent(dynamic_cast<Structured*>(const_cast<Array*>(this)));
+			}
+			result->add_array_element(std::move(x));
 		}
 
 		return result;
@@ -3525,7 +3532,7 @@ namespace claujson {
 		 std::string write_to_str2(const _Value& data, bool pretty);
 
 		 void write_parallel(const std::string& fileName, _Value& j, uint64_t thr_num, bool pretty);
-		 void write_parallel2(const std::string& fileName, _Value& j, uint64_t thr_num, bool pretty);
+		 void write_parallel2(const std::string& fileName, const _Value& j, uint64_t thr_num, bool pretty);
 
 	};
 
@@ -4386,7 +4393,7 @@ namespace claujson {
 		}
 	}
 
-	void LoadData2::write_parallel2(const std::string& fileName, _Value& j, uint64_t thr_num, bool pretty) {
+	void LoadData2::write_parallel2(const std::string& fileName, const _Value& j, uint64_t thr_num, bool pretty) {
 		if (!j.is_structured()) {
 			write(fileName, j, pretty, false);
 			return;
@@ -6100,7 +6107,7 @@ namespace claujson {
 		LoadData2 p(pool.get()); 
 		p.write_parallel(fileName, j, thr_num, pretty);
 	}
-	void writer::write_parallel2(const std::string& fileName, _Value& j, uint64_t thr_num, bool pretty) {
+	void writer::write_parallel2(const std::string& fileName, const _Value& j, uint64_t thr_num, bool pretty) {
 		LoadData2 p(pool.get()); 
 		p.write_parallel2(fileName, j, thr_num, pretty);
 	}
