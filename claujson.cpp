@@ -1305,9 +1305,6 @@ namespace claujson {
 
 		for (uint64_t i = 0; i < sz; ++i) {
 			auto x = this->get_value_list(i).clone();
-			if (x.as_structured_ptr()) {
-				x.as_structured_ptr()->set_parent(result);
-			}
 			result->add_object_element(this->get_key_list(i).clone(), std::move(x));
 		}
 
@@ -1624,9 +1621,6 @@ namespace claujson {
 		uint64_t sz = this->get_data_size();
 		for (uint64_t i = 0; i < sz; ++i) {
 			auto x = this->get_value_list(i).clone();
-			if (x.as_structured_ptr()) {
-				x.as_structured_ptr()->set_parent(result);
-			}
 			result->add_array_element(std::move(x));
 		}
 
