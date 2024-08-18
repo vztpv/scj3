@@ -3275,7 +3275,7 @@ namespace claujson {
 
 						pivot.push_back(start[0]);
 
-						for (int i = 1; i < parse_num; ++i) {
+						for (uint64_t i = 1; i < parse_num; ++i) {
 							pivot.push_back(FindDivisionPlace(buf, imple, start[i], start[i + 1] - 1));
 						}
 
@@ -5711,7 +5711,7 @@ namespace claujson {
 				length = how_many;
 
 				start[0] = 0;
-				for (int i = 1; i < thr_num; ++i) {
+				for (uint64_t i = 1; i < thr_num; ++i) {
 					start[i] = how_many / thr_num * i;
 				}
 			}
@@ -5786,7 +5786,7 @@ namespace claujson {
 						log << err << "calloc fail in parse function.";
 						return { false, -55 };
 					}
-					for (int i = 0; i < _set.size(); ++i) {
+					for (uint64_t i = 0; i < _set.size(); ++i) {
 						thr_result[i] = pool->enqueue(is_valid2, std::ref(test_), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec, &err);
 					}
 					std::vector<int> result(_set.size());
@@ -5987,7 +5987,7 @@ namespace claujson {
 					return { false, -55 };
 				}
 				
-				for (int i = 0; i < _set.size(); ++i) {
+				for (uint64_t i = 0; i < _set.size(); ++i) {
 					thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec, &err);
 				}
 				std::vector<int> vec(_set.size());
