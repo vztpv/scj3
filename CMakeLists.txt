@@ -47,7 +47,7 @@ target_include_directories(${LIB_NAME14} PUBLIC ${INCLUDE_DIR} PRIVATE ${fmt_SOU
 
 
 if (UNIX) 
-        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++20 -march=native -pthread -Wno-narrowing -Wextra -O2)
+        target_compile_options(${LIB_NAME} PRIVATE -m64 -std=c++2a -march=native -pthread -Wno-narrowing -Wextra -O2)
         target_compile_options(${LIB_NAME14} PRIVATE -m64 -std=c++14 -march=native -pthread -Wno-narrowing -Wextra -O2)
       
 elseif (MSVC)
