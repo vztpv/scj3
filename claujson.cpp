@@ -4444,7 +4444,7 @@ namespace claujson {
 			start.resize(1 + _set.size());
 			last.resize(_set.size());
 
-			int count = 0;
+			uint64_t count = 0;
 			for (auto x : _set) { // order is important.
 				start[count] = x;
 				++count;
@@ -5919,7 +5919,7 @@ namespace claujson {
 				length = how_many;
 
 				start[0] = 0;
-				for (int i = 1; i < thr_num; ++i) {
+				for (uint64_t i = 1; i < thr_num; ++i) {
 					start[i] = how_many / thr_num * i;
 				}
 			}

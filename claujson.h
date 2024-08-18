@@ -113,7 +113,7 @@ namespace claujson {
 		}
 
 		int compare(const StringView view) {
-			int idx1 = 0, idx2 = 0;
+			uint64_t idx1 = 0, idx2 = 0;
 			for (; idx1 < this->length() && idx2 < view.length(); ++idx1, ++idx2) {
 				uint8_t diff = this->data()[idx1] - view.data()[idx2];
 				if (diff < 0) {
@@ -595,7 +595,7 @@ namespace claujson {
 		explicit String(const std::string& str) {
 			if (str.size() <= CLAUJSON_STRING_BUF_SIZE) {
 				memcpy(buf, str.data(), str.size());
-				this->sz = str.size();
+				this->sz = static_cast<uint32_t>(str.size()); // chk..
 				this->type = _ValueType::SHORT_STRING;
 			}
 			else {
@@ -607,7 +607,7 @@ namespace claujson {
 				}
 				memcpy(temp, str.data(), str.size());
 				this->str = temp;
-				this->sz = str.size();
+				this->sz = static_cast<uint32_t>(str.size());
 				this->type = _ValueType::STRING;
 			}
 		}
