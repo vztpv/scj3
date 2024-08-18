@@ -4206,7 +4206,7 @@ namespace claujson {
 	class JsonView {
 	public:
 		const _Value* value;
-		uint64_t type; // enum? 0 - ARRAY, 1 - OBJECT, 2 - KEY, 3 - VALUE, 4 - END_ARRAY, 5 - END_OBJECT
+		int32_t type; // enum? 0 - ARRAY, 1 - OBJECT, 2 - KEY, 3 - VALUE, 4 - END_ARRAY, 5 - END_OBJECT
 	};
 
 	JsonView* _run(JsonView* view_arr, const _Value* x);
