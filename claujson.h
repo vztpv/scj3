@@ -11,7 +11,7 @@
 #include <set>
 #include <fstream>
 #include <cstring>
-
+#include <cstdint> // uint64_t? int64_t?
 
 #include "ThreadPool.h"
 
