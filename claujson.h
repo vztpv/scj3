@@ -595,7 +595,7 @@ namespace claujson {
 		explicit String(const std::string& str) {
 			if (str.size() <= CLAUJSON_STRING_BUF_SIZE) {
 				memcpy(buf, str.data(), str.size());
-				this->sz = static_cast<uint32_t>(str.size()); // chk..
+				this->sz = Static_Cast<uint64_t, uint32_t>(str.size()); // chk..
 				this->type = _ValueType::SHORT_STRING;
 			}
 			else {
@@ -607,7 +607,7 @@ namespace claujson {
 				}
 				memcpy(temp, str.data(), str.size());
 				this->str = temp;
-				this->sz = static_cast<uint32_t>(str.size());
+				this->sz = Static_Cast<uint64_t, uint32_t>(str.size());
 				this->type = _ValueType::STRING;
 			}
 		}
@@ -716,6 +716,10 @@ namespace claujson {
 
 		bool is_float() const;
 
+		bool is_number() const {
+			return is_valid() && (is_int() || is_uint() || is_float());
+		}
+
 		bool is_bool() const;
 
 		bool is_str() const;
@@ -746,6 +750,14 @@ namespace claujson {
 		
 		double& get_floating() {
 			return float_val();
+		}
+
+		template <typename T>
+		T get_number() const {
+			if (is_float()) {
+				return static_cast<T>(_float_val);
+			}
+			return static_cast<T>(_uint_val);
 		}
 
 		double float_val() const;
@@ -821,6 +833,32 @@ namespace claujson {
 		void set_bool(bool x);
 
 		void set_null();
+
+		// chk!! with clauscript++?
+		std::string convert_primitive_to_std_string() {
+			if (is_int()) {
+				return std::to_string(get_integer());
+			}
+			else if (is_uint()) {
+				return std::to_string(get_unsigned_integer());
+			}
+			else if (is_float()) {
+				return std::to_string(get_floating());
+			}
+			else if (is_bool()) {
+				return std::to_string(get_boolean());
+			}
+			else if (is_null()) {
+				return "null";
+			}
+			else if (is_str()) {
+				bool fail = false;
+				return get_string().get_std_string(fail);
+			}
+			else {
+				return "";
+			}
+		}
 
 	private:
 		void set_type(_ValueType type);

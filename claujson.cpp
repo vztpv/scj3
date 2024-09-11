@@ -3893,7 +3893,7 @@ namespace claujson {
 			_write(stream, global, 1, pretty);
 
 			if (is_arr) {
-				stream.add_2(str_close_array[pretty? 1 : 0]);
+				stream.add_2(str_close_array[pretty ? 1 : 0]);
 			}
 			else {
 				stream.add_2(str_close_object[pretty ? 1 : 0]);
@@ -3911,8 +3911,10 @@ namespace claujson {
 
 		std::ofstream outFile;
 		outFile.open(fileName, std::ios::binary); // binary!
-		outFile.write(stream.buf(), stream.buf_size());
-		outFile.close();
+		if (outFile) {
+			outFile.write(stream.buf(), stream.buf_size());
+			outFile.close();
+		}
 	}
 
 	void LoadData2::write(std::ostream& stream, const _Value& data, bool pretty) {

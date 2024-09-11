@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
 				// 
 				
 				claujson::writer w;
-				w.write_parallel2("temp.json", j.Get(), thr_num, true);
+				w.write_parallel("temp.json", j.Get(), thr_num, true);
 				
 				std::cout << "write_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
 				
