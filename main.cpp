@@ -90,7 +90,7 @@ void diff_test() {
 
 	std::cout << z.Get() << "\n";
 
-	auto& k = claujson::patch(x.Get(), y.Get());
+	auto& k = claujson::patch(x.Get(), z.Get());
 	std::cout << x.Get() << "\n";
 
 	//claujson::clean(x);
