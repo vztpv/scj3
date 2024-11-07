@@ -27,7 +27,7 @@ claujson::_Value& j = d.Get();
 
 if (!x.first) {
 	std::cout << "fail\n";
-	claujson::clean(j);
+	//claujson::clean(j);
 	return 1;
 }
 
