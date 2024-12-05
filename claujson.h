@@ -688,9 +688,9 @@ namespace claujson {
 		explicit _Value(_Value*) = delete;
 
 		explicit _Value(bool x);
-		explicit _Value(nullptr_t x);
+		explicit _Value(std::nullptr_t x);
 
-		explicit _Value(nullptr_t, bool valid);
+		explicit _Value(std::nullptr_t, bool valid);
 
 		explicit _Value(String&& x) {
 			this->_str_val = std::move(x);
@@ -1048,11 +1048,21 @@ namespace claujson {
 		virtual bool add_user_type(Ptr<Structured> j) = 0;
 	};
 
+	template <class Key, class Data>
+	class Pair {
+	public:
+		Key first;
+		Data second;
+	public:
+		Pair() { }
+		Pair(Key&& first, Data&& second) : first(std::move(first)), second(std::move(second)) { }
+	};
+
 	class Object : public Structured {
 	protected:
-		std::vector<std::pair<claujson::_Value, claujson::_Value>> obj_data;
+		std::vector<Pair<claujson::_Value, claujson::_Value>> obj_data;
 	public:
-		using _ValueIterator = std::vector<std::pair<claujson::_Value, claujson::_Value>>::iterator;
+		using _ValueIterator = std::vector<Pair<claujson::_Value, claujson::_Value>>::iterator;
 	protected:
 		//explicit Object(bool valid);
 	public:
@@ -1060,7 +1070,7 @@ namespace claujson {
 
 		Structured* clone() const;
 
-		bool chk_key_dup(uint64_t* idx) const;  // chk dupplication of key. only Object, Virtual Object..
+		bool chk_key_dup(uint64_t* idx) const;  // chk duplication of key. only Object, Virtual Object..
 
 		[[nodiscard]]
 		static _Value Make();

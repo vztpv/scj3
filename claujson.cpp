@@ -49,7 +49,7 @@ namespace claujson {
 	protected:
 		std::vector<_Value> arr_vec;
 		//
-		std::vector<std::pair<_Value, _Value>> obj_data;
+		std::vector<Pair<_Value, _Value>> obj_data;
 
 		_Value virtualJson;
 	public:
@@ -322,13 +322,13 @@ namespace claujson {
 		this->_type = _ValueType::NONE;
 		set_bool(x);
 	}
-	_Value::_Value(nullptr_t x) {
+	_Value::_Value(std::nullptr_t x) {
 		this->_int_val = 0;
 		this->_type = _ValueType::NONE;
 		set_type(_ValueType::NULL_);
 	}
 
-	_Value::_Value(nullptr_t, bool valid) {
+	_Value::_Value(std::nullptr_t, bool valid) {
 		this->_int_val = 0;
 		this->_type = _ValueType::NONE;
 		set_type(_ValueType::NULL_);
@@ -1284,10 +1284,10 @@ namespace claujson {
 
 	class CompKey {
 	private:
-		const std::vector<std::pair<_Value, _Value>>* vec;
+		const std::vector<Pair<_Value, _Value>>* vec;
 	public:
 
-		CompKey(const std::vector<std::pair<_Value, _Value>>* vec) : vec(vec) {
+		CompKey(const std::vector<Pair<_Value, _Value>>* vec) : vec(vec) {
 			//
 		}
 
