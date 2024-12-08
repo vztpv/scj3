@@ -4547,19 +4547,18 @@ namespace claujson {
 
 	bool is_valid2(_simdjson::dom::parser_for_claujson& dom_parser, uint64_t start, uint64_t last,
 		int* _start_state, int* _last_state,
-		std::vector<int>* _is_array = nullptr, std::vector<int>* _is_virtual_array = nullptr, uint64_t* count = nullptr,
-		int* err = nullptr) {
+		std::vector<int8_t>* _is_array, std::vector<int8_t>* _is_virtual_array,
+		uint64_t* count = nullptr
+		) {
 
 		const auto& buf = dom_parser.raw_buf();
 
 		auto* simdjson_imple = dom_parser.raw_implementation().get();
 		uint64_t idx = start;
 		uint64_t depth = 0;
-		std::vector<int> is_array;
-		std::vector<int> is_virtual_array;
+		std::vector<int8_t> is_array;
+		std::vector<int8_t> is_virtual_array;
 		std::vector<uint64_t> _stack; _stack.reserve(1024);
-		//uint64_t virtual_count = 0;
-		//uint64_t virtual_idx = 0;
 
 		is_array.reserve(1024);
 		is_virtual_array.reserve(1024);
@@ -4599,18 +4598,18 @@ namespace claujson {
 			case '{': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != '}') {
 				log << warn << ("starting brace unmatched");
 
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 
 				return false;
 			}
 					break;
 			case '[': if (buf[simdjson_imple->structural_indexes[simdjson_imple->n_structural_indexes - 1]] != ']') {
 				log << warn << ("starting bracket unmatched");
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 				return false;
 			}
 					break;
@@ -4647,7 +4646,7 @@ namespace claujson {
 					}
 				}
 				else { // idx >= n_~~  // error
-					*err = true;
+					//*err = true;
 					return false;
 				}
 			}
@@ -4673,9 +4672,9 @@ namespace claujson {
 			if (idx > last) {
 				goto document_end;
 			}
-			if (err && *err) {
-				return false;
-			}
+			//if (err && *err) {
+			//	return false;
+			//}
 		}
 		state = 0;
 		if (is_array.size() < depth) {
@@ -4691,9 +4690,9 @@ namespace claujson {
 			auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
 			if (key != '"') {
 				log << warn << ("Object does not start with a key");
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 				return false;
 			}
 			//SIMDJSON_TRY(visitor.increment_count(*this));
@@ -4706,9 +4705,9 @@ namespace claujson {
 			if (idx > last) {
 				goto document_end;
 			}
-			if (err && *err) {
-				return false;
-			}
+			//if (err && *err) {
+			//	return false;
+			//}
 		}
 
 		state = 1;
@@ -4718,34 +4717,34 @@ namespace claujson {
 			auto value = buf[simdjson_imple->structural_indexes[idx++]];
 			switch (value) {
 			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') {
-				++idx; count[no++] = 0;
+				++idx;// count[no++] = 0;
 				break;
 			}
 					goto object_begin;
 			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') {
-				++idx; count[no++] = 0; 
+				++idx;count[no++] = 0; 
 				break;
 			} 
 					goto array_begin;
 			case ',': { log << warn << "wrong comma.";
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 				return false; }
 			case ':': { log << warn << "wrong colon.";
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 				return false; }
 			case '}': { log << warn << "wrong }.";
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 				return false; }
 			case ']': { log << warn << "wrong ].";
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 				return false; }
 			default: //SIMDJSON_TRY(visitor.visit_primitive(*this, value)); 
 				break;
@@ -4758,20 +4757,20 @@ namespace claujson {
 		if (!_stack.empty()) {
 			count[_stack.back()]++;
 		}
-		else {
+		//else {
 			//if (virtual_count == 0) {
 			//	virtual_idx = idx - 1;
 			//}
 			//virtual_count++;
-		}
+		//}
 
 		{
 			if (idx > last) {
 				goto document_end;
 			}
-			if (err && *err) {
-				return false;
-			}
+			//if (err && *err) {
+			//	return false;
+			//}
 		}
 		state = 2;
 		switch (buf[simdjson_imple->structural_indexes[idx++]]) {
@@ -4781,9 +4780,9 @@ namespace claujson {
 			auto key = buf[simdjson_imple->structural_indexes[idx++]]; // advance();
 			if (_simdjson_unlikely(key != '"')) {
 				log << warn << ("Key string missing at beginning of field in object");
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 				return false;
 			}
 			//SIMDJSON_TRY(visitor.visit_key(*this, key));
@@ -4791,9 +4790,9 @@ namespace claujson {
 		goto object_field;
 		case '}': goto scope_end;
 		case ':': { log << warn << "wrong colon.";
-			if (err) {
-				*err = 1;
-			}
+			//if (err) {
+			//	*err = 1;
+			//}
 			return false; }
 		default: log << warn << ("No comma between object fields"); return false;
 		}
@@ -4835,7 +4834,7 @@ namespace claujson {
 						}
 					}
 					else { // idx >= n_~~  // error
-						*err = true;
+				//		*err = true;
 						return false;
 					}
 				}
@@ -4848,7 +4847,7 @@ namespace claujson {
 						break;
 					default:
 						// error
-						*err = true;
+				//		*err = true;
 						return false;
 					}
 				}
@@ -4867,9 +4866,9 @@ namespace claujson {
 			if (idx > last) {
 				goto document_end;
 			}
-			if (err && *err) {
-				return false;
-			}
+			//if (err && *err) {
+			//	return false;
+			//}
 		}
 		state = 4;
 		//log_start_value("array");
@@ -4887,9 +4886,9 @@ namespace claujson {
 			if (idx > last) {
 				goto document_end;
 			}
-			if (err && *err) {
-				return false;
-			}
+			//if (err && *err) {
+			//	return false;
+			//}
 		}
 
 		state = 5;
@@ -4901,24 +4900,24 @@ namespace claujson {
 			case '[': if (buf[simdjson_imple->structural_indexes[idx]] == ']') { ++idx; count[no++] = 0;
 				break; } goto array_begin;
 			case ',': { log << warn << "wrong comma.";
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+			//	}
 				return false; }
 			case ':': { log << warn << "wrong colon.";
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 				return false; }
 			case '}': { log << warn << "wrong }.";
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				///	*err = 1;
+				//}
 				return false; }
 			case ']': { log << warn << "wrong ].";
-				if (err) {
-					*err = 1;
-				}
+				//if (err) {
+				//	*err = 1;
+				//}
 				return false; }
 			default: break;
 			}
@@ -4928,20 +4927,20 @@ namespace claujson {
 		if (!_stack.empty()) {
 			count[_stack.back()]++;
 		}
-		else {
+		//else {
 			//if (virtual_count == 0) {
 			//	virtual_idx = idx - 1;
 			//}
 			//virtual_count++;
-		}
+		//}
 
 		{
 			if (idx > last) {
 				goto document_end;
 			}
-			if (err && *err) {
-				return false;
-			}
+		//	if (err && *err) {
+			//	return false;
+		//	}
 		}
 
 		state = 6;
@@ -4949,14 +4948,14 @@ namespace claujson {
 		case ',': goto array_value;
 		case ']': goto scope_end;
 		case ':': { log << warn << "wrong colon.";
-			if (err) {
-				*err = 1;
-			}
+			//if (err) {
+			//	*err = 1;
+			//}
 			return false; }
 		default: log << warn << ("Missing comma between array values");
-			if (err) {
-				*err = 1;
-			}
+			//if (err) {
+			//	*err = 1;
+			//}
 			return false;
 		}
 
@@ -4968,9 +4967,9 @@ namespace claujson {
 		if (idx <= last) {
 			log << warn << ("More than one JSON value at the root of the document, or extra characters at the end of the JSON!"); // chk...
 
-			if (err) {
-				*err = 1;
-			}
+			//if (err) {
+			//	*err = 1;
+			//}
 			return false;
 		}
 
@@ -5737,10 +5736,7 @@ namespace claujson {
 			{
 
 				auto a = std::chrono::steady_clock::now();
-
-
-					
-				
+								
 				//if (use_all_function) 
 				{
 
@@ -5779,69 +5775,79 @@ namespace claujson {
 						last[i] = start[i + 1];
 					}
 
-					std::vector<std::vector<int>> is_array(_set.size()), is_virtual_array(_set.size());
+					std::vector<std::vector<int8_t>> is_array(_set.size()), is_virtual_array(_set.size());
 					std::vector<std::future<bool>> thr_result(_set.size());
-					int err = 0;
+					//int err = 0;
 
 					count_vec = (uint64_t*)calloc(length, sizeof(uint64_t));
 					if (!count_vec) {
-						log << err << "calloc fail in parse function.";
+						log << "calloc fail in parse function.";
 						return { false, -55 };
 					}
-					for (uint64_t i = 0; i < _set.size(); ++i) {
-						thr_result[i] = pool->enqueue(is_valid2, std::ref(test_), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec, &err);
-					}
-					std::vector<int> result(_set.size());
 
-					for (uint64_t i = 0; i < _set.size(); ++i) {
-						result[i] = static_cast<int>(thr_result[i].get());
-					}
+					if (thr_num > 1) {
 
-					for (uint64_t i = 0; i < result.size(); ++i) {
-						if (result[i] == false) {
-							free(count_vec);
-							return { false, -1 };
+						for (uint64_t i = 0; i < _set.size(); ++i) {
+							thr_result[i] = pool->enqueue(is_valid2, std::ref(test_), start[i], last[i], &start_state[i], &last_state[i],
+								&is_array[i], &is_virtual_array[i], count_vec);
 						}
-					}
+						std::vector<int> result(_set.size());
 
-					for (uint64_t i = 0; i < _set.size() - 1; ++i) {
-						if (start_state[i + 1] != last_state[i]) { // need more tests.
-							free(count_vec); return { false, -2 };
+						for (uint64_t i = 0; i < _set.size(); ++i) {
+							result[i] = static_cast<int>(thr_result[i].get());
 						}
-					}
 
-					if (is_virtual_array[0].empty() == false) { // first block has no virtual array or virtual object.!
-						free(count_vec); return { false, -3 };
-					}
+						for (uint64_t i = 0; i < result.size(); ++i) {
+							if (result[i] == false) {
+								free(count_vec);
+								return { false, -1 };
+							}
+						}
 
-					for (uint64_t i = 1; i < _set.size(); ++i) {
-						if (false == is_virtual_array[i].empty()) {
-							// remove? matched is_array(or object) and is_virtual_array(or object)
-							if (is_array[0].size() >= is_virtual_array[i].size()) {
-								for (uint64_t j = 0; j < is_virtual_array[i].size(); ++j) {
-									if (is_array[0].back() != is_virtual_array[i][j]) {
-										free(count_vec); return { false, -3 };
+						for (uint64_t i = 0; i < _set.size() - 1; ++i) {
+							if (start_state[i + 1] != last_state[i]) { // need more tests.
+								free(count_vec); return { false, -2 };
+							}
+						}
+
+						if (is_virtual_array[0].empty() == false) { // first block has no virtual array or virtual object.!
+							free(count_vec); return { false, -3 };
+						}
+
+						for (uint64_t i = 1; i < _set.size(); ++i) {
+							if (false == is_virtual_array[i].empty()) {
+								// remove? matched is_array(or object) and is_virtual_array(or object)
+								if (is_array[0].size() >= is_virtual_array[i].size()) {
+									for (uint64_t j = 0; j < is_virtual_array[i].size(); ++j) {
+										if (is_array[0].back() != is_virtual_array[i][j]) {
+											free(count_vec); return { false, -3 };
+										}
+										is_array[0].pop_back();
 									}
-									is_array[0].pop_back();
+								}
+								else {
+									free(count_vec); return { false, -3 };
 								}
 							}
-							else {
-								free(count_vec); return { false, -3 };
-							}
+							// added...
+							is_array[0].insert(is_array[0].end(), is_array[i].begin(), is_array[i].end());
 						}
-						// added...
-						is_array[0].insert(is_array[0].end(), is_array[i].begin(), is_array[i].end());
-					}
 
-					if (false == is_array[0].empty()) {
-						free(count_vec); return { false, -4 };
+						if (false == is_array[0].empty()) {
+							free(count_vec); return { false, -4 };
+						}
+					}
+					else {
+						int start_state = 0;
+						int last_state = 0;
+
+						if (!is_valid2(test_, 0, length - 1, &start_state, &last_state,
+							nullptr, nullptr, count_vec)) {
+							free(count_vec);
+							return { false, 0 };
+						}
 					}
 				}
-				//else {
-				//	if (!is_valid(test, length)) {
-				//		return { false, 0 };
-				//	}
-				//}
 
 				dur = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - a);
 				log << info << "test time " << dur.count() << "ms\n";
@@ -5979,18 +5985,18 @@ namespace claujson {
 					last[i] = start[i + 1];
 				}
 
-				std::vector<std::vector<int>> is_array(_set.size()), is_virtual_array(_set.size());
+				std::vector<std::vector<int8_t>> is_array(_set.size()), is_virtual_array(_set.size());
 				std::vector<std::future<bool>> thr_result(_set.size());
-				int err = 0;
 
 				count_vec = (uint64_t*)calloc(length, sizeof(uint64_t));
 				if (!count_vec) {
-					log << err << "calloc fail in parse_str function.";
+					log << "calloc fail in parse_str function.";
 					return { false, -55 };
 				}
 				
 				for (uint64_t i = 0; i < _set.size(); ++i) {
-					thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i], &is_array[i], &is_virtual_array[i], count_vec, &err);
+					thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i],
+						&is_array[i], &is_virtual_array[i], count_vec);
 				}
 				std::vector<int> vec(_set.size());
 
@@ -6002,18 +6008,21 @@ namespace claujson {
 
 				for (uint64_t i = 0; i < vec.size(); ++i) {
 					if (vec[i] == false) {
-						free(count_vec); return { false, -1 };
+						free(count_vec); 
+						return { false, -1 };
 					}
 				}
 
 				for (uint64_t i = 0; i < _set.size() - 1; ++i) {
 					if (start_state[i + 1] != last_state[i]) {
-						free(count_vec); return { false, -2 };
+						free(count_vec); 
+						return { false, -2 };
 					}
 				}
 
 				if (is_virtual_array[0].empty() == false) { // first block has no virtual array or virtual object.!
-					free(count_vec); return { false, -3 };
+					free(count_vec); 
+					return { false, -3 };
 				}
 
 				for (uint64_t i = 1; i < _set.size(); ++i) {
@@ -6022,13 +6031,15 @@ namespace claujson {
 						if (is_array[0].size() >= is_virtual_array[i].size()) {
 							for (uint64_t j = 0; j < is_virtual_array[i].size(); ++j) {
 								if (is_array[0].back() != is_virtual_array[i][j]) {
-									free(count_vec); return { false, -3 };
+									free(count_vec);
+									return { false, -3 };
 								}
 								is_array[0].pop_back();
 							}
 						}
 						else {
-							free(count_vec); return { false, -3 };
+							free(count_vec); 
+							return { false, -3 };
 						}
 					}
 
@@ -6036,7 +6047,8 @@ namespace claujson {
 				}
 
 				if (false == is_array[0].empty()) {
-					free(count_vec); return { false, -4 };
+					free(count_vec); 
+					return { false, -4 };
 
 				}
 			}
@@ -6058,7 +6070,7 @@ namespace claujson {
 
 			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, thr_num)) // 0 : use all thread..
 			{
-				free(count_vec);
+				//free(count_vec);
 				return { false, 0 };
 			}
 			auto c = std::chrono::steady_clock::now();
@@ -6069,7 +6081,7 @@ namespace claujson {
 		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - _);
 		log << info << dur.count() << "ms\n";
 
-		free(count_vec);
+		//free(count_vec);
 		return  { true, length };
 	}
 

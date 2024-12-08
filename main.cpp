@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 
 		claujson::parser p(thr_num);
 
-		for (int i = 0; i < 10; ++i) {
+		for (int i = 0; i < 5; ++i) {
 			claujson::Document j;
 			
 			if (argc < 4) {
@@ -308,7 +308,7 @@ int main(int argc, char* argv[])
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
 
-			
+				continue;
 				//debug test
 			//	//std::cout << j << "\n";
 			//	std::cout << "chk\n";
@@ -330,11 +330,12 @@ int main(int argc, char* argv[])
 						return 1;
 					}
 
-					claujson::Document _diff = claujson::diff(j.Get(), x.Get());
+					//
+					//claujson::Document _diff = claujson::diff(j.Get(), x.Get());
 
-					if (_diff.Get().is_valid() && _diff.Get().as_structured_ptr() && _diff.Get().as_array()->empty() == false) {
-						std::cout << "diff \n";//return 1;
-					}
+					//if (_diff.Get().is_valid() && _diff.Get().as_structured_ptr() && _diff.Get().as_array()->empty() == false) {
+					//	std::cout << "diff \n";//return 1;
+					//}
 				}
 
 				//claujson::clean(j);
