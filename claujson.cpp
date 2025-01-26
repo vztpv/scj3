@@ -1020,7 +1020,7 @@ namespace claujson {
 	}
 
 	claujson_inline 
-	bool ConvertString(claujson::_Value& data, char* text, uint64_t len) {
+	bool ConvertString(claujson::_Value& data, const char* text, uint64_t len) {
 		uint8_t sbuf[1024 + 1 + _simdjson::_SIMDJSON_PADDING];
 		std::unique_ptr<uint8_t[]> ubuf;
 		uint8_t* string_buf = nullptr;
@@ -1032,7 +1032,7 @@ namespace claujson {
 			ubuf = std::make_unique<uint8_t[]>(len + _simdjson::_SIMDJSON_PADDING);
 			string_buf = &ubuf[0];
 		}
-		auto* x = _simdjson::parse_string((uint8_t*)text + 1, string_buf, false);
+		auto* x = _simdjson::parse_string((const uint8_t*)text + 1, string_buf, false);
 		if (x == nullptr) {
 			return false; // ERROR("Error in Convert for string");
 		}
@@ -1044,13 +1044,13 @@ namespace claujson {
 		return true;
 	}
 
-	claujson_inline bool ConvertNumber(claujson::_Value& data, char* text, uint64_t len, bool isFirst) {
+	claujson_inline bool ConvertNumber(claujson::_Value& data, const char* text, uint64_t len, bool isFirst) {
 
 		std::unique_ptr<uint8_t[]> copy;
 
 		uint64_t temp[2] = { 0 };
 
-		uint8_t* value = reinterpret_cast<uint8_t*>(text);
+		const uint8_t* value = reinterpret_cast<const uint8_t*>(text);
 
 		if (isFirst) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
 			copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[len + _simdjson::_SIMDJSON_PADDING]);
@@ -1413,6 +1413,14 @@ namespace claujson {
 		return obj_data.end();
 	}
 
+	Object::_ConstValueIterator Object::begin() const {
+		return obj_data.begin();
+	}
+
+	Object::_ConstValueIterator Object::end() const {
+		return obj_data.end();
+	}
+
 	void Object::reserve_data_list(uint64_t len) {
 		obj_data.reserve(len);
 	}
@@ -1701,13 +1709,23 @@ namespace claujson {
 	}
 
 
-	std::vector<_Value>::iterator Array::begin() {
+	Array::_ValueIterator Array::begin() {
 		return arr_vec.begin();
 	}
 
-	std::vector<_Value>::iterator Array::end() {
+	Array::_ValueIterator Array::end() {
 		return arr_vec.end();
 	}
+
+
+	Array::_ConstValueIterator Array::begin() const {
+		return arr_vec.begin();
+	}
+
+	Array::_ConstValueIterator Array::end() const {
+		return arr_vec.end();
+	}
+
 
 	bool Array::add_object_element(Value key, Value val) {
 		return false;
@@ -6770,6 +6788,15 @@ namespace claujson {
 			return { true, std::string(reinterpret_cast<char*>(buf_dest), string_length) };
 		}
 
+	}
+
+
+	bool convert_number(StringView x, claujson::_Value& data) {
+		return ConvertNumber(data, x.data(), x.size(), true);
+	}
+
+	bool convert_string(StringView x, claujson::_Value& data) {
+		return ConvertString(data, x.data(), x.size());
 	}
 
 #if __cpp_lib_char8_t

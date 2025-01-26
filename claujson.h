@@ -627,7 +627,7 @@ namespace claujson {
 	public:
 		friend std::ostream& operator<<(std::ostream& stream, const _Value& data);
 
-		friend bool ConvertString(_Value& data, char* text, uint64_t len);
+		friend bool ConvertString(_Value& data, const char* text, uint64_t len);
 		friend class Object;
 		friend class Array;
 	private:
@@ -1056,6 +1056,8 @@ namespace claujson {
 	public:
 		Pair() { }
 		Pair(Key&& first, Data&& second) : first(std::move(first)), second(std::move(second)) { }
+		Pair(const Key& first, Data&& second) : first((first)), second(std::move(second)) {}
+		Pair(Key&& first, const Data& second) : first(std::move(first)), second((second)) {}
 	};
 
 	class Object : public Structured {
@@ -1063,6 +1065,7 @@ namespace claujson {
 		std::vector<Pair<claujson::_Value, claujson::_Value>> obj_data;
 	public:
 		using _ValueIterator = std::vector<Pair<claujson::_Value, claujson::_Value>>::iterator;
+		using _ConstValueIterator = std::vector<Pair<claujson::_Value, claujson::_Value>>::const_iterator;
 	protected:
 		//explicit Object(bool valid);
 	public:
@@ -1106,6 +1109,10 @@ namespace claujson {
 
 		_ValueIterator begin();
 		_ValueIterator end();
+
+
+		_ConstValueIterator begin() const;
+		_ConstValueIterator end() const;
 		
 		virtual void reserve_data_list(uint64_t len);
 
@@ -1148,6 +1155,7 @@ namespace claujson {
 		std::vector<_Value> arr_vec;
 	public:
 		using _ValueIterator = std::vector<_Value>::iterator;
+		using _ConstValueIterator = std::vector<_Value>::const_iterator;
 	protected:
 		//explicit Array(bool valid);
 	public:
@@ -1192,6 +1200,11 @@ namespace claujson {
 		_ValueIterator begin();
 
 		_ValueIterator end();
+
+
+		_ConstValueIterator begin() const;
+
+		_ConstValueIterator end() const;
 
 
 		virtual bool add_object_element(Value key, Value val);
@@ -1281,6 +1294,10 @@ namespace claujson {
 	void clean(_Value& x); //
 
 	std::pair<bool, std::string> convert_to_string_in_json(StringView x);
+	
+	bool convert_number(StringView x, claujson::_Value& data);
+
+	bool convert_string(StringView x, claujson::_Value& data);
 
 	bool is_valid_string_in_json(StringView x);
 
