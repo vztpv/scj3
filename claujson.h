@@ -591,7 +591,8 @@ namespace claujson {
 			return StringView(data(), size());
 		}
 
-	private:
+	public:
+		// suppose str is valid utf-8 string!
 		explicit String(const std::string& str) {
 			if (str.size() <= CLAUJSON_STRING_BUF_SIZE) {
 				memcpy(buf, str.data(), str.size());
