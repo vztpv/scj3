@@ -151,6 +151,114 @@ bool operator==(const std::string& str, claujson::StringView sv);
 
 namespace claujson {
 
+	// has static buf?
+	template <class T>
+	class Vector {
+	private:
+		static const int SIZE = 1024;
+		T buf[SIZE];
+		T* ptr = nullptr;
+		uint32_t capacity = SIZE;
+		uint32_t sz = 0;
+		int type = 0;
+	public:
+		Vector() {
+			//
+		}
+		~Vector() {
+			if (type == 1 && ptr) {
+				delete ptr;
+				ptr = nullptr;
+				sz = 0;
+				type = 0;
+			}
+		}
+		Vector(const Vector&) = delete;
+		Vector& operator=(const Vector&) = delete;
+		Vector(Vector&& other) {
+			std::swap(ptr, other.ptr);
+			std::swap(capacity, other.capacity);
+			std::swap(sz, other.sz);
+			std::swap(type, other.type);
+			memcpy(buf, other.buf, SIZE * sizeof(T));
+		}
+		Vector& operator=(Vector&& other) {
+			Vector temp(std::move(other));
+
+			std::swap(this->ptr, temp.ptr);
+			std::swap(this->capacity, temp.capacity);
+			std::swap(this->sz, temp.sz);
+			std::swap(this->type, temp.type);
+			memcpy(this->buf, temp.buf, SIZE * sizeof(T));
+
+			return *this;
+		}
+	public:
+		T& back() {
+			if (type == 0) {
+				return buf[sz - 1];
+			}
+			return ptr[sz - 1];
+		}
+		const T& back() const {
+			if (type == 0) {
+				return buf[sz - 1];
+			}
+			return ptr[sz - 1];
+		}
+		void pop_back() {
+			if (empty() == false) {
+				--sz;
+			}
+		}
+		bool empty() const { return 0 == sz; }
+		uint64_t size() const { return sz; }
+		void push_back(const T& val) {
+			if (type == 0) {
+				buf[sz] = (val);
+				++sz;
+				if (sz == SIZE) {
+					if (ptr) {
+						delete ptr; ptr = nullptr;
+					}
+					ptr = new T[SIZE * 2];
+					capacity = SIZE * 2;
+					memcpy(ptr, buf, SIZE * sizeof(T));
+					type = 1;
+				}
+			}
+			else {
+				if (sz < capacity) {
+					ptr[sz] = (val);
+					++sz;
+				}
+				else {
+					T* temp = new T[2 * capacity];
+					memcpy(temp, ptr, sz * sizeof(T));
+					capacity = capacity * 2;
+					delete ptr;
+					ptr = temp;
+					ptr[sz] = (val);
+					++sz;
+				}
+			}
+		}
+	public:
+		T& operator[](const uint64_t idx) {
+			if (type == 0) {
+				return buf[idx];
+			}
+			return ptr[idx];
+		}
+		const T& operator[](const uint64_t idx) const {
+			if (type == 0) {
+				return buf[idx];
+			}
+			return ptr[idx];
+		}
+
+	};
+
 	class Log;
 
 	template <class T>
@@ -1251,6 +1359,97 @@ namespace claujson {
 }
 
 namespace claujson {
+	/*
+	class Array2;
+	class Object2;
+
+	using Type2 = _ValueType;
+	using String2 = String;
+
+	class Primitive2 { // cf) _Value 
+	public:
+		union {
+			struct {
+				union {
+					uint64_t m_uint;
+					int64_t  m_int;
+					double   m_float;
+					bool     m_bool;
+				};
+				uint32_t temp;
+				Type2 m_type;
+			};
+			String2 m_str;
+		};
+
+	public:
+		Primitive2();
+		~Primitive2();
+	};
+
+	class Wizard;
+
+	class Document2 {
+	private:
+		friend class Wizard;
+	private:
+		std::vector<Primitive2> prim_vec;  // 01
+		std::vector<Array2> arr_vec;       // 10
+		std::vector<Object2> obj_vec;      // 11
+		uint64_t root = 0;
+	public:
+		Primitive2& as_primitive();
+		Array2& as_array();
+		Object2& as_object();
+
+		bool is_primitive() const;
+		bool is_array() const;
+		bool is_object() const;
+	};
+
+	class Wizard {
+	private:
+		Document2* res;
+	public:
+		Wizard(Document2* res);
+	public:
+		bool is_primitive(uint64_t id);
+		bool is_array(uint64_t id);
+		bool is_object(uint64_t id);
+		
+		Primitive2& as_primitive(uint64_t id);
+		Array2& as_array(uint64_t id);
+		Object2& as_object(uint64_t id);
+	};
+
+	class Array2 {
+	private:
+		std::vector<uint64_t> id_vec;
+		Document2* resources = nullptr; 
+	public:
+		Array2(Document2* res);
+	public:
+		void add_element(Primitive2 value);
+		void add_element(Array2 arr);
+		void add_element(Object2 obj);
+		
+		uint64_t operator[](uint64_t idx) const;
+	};
+
+	class Object2 {
+	private:
+		std::vector<uint64_t> id_vec;
+		Document2* resources = nullptr;
+	public:
+		Object2(Document2* res);
+	public:
+		void add_element(Primitive2 key, Primitive2 value);
+		void add_element(Primitive2 key, Array2 arr);
+		void add_element(Primitive2 key, Object2 obj);
+
+		uint64_t operator[](uint64_t idx) const;
+	};
+	*/
 
 	class parser {
 	private:
@@ -1262,6 +1461,8 @@ namespace claujson {
 		// parse json file.
 		std::pair<bool, uint64_t> parse(const std::string& fileName, Document& d, uint64_t thr_num);
 
+		//std::pair<bool, uint64_t> parse2(const std::string& fileName, Document2*& j, uint64_t thr_num);
+		
 		// parse json str.
 		std::pair<bool, uint64_t> parse_str(StringView str, Document& d, uint64_t thr_num);
 

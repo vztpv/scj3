@@ -8,7 +8,6 @@
 
 #include "fmt/format.h"
 
-
 #define claujson_inline _simdjson_inline
 
 
@@ -735,7 +734,7 @@ namespace claujson {
 	}
 
 	bool _Value::set_str(const char* str, uint64_t len) {
-
+		
 		bool convert = true;
 
 		if (!is_valid()) {
@@ -1052,6 +1051,8 @@ namespace claujson {
 
 		const uint8_t* value = reinterpret_cast<const uint8_t*>(text);
 
+
+		// todo : number -> fixed size? -> len <- limit... -> no new!
 		if (isFirst) { // if this case may be root number -> chk.. visit_root_number. in tape_builder in simdjson.cpp
 			copy = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[len + _simdjson::_SIMDJSON_PADDING]);
 			if (copy.get() == nullptr) { return false; } // ERROR("Error in Convert for new"); } // cf) new Json?
@@ -1097,11 +1098,13 @@ namespace claujson {
 	claujson_inline
 		claujson::_Value& Convert(claujson::_Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
 		char* buf, uint64_t token_idx, bool& err) {
+		
+		data.clear(true);
 
+		int ch = buf[buf_idx];
 		//try {
-		data.clear(false);
-
-		switch (buf[buf_idx]) {
+		
+		switch (ch) {
 		case '"':
 			if (ConvertString(data, &buf[buf_idx], next_buf_idx - buf_idx)) {}
 			else {
@@ -1149,6 +1152,9 @@ namespace claujson {
 			goto ERR; //ERROR("convert Error");
 			//throw "Error in Convert : not expected";
 		}
+
+		//
+
 		return data;
 		//}
 
@@ -4565,7 +4571,7 @@ namespace claujson {
 
 	bool is_valid2(_simdjson::dom::parser_for_claujson& dom_parser, uint64_t start, uint64_t last,
 		int* _start_state, int* _last_state,
-		std::vector<int8_t>* _is_array, std::vector<int8_t>* _is_virtual_array,
+		Vector<int8_t>* _is_array, Vector<int8_t>* _is_virtual_array,
 		uint64_t* count = nullptr
 		) {
 
@@ -4574,12 +4580,10 @@ namespace claujson {
 		auto* simdjson_imple = dom_parser.raw_implementation().get();
 		uint64_t idx = start;
 		uint64_t depth = 0;
-		std::vector<int8_t> is_array;
-		std::vector<int8_t> is_virtual_array;
-		std::vector<uint64_t> _stack; _stack.reserve(1024);
 
-		is_array.reserve(1024);
-		is_virtual_array.reserve(1024);
+		Vector<int8_t> is_array;
+		Vector<int8_t> is_virtual_array;
+		Vector<uint64_t> _stack;
 
 		int state = 0;
 		uint64_t no = start;
@@ -5793,7 +5797,7 @@ namespace claujson {
 						last[i] = start[i + 1];
 					}
 
-					std::vector<std::vector<int8_t>> is_array(_set.size()), is_virtual_array(_set.size());
+					std::vector<Vector<int8_t>> is_array(_set.size()), is_virtual_array(_set.size());
 					std::vector<std::future<bool>> thr_result(_set.size());
 					//int err = 0;
 
@@ -5848,7 +5852,11 @@ namespace claujson {
 								}
 							}
 							// added...
-							is_array[0].insert(is_array[0].end(), is_array[i].begin(), is_array[i].end());
+							for (uint64_t x = 0; x < is_array[i].size(); ++x) {
+								is_array[0].push_back(is_array[i][x]);
+							}
+
+							//is_array[0].insert(is_array[0].end(), is_array[i].begin(), is_array[i].end());
 						}
 
 						if (false == is_array[0].empty()) {
@@ -5897,6 +5905,103 @@ namespace claujson {
 		free(count_vec);
 		return  { true, length };
 	}
+	
+
+
+
+	
+	/*
+	Object2 ParseObject(Document2* d, Wizard* wiz,  _simdjson::dom::parser_for_claujson* scanner, uint64_t start) {
+		//Object2 obj(d);
+
+		//Primitive2 key;
+
+		auto* buf = scanner->raw_buf().get();
+		auto* tokens = scanner->raw_implementation()->structural_indexes.get();
+
+		// while() {
+			// chk key
+			// chk :
+			// chk value
+			// chk (,)
+		// }
+
+		//obj.add_element(key, value);
+
+		return obj;
+	}
+	Array2 ParseArray(Document2* d, Wizard* wiz, _simdjson::dom::parser_for_claujson* scanner, uint64_t start) {
+		return {d};
+	}
+	Primitive2 ParsePrimitive(Document2* d, Wizard* wiz, _simdjson::dom::parser_for_claujson* scanner, uint64_t start) {
+		return {};
+	}
+
+	void Parse(Document2* d, Wizard* wiz, _simdjson::dom::parser_for_claujson* scanner, uint64_t start = 0) {
+		auto* buf = scanner->raw_buf().get();
+		auto* tokens = scanner->raw_implementation()->structural_indexes.get();
+		
+		if (buf[tokens[start]] == '{') {
+			//ParseObject(d, wiz, scanner, start + 1);
+		}
+		else if (buf[tokens[0]] == '[') {
+			//ParseArray(d, wiz, scanner, start + 1);
+		}
+		else {
+			///ParsePrimitive(d, wiz,scanner, start + 1);
+		}
+	}
+
+	// experimental...
+	std::pair<bool, uint64_t> parser::parse2(const std::string& fileName, Document2*& d, uint64_t thr_num)
+	{
+		if (thr_num <= 0) {
+			thr_num = std::max((int)std::thread::hardware_concurrency() - 2, 1);
+		}
+		if (thr_num <= 0) {
+			thr_num = 1;
+		}
+
+		uint64_t length = 0;
+
+		auto _ = std::chrono::steady_clock::now();
+
+		uint64_t* count_vec = nullptr;
+		{
+			log << info << "simdjson-stage1 start\n";
+			auto x = test_.load(fileName);
+
+			if (x.error() != _simdjson::error_code::SUCCESS) {
+				log << warn << "stage1 error : ";
+				log << warn << x.error() << "\n";
+
+				//ERROR(_simdjson::error_message(x.error()));
+
+				return { false, 0 };
+			}
+
+			const auto& buf = test_.raw_buf();
+			const auto buf_len = test_.raw_len();
+			auto* simdjson_imple_ = test_.raw_implementation().get(); // token array.
+			const auto token_len = simdjson_imple_->n_structural_indexes;
+			const auto* tokens = simdjson_imple_->structural_indexes.get();
+			
+
+			Document2* dom = new Document2;
+			Wizard* wiz = new Wizard(dom);
+
+			{
+				Parse(dom, wiz, &test_);
+				// if(d) { } // ?
+				d = dom;
+			}
+		}
+		
+
+		return { true, length };
+	}
+	*/
+	
 	std::pair<bool, uint64_t> parser::parse_str(StringView str, Document& d, uint64_t thr_num)
 	{
 		_Value& ut = d.Get();
@@ -6003,7 +6108,7 @@ namespace claujson {
 					last[i] = start[i + 1];
 				}
 
-				std::vector<std::vector<int8_t>> is_array(_set.size()), is_virtual_array(_set.size());
+				std::vector<Vector<int8_t>> is_array(_set.size()), is_virtual_array(_set.size());
 				std::vector<std::future<bool>> thr_result(_set.size());
 
 				count_vec = (uint64_t*)calloc(length, sizeof(uint64_t));
@@ -6061,7 +6166,11 @@ namespace claujson {
 						}
 					}
 
-					is_array[0].insert(is_array[0].end(), is_array[i].begin(), is_array[i].end());
+					for (uint64_t x = 0; x < is_array[i].size(); ++x) {
+						is_array[0].push_back(is_array[i][x]);
+					}
+					
+					//is_array[0].insert(is_array[0].end(), is_array[i].begin(), is_array[i].end());
 				}
 
 				if (false == is_array[0].empty()) {
