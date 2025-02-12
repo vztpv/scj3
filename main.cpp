@@ -308,7 +308,7 @@ int main(int argc, char* argv[])
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
 
-				continue;
+				//continue;
 				//debug test
 			//	//std::cout << j << "\n";
 			//	std::cout << "chk\n";

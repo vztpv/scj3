@@ -152,11 +152,56 @@ bool operator==(const std::string& str, claujson::StringView sv);
 namespace claujson {
 
 	// has static buf?
-	template <class T>
+	template <class T, int SIZE = 1024>
 	class Vector {
+	public:
+		class iterator {
+		private: 
+			T* ptr;
+		public:
+			iterator(T* now) {
+				ptr = now;
+			}
+		public:
+			void operator++() {
+				++ptr;
+			}
+			T* operator->() {
+				return ptr;
+			}
+			const T* operator->() const {
+				return ptr;
+			}
+			T& operator*() {
+				return *ptr;
+			}
+			const T& operator*() const {
+				return *ptr;
+			}
+			bool operator!=(const iterator& other) const {
+				return this->ptr != other.ptr;
+			}
+		};
+		class const_iterator {
+		private:
+			T* ptr;
+		public:
+			const_iterator(T* now) {
+				ptr = now;
+			}
+		public:
+			const T* operator->() const {
+				return ptr;
+			}
+			const T& operator*() const {
+				return *ptr;
+			}
+			bool operator!=(const iterator& other) const {
+				return this->ptr != other.ptr;
+			}
+		};
 	private:
-		static const int SIZE = 1024;
-		T buf[SIZE];
+		T buf[SIZE + 1];
 		T* ptr = nullptr;
 		uint32_t capacity = SIZE;
 		uint32_t sz = 0;
@@ -194,6 +239,29 @@ namespace claujson {
 			return *this;
 		}
 	public:
+		iterator begin() {
+			return iterator(type == 1 ? ptr : buf);
+		}
+		const_iterator begin() const {
+			return iterator(type == 1 ? ptr : buf);
+		}
+		iterator end() {
+			return iterator(type == 1 ? ptr + sz : buf + SIZE);
+		}
+		const_iterator end() const {
+			return iterator(type == 1 ? ptr + sz : buf + SIZE);
+		}
+	public:
+		void clear() {
+			if (type == 1 && ptr) {
+				delete ptr;
+				ptr = nullptr;
+			}
+			capacity = SIZE;
+			sz = 0;
+			type = 0;
+		}
+
 		T& back() {
 			if (type == 0) {
 				return buf[sz - 1];
@@ -213,15 +281,18 @@ namespace claujson {
 		}
 		bool empty() const { return 0 == sz; }
 		uint64_t size() const { return sz; }
-		void push_back(const T& val) {
+		void push_back(T val) {
 			if (type == 0) {
-				buf[sz] = (val);
+				buf[sz] = std::move(val);
 				++sz;
 				if (sz == SIZE) {
 					if (ptr) {
 						delete ptr; ptr = nullptr;
 					}
-					ptr = new T[SIZE * 2];
+					ptr = new (std::nothrow) T[SIZE * 2];
+					if (!ptr) {
+						throw ("new failed");
+					}
 					capacity = SIZE * 2;
 					memcpy(ptr, buf, SIZE * sizeof(T));
 					type = 1;
@@ -229,16 +300,19 @@ namespace claujson {
 			}
 			else {
 				if (sz < capacity) {
-					ptr[sz] = (val);
+					ptr[sz] = std::move(val);
 					++sz;
 				}
 				else {
-					T* temp = new T[2 * capacity];
+					T* temp = new (std::nothrow) T[2 * capacity];
+					if (!ptr) {
+						throw ("new failed");
+					}
 					memcpy(temp, ptr, sz * sizeof(T));
 					capacity = capacity * 2;
 					delete ptr;
 					ptr = temp;
-					ptr[sz] = (val);
+					ptr[sz] = std::move(val);
 					++sz;
 				}
 			}
