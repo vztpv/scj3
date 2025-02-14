@@ -401,7 +401,7 @@ int main(int argc, char* argv[])
 									for (auto& x : *coordinate__arr) {
 										if (x.is_float()) {
 											sum += x.float_val();
-											x.set_str(claujson::String(u8"te한st", 7));
+											x.set_str(u8"te한st", 7);
 											counter++;
 										}
 									}

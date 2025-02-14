@@ -528,7 +528,7 @@ namespace claujson {
 			struct {
 				char* str;
 				uint32_t sz;
-				_ValueType type; // STRING or SHORT_STRING or NOT_VALID
+				_ValueType type; // STRING or SHORT_STRING or NOT_VALID ...
 			};
 			struct {
 				char buf[CLAUJSON_STRING_BUF_SIZE];
@@ -536,7 +536,8 @@ namespace claujson {
 				_ValueType type_;
 			};
 		};
-	
+	public:
+		static const uint64_t npos = -1;
 	public:
 		String& operator=(const String& other) {
 			if (!is_valid() || !other.is_valid() || this == &other) { return *this; }
@@ -644,7 +645,7 @@ namespace claujson {
 			return *this;
 		}
 
-
+	private:
 		explicit String(const char* str) {
 			if (!str) { this->type = _ValueType::ERROR; return; }
 			
@@ -710,7 +711,7 @@ namespace claujson {
 				return nullptr;
 			}
 		}
-
+		
 		const char* data() const {
 			if (type == _ValueType::STRING) {
 				return str;
@@ -773,7 +774,22 @@ namespace claujson {
 			return StringView(data(), size());
 		}
 
-	public:
+		uint64_t find(char ch, uint64_t start) const {
+			const char* x = data();
+			uint64_t sz = size();
+
+			for (uint64_t i = start; i < sz; ++i) {
+				if (x[i] == ch) {
+					return i;
+				}
+			}
+			return npos;
+		}
+
+		String substr(uint64_t start, uint64_t len) {
+			return String(data() + start, len);
+		}
+	private:
 		// suppose str is valid utf-8 string!
 		explicit String(const std::string& str) {
 			if (str.size() <= CLAUJSON_STRING_BUF_SIZE) {
@@ -811,6 +827,7 @@ namespace claujson {
 		friend std::ostream& operator<<(std::ostream& stream, const _Value& data);
 
 		friend bool ConvertString(_Value& data, const char* text, uint64_t len);
+
 		friend class Object;
 		friend class Array;
 	private:
@@ -1011,7 +1028,7 @@ namespace claujson {
 
 		bool set_str(const char* str, uint64_t len);
 
-		bool set_str(String&& str);
+		bool set_str(String str);
 	private:
 		void set_str_in_parse(char* str, uint64_t len);
 	public:

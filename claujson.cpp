@@ -846,7 +846,7 @@ namespace claujson {
 
 
 
-	bool _Value::set_str(String&& str) {
+	bool _Value::set_str(String str) {
 		if (!is_valid()) {
 			return false;
 		}
