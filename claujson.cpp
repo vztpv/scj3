@@ -858,7 +858,7 @@ namespace claujson {
 		return true;
 	}
 
-	void _Value::set_str_in_parse(char* str, uint64_t len) {
+	void _Value::set_str_in_parse(const char* str, uint64_t len) {
 		_str_val = String(str, Static_Cast<uint64_t, uint32_t>(len));
 	}
 
@@ -2545,37 +2545,6 @@ namespace claujson {
 		return empty_value;
 	}
 
-	// not exact type! for int, uint, float. ( int, uint, float -> float )
-	claujson_inline _simdjson::internal::tape_type get_type(unsigned char x) {
-		
-		return _simdjson::internal::tape_type(x);
-		
-		/*
-		switch (x) {
-		case '-':
-		case '0':
-		case '1': case '2': case '3': case '4':
-		case '5': case '6': case '7': case '8': case '9':
-			return _simdjson::internal::tape_type::DOUBLE; // number?
-			break;
-		case '"':
-		case 't':
-		case 'f':
-		case 'n':
-		case '{':
-		case '[':
-		case '}':
-		case ']':
-			return	(_simdjson::internal::tape_type)(x);
-			break;
-		case ':':
-		case ',':
-
-			return	(_simdjson::internal::tape_type)(x);
-			break;
-		}
-		return _simdjson::internal::tape_type::NONE;*/
-	}
 
 	class StrStream {
 	private:
@@ -3125,25 +3094,25 @@ namespace claujson {
 
 				for (uint64_t i = 0; i < token_arr_len; ++i) {
 
-					const _simdjson::internal::tape_type type = get_type(buf[imple->structural_indexes[token_arr_start + i]]);
+					const char type = (buf[imple->structural_indexes[token_arr_start + i]]);
 
-					if (type == _simdjson::internal::tape_type::COMMA) {
+					if (type == ',') {
 						continue;
 					}
 
 					// Left 1
-					if (type == _simdjson::internal::tape_type::START_OBJECT ||
-						type == _simdjson::internal::tape_type::START_ARRAY) { // object start, array start
+					if (type == '{' ||
+						type == '[') { // object start, array start
 
 						state = 0;
 
 						if (key.is_key) {
 							nowUT->add_user_type(key.buf_idx, key.next_buf_idx, buf,
-								type == _simdjson::internal::tape_type::START_OBJECT ? _ValueType::OBJECT : _ValueType::ARRAY, key.token_idx); // object vs array
+								type == '{' ? _ValueType::OBJECT : _ValueType::ARRAY, key.token_idx); // object vs array
 							key.is_key = false;
 						}
 						else {
-							nowUT->add_user_type(type == _simdjson::internal::tape_type::START_OBJECT ? _ValueType::OBJECT : _ValueType::ARRAY);
+							nowUT->add_user_type(type == '{' ? _ValueType::OBJECT : _ValueType::ARRAY);
 						}
 
 
@@ -3154,18 +3123,18 @@ namespace claujson {
 						/// initial new nestedUT.
 						nowUT = pTemp;
 						nowUT->reserve_data_list(count_vec[left_no++]);
-						
+
 					}
 					// Right 2
-					else if (type == _simdjson::internal::tape_type::END_OBJECT ||
-						type == _simdjson::internal::tape_type::END_ARRAY) {
+					else if (type == '}' ||
+						type == ']') {
 
 						state = 0;
 						if (braceNum == 0) {
 
 							Ptr<Structured> ut; // is v_array or v_object.
 
-							if (type == _simdjson::internal::tape_type::END_OBJECT) {
+							if (type == '}') {
 								Object* temp = new VirtualObject();
 								ut = Ptr<Structured>(temp);
 							}

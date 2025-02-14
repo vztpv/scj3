@@ -304,6 +304,8 @@ int main(int argc, char* argv[])
 				}
 
 
+			// return 0;
+
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
@@ -318,6 +320,7 @@ int main(int argc, char* argv[])
 				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
 				std::cout << "total " << dur.count() << "ms\n";
 
+			//	return 0;
 
 				//continue;
 				//debug test
@@ -401,7 +404,8 @@ int main(int argc, char* argv[])
 									for (auto& x : *coordinate__arr) {
 										if (x.is_float()) {
 											sum += x.float_val();
-											x.set_str(u8"te한st", 7);
+											x.set_int(x.float_val());
+											//x.set_str(u8"te한st", 7);
 											counter++;
 										}
 									}
