@@ -1010,6 +1010,8 @@ namespace claujson {
 		void set_float(double x);
 
 		bool set_str(const char* str, uint64_t len);
+
+		bool set_str(String&& str);
 	private:
 		void set_str_in_parse(char* str, uint64_t len);
 	public:

@@ -307,6 +307,17 @@ int main(int argc, char* argv[])
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
+				auto c = std::chrono::steady_clock::now();
+				{
+					auto z = j.Get().clone();
+					c = std::chrono::steady_clock::now();
+					claujson::clean(z);
+				}
+
+				
+				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
+				std::cout << "total " << dur.count() << "ms\n";
+
 
 				//continue;
 				//debug test
@@ -319,7 +330,7 @@ int main(int argc, char* argv[])
 				claujson::writer w;
 				w.write_parallel("temp.json", j.Get(), thr_num, true);
 				
-				std::cout << "write_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - b).count() << "ms\n";
+				std::cout << "write_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - c).count() << "ms\n";
 				
 				if (1) {
 
@@ -353,7 +364,7 @@ int main(int argc, char* argv[])
 				//claujson::LoadData::write(std::cout, ut);
 				//claujson::LoadData::write("output14.json", j);
 //
-				auto c = std::chrono::steady_clock::now();
+				c = std::chrono::steady_clock::now();
 				//dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
 				//std::cout << "write " << dur.count() << "ms\n";
 
@@ -390,6 +401,7 @@ int main(int argc, char* argv[])
 									for (auto& x : *coordinate__arr) {
 										if (x.is_float()) {
 											sum += x.float_val();
+											x.set_str(claujson::String(u8"te한st", 7));
 											counter++;
 										}
 									}
@@ -411,7 +423,7 @@ int main(int argc, char* argv[])
 				dur = std::chrono::duration_cast<std::chrono::milliseconds>(dd - c);
 				std::cout << "clean " <<  dur.count() << "ms\n";
 
-
+				w.write_parallel("test2333.json", j.Get(), 0, true);
 				return 0;
 
 				
