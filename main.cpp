@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 
 		claujson::parser p(thr_num);
 
-		for (int i = 0; i < 5; ++i) {
+		for (int i = 0; i < 23; ++i) {
 			claujson::Document j;
 			
 			if (argc < 4) {
@@ -322,7 +322,7 @@ int main(int argc, char* argv[])
 
 			//	return 0;
 
-				//continue;
+				continue;
 				//debug test
 			//	//std::cout << j << "\n";
 			//	std::cout << "chk\n";

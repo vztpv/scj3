@@ -13,6 +13,19 @@
 #include <cstring>
 #include <cstdint> // uint64_t? int64_t?
 
+#include <memory_resource> // with C++17~
+
+#define USE_PMR
+
+#ifdef USE_PMR
+template <class T>
+using std_vector = std::pmr::vector<T>;
+#else
+template <class T>
+using std_vector = std::vector<T>;
+#endif
+
+
 #include "ThreadPool.h"
 
 #include "_simdjson.h" // modified simdjson // using simdjson 3.9.1
@@ -984,8 +997,8 @@ namespace claujson {
 			return _array_or_object_ptr;
 		}
 
-		_Value& json_pointerB(const std::vector<_Value>& routeDataVec);
-		const _Value& json_pointerB(const std::vector<_Value>& routeVec) const;
+		_Value& json_pointerB(const std_vector<_Value>& routeDataVec);
+		const _Value& json_pointerB(const std_vector<_Value>& routeVec) const;
 
 		Array* as_array();
 		Object* as_object();
@@ -1107,10 +1120,17 @@ namespace claujson {
 		_Value& Get() noexcept { return x; }
 		const _Value& Get() const noexcept { return x; }
 	};
+	
+	class parser;
 
 	class Document {
+	public:
+		friend class parser;
 	private:
 		_Value x;
+
+		std::vector<std::byte>* res_buf = nullptr;
+		std::vector<std::pmr::monotonic_buffer_resource*>* res = nullptr;
 	public:
 		Document() noexcept { }
 
@@ -1238,12 +1258,19 @@ namespace claujson {
 			char* buf,  uint64_t val_token_idx) = 0;
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			 _ValueType type, uint64_t key_token_idx) = 0;
+			 _ValueType type, uint64_t key_token_idx 
+#ifdef USE_PMR
+			, std::pmr::monotonic_buffer_resource* res
+#endif
+			
+		) = 0;
 
 		//
-
-		virtual void add_user_type(_ValueType type) = 0; // int type -> enum?
-
+		virtual void add_user_type(_ValueType type
+#ifdef USE_PMR
+			, std::pmr::monotonic_buffer_resource* res
+#endif
+			) = 0; // int type -> enum?
 
 		virtual bool add_user_type(Value key, Ptr<Structured> j) = 0;
 
@@ -1264,10 +1291,10 @@ namespace claujson {
 
 	class Object : public Structured {
 	protected:
-		std::vector<Pair<claujson::_Value, claujson::_Value>> obj_data;
+		std_vector<Pair<claujson::_Value, claujson::_Value>> obj_data;
 	public:
-		using _ValueIterator = std::vector<Pair<claujson::_Value, claujson::_Value>>::iterator;
-		using _ConstValueIterator = std::vector<Pair<claujson::_Value, claujson::_Value>>::const_iterator;
+		using _ValueIterator = std_vector<Pair<claujson::_Value, claujson::_Value>>::iterator;
+		using _ConstValueIterator = std_vector<Pair<claujson::_Value, claujson::_Value>>::const_iterator;
 	protected:
 		//explicit Object(bool valid);
 	public:
@@ -1281,7 +1308,9 @@ namespace claujson {
 		static _Value Make();
 
 		explicit Object();
-
+#ifdef USE_PMR
+		explicit Object(std::pmr::monotonic_buffer_resource* res) : obj_data(res) { }
+#endif
 		virtual ~Object();
 
 		virtual bool is_object() const;
@@ -1343,9 +1372,19 @@ namespace claujson {
 			char* buf,  uint64_t val_token_idx);
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			 _ValueType type, uint64_t key_token_idx);
+			_ValueType type, uint64_t key_token_idx
+#ifdef USE_PMR
+			, std::pmr::monotonic_buffer_resource* res
+#endif
 
-		virtual void add_user_type(_ValueType type);
+		);
+
+		//
+		virtual void add_user_type(_ValueType type
+#ifdef USE_PMR
+			, std::pmr::monotonic_buffer_resource* res
+#endif
+		); // int type -> enum?
 
 		virtual bool add_user_type(Value key, Ptr<Structured> j);
 
@@ -1354,10 +1393,10 @@ namespace claujson {
 
 	class Array : public Structured {
 	protected:
-		std::vector<_Value> arr_vec;
+		std_vector<_Value> arr_vec;
 	public:
-		using _ValueIterator = std::vector<_Value>::iterator;
-		using _ConstValueIterator = std::vector<_Value>::const_iterator;
+		using _ValueIterator = std_vector<_Value>::iterator;
+		using _ConstValueIterator = std_vector<_Value>::const_iterator;
 	protected:
 		//explicit Array(bool valid);
 	public:
@@ -1370,6 +1409,10 @@ namespace claujson {
 		static _Value Make();
 
 		explicit Array();
+
+#ifdef USE_PMR
+		explicit Array(std::pmr::memory_resource* res);
+#endif
 
 		virtual ~Array();
 
@@ -1439,9 +1482,19 @@ namespace claujson {
 			char* buf,  uint64_t val_token_idx);
 
 		virtual void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-			 _ValueType type, uint64_t key_token_idx);
+			_ValueType type, uint64_t key_token_idx
+#ifdef USE_PMR
+			, std::pmr::monotonic_buffer_resource* res
+#endif
 
-		virtual void add_user_type(_ValueType type);
+		);
+
+		//
+		virtual void add_user_type(_ValueType type
+#ifdef USE_PMR
+			, std::pmr::monotonic_buffer_resource* res
+#endif
+		); // int type -> enum?
 
 		virtual bool add_user_type(Value key, Ptr<Structured> j);
 
@@ -1486,9 +1539,9 @@ namespace claujson {
 	private:
 		friend class Wizard;
 	private:
-		std::vector<Primitive2> prim_vec;  // 01
-		std::vector<Array2> arr_vec;       // 10
-		std::vector<Object2> obj_vec;      // 11
+		std_vector<Primitive2> prim_vec;  // 01
+		std_vector<Array2> arr_vec;       // 10
+		std_vector<Object2> obj_vec;      // 11
 		uint64_t root = 0;
 	public:
 		Primitive2& as_primitive();
@@ -1517,7 +1570,7 @@ namespace claujson {
 
 	class Array2 {
 	private:
-		std::vector<uint64_t> id_vec;
+		std_vector<uint64_t> id_vec;
 		Document2* resources = nullptr; 
 	public:
 		Array2(Document2* res);
@@ -1531,7 +1584,7 @@ namespace claujson {
 
 	class Object2 {
 	private:
-		std::vector<uint64_t> id_vec;
+		std_vector<uint64_t> id_vec;
 		Document2* resources = nullptr;
 	public:
 		Object2(Document2* res);
