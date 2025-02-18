@@ -1041,12 +1041,14 @@ namespace claujson {
 
 	Document::~Document() noexcept {
 		claujson::clean(x);
+#ifdef USE_PMR
 		if (res_buf) {
 			delete res_buf;
 		}
 		if (res) {
 			delete res;
 		}
+#endif
 	}
 
 	claujson_inline 
@@ -1690,10 +1692,11 @@ namespace claujson {
 
 	Array::Array() { }
 
+#ifdef USE_PMR 
 	Array::Array(std::pmr::memory_resource* res) : arr_vec(res) {
 		//
 	}
-
+#endif
 
 	Array::~Array() {
 		for (auto& x : arr_vec) {
@@ -2379,14 +2382,22 @@ namespace claujson {
 				Structured* json = nullptr;
 
 				if (type == _ValueType::OBJECT) {
-					json = new (std::nothrow) Object(res);
+					json = new (std::nothrow) Object(
+#ifdef USE_PMR
+						res
+#endif
+					);
 					if (json == nullptr) {
 						log << warn << "new error";
 						return;
 					}
 				}
 				else if (type == _ValueType::ARRAY) {
-					json = new (std::nothrow) Array(res);
+					json = new (std::nothrow) Array(
+#ifdef USE_PMR
+						res
+#endif
+						);
 					if (json == nullptr) {
 						log << warn << "new error";
 						return;
@@ -2408,10 +2419,18 @@ namespace claujson {
 			Structured* json = nullptr;
 
 			if (type == _ValueType::OBJECT) {
-				json = new (std::nothrow) Object(res);
+				json = new (std::nothrow) Object(
+#ifdef USE_PMR
+					res
+#endif
+				);
 			}
 			else if (type == _ValueType::ARRAY) {
-				json = new (std::nothrow) Array(res);
+				json = new (std::nothrow) Array(
+#ifdef USE_PMR
+					res
+					#endif
+					);
 			}
 
 			if (json == nullptr) {
@@ -2454,10 +2473,18 @@ namespace claujson {
 				Structured* json = nullptr;
 
 				if (type == _ValueType::OBJECT) {
-					json = new (std::nothrow) Object(res);
+					json = new (std::nothrow) Object(
+#ifdef USE_PMR
+						res
+#endif
+					);
 				}
 				else if (type == _ValueType::ARRAY) {
-					json = new (std::nothrow) Array(res);
+					json = new (std::nothrow) Array(
+#ifdef USE_PMR
+						res
+#endif
+					);
 				}
  
 				if (json == nullptr) {
@@ -2483,10 +2510,18 @@ namespace claujson {
 			Structured* json = nullptr;
 
 			if (type == _ValueType::OBJECT) {
-				json = new (std::nothrow) Object(res);
+				json = new (std::nothrow) Object(
+#ifdef USE_PMR
+					res
+#endif
+				);
 			}
 			else if (type == _ValueType::ARRAY) {
-				json = new (std::nothrow) Array(res);
+				json = new (std::nothrow) Array(
+#ifdef USE_PMR
+					res
+#endif
+				);
 			}
 
 			if (json == nullptr) {
@@ -3117,7 +3152,11 @@ namespace claujson {
 			_simdjson::internal::dom_parser_implementation* imple,
 			int64_t token_arr_start, uint64_t token_arr_len, Ptr<Structured>& _global,
 			int start_state, int last_state, // this line : now not used..
-			class Structured** next, uint64_t* count_vec, std::pmr::monotonic_buffer_resource* res, int* err, uint64_t no)
+			class Structured** next, uint64_t* count_vec, 
+#ifdef USE_PMR
+			 std::pmr::monotonic_buffer_resource* res, 
+#endif 
+			 int* err, uint64_t no)
 		{
 			try {
 				if (token_arr_len <= 0) {
@@ -3153,11 +3192,19 @@ namespace claujson {
 
 						if (key.is_key) {
 							nowUT->add_user_type(key.buf_idx, key.next_buf_idx, buf,
-								type == '{' ? _ValueType::OBJECT : _ValueType::ARRAY, key.token_idx, res); // object vs array
+								type == '{' ? _ValueType::OBJECT : _ValueType::ARRAY, key.token_idx
+#ifdef USE_PMR 
+								, res
+#endif
+							); // object vs array
 							key.is_key = false;
 						}
 						else {
-							nowUT->add_user_type(type == '{' ? _ValueType::OBJECT : _ValueType::ARRAY, res);
+							nowUT->add_user_type(type == '{' ? _ValueType::OBJECT : _ValueType::ARRAY
+#ifdef USE_PMR 
+								, res
+#endif
+							);
 						}
 
 
@@ -3305,8 +3352,12 @@ namespace claujson {
 		 bool _LoadData(_Value& global, char* buf, uint64_t buf_len,
 
 			_simdjson::internal::dom_parser_implementation* imple, int64_t& length,
-			std_vector<int64_t>& start, uint64_t* count_vec, std::vector<std::byte>*& _res_buf, 
-			 std::vector<std::pmr::monotonic_buffer_resource*>*& _res,  uint64_t parse_num) // first, strVec.empty() must be true!!
+			std_vector<int64_t>& start, uint64_t* count_vec,
+#ifdef USE_PMR
+			 std::vector<std::byte>*& _res_buf, 
+			 std::vector<std::pmr::monotonic_buffer_resource*>*& _res,
+#endif 
+			 uint64_t parse_num) // first, strVec.empty() must be true!!
 		{	
 			try {
 				Ptr<Structured> _global = Ptr<Structured>(new PartialJson());
@@ -3351,6 +3402,7 @@ namespace claujson {
 
 					std_vector<class Structured*> next(pivots.size() - 1, nullptr);
 					{
+#ifdef USE_PMR
 						std::vector<std::byte>* res_buf = new std::vector<std::byte>((1024 * 1024 + 64) * (pivots.size() - 1));
 						std::vector<std::pmr::monotonic_buffer_resource*>* res = new std::vector<std::pmr::monotonic_buffer_resource*>;
 						for (uint64_t i = 0; i < pivots.size() - 1; ++i) {
@@ -3358,7 +3410,7 @@ namespace claujson {
 						}
 						_res_buf = res_buf;
 						_res = res;
-
+#endif
 						__global = std_vector<Ptr<Structured>>(pivots.size() - 1);
 						for (uint64_t i = 0; i < __global.size(); ++i) {
 							__global[i] = Ptr<Structured>(new PartialJson());
@@ -3373,7 +3425,11 @@ namespace claujson {
 
 
 							result[0] = pool->enqueue(__LoadData, (buf), buf_len, (imple), start[0], _token_arr_len, std::ref(__global[0]), 0, 0,
-								&next[0], count_vec, (*res)[0], &err[0], 0);
+								&next[0], count_vec,
+#ifdef USE_PMR 
+								(*res)[0],
+#endif 
+								&err[0], 0);
 						}
 
 						auto a = std::chrono::steady_clock::now();
@@ -3382,7 +3438,11 @@ namespace claujson {
 							int64_t _token_arr_len = pivots[i + 1] - pivots[i];
 
 							result[i] = pool->enqueue(__LoadData, (buf), buf_len, (imple), pivots[i], _token_arr_len, std::ref(__global[i]), 0, 0,
-								&next[i], count_vec, (*res)[i], & err[i], i);
+								&next[i], count_vec,
+#ifdef USE_PMR 
+								(*res)[i],
+#endif 
+								& err[i], i);
 
 						}
 
@@ -3564,9 +3624,17 @@ namespace claujson {
 		 bool parse(_Value& global, char* buf, uint64_t buf_len,
 
 			_simdjson::internal::dom_parser_implementation* imple,
-			int64_t length, std_vector<int64_t>& start, uint64_t* count_vec, std::vector<std::byte>*& res_buf, std::vector<std::pmr::monotonic_buffer_resource*>*& res, uint64_t thr_num) {
+			int64_t length, std_vector<int64_t>& start, uint64_t* count_vec, 
+#ifdef USE_PMR
+			 std::vector<std::byte>*& res_buf, std::vector<std::pmr::monotonic_buffer_resource*>*& res,
+#endif
+			 uint64_t thr_num) {
 
-			return _LoadData(global, buf, buf_len, imple, length, start, count_vec, res_buf, res, thr_num);
+			return _LoadData(global, buf, buf_len, imple, length, start, count_vec, 
+#ifdef USE_PMR
+				res_buf, res,
+#endif
+				thr_num);
 		}
 
 	private:
@@ -5924,7 +5992,11 @@ namespace claujson {
 
 			LoadData2 p(pool.get());
 						
-			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, d.res_buf, d.res, thr_num)) // 0 : use all thread..
+			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, 
+#ifdef USE_PMR
+				d.res_buf, d.res,
+#endif
+				thr_num)) // 0 : use all thread..
 			{
 				free(count_vec);
 				return { false, 0 };
@@ -6231,7 +6303,11 @@ namespace claujson {
 
 			LoadData2 p(pool.get());
 
-			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, d.res_buf, d.res, thr_num)) // 0 : use all thread..
+			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, 
+#ifdef USE_PMR
+				d.res_buf, d.res, 
+#endif 
+				thr_num)) // 0 : use all thread..
 			{
 				//free(count_vec);
 				return { false, 0 };

@@ -15,8 +15,6 @@
 
 #include <memory_resource> // with C++17~
 
-#define USE_PMR
-
 #ifdef USE_PMR
 template <class T>
 using std_vector = std::pmr::vector<T>;
@@ -1128,9 +1126,10 @@ namespace claujson {
 		friend class parser;
 	private:
 		_Value x;
-
+#ifdef USE_PMR
 		std::vector<std::byte>* res_buf = nullptr;
 		std::vector<std::pmr::monotonic_buffer_resource*>* res = nullptr;
+#endif
 	public:
 		Document() noexcept { }
 

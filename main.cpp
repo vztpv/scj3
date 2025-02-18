@@ -9,6 +9,9 @@
 #include <string>
 #include <ctime>
 
+
+//#define USE_PMR // with c++17~
+
 #include "claujson.h" // using simdjson 3.9.1
 
 #include "_simdjson.h"
