@@ -28,8 +28,8 @@ set(INCLUDE_DIR ${ROOT}) # ${ROOT}/_deps/rapidjson-src/include)
 
 
 # build setting.
-add_library(${LIB_NAME} STATIC ${SOURCE_DIR}/claujson.cpp ${SOURCE_DIR}/_simdjson.cpp) 
-add_library(${LIB_NAME14} STATIC ${SOURCE_DIR}/claujson.cpp ${SOURCE_DIR}/_simdjson.cpp) 
+add_library(${LIB_NAME} STATIC ${SOURCE_DIR}/claujson.cpp ${SOURCE_DIR}/_simdjson.cpp ${SOURCE_DIR}/claujson_array.cpp ${SOURCE_DIR}/claujson_object.cpp ${SOURCE_DIR}/claujson_partialjson.cpp ${SOURCE_DIR}/claujson_value.cpp) 
+add_library(${LIB_NAME14} STATIC ${SOURCE_DIR}/claujson.cpp ${SOURCE_DIR}/_simdjson.cpp ${SOURCE_DIR}/claujson_array.cpp ${SOURCE_DIR}/claujson_object.cpp ${SOURCE_DIR}/claujson_partialjson.cpp ${SOURCE_DIR}/claujson_value.cpp) 
  
 include(FetchContent)
 
