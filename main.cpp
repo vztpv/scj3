@@ -38,10 +38,10 @@ void key_dup_test() {
 
 	Ptr<Object> x = Ptr<Object>(new Object());
 
-	x->add_object_element(_Value("456"sv), _Value(123));
-	x->add_object_element(_Value("123"sv), _Value(234));
-	x->add_object_element(_Value("567"sv), _Value(345));
-	x->add_object_element(_Value("456"sv), _Value(456));
+	x->add_element(_Value("456"sv), _Value(123));
+	x->add_element(_Value("123"sv), _Value(234));
+	x->add_element(_Value("567"sv), _Value(345));
+	x->add_element(_Value("456"sv), _Value(456));
 
 	uint64_t idx = 0;
 	bool found = false;
@@ -86,21 +86,22 @@ void diff_test() {
 	claujson::Document x, y;
 	claujson::parser p;
 	p.parse_str(json1, x, 0);
-	p.parse_str(json2, y, 1);
+	p.parse_str(json2, y, 0);
 
-
+	std::cout << x.Get() << "\n";
 	claujson::Document z = claujson::diff(x.Get(), y.Get());
 
 	std::cout << z.Get() << "\n";
 
-	auto& k = claujson::patch(x.Get(), z.Get());
-	std::cout << x.Get() << "\n";
+	auto& k = claujson::patch(x.Get(), z.Get()); // chk!
+	std::cout << k << "\n";
 
 	//claujson::clean(x);
 	//claujson::clean(y);
 	//claujson::clean(z);
 }
 
+/*
 // iterator test.
 #include <functional>
 namespace claujson {
@@ -169,6 +170,7 @@ namespace claujson {
 		std::vector<size_t> _m_child_pos_in_parent;
 	};
 }
+*/
 
 int main(int argc, char* argv[])
 {
@@ -267,7 +269,7 @@ int main(int argc, char* argv[])
 
 		claujson::parser p(thr_num);
 
-		for (int i = 0; i < 23; ++i) {
+		for (int i = 0; i < 1; ++i) {
 			claujson::Document j;
 			
 			if (argc < 4) {
@@ -305,13 +307,14 @@ int main(int argc, char* argv[])
 
 					return 1;
 				}
-
+				
 
 			// return 0;
 
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
+			//	continue;
 				auto c = std::chrono::steady_clock::now();
 				{
 					auto z = j.Get().clone();
@@ -323,9 +326,9 @@ int main(int argc, char* argv[])
 				dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - b);
 				std::cout << "total " << dur.count() << "ms\n";
 
-			//	return 0;
+				//return 0;
 
-				continue;
+			//	continue;
 				//debug test
 			//	//std::cout << j << "\n";
 			//	std::cout << "chk\n";
@@ -334,7 +337,8 @@ int main(int argc, char* argv[])
 				// 
 				
 				claujson::writer w;
-				w.write_parallel("temp.json", j.Get(), thr_num, true);
+
+				w.write_parallel("temp.json", j.Get(), 0, true);
 				
 				std::cout << "write_parallel " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - c).count() << "ms\n";
 				
