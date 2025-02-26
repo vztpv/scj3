@@ -215,14 +215,14 @@ namespace claujson {
 		}
 		Vector(const Vector&) = delete;
 		Vector& operator=(const Vector&) = delete;
-		Vector(Vector&& other) {
+		Vector(Vector&& other) noexcept {
 			std::swap(ptr, other.ptr);
 			std::swap(capacity, other.capacity);
 			std::swap(sz, other.sz);
 			std::swap(type, other.type);
 			memcpy(buf, other.buf, SIZE * sizeof(T));
 		}
-		Vector& operator=(Vector&& other) {
+		Vector& operator=(Vector&& other) noexcept {
 			Vector temp(std::move(other));
 
 			std::swap(this->ptr, temp.ptr);
@@ -300,7 +300,7 @@ namespace claujson {
 				}
 				else {
 					T* temp = new (std::nothrow) T[2 * capacity];
-					if (!ptr) {
+					if (!temp) {
 						throw ("new failed");
 					}
 					memcpy(temp, ptr, sz * sizeof(T));

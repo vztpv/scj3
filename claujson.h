@@ -358,9 +358,12 @@ namespace claujson {
 		static const uint64_t npos;
 		static _Value empty_value;
 
-		Array* arr = nullptr;
-		Object* obj = nullptr;
-		PartialJson* pj = nullptr;
+		union {
+			Array* arr = nullptr;
+			Object* obj;
+			PartialJson* pj;
+		};
+		uint32_t type = 0;
 
 		StructuredPtr(_Value& x);
 
@@ -368,40 +371,56 @@ namespace claujson {
 
 		StructuredPtr(const StructuredPtr& other) {
 			arr = other.arr;
-			obj = other.obj;
-			pj = other.pj;	
+			type = other.type;
 		}
 
-		StructuredPtr() = default;
-
-		 StructuredPtr(Array* arr, Object* obj, PartialJson* pj) : arr(arr), obj(obj), pj(pj)
-		{
-			//
-		}
-		 StructuredPtr(Array* arr) : arr(arr)
-		{
-			//
-		}
-		 StructuredPtr(Object* obj) : obj(obj)
-		{
-			//
+		StructuredPtr() {
+			arr = nullptr;
+			type = 0;
 		}
 
-		 StructuredPtr(PartialJson* pj) : pj(pj)
+		 StructuredPtr(Array* arr, Object* obj, PartialJson* pj)
+		{
+			 if (arr) {
+				 this->arr = arr;
+				 type = 1;
+			 }
+			 else if (obj) {
+				 this->obj = obj;
+				 type = 2;
+			 }
+			 else if (pj) {
+				 this->pj = pj;
+				 type = 3;
+			 }
+		}
+		 StructuredPtr(nullptr_t) : arr(nullptr), type(0) {
+			 //
+		 }
+		 StructuredPtr(Array* arr) : arr(arr), type(1)
+		{
+
+		}
+		 StructuredPtr(Object* obj) : obj(obj), type(2)
+		{
+
+		}
+
+		 StructuredPtr(PartialJson* pj) : pj(pj), type(3)
 		{
 			//
 		}
-		 StructuredPtr(const Array* arr) : arr(const_cast<Array*>(arr))
+		 StructuredPtr(const Array* arr) : arr(const_cast<Array*>(arr)), type(1)
 		{
 			//
 		}
 
-		 StructuredPtr(const Object* obj) : obj(const_cast<Object*>(obj))
+		 StructuredPtr(const Object* obj) : obj(const_cast<Object*>(obj)), type(2)
 		{
 			//
 		}
 
-		 StructuredPtr(const PartialJson* pj) : pj(const_cast<PartialJson*>(pj))
+		 StructuredPtr(const PartialJson* pj) : pj(const_cast<PartialJson*>(pj)), type(3)
 		{
 			//
 		}
@@ -413,22 +432,26 @@ namespace claujson {
 		_Value& get_key_list(uint64_t idx);
 
 		explicit operator bool() const {
-			return arr || obj || pj;
+			return arr;
 		}
 
 		bool operator==(const StructuredPtr& other) const {
-			return arr == other.arr && obj == other.obj && pj == other.pj;
+			return arr == other.arr && type == other.type;
 		}
 
 		bool is_array() const {
-			return arr;
+			return type == 1;
 		}
 		bool is_object() const {
-			return obj;
+			return type == 2;
 		}
 		bool is_partial_json() const {
-			return pj;
+			return type == 3;
 		}
+		bool is_nullptr() const {
+			return type == 0;
+		}
+
 		bool add_array_element(Value v);
 		bool add_object_element(Value key, Value v);
 
@@ -438,24 +461,22 @@ namespace claujson {
 		void erase(uint64_t idx);
 
 		bool operator==(nullptr_t) {
-			return !arr && !obj && !pj;
+			return !arr;
 		}
 		bool operator==(StructuredPtr p) {
-			return arr == p.arr && obj == p.obj && pj == p.pj;
+			return arr == p.arr && type == p.type;
 		}
 		bool operator!=(nullptr_t) {
-			return arr || obj || pj;
+			return arr;
 		}
 		void operator=(nullptr_t) {
 			arr = nullptr;
-			obj = nullptr;
-			pj = nullptr;
+			type = 0;
 		}
 
 		void operator=(const StructuredPtr& other) {
 			arr = other.arr;
-			obj = other.obj;
-			pj = other.pj;
+			type = other.type;
 		}
 
 		void Delete();
