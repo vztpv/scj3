@@ -207,7 +207,7 @@ namespace claujson {
 		}
 		~Vector() {
 			if (type == 1 && ptr) {
-				delete ptr;
+				delete[] ptr;
 				ptr = nullptr;
 				sz = 0;
 				type = 0;
@@ -249,7 +249,7 @@ namespace claujson {
 	public:
 		void clear() {
 			if (type == 1 && ptr) {
-				delete ptr;
+				delete[] ptr;
 				ptr = nullptr;
 			}
 			capacity = SIZE;
@@ -282,7 +282,7 @@ namespace claujson {
 				++sz;
 				if (sz == SIZE) {
 					if (ptr) {
-						delete ptr; ptr = nullptr;
+						delete[] ptr; ptr = nullptr;
 					}
 					ptr = new (std::nothrow) T[SIZE * 2];
 					if (!ptr) {
@@ -305,7 +305,7 @@ namespace claujson {
 					}
 					memcpy(temp, ptr, sz * sizeof(T));
 					capacity = capacity * 2;
-					delete ptr;
+					delete[] ptr;
 					ptr = temp;
 					ptr[sz] = std::move(val);
 					++sz;
