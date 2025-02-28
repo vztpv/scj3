@@ -3,7 +3,7 @@
 // need C++14~, 64bit..
 // mainly tested with C++17...
 
-#include "mimalloc-new-delete.h"
+//#include "mimalloc-new-delete.h"
 
 #include <iostream>
 #include <string>
@@ -314,7 +314,9 @@ int main(int argc, char* argv[])
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
-			//	continue;
+				return 0;
+				
+				//	continue;
 				auto c = std::chrono::steady_clock::now();
 				{
 					auto z = j.Get().clone();

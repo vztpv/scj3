@@ -9,10 +9,34 @@
 
 #include "fmt/format.h"
 
+#if __cpp_lib_string_view
+
+#else
+
+	claujson::StringView operator""sv(const char* str, size_t sz) {
+		return claujson::StringView(str, sz);
+	}
+
+	bool operator==(const std::string& str, claujson::StringView sv) {
+		return claujson::StringView(str.data(), str.size()) == sv;
+	}
+
+#endif
+
 namespace claujson {
 	// todo? make Document class? like simdjson?
 	_Value _Value::empty_value{ nullptr, false }; // valid is false..
 	const uint64_t _Value::npos = -1; // 
+#if __cpp_lib_string_view
+
+#else
+	const uint64_t StringView::npos = -1;
+#endif
+
+	Log::Info info;
+	Log::Warning warn;
+
+
 
 	const uint64_t StructuredPtr::npos = -1;
 	_Value StructuredPtr::empty_value{ nullptr, false };

@@ -590,20 +590,6 @@ namespace claujson {
 		/* error.make(__LINE__, StringView(msg)); */ \
 	} while (false) 
 
-#if __cpp_lib_string_view
-#else
-
-claujson::StringView operator""sv(const char* str, size_t sz) {
-	return claujson::StringView(str, sz);
-}
-
-uint64_t claujson::StringView::npos = -1;
-
-bool operator==(const std::string& str, claujson::StringView sv) {
-	return strcmp(str.data(), sv.data()) == 0;
-}
-
-#endif
 namespace claujson {
 	claujson::_Value& Convert(claujson::_Value& data, uint64_t buf_idx, uint64_t next_buf_idx, bool key,
 			char* buf, uint64_t token_idx, bool& err);

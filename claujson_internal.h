@@ -94,7 +94,7 @@ namespace claujson {
 		const char* m_str;
 		size_t m_len;
 	public:
-		static uint64_t npos;
+		static const uint64_t npos;
 
 		friend std::ostream& operator<<(std::ostream& stream, const claujson::StringView& sv) {
 			stream << sv.data();
@@ -135,9 +135,9 @@ namespace claujson {
 	};
 }
 
-
 claujson::StringView operator""sv(const char* str, size_t sz);
 bool operator==(const std::string& str, claujson::StringView sv);
+
 
 
 #endif
@@ -482,8 +482,8 @@ namespace claujson {
 		return log;
 	}
 
-	static Log::Info info;
-	static Log::Warning warn;
+	extern Log::Info info;
+	extern Log::Warning warn;
 	extern Log log; // no static..
 	// inline Error error;
 
