@@ -58,9 +58,7 @@ namespace claujson {
 		static _Value MakeVirtual();
 
 			explicit Object();
-#ifdef USE_PMR
-		explicit Object(std::pmr::monotonic_buffer_resource* res) : obj_data(res) {}
-#endif
+
 		 ~Object();
 
 		 bool is_object() const;
@@ -119,17 +117,12 @@ namespace claujson {
 
 		 void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
 			_ValueType type, uint64_t key_token_idx
-#ifdef USE_PMR
-			, std::pmr::monotonic_buffer_resource* res
-#endif
 
 		);
 
 		//
 		 void add_user_type(_ValueType type
-#ifdef USE_PMR
-			, std::pmr::monotonic_buffer_resource* res
-#endif
+
 		); // int type -> enum?
 
 	};

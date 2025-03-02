@@ -243,9 +243,7 @@ namespace claujson {
 
 	 void PartialJson::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
 		_ValueType type, uint64_t key_token_idx
-#ifdef USE_PMR
-		, std::pmr::monotonic_buffer_resource* res
-#endif
+
 	) {
 		{
 			if (!arr_vec.empty()) {
@@ -283,9 +281,7 @@ namespace claujson {
 			}
 			else if (type == _ValueType::ARRAY) {
 				StructuredPtr json = new (std::nothrow) Array(
-#ifdef USE_PMR
-					res
-#endif
+
 				);
 
 				if (json == nullptr) {
@@ -300,9 +296,7 @@ namespace claujson {
 		}
 	}
 	 void PartialJson::add_user_type(_ValueType type
-#ifdef USE_PMR
-		, std::pmr::monotonic_buffer_resource* res
-#endif
+
 	) {
 		{
 			if (!obj_data.empty()) {
@@ -313,16 +307,12 @@ namespace claujson {
 
 			if (type == _ValueType::OBJECT) {
 				json = new (std::nothrow) Object(
-#ifdef USE_PMR
-					res
-#endif
+
 				);
 			}
 			else if (type == _ValueType::ARRAY) {
 				json = new (std::nothrow) Array(
-#ifdef USE_PMR
-					res
-#endif
+
 				);
 			}
 

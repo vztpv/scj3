@@ -1437,9 +1437,7 @@ namespace claujson {
 			int64_t token_arr_start, uint64_t token_arr_len, StructuredPtr _global,
 			int start_state, int last_state, // this line : now not used..
 			class StructuredPtr* next, uint64_t* count_vec, 
-#ifdef USE_PMR
-			 std::pmr::monotonic_buffer_resource* res, 
-#endif 
+
 			 int* err, uint64_t no)
 		{
 			try {

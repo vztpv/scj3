@@ -35,9 +35,7 @@ namespace claujson {
 
 		explicit Array();
 
-#ifdef USE_PMR
-		explicit Array(std::pmr::memory_resource* res);
-#endif
+
 
 		~Array();
 
@@ -111,17 +109,13 @@ namespace claujson {
 
 		void add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
 			_ValueType type, uint64_t key_token_idx
-#ifdef USE_PMR
-			, std::pmr::monotonic_buffer_resource* res
-#endif
+
 
 		);
 
 		//
 		void add_user_type(_ValueType type
-#ifdef USE_PMR
-			, std::pmr::monotonic_buffer_resource* res
-#endif
+
 		); // int type -> enum?
 
 

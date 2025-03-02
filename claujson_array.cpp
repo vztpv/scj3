@@ -54,11 +54,6 @@ namespace claujson {
 
 	Array::Array() {}
 
-#ifdef USE_PMR 
-	Array::Array(std::pmr::memory_resource* res) : arr_vec(res) {
-		//
-	}
-#endif
 
 	Array::~Array() {
 		for (auto& x : arr_vec) {
@@ -287,25 +282,19 @@ namespace claujson {
 
 	void Array::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
 		_ValueType type, uint64_t key_token_idx
-#ifdef USE_PMR
-		, std::pmr::monotonic_buffer_resource* res
-#endif
+
 	) {
 		log << warn << "error";
 		ERROR("Array::add_user_type1");
 	}
 
 	void Array::add_user_type(_ValueType type
-#ifdef USE_PMR
-		, std::pmr::monotonic_buffer_resource* res
-#endif
+
 	) {
 
 		if (type == _ValueType::OBJECT) {
 			Object* json = new (std::nothrow) Object(
-#ifdef USE_PMR
-				res
-#endif
+
 			);
 
 			if (json == nullptr) {

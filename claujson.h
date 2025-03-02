@@ -328,10 +328,7 @@ namespace claujson {
 		friend class parser;
 	private:
 		_Value x;
-#ifdef USE_PMR
-		std::vector<std::byte>* res_buf = nullptr;
-		std::vector<std::pmr::monotonic_buffer_resource*>* res = nullptr;
-#endif
+
 	public:
 		Document() noexcept { }
 

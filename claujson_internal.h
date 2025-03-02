@@ -521,13 +521,9 @@ namespace claujson {
 		Pair(Key&& first, const Data& second) : first(std::move(first)), second((second)) {}
 	};
 
-#ifdef USE_PMR
-	template <class T>
-	using std_vector = std::pmr::vector<T>;
-#else
 	template <class T>
 	using std_vector = std::vector<T>;
-#endif
+
 
 } // end of claujson
 
