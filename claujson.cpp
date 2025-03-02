@@ -1643,16 +1643,14 @@ namespace claujson {
 
 			_simdjson::internal::dom_parser_implementation* imple, int64_t& length,
 			std_vector<int64_t>& start, uint64_t* count_vec,
-#ifdef USE_PMR
-			 std::vector<std::byte>*& _res_buf, 
-			 std::vector<std::pmr::monotonic_buffer_resource*>*& _res,
-#endif 
+
 			 uint64_t parse_num) // first, strVec.empty() must be true!!
 		{	
-			try {
-				 StructuredPtr _global = (new PartialJson());
-				std_vector<StructuredPtr> __global;
+			StructuredPtr _global = (new PartialJson());
+			std_vector<StructuredPtr> __global;
 
+			try {
+				 
 				{
 					uint64_t pivot_num = parse_num;
 					
@@ -1691,15 +1689,6 @@ namespace claujson {
 
 					std_vector<StructuredPtr> next(pivots.size() - 1);
 					{
-#ifdef USE_PMR
-						std::vector<std::byte>* res_buf = new std::vector<std::byte>((1024 * 1024 + 64) * (pivots.size() - 1));
-						std::vector<std::pmr::monotonic_buffer_resource*>* res = new std::vector<std::pmr::monotonic_buffer_resource*>;
-						for (uint64_t i = 0; i < pivots.size() - 1; ++i) {
-							res->push_back(new std::pmr::monotonic_buffer_resource(res_buf->data() + (1024 * 1024 + 64) * i, 1024 * 1024));
-						}
-						_res_buf = res_buf;
-						_res = res;
-#endif
 						__global = std_vector<StructuredPtr>(pivots.size() - 1);
 						for (uint64_t i = 0; i < __global.size(); ++i) {
 							__global[i] = (new PartialJson());
@@ -1715,9 +1704,7 @@ namespace claujson {
 
 							result[0] = pool->enqueue(__LoadData, (buf), buf_len, (imple), start[0], _token_arr_len, (__global[0]), 0, 0,
 								&next[0], count_vec,
-#ifdef USE_PMR 
-								(*res)[0],
-#endif 
+
 								&err[0], 0);
 						}
 
@@ -1728,9 +1715,7 @@ namespace claujson {
 
 							result[i] = pool->enqueue(__LoadData, (buf), buf_len, (imple), pivots[i], _token_arr_len, (__global[i]), 0, 0,
 								&next[i], count_vec,
-#ifdef USE_PMR 
-								(*res)[i],
-#endif 
+
 								& err[i], i);
 
 						}
@@ -1888,24 +1873,58 @@ namespace claujson {
 					//	log << warn  << std::chrono::steady_clock::now() - a__ << "ms\n";
 				}
 				//	log << warn  << std::chrono::steady_clock::now() - a__ << "ms\n";
+
+				for (uint64_t i = 0; i < __global.size(); ++i) {
+					if (__global[i]) {
+						__global[i].Delete();
+					}
+				}
+				if (_global) {
+					_global.Delete();
+				}
 				return true;
 			}
 			catch (int err) {
 
 				log << warn << "merge error " << err << "\n";
 				//ERROR("Merge Error"sv);
+				for (uint64_t i = 0; i < __global.size(); ++i) {
+					if (__global[i]) {
+						__global[i].Delete();
+					}
+				}
+				if (_global) {
+					_global.Delete();
+				}
+
 				return false;
 			}
 			catch (const char* err) {
 
 				log << warn << err << "\n";
 				//ERROR("Merge Error"sv);
-
+				for (uint64_t i = 0; i < __global.size(); ++i) {
+					if (__global[i]) {
+						__global[i].Delete();
+					}
+				}
+				if (_global) {
+					_global.Delete();
+				}
 				return false;
 			}
 			catch (...) {
 
 				log << warn  << "internal error or new error \n";
+				for (uint64_t i = 0; i < __global.size(); ++i) {
+					if (__global[i]) {
+						__global[i].Delete();
+					}
+				}
+				if (_global) {
+					_global.Delete();
+				}
+
 				//ERROR("Internal Error"sv);
 				return false;
 			}
@@ -1915,15 +1934,11 @@ namespace claujson {
 
 			_simdjson::internal::dom_parser_implementation* imple,
 			int64_t length, std_vector<int64_t>& start, uint64_t* count_vec, 
-#ifdef USE_PMR
-			 std::vector<std::byte>*& res_buf, std::vector<std::pmr::monotonic_buffer_resource*>*& res,
-#endif
+
 			 uint64_t thr_num) {
 
 			return _LoadData(global, buf, buf_len, imple, length, start, count_vec, 
-#ifdef USE_PMR
-				res_buf, res,
-#endif
+
 				thr_num);
 		}
 
@@ -4604,12 +4619,9 @@ namespace claujson {
 			LoadData2 p(pool.get());
 
 			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, 
-#ifdef USE_PMR
-				d.res_buf, d.res, 
-#endif 
 				thr_num)) // 0 : use all thread..
 			{
-				//free(count_vec);
+				free(count_vec);
 				return { false, 0 };
 			}
 			auto c = std::chrono::steady_clock::now();
@@ -4620,7 +4632,7 @@ namespace claujson {
 		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(c - _);
 		log << info << dur.count() << "ms\n";
 
-		//free(count_vec);
+		free(count_vec);
 		return  { true, length };
 	}
 

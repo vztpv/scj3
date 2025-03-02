@@ -3,7 +3,11 @@
 // need C++14~, 64bit..
 // mainly tested with C++17...
 
-//#include "mimalloc-new-delete.h"
+//#define _CRTDBG_MAP_ALLOC
+//#include <cstdlib>
+//#include <crtdbg.h>
+
+#include "mimalloc-new-delete.h"
 
 #include <iostream>
 #include <string>
@@ -96,6 +100,7 @@ void diff_test() {
 	auto& k = claujson::patch(x.Get(), z.Get()); // chk!
 	std::cout << k << "\n";
 
+	//int* yy = new int[100];
 	//claujson::clean(x);
 	//claujson::clean(y);
 	//claujson::clean(z);
@@ -174,6 +179,8 @@ namespace claujson {
 
 int main(int argc, char* argv[])
 {
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
 	std::cout << sizeof(std::vector<std::pair<claujson::_Value, claujson::_Value>>) << "\n";
 	//std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
 	//	<< " " << sizeof(claujson::Object) << " " << sizeof(claujson::_Value) << "\n";
@@ -254,11 +261,11 @@ int main(int argc, char* argv[])
 
 
 		{
-			claujson::StringView s{ "abc", 3 };
-			claujson::StringView x{ "abcg", 4 };
+			//claujson::StringView s{ "abc", 3 };
+			//claujson::StringView x{ "abcg", 4 };
 
-			std::cout << s.compare(x) << "\n";
-			std::cout << x.compare(s) << "\n";
+			//std::cout << s.compare(x) << "\n";
+			//std::cout << x.compare(s) << "\n";
 		}
 
 				int thr_num = 0;
@@ -314,7 +321,7 @@ int main(int argc, char* argv[])
 				auto b = std::chrono::steady_clock::now();
 				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 				std::cout << "total " << dur.count() << "ms\n";
-				return 0;
+			//	return 0;
 				
 				//	continue;
 				auto c = std::chrono::steady_clock::now();
