@@ -83,7 +83,7 @@ std::cout << counter << "  ";
 # Use CMake, (msvc -> use Release, 64bit), tested with mimalloc
 
 # fmt, progschj/ThreadPool (some modified to use C++17)
-
+# simdjson (some modified to use it as Scanner)
 
 # Using simdjson/simdjson (https://github.com/simdjson/simdjson) Apache-2.0 License
 	Apache License
