@@ -265,9 +265,6 @@ namespace claujson {
 
 			if (type == _ValueType::OBJECT) {
 				StructuredPtr json = new (std::nothrow) Object(
-#ifdef USE_PMR
-					res
-#endif
 				);
 
 				if (json == nullptr) {

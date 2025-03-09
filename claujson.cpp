@@ -104,6 +104,15 @@ namespace claujson {
 		}
 		return 0;
 	}
+	bool StructuredPtr::empty() const {
+		if (type == 1) {
+			return arr->empty();
+		}
+		if (type == 2) {
+			return obj->empty();
+		}
+		return true;
+	}
 	_Value& StructuredPtr::get_value_list(uint64_t idx) {
 		if (type == 1) {
 			return arr->get_value_list(idx);
@@ -125,6 +134,47 @@ namespace claujson {
 		}
 		return empty_value;
 	}
+	const _Value& StructuredPtr::get_value_list(uint64_t idx) const {
+		if (type == 1) {
+			return arr->get_value_list(idx);
+		}
+		if (type == 2) {
+			return obj->get_value_list(idx);
+		}
+		if (type == 3) {
+			return pj->get_value_list(idx);
+		}
+		return empty_value;
+	}
+	const _Value& StructuredPtr::get_key_list(uint64_t idx) const {
+		if (type == 2) {
+			return obj->get_key_list(idx);
+		}
+		else if (type == 3) {
+			return pj->get_key_list(idx);
+		}
+		return empty_value;
+	}
+	const _Value& StructuredPtr::get_const_key_list(uint64_t idx) const {
+		if (type == 2) {
+			return obj->get_const_key_list(idx);
+		}
+		return empty_value;
+	}
+
+	bool StructuredPtr::change_key(const _Value& key, _Value&& next_key) {
+		if (type == 2) {
+			return obj->change_key(key, std::move(next_key));
+		}
+		return false;
+	}
+	bool StructuredPtr::change_key(uint64_t idx, _Value&& next_key) {
+		if (type == 2) {
+			return obj->change_key(idx, std::move(next_key));
+		}
+		return false;
+	}
+
 	bool StructuredPtr::add_array_element(Value v) {
 		if (type == 1) {
 			return arr->add_element(std::move(v));
@@ -151,12 +201,12 @@ namespace claujson {
 	}
 
 
-	void StructuredPtr::erase(uint64_t idx) {
+	void StructuredPtr::erase(uint64_t idx, bool real) {
 		if (type == 1) {
-			return arr->erase(idx);
+			return arr->erase(idx, real);
 		}
 		if (type == 2) {
-			return obj->erase(idx);
+			return obj->erase(idx, real);
 		}
 		if (type == 3) {
 			return;
@@ -538,14 +588,6 @@ namespace claujson {
 
 	Document::~Document() noexcept {
 		claujson::clean(x);
-#ifdef USE_PMR
-		if (res_buf) {
-			delete res_buf;
-		}
-		if (res) {
-			delete res;
-		}
-#endif
 	}
 
 	claujson_inline 
@@ -1510,17 +1552,11 @@ namespace claujson {
 						if (key.is_key) {
 							nowUT.add_user_type(key.buf_idx, key.next_buf_idx, buf,
 								type == '{' ? _ValueType::OBJECT : _ValueType::ARRAY, key.token_idx
-#ifdef USE_PMR 
-								, res
-#endif
 							); // object vs array
 							key.is_key = false;
 						}
 						else {
 							nowUT.add_user_type(type == '{' ? _ValueType::OBJECT : _ValueType::ARRAY
-#ifdef USE_PMR 
-								, res
-#endif
 							);
 						}
 
@@ -4306,9 +4342,6 @@ namespace claujson {
 			LoadData2 p(pool.get());
 						
 			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, 
-#ifdef USE_PMR
-				d.res_buf, d.res,
-#endif
 				thr_num)) // 0 : use all thread..
 			{
 				free(count_vec);
@@ -4531,13 +4564,11 @@ namespace claujson {
 
 				std_vector<Vector<int8_t>> is_array(_set.size()), is_virtual_array(_set.size());
 				std_vector<std::future<bool>> thr_result(_set.size());
-
 				count_vec = (uint64_t*)calloc(length, sizeof(uint64_t));
 				if (!count_vec) {
 					log << "calloc fail in parse_str function.";
 					return { false, -55 };
 				}
-				
 				for (uint64_t i = 0; i < _set.size(); ++i) {
 					thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i],
 						&is_array[i], &is_virtual_array[i], count_vec);

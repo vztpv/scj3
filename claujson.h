@@ -11,7 +11,6 @@
 
 namespace claujson {
 	class _Value;
-	class Structured;
 	class Array;
 	class Object;
 	class PartialJson;
@@ -199,10 +198,13 @@ namespace claujson {
 		Array* as_array();
 		Object* as_object();
 		PartialJson* as_partial_json();
+		StructuredPtr as_structured_ptr();
 
 		const Array* as_array()const;
 		const Object* as_object()const;
 		const PartialJson* as_partial_json()const;
+
+		const StructuredPtr as_structured_ptr()const;
 
 		uint64_t find(const _Value& key) const; // find without key`s converting?
 
@@ -376,21 +378,22 @@ namespace claujson {
 			type = 0;
 		}
 
-		 StructuredPtr(Array* arr, Object* obj, PartialJson* pj)
+		StructuredPtr(Array* arr, Object* obj, PartialJson* pj)
 		{
-			 if (arr) {
-				 this->arr = arr;
-				 type = 1;
-			 }
-			 else if (obj) {
-				 this->obj = obj;
-				 type = 2;
-			 }
-			 else if (pj) {
-				 this->pj = pj;
-				 type = 3;
-			 }
+			if (arr) {
+				this->arr = arr;
+				type = 1;
+			}
+			else if (obj) {
+				this->obj = obj;
+				type = 2;
+			}
+			else if (pj) {
+				this->pj = pj;
+				type = 3;
+			}
 		}
+
 		 StructuredPtr(nullptr_t) : arr(nullptr), type(0) {
 			 //
 		 }
@@ -425,8 +428,19 @@ namespace claujson {
 
 		uint64_t get_data_size() const;
 		uint64_t size() const;
+		
+		bool empty() const;
+
 		_Value& get_value_list(uint64_t idx);
 		_Value& get_key_list(uint64_t idx);
+
+		const _Value& get_value_list(uint64_t idx)const;
+		const _Value& get_key_list(uint64_t idx)const;
+
+		const _Value& get_const_key_list(uint64_t idx) const;
+
+		bool change_key(const _Value& key, _Value&& next_key);
+		bool change_key(uint64_t idx, _Value&& next_key);
 
 		explicit operator bool() const {
 			return arr;
@@ -449,13 +463,17 @@ namespace claujson {
 			return type == 0;
 		}
 
+		bool is_user_type() const {
+			return is_array() || is_object();
+		}
+
 		bool add_array_element(Value v);
 		bool add_object_element(Value key, Value v);
 
 		// pj`s parent is nullptr.
 		StructuredPtr get_parent();
 
-		void erase(uint64_t idx);
+		void erase(uint64_t idx, bool real = false);
 
 		bool operator==(nullptr_t) {
 			return !arr;

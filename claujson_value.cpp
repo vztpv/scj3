@@ -730,6 +730,19 @@ namespace claujson {
 		return nullptr;
 	}
 
+	StructuredPtr _Value::as_structured_ptr() {
+		if (is_array()) {
+			return { _array_ptr };
+		}
+		else if (is_object()) {
+			return { _obj_ptr };
+		}
+		else if (is_partial_json()) {
+			return { _pj_ptr };
+		}
+		return { nullptr };
+	}
+
 	const Array* _Value::as_array() const {
 		if (is_array()) {
 			return const_cast<const Array*>(_array_ptr);
@@ -749,6 +762,21 @@ namespace claujson {
 		}
 		return nullptr;
 	}
+
+
+	const StructuredPtr _Value::as_structured_ptr()const {
+		if (is_array()) {
+			return { _array_ptr };
+		}
+		else if (is_object()) {
+			return { _obj_ptr };
+		}
+		else if (is_partial_json()) {
+			return { _pj_ptr };
+		}
+		return { nullptr };
+	}
+
 	_Value& _Value::operator[](uint64_t idx) {
 		static _Value empty_value(nullptr, false);
 

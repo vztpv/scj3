@@ -432,9 +432,6 @@ namespace claujson {
 
 			if (type == _ValueType::OBJECT) {
 				Object* json = new (std::nothrow) Object(
-#ifdef USE_PMR
-					res
-#endif
 				);
 				if (json == nullptr) {
 					log << warn << "new error";
@@ -447,9 +444,6 @@ namespace claujson {
 			}
 			else if (type == _ValueType::ARRAY) {
 				Array* json = new (std::nothrow) Array(
-#ifdef USE_PMR
-					res
-#endif
 				);
 				if (json == nullptr) {
 					log << warn << "new error";

@@ -308,9 +308,6 @@ namespace claujson {
 		}
 		else if (type == _ValueType::ARRAY) {
 			Array* json = new (std::nothrow) Array(
-#ifdef USE_PMR
-				res
-#endif
 			);
 
 			if (json == nullptr) {

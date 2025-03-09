@@ -11,9 +11,6 @@
 #include <cstring>
 #include <cstdint> // uint64_t? int64_t?
 
-#ifdef USE_PMR
-#include <memory_resource> // with C++17~
-#endif
 
 template <class From, class To>
 inline To Static_Cast(From x) {
