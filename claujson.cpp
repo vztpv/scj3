@@ -23,428 +23,516 @@
 
 #endif
 
-namespace claujson {
-	// todo? make Document class? like simdjson?
-	_Value _Value::empty_value{ nullptr, false }; // valid is false..
-	const uint64_t _Value::npos = -1; // 
+	namespace claujson {
+		// todo? make Document class? like simdjson?
+		_Value _Value::empty_value{ nullptr, false }; // valid is false..
+		const uint64_t _Value::npos = -1; // 
 #if __cpp_lib_string_view
 
 #else
-	const uint64_t StringView::npos = -1;
+		const uint64_t StringView::npos = -1;
 #endif
 
-	Log::Info info;
-	Log::Warning warn;
+		Log::Info info;
+		Log::Warning warn;
 
 
 
-	const uint64_t StructuredPtr::npos = -1;
-	_Value StructuredPtr::empty_value{ nullptr, false };
+		const uint64_t StructuredPtr::npos = -1;
+		_Value StructuredPtr::empty_value{ nullptr, false };
 
-	Log log;
+		Log log;
 
-	StructuredPtr::StructuredPtr(_Value& x) {
-		arr = x.as_array();
-		if (arr) {
-			type = 1;
-			return;
+		StructuredPtr::StructuredPtr(_Value& x) {
+			arr = x.as_array();
+			if (arr) {
+				type = 1;
+				return;
+			}
+			obj = x.as_object();
+			if (obj) {
+				type = 2;
+				return;
+			}
+			pj = x.as_partial_json();
+			if (pj) {
+				type = 3;
+				return;
+			}
 		}
-		obj = x.as_object();
-		if (obj) {
-			type = 2;
-			return;
-		}
-		pj = x.as_partial_json();
-		if (pj) {
-			type = 3;
-			return;
-		}
-	}
 
 
-	StructuredPtr::StructuredPtr(const _Value& x) {
-		arr = const_cast<Array*>(x.as_array());		
-		if (arr) {
-			type = 1;
-			return;
+		StructuredPtr::StructuredPtr(const _Value& x) {
+			arr = const_cast<Array*>(x.as_array());
+			if (arr) {
+				type = 1;
+				return;
+			}
+			obj = const_cast<Object*>(x.as_object());
+			if (obj) {
+				type = 2;
+				return;
+			}
+			pj = const_cast<PartialJson*>(x.as_partial_json());
+			if (pj) {
+				type = 3;
+				return;
+			}
 		}
-		obj = const_cast<Object*>(x.as_object());
-		if (obj) {
-			type = 2;
-			return;
-		}
-		pj = const_cast<PartialJson*>(x.as_partial_json());
-		if (pj) {
-			type = 3;
-			return;
-		}
-	}
 
-	uint64_t StructuredPtr::get_data_size() const {
-		if (type == 1) {
-			return arr->get_data_size();
+		uint64_t StructuredPtr::get_data_size() const {
+			if (type == 1) {
+				return arr->get_data_size();
+			}
+			if (type == 2) {
+				return obj->get_data_size();
+			}
+			if (type == 3) {
+				return pj->get_data_size();
+			}
+			return 0; // make npos!
 		}
-		if (type == 2) {
-			return obj->get_data_size();
+		uint64_t StructuredPtr::size() const {
+			if (type == 1) {
+				return arr->size();
+			}
+			if (type == 2) {
+				return obj->size();
+			}
+			if (type == 3) {
+				return pj->get_data_size();
+			}
+			return 0;
 		}
-		if (type == 3) {
-			return pj->get_data_size();
+		bool StructuredPtr::empty() const {
+			if (type == 1) {
+				return arr->empty();
+			}
+			if (type == 2) {
+				return obj->empty();
+			}
+			return true;
 		}
-		return 0; // make npos!
-	}
-	uint64_t StructuredPtr::size() const {
-		if (type == 1) {
-			return arr->size();
+		_Value& StructuredPtr::get_value_list(uint64_t idx) {
+			if (type == 1) {
+				return arr->get_value_list(idx);
+			}
+			if (type == 2) {
+				return obj->get_value_list(idx);
+			}
+			if (type == 3) {
+				return pj->get_value_list(idx);
+			}
+			return empty_value;
 		}
-		if (type == 2) {
-			return obj->size();
+		_Value& StructuredPtr::get_key_list(uint64_t idx) {
+			if (type == 2) {
+				return obj->get_key_list(idx);
+			}
+			else if (type == 3) {
+				return pj->get_key_list(idx);
+			}
+			return empty_value;
 		}
-		if (type == 3) {
-			return pj->get_data_size();
+		const _Value& StructuredPtr::get_value_list(uint64_t idx) const {
+			if (type == 1) {
+				return arr->get_value_list(idx);
+			}
+			if (type == 2) {
+				return obj->get_value_list(idx);
+			}
+			if (type == 3) {
+				return pj->get_value_list(idx);
+			}
+			return empty_value;
 		}
-		return 0;
-	}
-	bool StructuredPtr::empty() const {
-		if (type == 1) {
-			return arr->empty();
+		const _Value& StructuredPtr::get_key_list(uint64_t idx) const {
+			if (type == 2) {
+				return obj->get_key_list(idx);
+			}
+			else if (type == 3) {
+				return pj->get_key_list(idx);
+			}
+			return empty_value;
 		}
-		if (type == 2) {
-			return obj->empty();
-		}
-		return true;
-	}
-	_Value& StructuredPtr::get_value_list(uint64_t idx) {
-		if (type == 1) {
-			return arr->get_value_list(idx);
-		}
-		if (type == 2) {
-			return obj->get_value_list(idx);
-		}
-		if (type == 3) {
-			return pj->get_value_list(idx);
-		}
-		return empty_value;
-	}
-	_Value& StructuredPtr::get_key_list(uint64_t idx) {
-		if (type == 2) {
-			return obj->get_key_list(idx);
-		}
-		else if (type == 3) {
-			return pj->get_key_list(idx);
-		}
-		return empty_value;
-	}
-	const _Value& StructuredPtr::get_value_list(uint64_t idx) const {
-		if (type == 1) {
-			return arr->get_value_list(idx);
-		}
-		if (type == 2) {
-			return obj->get_value_list(idx);
-		}
-		if (type == 3) {
-			return pj->get_value_list(idx);
-		}
-		return empty_value;
-	}
-	const _Value& StructuredPtr::get_key_list(uint64_t idx) const {
-		if (type == 2) {
-			return obj->get_key_list(idx);
-		}
-		else if (type == 3) {
-			return pj->get_key_list(idx);
-		}
-		return empty_value;
-	}
-	const _Value& StructuredPtr::get_const_key_list(uint64_t idx) const {
-		if (type == 2) {
-			return obj->get_const_key_list(idx);
-		}
-		return empty_value;
-	}
 
-	bool StructuredPtr::change_key(const _Value& key, _Value&& next_key) {
-		if (type == 2) {
-			return obj->change_key(key, std::move(next_key));
+		const _Value& StructuredPtr::get_const_key_list(uint64_t idx) {
+			if (type == 2) {
+				return obj->get_const_key_list(idx);
+			}
+			return empty_value;
 		}
-		return false;
-	}
-	bool StructuredPtr::change_key(uint64_t idx, _Value&& next_key) {
-		if (type == 2) {
-			return obj->change_key(idx, std::move(next_key));
-		}
-		return false;
-	}
 
-	bool StructuredPtr::add_array_element(Value v) {
-		if (type == 1) {
-			return arr->add_element(std::move(v));
+		const _Value& StructuredPtr::get_const_key_list(uint64_t idx) const {
+			if (type == 2) {
+				return obj->get_const_key_list(idx);
+			}
+			return empty_value;
 		}
-		if (type == 2) {
+
+		bool StructuredPtr::change_key(const _Value& key, Value&& next_key) {
+			if (type == 2) {
+				return obj->change_key(key, std::move(next_key));
+			}
 			return false;
 		}
-		if (type == 3) {
-			return pj->add_array_element(std::move(v));
-		}
-		return false;
-	}
-	bool StructuredPtr::add_object_element(Value key, Value v) {
-		if (type == 1) {
+		bool StructuredPtr::change_key(uint64_t idx, Value&& next_key) {
+			if (type == 2) {
+				return obj->change_key(idx, std::move(next_key));
+			}
 			return false;
 		}
-		if (type == 2) {
-			return obj->add_element(std::move(key), std::move(v));
-		}
-		if (type == 3) {
-			return pj->add_object_element(std::move(key), std::move(v));
-		}
-		return false;
-	}
 
+		bool StructuredPtr::chk_key_dup(uint64_t* idx) const {
+			if (type == 2) {
+				return obj->chk_key_dup(idx);
+			}
+			return false;
+		}
+		
+		uint64_t StructuredPtr::find_by_key(const _Value & key) const{ // find without key`s converting ( \uxxxx )
+			if (type == 2) {
+				return obj->find(key);
+			}
+			return npos;
+		}
 
-	void StructuredPtr::erase(uint64_t idx, bool real) {
-		if (type == 1) {
-			return arr->erase(idx, real);
+		_Value& StructuredPtr::operator[](const _Value& key) { // if not exist key, then _Value <- is not valid.
+			if (type == 2) {
+				return obj->operator[](key);
+			}
+			return empty_value;
 		}
-		if (type == 2) {
-			return obj->erase(idx, real);
+		const _Value& StructuredPtr::operator[](const _Value& key) const {// if not exist key, then _Value <- is not valid.
+			if (type == 2) {
+				return obj->operator[](key);
+			}
+			return empty_value;
 		}
-		if (type == 3) {
+
+		bool StructuredPtr::add_array_element(Value v) {
+			if (type == 1) {
+				return arr->add_element(std::move(v));
+			}
+			if (type == 2) {
+				return false;
+			}
+			if (type == 3) {
+				return pj->add_array_element(std::move(v));
+			}
+			return false;
+		}
+		bool StructuredPtr::add_object_element(Value key, Value v) {
+			if (type == 1) {
+				return false;
+			}
+			if (type == 2) {
+				return obj->add_element(std::move(key), std::move(v));
+			}
+			if (type == 3) {
+				return pj->add_object_element(std::move(key), std::move(v));
+			}
+			return false;
+		}
+
+		uint64_t StructuredPtr::find_by_value(const _Value& value, uint64_t start) const { // find without key`s converting ( \uxxxx )
+			if (type == 1) {
+				return arr->find(value, start);
+			}
+			return npos;
+		}
+		_Value& StructuredPtr::operator[](uint64_t idx) {
+			if (type == 1) {
+				return arr->operator[](idx);
+			}
+			if (type == 2) {
+				return obj->operator[](idx);
+			}
+			return empty_value;
+		}
+
+		const _Value& StructuredPtr::operator[](uint64_t idx) const {
+			if (type == 1) {
+				return arr->operator[](idx);
+			}
+			if (type == 2) {
+				return obj->operator[](idx);
+			}
+			return empty_value;
+		}
+
+		void StructuredPtr::erase(uint64_t idx, bool real) {
+			if (type == 1) {
+				return arr->erase(idx, real);
+			}
+			if (type == 2) {
+				return obj->erase(idx, real);
+			}
+			if (type == 3) {
+				return;
+			}
 			return;
 		}
-		return;
-	}
-	void StructuredPtr::Delete() {
-		if (type == 1) {
-			delete arr;
-			arr = nullptr;
-		}
-		else if (type == 2) {
-			delete obj;
-			obj = nullptr;
-		}
-		else if (type == 3) {
-			delete pj;
-			pj = nullptr;
-		}
-		type = 0;
-	}
-	void StructuredPtr::clear() {
-		if (type == 1) {
-			return arr->clear();
-		}
-		if (type == 2) {
-			return obj->clear();
-		}
-		if (type == 3) {
-			return pj->clear();
-		}
-		return;
-	}
-
-	void StructuredPtr::MergeWith(StructuredPtr j, int start_offset) {
-		if (type == 1) {
-			if (j.is_array()) {
-				return arr->MergeWith(j.arr , start_offset);
+		void StructuredPtr::erase(const _Value& key, bool real) {
+			if (type == 2) {
+				return obj->erase(key, real);
 			}
-			if (j.is_object()) {
-				return arr->MergeWith(j.obj, start_offset);
+			return;
+		}
+
+		void StructuredPtr::Delete() {
+			if (type == 1) {
+				delete arr;
+				arr = nullptr;
 			}
-			if (j.is_partial_json()) {
-				return arr->MergeWith(j.pj, start_offset);
+			else if (type == 2) {
+				delete obj;
+				obj = nullptr;
+			}
+			else if (type == 3) {
+				delete pj;
+				pj = nullptr;
+			}
+			type = 0;
+		}
+		void StructuredPtr::clear() {
+			if (type == 1) {
+				return arr->clear();
+			}
+			if (type == 2) {
+				return obj->clear();
+			}
+			if (type == 3) {
+				return pj->clear();
+			}
+			return;
+		}
+
+		void StructuredPtr::clear(uint64_t idx) {
+			if (type == 1) {
+				return arr->clear(idx);
+			}
+			if (type == 2) {
+				return obj->clear(idx);
+			}
+			return;
+		}
+
+		bool StructuredPtr::assign_value(uint64_t idx, Value val) {
+			if (type == 1) {
+				return arr->assign_element(idx, std::move(val));
+			}
+			if (type == 2) {
+				return obj->assign_value_element(idx, std::move(val));
+			}
+			return false;
+		}
+
+
+		void StructuredPtr::MergeWith(StructuredPtr j, int start_offset) {
+			if (type == 1) {
+				if (j.is_array()) {
+					return arr->MergeWith(j.arr, start_offset);
+				}
+				if (j.is_object()) {
+					return arr->MergeWith(j.obj, start_offset);
+				}
+				if (j.is_partial_json()) {
+					return arr->MergeWith(j.pj, start_offset);
+				}
+			}
+			if (type == 2) {
+				if (j.is_array()) {
+					return obj->MergeWith(j.arr, start_offset);
+				}
+				if (j.is_object()) {
+					return obj->MergeWith(j.obj, start_offset);
+				}
+				if (j.is_partial_json()) {
+					return obj->MergeWith(j.pj, start_offset);
+				}
+			}
+			if (type == 3) {
+				if (j.is_array()) {
+					return pj->MergeWith(j.arr, start_offset);
+				}
+				if (j.is_object()) {
+					return pj->MergeWith(j.obj, start_offset);
+				}
+				if (j.is_partial_json()) {
+					return pj->MergeWith(j.pj, start_offset);
+				}
 			}
 		}
-		if (type == 2) {
-			if (j.is_array()) {
-				return obj->MergeWith(j.arr, start_offset);
+
+		void StructuredPtr::reserve_data_list(uint64_t sz) {
+			if (type == 1) {
+				return arr->reserve_data_list(sz);
 			}
-			if (j.is_object()) {
-				return obj->MergeWith(j.obj, start_offset);
+			if (type == 2) {
+				return obj->reserve_data_list(sz);
 			}
-			if (j.is_partial_json()) {
-				return obj->MergeWith(j.pj, start_offset);
+			return;
+		}
+
+		// need rename param....!
+
+		void StructuredPtr::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint64_t key_token_idx, uint64_t val_token_idx) {
+			if (type == 1) {
+				return arr->add_item_type(key_buf_idx, key_next_buf_idx, val_buf_idx, val_next_buf_idx, buf, key_token_idx, val_token_idx);
+			}
+			if (type == 2) {
+				return obj->add_item_type(key_buf_idx, key_next_buf_idx, val_buf_idx, val_next_buf_idx, buf, key_token_idx, val_token_idx);
+			}
+			if (type == 3) {
+				return pj->add_item_type(key_buf_idx, key_next_buf_idx, val_buf_idx, val_next_buf_idx, buf, key_token_idx, val_token_idx);
+			}
+			//std::cout << "chk 1";
+			return;
+		}
+
+		void StructuredPtr::add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
+			char* buf, uint64_t val_token_idx) {
+			if (type == 1) {
+				return arr->add_item_type(val_buf_idx, val_next_buf_idx, buf, val_token_idx);
+			}
+			if (type == 2) {
+				return obj->add_item_type(val_buf_idx, val_next_buf_idx, buf, val_token_idx);
+			}
+			if (type == 3) {
+				return pj->add_item_type(val_buf_idx, val_next_buf_idx, buf, val_token_idx);
+			}
+			//std::cout << "chk 2";
+			return;
+		}
+
+		void StructuredPtr::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
+			_ValueType type, uint64_t key_token_idx) {
+			if (this->type == 1) {
+				return arr->add_user_type(key_buf_idx, key_next_buf_idx, buf, type, key_token_idx);
+			}
+			if (this->type == 2) {
+				return obj->add_user_type(key_buf_idx, key_next_buf_idx, buf, type, key_token_idx);
+			}
+			if (this->type == 3) {
+				return pj->add_user_type(key_buf_idx, key_next_buf_idx, buf, type, key_token_idx);
+			}
+			//std::cout << "chk 3";
+			return;
+		}
+
+		void StructuredPtr::add_user_type(_ValueType type) {
+			if (this->type == 1) {
+				return arr->add_user_type(type);
+			}
+			if (this->type == 2) {
+				return obj->add_user_type(type);
+			}
+			if (this->type == 3) {
+				return pj->add_user_type(type);
+			}
+			//std::cout << "chk 4";
+			return;
+		}
+
+		bool StructuredPtr::is_virtual() const {
+			if (type == 1) {
+				return arr->is_virtual();
+			}
+			if (type == 2) {
+				return obj->is_virtual();
+			}
+			return false;
+		}
+		void StructuredPtr::set_parent(StructuredPtr p) {
+			if (type == 1) {
+				arr->set_parent(p);
+			}
+			else if (type == 2) {
+				obj->set_parent(p);
 			}
 		}
-		if (type == 3) {
-			if (j.is_array()) {
-				return pj->MergeWith(j.arr, start_offset);
+
+		StructuredPtr StructuredPtr::get_parent() {
+			StructuredPtr p;
+
+			if (type == 1) {
+				p = arr->get_parent();
 			}
-			if (j.is_object()) {
-				return pj->MergeWith(j.obj, start_offset);
+			if (type == 2) {
+				p = obj->get_parent();
 			}
-			if (j.is_partial_json()) {
-				return pj->MergeWith(j.pj, start_offset);
+
+			return p;
+		}
+
+		std::ostream& operator<<(std::ostream& stream, const claujson::_Value& data) {
+
+			if (false == data.is_valid()) {
+				stream << "--not valid\n";
+				return stream;
 			}
-		}
-	}
 
-	void StructuredPtr::reserve_data_list(uint64_t sz) {
-		if (type == 1) {
-			return arr->reserve_data_list(sz);
-		}
-		if (type == 2) {
-			return obj->reserve_data_list(sz);
-		}
-		return;
-	}
+			switch (data._type) {
+			case claujson::_ValueType::INT:
+				stream << data._int_val;
+				break;
+			case claujson::_ValueType::UINT:
+				stream << data._uint_val;
+				break;
+			case claujson::_ValueType::FLOAT:
+				stream << data._float_val;
+				break;
+			case claujson::_ValueType::STRING:
+			case claujson::_ValueType::SHORT_STRING:
+				stream << "\"" << (data._str_val.data()) << "\"";
+				break;
+			case claujson::_ValueType::BOOL:
+				stream << data._bool_val;
+				break;
+			case claujson::_ValueType::NULL_:
+				stream << "null";
+				break;
+			case claujson::_ValueType::ARRAY:
+			{
+				//	stream << "array_or_object";
+				auto* x = data.as_array();
+				if (x) {
+					stream << "[ ";
+					uint64_t sz = x->get_data_size();
+					for (uint64_t i = 0; i < sz; ++i) {
+						stream << x->get_value_list(i) << " ";
+						if (i < sz - 1) {
+							stream << " , ";
+						}
+					}
+					stream << "]\n";
+				}
+				break;
+			}
+			case claujson::_ValueType::OBJECT:
+			{
+				auto* x = data.as_object();
+				if (x) {
+					stream << "{ ";
+					uint64_t sz = x->get_data_size();
+					for (uint64_t i = 0; i < sz; ++i) {
+						stream << x->get_key_list(i) << " : ";
+						stream << x->get_value_list(i) << " ";
+						if (i < sz - 1) {
+							stream << " , ";
+						}
+					}
+					stream << "}\n";
+				}
+			}
+			break;
+			}
 
-	// need rename param....!
-	
-	void StructuredPtr::add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
-		char* buf, uint64_t key_token_idx, uint64_t val_token_idx) {
-		if (type == 1) {
-			return arr->add_item_type(key_buf_idx, key_next_buf_idx, val_buf_idx, val_next_buf_idx, buf, key_token_idx, val_token_idx);
-		}
-		if (type == 2) {
-			return obj->add_item_type(key_buf_idx, key_next_buf_idx, val_buf_idx, val_next_buf_idx, buf, key_token_idx, val_token_idx);
-		}
-		if (type == 3) {
-			return pj->add_item_type(key_buf_idx, key_next_buf_idx, val_buf_idx, val_next_buf_idx, buf, key_token_idx, val_token_idx);
-		}
-		//std::cout << "chk 1";
-		return;
-	}
-
-	void StructuredPtr::add_item_type(int64_t val_buf_idx, int64_t val_next_buf_idx,
-		char* buf, uint64_t val_token_idx) {
-		if (type == 1) {
-			return arr->add_item_type(val_buf_idx, val_next_buf_idx, buf, val_token_idx);
-		}
-		if (type == 2) {
-			return obj->add_item_type(val_buf_idx, val_next_buf_idx, buf, val_token_idx);
-		}
-		if (type == 3) {
-			return pj->add_item_type(val_buf_idx, val_next_buf_idx, buf, val_token_idx);
-		}
-		//std::cout << "chk 2";
-		return;
-	}
-
-	void StructuredPtr::add_user_type(int64_t key_buf_idx, int64_t key_next_buf_idx, char* buf,
-		_ValueType type, uint64_t key_token_idx) {
-		if (this->type == 1) {
-			return arr->add_user_type(key_buf_idx, key_next_buf_idx, buf, type, key_token_idx);
-		}
-		if (this->type == 2) {
-			return obj->add_user_type(key_buf_idx, key_next_buf_idx, buf, type, key_token_idx);
-		}
-		if (this->type == 3) {
-			return pj->add_user_type(key_buf_idx, key_next_buf_idx, buf, type, key_token_idx);
-		}
-		//std::cout << "chk 3";
-		return;
-	}
-	
-	void StructuredPtr::add_user_type(_ValueType type) {
-		if (this->type == 1) {
-			return arr->add_user_type(type);
-		}
-		if (this->type == 2) {
-			return obj->add_user_type(type);
-		}
-		if (this->type == 3) {
-			return pj->add_user_type(type);
-		}
-		//std::cout << "chk 4";
-		return;
-	}
-
-	bool StructuredPtr::is_virtual() const {
-		if (type == 1) {
-			return arr->is_virtual();
-		}
-		if (type == 2) {
-			return obj->is_virtual();
-		}
-		return false;
-	}
-	void StructuredPtr::set_parent(StructuredPtr p) {
-		if (type == 1) {
-			arr->set_parent(p);
-		}
-		else if (type == 2) {
-			obj->set_parent(p);
-		}
-	}
-
-	StructuredPtr StructuredPtr::get_parent() {
-		StructuredPtr p;
-
-		if (type == 1) {
-			p = arr->get_parent();
-		}
-		if (type == 2) {
-			p = obj->get_parent();
-		}
-
-		return p;
-	}
-
-	std::ostream& operator<<(std::ostream& stream, const claujson::_Value& data) {
-
-		if (false == data.is_valid()) {
-			stream << "--not valid\n";
 			return stream;
 		}
-
-		switch (data._type) {
-		case claujson::_ValueType::INT:
-			stream << data._int_val;
-			break;
-		case claujson::_ValueType::UINT:
-			stream << data._uint_val;
-			break;
-		case claujson::_ValueType::FLOAT:
-			stream << data._float_val;
-			break;
-		case claujson::_ValueType::STRING:
-		case claujson::_ValueType::SHORT_STRING:
-			stream << "\"" << (data._str_val.data()) << "\"";
-			break;
-		case claujson::_ValueType::BOOL:
-			stream << data._bool_val;
-			break;
-		case claujson::_ValueType::NULL_:
-			stream << "null";
-			break;
-		case claujson::_ValueType::ARRAY:
-		{
-			//	stream << "array_or_object";
-			auto* x = data.as_array();
-			if (x) {
-				stream << "[ ";
-				uint64_t sz = x->get_data_size();
-				for (uint64_t i = 0; i < sz; ++i) {
-					stream << x->get_value_list(i) << " ";
-					if (i < sz - 1) {
-						stream << " , ";
-					}
-				}
-				stream << "]\n";
-			}
-			break;
-		}
-		case claujson::_ValueType::OBJECT:
-		{
-			auto* x = data.as_object();
-			if (x) {
-				stream << "{ ";
-				uint64_t sz = x->get_data_size();
-				for (uint64_t i = 0; i < sz; ++i) {
-					stream << x->get_key_list(i) << " : ";
-					stream << x->get_value_list(i) << " ";
-					if (i < sz - 1) {
-						stream << " , ";
-					}
-				}
-				stream << "}\n";
-			}
-		}
-		break;
-		}
-
-		return stream;
 	}
-}
 
 namespace claujson {
 

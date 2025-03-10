@@ -353,17 +353,19 @@ namespace claujson {
 	public:
 		friend class LoadData2;
 		friend class PartialJson;
+		friend class _Value;
 
 		static const uint64_t npos;
 		static _Value empty_value;
-
+		
+	private:
 		union {
 			Array* arr = nullptr;
 			Object* obj;
 			PartialJson* pj;
 		};
 		uint32_t type = 0;
-
+	public:
 		StructuredPtr(_Value& x);
 
 		StructuredPtr(const _Value& x);
@@ -437,10 +439,12 @@ namespace claujson {
 		const _Value& get_value_list(uint64_t idx)const;
 		const _Value& get_key_list(uint64_t idx)const;
 
+
+		const _Value& get_const_key_list(uint64_t idx);
 		const _Value& get_const_key_list(uint64_t idx) const;
 
-		bool change_key(const _Value& key, _Value&& next_key);
-		bool change_key(uint64_t idx, _Value&& next_key);
+		bool change_key(const _Value& key, Value&& next_key);
+		bool change_key(uint64_t idx, Value&& next_key);
 
 		explicit operator bool() const {
 			return arr;
@@ -467,13 +471,26 @@ namespace claujson {
 			return is_array() || is_object();
 		}
 
+		bool chk_key_dup(uint64_t* idx) const;
+		uint64_t find_by_key(const _Value& key) const; // find without key`s converting ( \uxxxx )
+
+		_Value& operator[](const _Value& key); // if not exist key, then _Value <- is not valid.
+		const _Value& operator[](const _Value& key) const; // if not exist key, then _Value <- is not valid.
+
 		bool add_array_element(Value v);
 		bool add_object_element(Value key, Value v);
+
+		uint64_t find_by_value(const _Value& value, uint64_t start = 0) const; // find without key`s converting ( \uxxxx )
+
+		_Value& operator[](uint64_t idx);
+
+		const _Value& operator[](uint64_t idx) const;
 
 		// pj`s parent is nullptr.
 		StructuredPtr get_parent();
 
 		void erase(uint64_t idx, bool real = false);
+		void erase(const _Value& key, bool real = false);
 
 		bool operator==(nullptr_t) {
 			return !arr;
@@ -496,11 +513,16 @@ namespace claujson {
 
 		void Delete();
 		void clear();
+		void clear(uint64_t idx); // clear child[idx] ?
+		
+		bool assign_value(uint64_t idx, Value val);
+
 
 		void MergeWith(StructuredPtr j, int start_offset);
 
 		void reserve_data_list(uint64_t sz);
 
+	private:
 		// need rename param....!
 		void add_item_type(int64_t key_buf_idx, int64_t key_next_buf_idx, int64_t val_buf_idx, int64_t val_next_buf_idx,
 			char* buf, uint64_t key_token_idx, uint64_t val_token_idx);
@@ -515,6 +537,7 @@ namespace claujson {
 		//
 		void add_user_type(_ValueType type
 		); // int type -> enum?
+	public:
 
 		bool is_virtual() const;
 

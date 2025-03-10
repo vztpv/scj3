@@ -35,8 +35,6 @@ namespace claujson {
 
 		explicit Array();
 
-
-
 		~Array();
 
 		bool is_object() const;

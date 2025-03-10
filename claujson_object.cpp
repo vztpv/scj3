@@ -281,13 +281,13 @@ namespace claujson {
 	}
 
 	bool Object::assign_value_element(uint64_t idx, Value val) { this->obj_data[idx].second = std::move(val.Get()); return true; }
-	bool Object::assign_key_element(uint64_t idx, Value key) {
-		if (!key.Get() || !key.Get().is_str()) {
-			return false;
-		}
-		this->obj_data[idx].first = std::move(key.Get());
-		return true;
-	}
+	//bool Object::assign_key_element(uint64_t idx, Value key) {
+	//	if (!key.Get() || !key.Get().is_str()) {
+	//		return false;
+	//	}
+	//	this->obj_data[idx].first = std::move(key.Get());
+	//	return true;
+	//}
 
 	void Object::erase(const _Value& key, bool real) {
 		uint64_t idx = this->find(key);

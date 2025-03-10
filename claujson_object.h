@@ -98,7 +98,7 @@ namespace claujson {
 		 bool add_element(Value key, Value val);
 
 		 bool assign_value_element(uint64_t idx, Value val);
-		 bool assign_key_element(uint64_t idx, Value key);
+		// bool assign_key_element(uint64_t idx, Value key);
 
 		 void erase(const _Value& key, bool real = false);
 		 void erase(uint64_t idx, bool real = false);
