@@ -184,6 +184,21 @@ namespace claujson {
 		return true;
 	}
 
+	// idx range check?
+	bool Array::insert(uint64_t idx, Value val) {
+		if (!add_element(std::move(val))) {
+			return false;
+		}
+		_Value temp = std::move(arr_vec.back());
+		uint64_t sz = size();
+		for (uint64_t i = sz - 1; i > idx; --i) {
+			arr_vec[i] = std::move(arr_vec[i - 1]);
+		}
+		arr_vec[idx] = std::move(temp);
+
+		return true;
+	}
+
 
 	void Array::erase(const _Value& key, bool real) {
 		uint64_t idx = this->find(key);

@@ -17,6 +17,7 @@ namespace claujson {
 	class StructuredPtr;
 
 	class _Value {
+	public:
 		static _Value empty_value;
 		static const uint64_t npos;
 	public:
@@ -322,7 +323,36 @@ namespace claujson {
 		_Value& Get() noexcept { return x; }
 		const _Value& Get() const noexcept { return x; }
 	};
-	
+
+	class _ValueView {
+	private:
+		claujson::_Value* p = nullptr;
+	public:
+		_ValueView() {}
+		_ValueView(const claujson::_Value& x) {
+			p = const_cast<claujson::_Value*>(&x);
+		}
+
+		claujson::_Value* operator->() {
+			return p;
+		}
+		const claujson::_Value* operator->() const {
+			return p;
+		}
+
+		claujson::_Value& operator*() {
+			return *p;
+		}
+		const claujson::_Value& operator*() const {
+			return *p;
+		}
+
+		bool operator<(_ValueView other) const {
+			return (*p) < (*other.p);
+		}
+	};
+
+
 	class parser;
 
 	class Document {
@@ -439,6 +469,7 @@ namespace claujson {
 		const _Value& get_value_list(uint64_t idx)const;
 		const _Value& get_key_list(uint64_t idx)const;
 
+		bool insert(uint64_t idx, Value val); // from Array
 
 		const _Value& get_const_key_list(uint64_t idx);
 		const _Value& get_const_key_list(uint64_t idx) const;

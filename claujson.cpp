@@ -155,6 +155,12 @@
 			}
 			return empty_value;
 		}
+		bool StructuredPtr::insert(uint64_t idx, Value val) { // from Array
+			if (type == 1) {
+				return arr->insert(idx, std::move(val));
+			}
+			return false;
+		}
 
 		const _Value& StructuredPtr::get_const_key_list(uint64_t idx) {
 			if (type == 2) {
@@ -5172,7 +5178,7 @@ namespace claujson {
 				}
 				_Value& value = result.json_pointerB(vec);
 
-				value = obj->get_value_list(value_idx).clone();
+				value = obj->get_value_list(value_idx).clone(); // clone -> std::move(~~)??
 			}
 			else if (obj->get_value_list(op_idx).str_val() == "remove"sv) {
 				std_vector<_Value> vec;

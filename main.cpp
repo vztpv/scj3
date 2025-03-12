@@ -104,73 +104,428 @@ void diff_test() {
 }
 
 /*
-// iterator test.
-#include <functional>
-namespace claujson {
-	class JsonIterator {
-	public:
-		JsonIterator& enter(std::function<void(Structured*)> func = { }) {
-			if (_m_now && _m_now->get_value_list(_m_child_pos_in_parent.back()).is_structured()) {
-				_m_now = _m_now->get_value_list(_m_child_pos_in_parent.back()).as_structured_ptr();
-				_m_child_pos_in_parent.push_back(0);
-				if (func) {
-					func(_m_now);
+enum class ValueType {
+	none,
+	end_of_container,
+	end_of_document,
+	container, // array or object
+	item,
+	key,
+	value
+};
+
+class ClauJsonTraverser {
+	// todo!
+};
+
+class DiffResult {
+public:
+	ClauJsonTraverser x;
+	ClauJsonTraverser y;
+	claujson::_Value data; // key or value.
+	int line = 0;
+	int type = 0; // -1 delete, +1 add
+	ValueType x_type;
+	ValueType y_type;
+public:
+	DiffResult(int line, const ClauJsonTraverser& x, ValueType x_type, const ClauJsonTraverser& y,
+		ValueType y_type,
+		int type, claujson::_Value&& data)
+		: line(line), x(x), x_type(x_type), y(y), y_type(y_type), type(type), data(std::move(data))
+	{
+		//
+	}
+};
+
+std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::StructuredPtr after) {
+	std::vector<DiffResult> result;
+
+	if (before == nullptr || after == nullptr) {
+		return result;
+	}
+
+	std::map<claujson::_ValueView, size_t> before_map;
+	std::map<claujson::_ValueView, size_t> after_map;
+
+	ClauJsonTraverser iter_before(before);
+	ClauJsonTraverser iter_after(after);
+
+	ClauJsonTraverser x = iter_before;
+	ClauJsonTraverser y = iter_after;
+
+	ClauJsonTraverser __x = x;
+	ClauJsonTraverser __y = y;
+
+	ClauJsonTraverser temp_x = x;
+	ClauJsonTraverser temp_y = y;
+
+	ClauJsonTraverser temp_ = y;
+
+	ClauJsonTraverser before_x = x;
+	ClauJsonTraverser before_y = y;
+
+	claujson::_ValueView temp;
+	claujson::_ValueView str1;
+	claujson::_ValueView str2;
+
+	claujson::_ValueView same_value;
+
+	int line = 0;
+
+	int state = 0;
+
+	{
+		ClauJsonTraverser test_a(before);
+		while (true) {
+			ValueType type = test_a.next();
+			if (type == ValueType::end_of_document) {
+				break;
+			}
+			
+			std::cout << (int)type << " ";
+			if (type == ValueType::key) {
+				std::cout << "(key)";
+			}
+			else if (type == ValueType::value) {
+				std::cout << ("value");
+			}
+			std::cout << "\n";
+		}
+	}
+
+	while (true) {
+
+		//str1.clear(true);
+		//str2.clear();
+		before_map.clear();
+		after_map.clear();
+
+		auto x_type = x.next();
+		auto y_type = y.next();
+
+		if (x_type == ValueType::end_of_document) {
+			break;
+		}
+		if (y_type == ValueType::end_of_document) {
+			break;
+		}
+
+		{
+			if (x_type == y_type) {
+				if (x_type == ValueType::container ||
+							x_type == ValueType::end_of_container) {
+					x_type = x.next();
+					y_type = y.next();
+					continue;
+				}
+
+				if (*x.get_now() == *y.get_now()) {
+					x_type = x.next();
+					y_type = y.next();
+					continue;
 				}
 			}
-			return *this;
-		}
-		
-		JsonIterator& quit(std::function<void(Structured*)> func = { }) {
-			if (_m_now) {
-				_m_child_pos_in_parent.pop_back();
-				_m_now = _m_now->get_parent();
-				if (func) {
-					func(_m_now);
+
+			{
+				__x = x;
+				__y = y;
+	
+				size_t count__x = 0;
+				size_t count__y = 0;
+
+				// find same value position.
+				if (x_type == ValueType::key || x_type == ValueType::value) {
+					before_map.insert({ __x.get_now(), count__x });
+				}
+				if (y_type == ValueType::key || y_type == ValueType::value) {
+					after_map.insert({ __y.get_now(), count__y });
+				}
+
+				{
+					int turn = 1; // 1 -> -1 -> 1 -> -1 ...
+					bool pass = false;
+					int state = 0;
+					int state2 = 0;
+
+
+					auto __x_type = ValueType::none;
+					auto __y_type = ValueType::none;
+
+					while (true) {
+						if (__x_type == ValueType::end_of_document) {
+							break;
+						}
+						if (__y_type == ValueType::end_of_document) {
+							break;
+						}
+
+						if (turn == 1) {
+							__x_type = __x.next();
+							count__x++;
+
+							if (__x_type == ValueType::key || __x_type == ValueType::value) {
+							}
+							else {
+								state = 1;
+								turn *= -1;
+								continue;
+							}
+							state = 0;
+
+							before_map.insert({ __x.get_now(), count__x});
+
+							// if found same value?
+							if (after_map.end() != after_map.find(__x.get_now())) {
+								pass = true;
+								same_value = __x.get_now();
+								count__y = after_map.find(__x.get_now())->second;
+
+								if (__y_type == ValueType::key || __y_type == ValueType::value) {
+								}
+								else {
+									state2 = 2;
+								}
+
+								break;
+							}
+						}
+						else {
+							__y_type = __y.next();
+							count__y++;
+
+							if (__y_type == ValueType::key || __y_type == ValueType::value) {
+							}
+							else
+							{
+								state2 = 2;
+
+								turn *= -1;
+								continue;
+							}
+							state2 = 0;
+
+							after_map.insert({ __y.get_now(), count__y });
+
+							// if found same value?
+							if (before_map.end() != before_map.find(__y.get_now())) {
+								pass = true;
+								same_value = __y.get_now();
+								count__x = before_map.find(__y.get_now())->second;
+
+								if (__x_type == ValueType::key || __x_type == ValueType::value) {
+								}
+								else {
+									state = 1;
+								}
+
+								break;
+							}
+						}
+
+						turn *= -1; // change turn.
+					}
+
+					// found same value,
+					if (pass) {
+
+						before_x = x;
+						if (state == 1) {
+
+							x_type = x.next();
+
+							state = 0;
+						}
+						before_y = y;
+						if (state2 == 2) {
+
+							y_type = y.next();
+
+							state2 = 0;
+						}
+
+						temp_x = x;
+						temp_y = y;
+
+						line++;
+
+						int state = 0;
+
+						while (*(temp = x.get_now()) != *same_value) {
+
+							result.emplace_back(line, x, x_type, temp_y, y_type, -1, temp->clone());
+
+							before_x = x;
+
+							if (x_type == ValueType::key) {
+								x_type = x.next();
+								if (x_type == ValueType::value) {
+									before_x = x;
+
+									if (*x.get_now() == *same_value) {
+										x_type = x.next();
+										break;
+									}
+
+									x_type = x.next();
+								}
+							}
+							else {
+								x_type = x.next();
+							}
+
+						}
+
+						state = 0;
+
+						temp_x = before_x;
+
+						while (*(temp = y.get_now()) != *same_value) {
+
+							result.emplace_back(line, temp_x, x_type, y, y_type, +1, temp->clone());
+
+							before_y = y;
+
+							if (y_type == ValueType::key) {
+								y_type = y.next();
+								if (y_type == ValueType::value) {
+									before_y = y;
+
+									if (*y.get_now() == *same_value) {
+										y_type = y.next();
+										break;
+									}
+
+									y_type = y.next();
+								}
+							}
+							else {
+								y_type = y.next();
+							}
+						}
+					}
 				}
 			}
-			return *this;
 		}
+	}
 
-		JsonIterator& next(std::function<void(Structured*)> func = { }) {
-			if (_m_now) {
-				_m_child_pos_in_parent.back()++;
-				if (func) {
-					func(_m_now);
+
+	auto _result = std::move(result);
+	result.clear();
+
+	for (size_t i = 0; i < _result.size(); ++i) {
+		if (_result[i].type > 0) {
+			if (_result[i].y_type == ValueType::key) {
+				auto& y = _result[i].y;
+
+				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, y, _result[i].y_type, 
+										+1, y.get_now()->clone());				
+				auto y_type = y.next();
+				if (y_type == ValueType::value) {
+					result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, y, y_type, +1, y.get_now()->clone());
 				}
 			}
-			return *this;
-		}
+			else if (_result[i].y_type == ValueType::value) {
+				ClauJsonTraverser& y = _result[i].y;
 
-		JsonIterator& iterate(std::function<void(_Value&)> func) {
-			if (_m_now) {
-				size_t len = _m_now->get_data_size();
-				for (size_t i = _m_child_pos_in_parent.back(); i < len; ++i) {
-					func(_m_now->get_value_list(i));
+				if (y.is_in_object()) {
+					ClauJsonTraverser temp = y;
+
+					temp.with_key();
+
+					auto temp_type = temp.next();
+
+					result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, temp, temp_type, +1, y.get_now()->clone());
+				}
+				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type,  y, _result[i].y_type, +1, y.get_now()->clone());
+			}
+			else {
+				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, _result[i].y, _result[i].y_type, +1, _result[i].data.clone());
+			}
+		}
+		else if (_result[i].type < 0) {
+			if (_result[i].x_type == ValueType::key) {
+				auto x = _result[i].x;
+
+				result.emplace_back(_result[i].line, x, _result[i].x_type, _result[i].y, _result[i].y_type, - 1, x.get_now()->clone());
+			
+				auto x_type = x.next();
+
+				if (x_type == ValueType::value) {
+					result.emplace_back(_result[i].line, x, x_type, _result[i].y, _result[i].y_type,  - 1, x.get_now()->clone());
 				}
 			}
-			return *this;
-		}
+			else if (_result[i].x_type == ValueType::value) {
+				auto x = _result[i].x;
 
-		bool is_valid() const {
-			return _m_now && _m_child_pos_in_parent.empty() == false && _m_child_pos_in_parent.back() < _m_now->get_data_size();
-		}
+				if (x.is_in_object()) {
+					auto temp = x;
+					temp.with_key();
+					auto temp_type = temp.next();
 
-		_Value& now() {
-			if (_m_now) {
-				return _m_now->get_value_list(_m_child_pos_in_parent.back());
+					result.push_back(DiffResult{ _result[i].line, temp, temp_type, _result[i].y, _result[i].y_type, - 1, temp.get_now()->clone()});
+				}
+				result.emplace_back(_result[i].line, x, _result[i].x_type, _result[i].y, _result[i].y_type,  - 1, x.get_now()->clone());
 			}
-			static _Value null_data(nullptr, false);
-			return null_data;
+			else {
+				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, _result[i].y, _result[i].y_type, -1, _result[i].data.clone());
+			}
 		}
+	}
 
-	public:
-		JsonIterator(Structured* arr_or_obj) : _m_now(arr_or_obj) {
-			_m_child_pos_in_parent.push_back(0);
+	_result.clear();
+
+
+	++line;
+
+	// delete -
+	if (!x.is_end()) {
+		//temp.clear();
+		while (true) {
+			x.next();
+			if (x.is_end()) {
+				break;
+			}
+			result.emplace_back(line, x, ValueType::none, y, ValueType::none, -1, x.get_now()->clone());
 		}
-	private:
-		Structured* _m_now = nullptr;
-		std::vector<size_t> _m_child_pos_in_parent;
-	};
+	}
+	// added +
+	if (!y.is_end()) {
+		//temp.clear();
+		while (true) {
+			if (y.is_end()) {
+				break;
+			}
+
+			result.emplace_back(line, x, ValueType::none, y, ValueType::none, +1, y.get_now()->clone());
+
+			y.next();
+		}
+	}
+
+	return result;
+}
+
+void diff_test2() {
+	std::cout << "diff test\n";
+
+	std::string json1 = "{ \"test\" : 1, \"abc\" : [ 1,2,3] }";
+	std::string json2 = "{ \"abc\" : [ 2,4,5] }";
+
+	claujson::Document x, y;
+	claujson::parser p;
+	p.parse_str(json1, x, 0);
+	p.parse_str(json2, y, 0);
+
+	std::cout << x.Get() << "\n";
+	std::vector<DiffResult> z = Diff(x.Get(), y.Get());
+	std::cout << z.size() << "\n";
+	for (auto& x : z) {
+		std::cout << x.type  << " " << x.data << "\n";
+	}
+	//int* yy = new int[100];
+	//claujson::clean(x);
+	//claujson::clean(y);
+	//claujson::clean(z);
 }
 */
 
@@ -187,8 +542,20 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 
-	diff_test();
-
+	//diff_test();
+	std::cout << "----------\n";
+	//diff_test2();
+	std::cout << "----------\n";
+	{
+		claujson::Array arr;
+		arr.add_element(claujson::_Value(1));
+		arr.add_element(claujson::_Value(3));
+		arr.insert(1, claujson::_Value(2));
+		for (auto& x : arr) {
+			std::cout << x << " ";
+		}
+		std::cout << "\n";
+	}
 	/*
 	std::cout << sizeof(claujson::_Value) << "\n";
 	std::cout << sizeof(claujson::Array) << "\n";
