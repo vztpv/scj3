@@ -3236,7 +3236,7 @@ namespace claujson {
 	object_begin:
 		//log_start_value("object");
 		depth++;
-
+		count[no] = 0;
 		{
 			if (idx > last) {
 				goto document_end;
@@ -3286,7 +3286,7 @@ namespace claujson {
 			auto value = buf[simdjson_imple->structural_indexes[idx++]];
 			switch (value) {
 			case '{': if (buf[simdjson_imple->structural_indexes[idx]] == '}') {
-				++idx;// count[no++] = 0;
+				++idx;count[no++] = 0;
 				break;
 			}
 					goto object_begin;
@@ -3430,7 +3430,8 @@ namespace claujson {
 		// Array parser states
 		//
 	array_begin:
-
+		
+		count[no] = 0;
 		{
 			if (idx > last) {
 				goto document_end;
@@ -4348,7 +4349,7 @@ namespace claujson {
 					std_vector<std::future<bool>> thr_result(_set.size());
 					//int err = 0;
 
-					count_vec = (uint64_t*)calloc(length, sizeof(uint64_t));
+					count_vec = (uint64_t*)malloc(length * sizeof(uint64_t));
 					if (!count_vec) {
 						log << "calloc fail in parse function.";
 						return { false, -55 };
@@ -4658,7 +4659,7 @@ namespace claujson {
 
 				std_vector<Vector<int8_t>> is_array(_set.size()), is_virtual_array(_set.size());
 				std_vector<std::future<bool>> thr_result(_set.size());
-				count_vec = (uint64_t*)calloc(length, sizeof(uint64_t));
+				count_vec = (uint64_t*)malloc(length * sizeof(uint64_t));
 				if (!count_vec) {
 					log << "calloc fail in parse_str function.";
 					return { false, -55 };

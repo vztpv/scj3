@@ -542,7 +542,7 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 
-	//diff_test();
+	diff_test();
 	std::cout << "----------\n";
 	//diff_test2();
 	std::cout << "----------\n";
