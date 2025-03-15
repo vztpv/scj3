@@ -4351,7 +4351,7 @@ namespace claujson {
 
 					count_vec = (uint64_t*)malloc(length * sizeof(uint64_t));
 					if (!count_vec) {
-						log << "calloc fail in parse function.";
+						log << "malloc fail in parse function.";
 						return { false, -55 };
 					}
 
@@ -4661,7 +4661,7 @@ namespace claujson {
 				std_vector<std::future<bool>> thr_result(_set.size());
 				count_vec = (uint64_t*)malloc(length * sizeof(uint64_t));
 				if (!count_vec) {
-					log << "calloc fail in parse_str function.";
+					log << "malloc fail in parse_str function.";
 					return { false, -55 };
 				}
 				for (uint64_t i = 0; i < _set.size(); ++i) {
