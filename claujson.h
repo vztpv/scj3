@@ -428,7 +428,7 @@ namespace claujson {
 			}
 		}
 
-		 StructuredPtr(nullptr_t) : arr(nullptr), type(0) {
+		 StructuredPtr(std::nullptr_t) : arr(nullptr), type(0) {
 			 //
 		 }
 		 StructuredPtr(Array* arr) : arr(arr), type(1)
@@ -525,16 +525,16 @@ namespace claujson {
 		void erase(uint64_t idx, bool real = false);
 		void erase(const _Value& key, bool real = false);
 
-		bool operator==(nullptr_t) {
+		bool operator==(std::nullptr_t) {
 			return !arr;
 		}
 		bool operator==(StructuredPtr p) {
 			return arr == p.arr && type == p.type;
 		}
-		bool operator!=(nullptr_t) {
+		bool operator!=(std::nullptr_t) {
 			return arr;
 		}
-		void operator=(nullptr_t) {
+		void operator=(std::nullptr_t) {
 			arr = nullptr;
 			type = 0;
 		}
