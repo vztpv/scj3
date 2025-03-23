@@ -5280,7 +5280,7 @@ namespace claujson {
 				delete x.as_partial_json();
 			}
 
-			x.set_null();
+			x.set_none();
 		}
 	}
 

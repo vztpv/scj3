@@ -247,6 +247,8 @@ namespace claujson {
 
 		void set_null();
 
+		void set_none();
+
 		// chk!! with clauscript++?
 		std::string convert_primitive_to_std_string() {
 			if (is_int()) {

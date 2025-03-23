@@ -546,6 +546,17 @@ namespace claujson {
 		set_type(_ValueType::NULL_);
 	}
 
+	void _Value::set_none() {
+		if (!is_valid()) {
+			return;
+		}
+		if (is_str()) {
+			_str_val.clear();
+		}
+
+		set_type(_ValueType::NONE);
+	}
+
 	void _Value::set_type(_ValueType type) {
 		this->_type = type;
 	}
