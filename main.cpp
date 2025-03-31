@@ -103,21 +103,315 @@ void diff_test() {
 	//claujson::clean(z);
 }
 
-/*
+
+class Explorer {
+private:
+	claujson::_Value* root = nullptr;
+	std::vector<std::pair<uint64_t, claujson::_Value*>> _stack;
+
+public:
+	Explorer(claujson::_Value* root) : root(root) {
+		if (root->is_primitive()) {
+			_stack.push_back({ 0, nullptr });
+		}
+		else {
+			_stack.push_back({ 0, root });
+		}
+	}
+	Explorer() {
+		//
+	}
+
+public:
+	bool empty() const {
+		return _stack.empty();
+	}
+	claujson::_Value* Now() {
+		return _stack.back().second;
+	}
+
+	const claujson::_Value* Now() const {
+		return _stack.back().second;
+	}
+
+public:
+	bool IsPrimitiveRoot() const {
+		return root->is_primitive();
+	}
+
+	uint64_t GetIdx() const {
+		if (_stack.empty()) { return 0; }
+		return _stack.back().first;
+	}
+
+	void SetIdx(const uint64_t idx) {
+		if (_stack.empty()) { return; }
+		_stack.back().first = idx;
+	}
+
+	claujson::_Value& Get() {
+		if (IsPrimitiveRoot()) {
+			return *root;
+		}
+		return claujson::StructuredPtr(Now()->as_structured_ptr()).get_value_list(GetIdx());
+	}
+
+	const claujson::_Value& Get() const {
+		if (IsPrimitiveRoot()) {
+			return *root;
+		}
+		return claujson::StructuredPtr(Now()->as_structured_ptr()).get_value_list(GetIdx());
+	}
+
+	const claujson::_Value& GetKey() const {
+		static claujson::_Value nkey(nullptr, false);
+		if (!Now() || claujson::StructuredPtr(Now()->as_structured_ptr()).is_array()) {
+			return nkey;
+		}
+		return claujson::StructuredPtr(Now()->as_structured_ptr()).get_const_key_list(GetIdx());
+	}
+
+	void ChangeKey(claujson::Value new_key) {
+		if (Now()) {
+			claujson::StructuredPtr(Now()->as_structured_ptr()).change_key(GetKey(), std::move(new_key));
+		}
+	}
+
+	void Delete() {
+		if (Now()) {
+			claujson::StructuredPtr(Now()->as_structured_ptr()).erase(GetIdx(), true);
+		}
+	}
+
+	void Enter() {
+		if (Get().is_structured()) {
+			_stack.push_back({ 0, &Get() });
+		}
+	}
+
+	void Quit() {
+		if (_stack.empty()) {
+			return;
+		}
+		_stack.pop_back();
+	}
+
+	// Group <- Array or Object!
+	bool IsEndOfGroup() { // END Of GROUP?
+		if (IsPrimitiveRoot()) {
+			return true;
+		}
+		if (Now() == nullptr) {
+			return true;
+		}
+		return GetIdx() >= claujson::StructuredPtr(Now()->as_structured_ptr()).get_data_size();
+	}
+
+	bool Next() {
+		if (!IsEndOfGroup()) {
+			SetIdx(GetIdx() + 1);
+			return true;
+		}
+		return false;
+	}
+
+	// todo - goto using json pointer?, dir is STRING or UNSIGNED_INTEGER
+	void Goto(const std::vector<claujson::_Value>& dir) {
+		//
+	}
+
+	void Dump(std::ostream& out) {
+		Dump(out, this);
+	}
+	// check.. cf) simdjson`s Dump?
+	void Dump(std::ostream& out, Explorer* exp) {
+		while (!IsEndOfGroup()) {
+			if (GetKey().is_str()) {
+				out << GetKey() << " : ";
+			}
+			if (Get().is_primitive()) {
+				out << Get() << " ";
+			}
+			else {
+				if (Get().is_array()) {
+					out << " [ ";
+				}
+				else {
+					out << " { ";
+				}
+
+				Enter();
+
+				Dump(out, exp);
+
+				Quit();
+
+				if (Get().is_array()) {
+					out << " ] \n";
+				}
+				else {
+					out << " } \n";
+				}
+			}
+			Next();
+		}
+	}
+};
+
 enum class ValueType {
 	none,
 	end_of_container,
 	end_of_document,
 	container, // array or object
-	item,
 	key,
 	value
 };
 
+std::ostream& operator<<(std::ostream& out, ValueType t) {
+	switch (t) {
+	case ValueType::none: {
+		out << "NONE";
+		break;
+	}
+	case ValueType::end_of_container: {
+		out << "end of container";
+		break;
+	}
+	case ValueType::end_of_document: {
+		out << "end of document";
+		break;
+	}
+	case ValueType::container: {
+		out << "container";
+		break;
+	}
+	case ValueType::key: {
+		out << "key";
+		break;
+	}
+	case ValueType::value: {
+		out << "value";
+		break;
+	}
+	}
+	return out;
+}
 class ClauJsonTraverser {
-	// todo!
-};
+private:
+	Explorer traverser;
+	int state = 0;
+	ValueType type = ValueType::none;
+public:
+	ClauJsonTraverser(claujson::_Value* v) : traverser(v), state(0), type(ValueType::none) {
+		//
+	}
 
+public:
+	bool empty() const {
+		return traverser.empty();
+	}
+	bool is_in_array() const {
+		return traverser.Now()->is_array();
+	}
+	bool is_in_object() const {
+		return traverser.Now()->is_object();
+	}
+	ValueType get_type() const {
+		return type;
+	}
+	const claujson::_Value* get_now() const {
+		if (state == 3) {
+			return &traverser.GetKey();
+		}
+		return &traverser.Get();
+	}
+
+	bool is_end() const {
+		return state == 1;
+	}
+
+	void with_key() {
+		state = 2;
+	}
+
+	ValueType next(bool flag1 = true, bool flag2 = true) {
+		if (state == 1) {
+			return type = ValueType::end_of_document;
+		}
+		// Init?
+		if (state == 0) {
+			// ex) "string"  ex) 1 ex) 3.14
+			if (traverser.Now() == nullptr) {
+				state = 1;
+				return type = ValueType::value;
+			}
+			else {
+				state = 4;
+				return type = ValueType::container;
+			}
+		}
+
+		if (state == 2 && flag2) {
+			traverser.Next();
+		}
+
+		if (traverser.IsEndOfGroup()) {
+			state = 2;
+			traverser.Quit();
+			if (traverser.empty() == false) {
+				//traverser.Next();
+				return type = ValueType::end_of_container;
+			}
+			else {
+				state = 1;
+				return type = ValueType::end_of_container;
+			}
+		}
+
+		if (state == 3) {
+			if (traverser.Get().is_structured()) {
+				state = 4;
+				return type = ValueType::container;
+			}
+			else {
+				state = 2;
+				//traverser.Next();
+				return type = ValueType::value;
+			}
+		}
+
+		if (state == 4) {
+			if (flag1) {
+				traverser.Enter();
+			}
+			state = 2;
+			return type = next(flag1, false);
+		}		
+
+		if (state == 2) {
+			if (traverser.GetKey().is_valid()) {
+				state = 3;
+				return type = ValueType::key;
+			}
+			else {
+				if (traverser.Get().is_structured()) {
+					state = 4;
+					return type = ValueType::container;
+				}
+				else {
+					state = 2;
+					//traverser.Next();
+					return type = ValueType::value;
+				}
+			}
+		}
+
+		state = 1;
+		return type = ValueType::end_of_document;
+	}
+
+};
+/*
 class DiffResult {
 public:
 	ClauJsonTraverser x;
@@ -137,7 +431,7 @@ public:
 	}
 };
 
-std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::StructuredPtr after) {
+std::vector<DiffResult> Diff(claujson::_Value* before, claujson::_Value* after) {
 	std::vector<DiffResult> result;
 
 	if (before == nullptr || after == nullptr) {
@@ -152,6 +446,9 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 
 	ClauJsonTraverser x = iter_before;
 	ClauJsonTraverser y = iter_after;
+
+	ClauJsonTraverser _x = x;
+	ClauJsonTraverser _y = y;
 
 	ClauJsonTraverser __x = x;
 	ClauJsonTraverser __y = y;
@@ -181,14 +478,9 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 			if (type == ValueType::end_of_document) {
 				break;
 			}
-			
-			std::cout << (int)type << " ";
-			if (type == ValueType::key) {
-				std::cout << "(key)";
-			}
-			else if (type == ValueType::value) {
-				std::cout << ("value");
-			}
+
+			std::cout << type << " ";
+			//std::cout << *test_a.get_now();
 			std::cout << "\n";
 		}
 	}
@@ -212,33 +504,30 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 
 		{
 			if (x_type == y_type) {
-				if (x_type == ValueType::container ||
-							x_type == ValueType::end_of_container) {
-					x_type = x.next();
-					y_type = y.next();
+				if (x_type == ValueType::container || // array, object!
+					x_type == ValueType::end_of_container) { // end_array, end_object!
 					continue;
 				}
 
 				if (*x.get_now() == *y.get_now()) {
-					x_type = x.next();
-					y_type = y.next();
 					continue;
 				}
 			}
-
+			std::cout << " chk " << x_type << " " << y_type << "\n";
+			std::cout << *x.get_now() << "-----" << *y.get_now() << "\n";
 			{
 				__x = x;
 				__y = y;
-	
+
 				size_t count__x = 0;
 				size_t count__y = 0;
 
 				// find same value position.
 				if (x_type == ValueType::key || x_type == ValueType::value) {
-					before_map.insert({ __x.get_now(), count__x });
+					before_map.insert({ *__x.get_now(), count__x });
 				}
 				if (y_type == ValueType::key || y_type == ValueType::value) {
-					after_map.insert({ __y.get_now(), count__y });
+					after_map.insert({ *__y.get_now(), count__y });
 				}
 
 				{
@@ -246,7 +535,6 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 					bool pass = false;
 					int state = 0;
 					int state2 = 0;
-
 
 					auto __x_type = ValueType::none;
 					auto __y_type = ValueType::none;
@@ -272,13 +560,13 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 							}
 							state = 0;
 
-							before_map.insert({ __x.get_now(), count__x});
+							before_map.insert({ *__x.get_now(), count__x });
 
 							// if found same value?
-							if (after_map.end() != after_map.find(__x.get_now())) {
+							if (after_map.end() != after_map.find(*__x.get_now())) {
 								pass = true;
-								same_value = __x.get_now();
-								count__y = after_map.find(__x.get_now())->second;
+								same_value = *__x.get_now();
+								count__y = after_map.find(*__x.get_now())->second;
 
 								if (__y_type == ValueType::key || __y_type == ValueType::value) {
 								}
@@ -304,13 +592,13 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 							}
 							state2 = 0;
 
-							after_map.insert({ __y.get_now(), count__y });
+							after_map.insert({ *__y.get_now(), count__y });
 
 							// if found same value?
-							if (before_map.end() != before_map.find(__y.get_now())) {
+							if (before_map.end() != before_map.find(*__y.get_now())) {
 								pass = true;
-								same_value = __y.get_now();
-								count__x = before_map.find(__y.get_now())->second;
+								same_value = *__y.get_now();
+								count__x = before_map.find(*__y.get_now())->second;
 
 								if (__x_type == ValueType::key || __x_type == ValueType::value) {
 								}
@@ -328,86 +616,46 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 					// found same value,
 					if (pass) {
 
-						before_x = x;
-						if (state == 1) {
-
-							x_type = x.next();
-
-							state = 0;
-						}
-						before_y = y;
-						if (state2 == 2) {
-
-							y_type = y.next();
-
-							state2 = 0;
-						}
-
 						temp_x = x;
 						temp_y = y;
 
+						before_x = x;
+						before_y = y;
+
 						line++;
+						temp_y = before_y;
 
-						int state = 0;
-
-						while (*(temp = x.get_now()) != *same_value) {
-
+						while (!x.is_end() && *(temp = *x.get_now()) != *same_value) {
+							std::cout << "chk:::::" << *temp << " " << *same_value << "\n";
 							result.emplace_back(line, x, x_type, temp_y, y_type, -1, temp->clone());
 
 							before_x = x;
 
-							if (x_type == ValueType::key) {
-								x_type = x.next();
-								if (x_type == ValueType::value) {
-									before_x = x;
-
-									if (*x.get_now() == *same_value) {
-										x_type = x.next();
-										break;
-									}
-
-									x_type = x.next();
-								}
-							}
-							else {
-								x_type = x.next();
-							}
-
+							x_type = x.next();
 						}
-
-						state = 0;
 
 						temp_x = before_x;
 
-						while (*(temp = y.get_now()) != *same_value) {
+						while (!y.is_end() && *(temp = *y.get_now()) != *same_value) {
+							std::cout << "chk:::::" << *temp << " " << *same_value << "\n";
 
 							result.emplace_back(line, temp_x, x_type, y, y_type, +1, temp->clone());
 
 							before_y = y;
 
-							if (y_type == ValueType::key) {
-								y_type = y.next();
-								if (y_type == ValueType::value) {
-									before_y = y;
-
-									if (*y.get_now() == *same_value) {
-										y_type = y.next();
-										break;
-									}
-
-									y_type = y.next();
-								}
-							}
-							else {
-								y_type = y.next();
-							}
+							y_type = y.next();
 						}
+
+						_x = x;
+						_y = y;
+
+						_x.next();
+						_y.next();
 					}
 				}
 			}
 		}
 	}
-
 
 	auto _result = std::move(result);
 	result.clear();
@@ -417,8 +665,8 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 			if (_result[i].y_type == ValueType::key) {
 				auto& y = _result[i].y;
 
-				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, y, _result[i].y_type, 
-										+1, y.get_now()->clone());				
+				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, y, _result[i].y_type,
+					+1, y.get_now()->clone());
 				auto y_type = y.next();
 				if (y_type == ValueType::value) {
 					result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, y, y_type, +1, y.get_now()->clone());
@@ -436,7 +684,7 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 
 					result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, temp, temp_type, +1, y.get_now()->clone());
 				}
-				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type,  y, _result[i].y_type, +1, y.get_now()->clone());
+				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, y, _result[i].y_type, +1, y.get_now()->clone());
 			}
 			else {
 				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, _result[i].y, _result[i].y_type, +1, _result[i].data.clone());
@@ -446,12 +694,12 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 			if (_result[i].x_type == ValueType::key) {
 				auto x = _result[i].x;
 
-				result.emplace_back(_result[i].line, x, _result[i].x_type, _result[i].y, _result[i].y_type, - 1, x.get_now()->clone());
-			
+				result.emplace_back(_result[i].line, x, _result[i].x_type, _result[i].y, _result[i].y_type, -1, x.get_now()->clone());
+
 				auto x_type = x.next();
 
 				if (x_type == ValueType::value) {
-					result.emplace_back(_result[i].line, x, x_type, _result[i].y, _result[i].y_type,  - 1, x.get_now()->clone());
+					result.emplace_back(_result[i].line, x, x_type, _result[i].y, _result[i].y_type, -1, x.get_now()->clone());
 				}
 			}
 			else if (_result[i].x_type == ValueType::value) {
@@ -462,9 +710,9 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 					temp.with_key();
 					auto temp_type = temp.next();
 
-					result.push_back(DiffResult{ _result[i].line, temp, temp_type, _result[i].y, _result[i].y_type, - 1, temp.get_now()->clone()});
+					result.push_back(DiffResult{ _result[i].line, temp, temp_type, _result[i].y, _result[i].y_type, -1, temp.get_now()->clone() });
 				}
-				result.emplace_back(_result[i].line, x, _result[i].x_type, _result[i].y, _result[i].y_type,  - 1, x.get_now()->clone());
+				result.emplace_back(_result[i].line, x, _result[i].x_type, _result[i].y, _result[i].y_type, -1, x.get_now()->clone());
 			}
 			else {
 				result.emplace_back(_result[i].line, _result[i].x, _result[i].x_type, _result[i].y, _result[i].y_type, -1, _result[i].data.clone());
@@ -478,27 +726,60 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 	++line;
 
 	// delete -
-	if (!x.is_end()) {
+	if (!_x.is_end()) {
 		//temp.clear();
 		while (true) {
-			x.next();
-			if (x.is_end()) {
+			do {
+				ValueType type = _x.get_type();
+				if (type == ValueType::end_of_container) {
+					_x.next();
+				}
+				else {
+					break;
+				}
+			} while (true);
+
+			if (_x.is_end()) {
 				break;
 			}
-			result.emplace_back(line, x, ValueType::none, y, ValueType::none, -1, x.get_now()->clone());
+
+			result.emplace_back(line, _x, ValueType::none, _y, ValueType::none, -1, _x.get_now()->clone());
+			if (_x.get_type() == ValueType::container) {
+				_x.next(false, true); // no enter!
+			}
+			else {
+				_x.next();
+			}
 		}
 	}
 	// added +
-	if (!y.is_end()) {
+	if (!_y.is_end()) {
+	
 		//temp.clear();
 		while (true) {
-			if (y.is_end()) {
+			
+			do {
+				ValueType type = _y.get_type();
+				if (type == ValueType::end_of_container) {
+					_y.next();
+				}
+				else {
+					break;
+				}
+			} while (true);
+			
+			if (_y.is_end()) {
 				break;
 			}
+			
+			result.emplace_back(line, _x, ValueType::none, _y, ValueType::none, +1, _y.get_now()->clone());
+			if (_y.get_type() == ValueType::container) {
+				_y.next(false, true); // no enter!
+			}
+			else {
+				_y.next();
+			}
 
-			result.emplace_back(line, x, ValueType::none, y, ValueType::none, +1, y.get_now()->clone());
-
-			y.next();
 		}
 	}
 
@@ -508,8 +789,8 @@ std::vector<DiffResult> Diff(claujson::StructuredPtr before, claujson::Structure
 void diff_test2() {
 	std::cout << "diff test\n";
 
-	std::string json1 = "{ \"test\" : 1, \"abc\" : [ 1,2,3] }";
-	std::string json2 = "{ \"abc\" : [ 2,4,5] }";
+	std::string json1 = "{ \"abc\" : [ 1,2,3] }";
+	std::string json2 = "{ \"test\" : 1, \"abc\" : [ 2,4,5] }";
 
 	claujson::Document x, y;
 	claujson::parser p;
@@ -517,22 +798,23 @@ void diff_test2() {
 	p.parse_str(json2, y, 0);
 
 	std::cout << x.Get() << "\n";
-	std::vector<DiffResult> z = Diff(x.Get(), y.Get());
+	std::vector<DiffResult> z = Diff(&x.Get(), &y.Get());
 	std::cout << z.size() << "\n";
 	for (auto& x : z) {
-		std::cout << x.type  << " " << x.data << "\n";
+		std::cout << x.type << " " << x.data << "\n";
 	}
 	//int* yy = new int[100];
 	//claujson::clean(x);
 	//claujson::clean(y);
 	//claujson::clean(z);
 }
+
 */
 
 int main(int argc, char* argv[])
 {
 	{
-	//	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+		//	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 		std::cout << sizeof(std::vector<std::pair<claujson::_Value, claujson::_Value>>) << "\n";
 		//std::cout << sizeof(std::string) << " " << sizeof(claujson::Structured) << " " << sizeof(claujson::Array)
@@ -543,10 +825,44 @@ int main(int argc, char* argv[])
 			return 2;
 		}
 
+		// test Explorer.Dump
+		if (0) {
+			claujson::Document d;
+			claujson::parser p;
+			p.parse(argv[1], d, 1);
+
+			Explorer test(&d.Get());
+			std::ofstream out("test.json", std::ios::binary);
+			test.Dump(out);
+			out.close();
+		}
+		std::cout << "----------" << std::endl;
+		if (0) {
+			claujson::Document d;
+			claujson::parser p;
+
+			p.parse(argv[1], d, 1);
+
+			ClauJsonTraverser test(&d.Get());
+
+			std::ofstream out("test.txt", std::ios::binary);
+
+			ValueType type; int count = 0;
+			while ((type = test.next()) != ValueType::end_of_document) {
+				//std::cout << (type) << "\n";
+				//std::cout << (++count) << std::endl;
+			//	getchar();
+			}
+			std::cout << "\n";
+			out.close();
+		}
+		std::cout << "----------" << std::endl;
 		diff_test();
-		std::cout << "----------\n";
-		//diff_test2();
-		std::cout << "----------\n";
+		std::cout << "----------" << std::endl;
+	//	diff_test2(); // chk bug..
+		std::cout << "----------" << std::endl;
+
+	//	return 0;
 		{
 			claujson::Array arr;
 			arr.add_element(claujson::_Value(1));
