@@ -1088,22 +1088,45 @@ int main(int argc, char* argv[])
 									continue;
 								}
 								for (auto& feature : *features_arr) { // feature["geometry"sv] <- no utf-8 str chk?, at("geometry"sv) : check valid utf-8 str?
-									auto& coordinate = feature[_geometry][_coordinates][0];  // feature.json_pointerB(vec)[0];  
-									claujson::Array* coordinate_arr = coordinate.as_array();
-									if (!coordinate_arr) {
-										continue;
-									}
-									for (auto& coordinate_ : *coordinate_arr) {
-										claujson::Array* coordinate__arr = coordinate_.as_array();
-										if (!coordinate__arr) {
-											continue;
-										}
-										for (auto& x : *coordinate__arr) {
-											if (x.is_float()) {
-												sum += x.float_val();
-												x.set_int(x.float_val());
-												//x.set_str(u8"te한st", 7);
-												counter++;
+									if (feature[_geometry][_coordinates].as_array()) {
+										for (int i = 0; i < feature[_geometry][_coordinates].as_array()->size(); ++i) {
+											auto& coordinate = feature[_geometry][_coordinates][i];  // feature.json_pointerB(vec)[0];  
+
+											claujson::Array* coordinate_arr = coordinate.as_array();
+											if (!coordinate_arr) {
+												continue;
+											}
+											for (auto& coordinate_ : *coordinate_arr) {
+												claujson::Array* coordinate__arr = coordinate_.as_array();
+												if (!coordinate__arr) {
+													continue;
+												}
+												for (auto& x : *coordinate__arr) {
+													if (x.is_float()) {
+														sum += x.float_val();
+														x.set_int(1); // x.float_val());
+														//x.set_str(u8"te한st", 7);
+														counter++;
+													}
+													else if (x.is_array()) {
+														for (auto& y : *x.as_array()) {
+															if (y.is_float()) {
+																sum += y.float_val();
+																y.set_int(1); // x.float_val());
+																//x.set_str(u8"te한st", 7);
+																counter++;
+															}
+														}
+													}
+												}
+											}
+											for (auto& x : *coordinate_arr) {
+												if (x.is_float()) {
+													sum += x.float_val();
+													x.set_int(1); // x.float_val());
+													//x.set_str(u8"te한st", 7);
+													counter++;
+												}
 											}
 										}
 									}
@@ -1124,7 +1147,28 @@ int main(int argc, char* argv[])
 					dur = std::chrono::duration_cast<std::chrono::milliseconds>(dd - c);
 					std::cout << "clean " << dur.count() << "ms\n";
 
-					w.write_parallel("test2333.json", j.Get(), 0, true);
+					w.write_parallel("test2333.json", j.Get(), thr_num, true);
+
+					if (1) {
+
+						claujson::Document x;
+						auto result = p.parse("test2333.json", x, thr_num);
+
+						if (!result.first) {
+							return 1;
+						}
+
+						//
+						claujson::Document _diff = claujson::diff(j.Get(), x.Get());
+
+						if (_diff.Get().is_valid() && _diff.Get().as_structured_ptr() && _diff.Get().as_array()->empty() == false) {
+							std::cout << _diff.Get() << "\n";
+							std::cout << "diff \n"; //return 1;
+						}
+						else {
+							std::cout << "same";
+						}
+					}
 					return 0;
 
 
