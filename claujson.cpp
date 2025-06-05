@@ -4570,11 +4570,7 @@ namespace claujson {
 		auto _ = std::chrono::steady_clock::now();
 		uint64_t* count_vec = nullptr;
 		{
-		
-			// not static?
-			static _simdjson::dom::parser_for_claujson test;
-
-			auto x = test.parse(str.data(), str.length());
+			auto x = test_.parse(str.data(), str.length());
 
 			if (x.error() != _simdjson::error_code::SUCCESS) {
 				log << warn << "stage1 error : ";
@@ -4582,9 +4578,9 @@ namespace claujson {
 
 				return { false, 0 };
 			}
-			const auto& buf = test.raw_buf();
-			const auto buf_len = test.raw_len();
-			auto* simdjson_imple_ = test.raw_implementation().get();
+			const auto& buf = test_.raw_buf();
+			const auto buf_len = test_.raw_len();
+			auto* simdjson_imple_ = test_.raw_implementation().get();
 
 			std_vector<int64_t> start(thr_num + 1, 0);
 			//std_vector<int> key;
@@ -4665,7 +4661,7 @@ namespace claujson {
 					return { false, -55 };
 				}
 				for (uint64_t i = 0; i < _set.size(); ++i) {
-					thr_result[i] = pool->enqueue(is_valid2, std::ref(test), start[i], last[i], &start_state[i], &last_state[i],
+					thr_result[i] = pool->enqueue(is_valid2, std::ref(test_), start[i], last[i], &start_state[i], &last_state[i],
 						&is_array[i], &is_virtual_array[i], count_vec);
 				}
 				std_vector<int> vec(_set.size());
@@ -5153,25 +5149,25 @@ namespace claujson {
 			uint64_t key_idx = obj->find(_key_str);
 
 			if (op_idx == Object::npos) {
-				clean(result);
+				//clean(result);
 				return unvalid_data;
 			}
 
 			if (path_idx == Object::npos) {
-				clean(result);
+				//clean(result);
 				return unvalid_data;
 			}
 
 			if (obj->get_value_list(op_idx).str_val() == "replace"sv) {
 				if (value_idx == Object::npos) {
-					clean(result);
+					//clean(result);
 					return unvalid_data;
 				}
 
 				std_vector<_Value> vec;
 				const Array* arr = obj->get_value_list(path_idx).as_array();
 				if (arr == nullptr) {
-					clean(result);
+					//clean(result);
 					return unvalid_data;
 				}
 				for (uint64_t i = 0; i < arr->size(); ++i) {
@@ -5185,7 +5181,7 @@ namespace claujson {
 				std_vector<_Value> vec;
 				const Array* arr = obj->get_value_list(path_idx).as_array();
 				if (arr == nullptr) {
-					clean(result);
+					//clean(result);
 					return unvalid_data;
 				}
 				for (uint64_t i = 0; i < arr->size(); ++i) {
@@ -5197,14 +5193,14 @@ namespace claujson {
 				// case : result.json_pointer returns root?
 				if (!parent) {
 					if (result.is_structured()) {
-						clean(result);
+						//clean(result);
 					}
 					result.clear(false);
 				}
 				else if (parent.is_array()) {
 					uint64_t last_idx_idx = obj->find(_last_idx_str);
 					if (last_idx_idx == Object::npos) {
-						clean(result);
+						//clean(result);
 						return unvalid_data;
 					}
 
@@ -5216,7 +5212,7 @@ namespace claujson {
 				else {
 					uint64_t last_key_idx = obj->find(_last_key_str);
 					if (last_key_idx == Object::npos) {
-						clean(result);
+						//clean(result);
 						return unvalid_data;
 					}
 
@@ -5228,14 +5224,14 @@ namespace claujson {
 			}
 			else if (obj->get_value_list(op_idx).str_val() == "add"sv) {
 				if (value_idx == Object::npos) {
-					clean(result);
+					//clean(result);
 					return unvalid_data;
 				}
 
 				std_vector<_Value> vec;
 				const Array* arr = obj->get_value_list(path_idx).as_array();
 				if (arr == nullptr) {
-					clean(result);
+					//clean(result);
 					return unvalid_data;
 				}
 				for (uint64_t i = 0; i < arr->size(); ++i) {
@@ -5256,7 +5252,7 @@ namespace claujson {
 					}
 					else if (parent.is_object()) {
 						if (key_idx == Object::npos) {
-							clean(result);
+							//clean(result);
 							return unvalid_data;
 						}
 						parent.add_object_element(obj->get_value_list(key_idx).clone(), obj->get_value_list(value_idx).clone());
