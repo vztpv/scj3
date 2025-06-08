@@ -4253,6 +4253,7 @@ namespace claujson {
 
 			log << info << "simdjson-stage1 start\n";
 			// not static??
+
 			auto x = test_.load(fileName);
 
 			if (x.error() != _simdjson::error_code::SUCCESS) {
@@ -4436,7 +4437,7 @@ namespace claujson {
 
 			LoadData2 p(pool.get());
 						
-			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, 
+			if (false == p.parse(ut, buf, buf_len, simdjson_imple_, length, start, count_vec, 
 				thr_num)) // 0 : use all thread..
 			{
 				free(count_vec);
@@ -4738,7 +4739,7 @@ namespace claujson {
 
 			LoadData2 p(pool.get());
 
-			if (false == p.parse(ut, buf.get(), buf_len, simdjson_imple_, length, start, count_vec, 
+			if (false == p.parse(ut, buf, buf_len, simdjson_imple_, length, start, count_vec, 
 				thr_num)) // 0 : use all thread..
 			{
 				free(count_vec);

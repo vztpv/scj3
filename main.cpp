@@ -968,7 +968,7 @@ int main(int argc, char* argv[])
 				bool ok;
 				//try
 				{
-					if (0) {
+					if (1) {
 						auto a = std::chrono::steady_clock::now();
 
 						static	_simdjson::dom::parser test;
@@ -1003,8 +1003,7 @@ int main(int argc, char* argv[])
 					auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 					std::cout << "total " << dur.count() << "ms\n";
 					//	return 0;
-
-						//	continue;
+		
 					auto c = std::chrono::steady_clock::now();
 					{
 						auto z = j.Get().clone();
@@ -1018,7 +1017,6 @@ int main(int argc, char* argv[])
 
 					//return 0;
 
-				//	continue;
 					//debug test
 				//	//std::cout << j << "\n";
 				//	std::cout << "chk\n";
