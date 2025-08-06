@@ -530,6 +530,9 @@ namespace claujson {
 			return arr == other.arr && type == other.type;
 		}
 
+
+		void null_parent();
+
 		bool is_array() const {
 			return type == 1;
 		}

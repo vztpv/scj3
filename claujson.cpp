@@ -195,6 +195,16 @@
 			}
 			return false;
 		}
+
+
+		void StructuredPtr::null_parent() {
+			if (type == 1) {
+				arr->null_parent();
+			}
+			else if (type == 2) {
+				obj->null_parent();
+			}
+		}
 		
 		uint64_t StructuredPtr::find_by_key(const _Value & key) const{ // find without key`s converting ( \uxxxx )
 			if (type == 2) {

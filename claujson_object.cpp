@@ -217,6 +217,14 @@ namespace claujson {
 		return get_value_list(idx);
 	}
 
+
+
+	void Object::null_parent() {
+		int left = this->parent.left_type();
+		this->parent = Pointer(nullptr, left, 0);
+	}
+
+
 	StructuredPtr Object::get_parent() const {
 		int type = this->parent.right_type();
 		if (type == 1) {

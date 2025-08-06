@@ -92,7 +92,7 @@ namespace claujson {
 		void erase(const _Value& key, bool real = false);
 		void erase(uint64_t idx, bool real = false);
 
-
+		void null_parent();
 	private:
 		// here only used in parsing.
 

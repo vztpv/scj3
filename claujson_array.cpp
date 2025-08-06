@@ -212,6 +212,11 @@ namespace claujson {
 	}
 
 
+	void Array::null_parent() {
+		int left = this->parent.left_type();
+		this->parent = Pointer(nullptr, left, 0);
+	}
+
 	void Array::erase(const _Value& key, bool real) {
 		uint64_t idx = this->find(key);
 		erase(idx, real);
