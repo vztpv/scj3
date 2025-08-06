@@ -25,7 +25,8 @@ namespace claujson {
 
 
 	void Array::set_parent(StructuredPtr p) {
-		parent = p;
+		int _is_virtual = parent.left_type();
+		parent = Pointer(p.arr, _is_virtual, p.type);
 	}
 
 	_Value Array::Make() {
@@ -48,7 +49,7 @@ namespace claujson {
 			v._type = _ValueType::ERROR;
 			return v;
 		}
-		temp->_is_virtual = true;
+		temp->parent = Pointer(nullptr, 1, 0);
 		return _Value(temp);
 	}
 
@@ -91,8 +92,18 @@ namespace claujson {
 		return this->get_value_list(idx);
 	}
 
-	const StructuredPtr Array::get_parent() const {
-		return this->parent;
+	StructuredPtr Array::get_parent() const {
+		int type = this->parent.right_type();
+		if (type == 1) {
+			return { (Array*)this->parent.use() };
+		}
+		else if (type == 2) {
+			return { (Object*)this->parent.use() };
+		}
+		else if (type == 3) {
+			return { (PartialJson*)this->parent.use() };
+		}
+		return {};
 	}
 
 	uint64_t Array::get_data_size() const {
@@ -129,6 +140,7 @@ namespace claujson {
 	}
 
 	bool Array::is_virtual() const {
+		bool _is_virtual = parent.left_type();
 		return _is_virtual;
 	}
 	void Array::clear() {

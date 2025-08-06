@@ -4242,6 +4242,7 @@ namespace claujson {
 			thr_num = 1;
 		}
 
+		claujson::clean(d.Get());
 		_Value& ut = d.Get();
 
 		uint64_t length = 0;
@@ -5241,8 +5242,8 @@ namespace claujson {
 
 				_Value& _ = result.json_pointerB(vec);
 
-				if (_.is_array()) {
-					StructuredPtr parent = (_.as_array()->get_parent());
+				{
+					StructuredPtr parent = _;
 
 					// case : result.json_pointer returns root?
 					if (!parent) {

@@ -5,8 +5,7 @@ namespace claujson {
 	class Object {
 	protected:
 		std_vector<Pair<claujson::_Value, claujson::_Value>> obj_data;
-		StructuredPtr parent;
-		bool _is_virtual = false;
+		Pointer parent;
 
 	public:
 		static _Value data_null; // valid is false..
@@ -33,7 +32,7 @@ namespace claujson {
 
 		const _Value& operator[](uint64_t idx) const;
 
-		const StructuredPtr get_parent() const;
+		StructuredPtr get_parent() const;
 
 	public:
 		bool change_key(const _Value& key, Value new_key);

@@ -7,9 +7,8 @@ namespace claujson {
 	class Array {
 	protected:
 		std_vector<_Value> arr_vec;
-		StructuredPtr parent;
-		bool _is_virtual = false;
-
+		//StructuredPtr parent;
+		Pointer parent;
 
 		static _Value data_null; // valid is false..
 		static const uint64_t npos;
@@ -46,7 +45,7 @@ namespace claujson {
 
 		const _Value& operator[](uint64_t idx) const;
 
-		const StructuredPtr get_parent() const;
+		StructuredPtr get_parent() const;
 
 	public:
 

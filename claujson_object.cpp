@@ -79,7 +79,7 @@ namespace claujson {
 			v._type = _ValueType::ERROR;
 			return v;
 		}
-		obj->_is_virtual = true;
+		obj->parent = Pointer(nullptr, 1, 0);
 		return _Value(obj);
 	}
 
@@ -135,6 +135,7 @@ namespace claujson {
 	}
 
 	bool Object::is_virtual() const {
+		bool _is_virtual = parent.left_type();
 		return _is_virtual;
 	}
 
@@ -164,8 +165,9 @@ namespace claujson {
 	}
 
 
-	void Object::set_parent(StructuredPtr a) {
-		parent = (a);
+	void Object::set_parent(StructuredPtr p) {
+		int _is_virtual = parent.left_type();
+		parent = Pointer(p.arr, _is_virtual, p.type);
 	}
 
 
@@ -215,8 +217,18 @@ namespace claujson {
 		return get_value_list(idx);
 	}
 
-	const StructuredPtr Object::get_parent() const {
-		return parent;
+	StructuredPtr Object::get_parent() const {
+		int type = this->parent.right_type();
+		if (type == 1) {
+			return { (Array*)this->parent.use() };
+		}
+		else if (type == 2) {
+			return { (Object*)this->parent.use() };
+		}
+		else if (type == 3) {
+			return { (PartialJson*)this->parent.use() };
+		}
+		return {};
 	}
 
 	bool Object::change_key(const _Value& key, Value new_key) { // chk test...

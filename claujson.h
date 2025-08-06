@@ -10,6 +10,47 @@
 #include "_simdjson.h" // modified simdjson // using simdjson 3.9.1
 
 namespace claujson {
+
+	//only used in Array, and Object, (parent Pointer + is_virtual?)
+	class Pointer {
+	private: 
+		void* ptr = nullptr; 
+	public:
+		Pointer() {}
+		// left_op : 1bit
+		// right_op : 2bit
+		Pointer(void* ptr, uint8_t left_op, uint8_t right_op) {
+			uint64_t value = (uint64_t)ptr;
+			if (left_op) {
+				value = value | 0x8000000000000000;
+			}
+			if (right_op) {
+				value = value | right_op;
+			}
+			this->ptr = (void*)value;
+		}
+	public:
+		int left_type() const {
+			int64_t value = (int64_t)ptr;
+			return value < 0 ? 1 : 0;
+		}
+		int right_type() const {
+			uint64_t value = (uint64_t)ptr;
+			return value & 3;
+		}
+		void* use() {
+			uint64_t value = (uint64_t)ptr;
+			value = value & 0x7FFFFFFFFFFFFC;
+			return (void*)value;
+		}
+		const void* use() const {
+			uint64_t value = (uint64_t)ptr;
+			value = value & 0x7FFFFFFFFFFFFC;
+			return (void*)value;
+		}
+	};
+
+
 	class _Value;
 	class Array;
 	class Object;
@@ -386,6 +427,8 @@ namespace claujson {
 		friend class LoadData2;
 		friend class PartialJson;
 		friend class _Value;
+		friend class Array;
+		friend class Object;
 
 		static const uint64_t npos;
 		static _Value empty_value;

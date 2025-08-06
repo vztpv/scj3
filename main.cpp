@@ -956,9 +956,9 @@ int main(int argc, char* argv[])
 			}
 
 			claujson::parser p(thr_num);
-
-			for (int i = 0; i < 1; ++i) {
-				claujson::Document j;
+			claujson::Document j;
+			for (int i = 0; i < 15; ++i) {
+				
 
 				if (argc < 4) {
 					claujson::log.console();
@@ -1003,12 +1003,12 @@ int main(int argc, char* argv[])
 					auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(b - a);
 					std::cout << "total " << dur.count() << "ms\n";
 					//	return 0;
-		
+					continue;
 					auto c = std::chrono::steady_clock::now();
 					{
-						auto z = j.Get().clone();
+					//	auto z = j.Get().clone();
 						c = std::chrono::steady_clock::now();
-						claujson::clean(z);
+					//	claujson::clean(z);
 					}
 
 
