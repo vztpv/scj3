@@ -4565,6 +4565,7 @@ namespace claujson {
 	
 	std::pair<bool, uint64_t> parser::parse_str(StringView str, Document& d, uint64_t thr_num)
 	{
+		claujson::clean(d.Get());
 		_Value& ut = d.Get();
 
 		log << info << str << "\n";
