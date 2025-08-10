@@ -956,9 +956,9 @@ int main(int argc, char* argv[])
 			}
 
 			claujson::parser p(thr_num);
-			claujson::Document j;
+			
 			for (int i = 0; i < 15; ++i) {
-				
+				claujson::Document j;
 
 				if (argc < 4) {
 					claujson::log.console();

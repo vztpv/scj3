@@ -1873,23 +1873,8 @@ namespace claujson {
 							switch (err[i]) {
 							case 0:
 								break;
-							case -10:
-							case -11:
-								return false;
-								break;
-							case -1:
-							case -4:
-								log << warn << "Syntax Error\n"; return false;
-								break;
-							case -2:
-								log << warn << "error final state is not last_state!\n"; return false;
-								break;
-							case -3:
-								log << warn << "error x > buffer + buffer_len:\n"; return false;
-								break;
 							default:
-								log << warn << "unknown parser error\n"; return false;
-								break;
+								throw err[i]; 
 							}
 						}
 
