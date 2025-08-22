@@ -3379,7 +3379,7 @@ namespace claujson {
 				}
 			}
 
-			if (idx > last) { // depth == 0) {
+			if (idx > last || (start == 0 && depth == 0)) {
 				goto document_end;
 			}
 
