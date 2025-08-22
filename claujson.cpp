@@ -4382,6 +4382,11 @@ namespace claujson {
 						}
 
 						for (uint64_t i = 1; i < _set.size(); ++i) {
+							if (is_array[0].empty()) {
+								free(count_vec);
+								return { false, -5 };
+							}
+
 							if (false == is_virtual_array[i].empty()) {
 								// remove? matched is_array(or object) and is_virtual_array(or object)
 								if (is_array[0].size() >= is_virtual_array[i].size()) {
@@ -4690,6 +4695,11 @@ namespace claujson {
 				}
 
 				for (uint64_t i = 1; i < _set.size(); ++i) {
+					if (is_array[0].empty()) {
+						free(count_vec);
+						return { false, -5 };
+					}
+
 					if (false == is_virtual_array[i].empty()) {
 						//  
 						if (is_array[0].size() >= is_virtual_array[i].size()) {
