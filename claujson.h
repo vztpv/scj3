@@ -411,6 +411,9 @@ namespace claujson {
 			//
 		}
 
+
+		Document(Document&& d) noexcept : x(std::move(d.x)) {}
+
 		~Document() noexcept;
 	public:
 		Document& operator=(const Document&) = delete;
