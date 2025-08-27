@@ -11,7 +11,7 @@
 #include <functional>
 #include <stdexcept>
 
-#if __cplusplus >= 201703L
+#if __cpp_lib_is_invocable
 class ThreadPool {
 public:
     ThreadPool(size_t);
@@ -183,3 +183,4 @@ inline ThreadPool::~ThreadPool()
 #endif
 
 #endif
+
