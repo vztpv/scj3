@@ -68,7 +68,6 @@ target_compile_definitions(${LIB_NAME} PRIVATE
             /permissive-;
             /sdl;
             /W3;
-	    /Zc:__cplusplus; 
             ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
             ${DEFAULT_CXX_EXCEPTION_HANDLING}
         )
@@ -92,7 +91,6 @@ target_compile_definitions(${LIB_NAME} PRIVATE
             /permissive-;
             /sdl;
             /W3;
-	    /Zc:__cplusplus; 
             ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
             ${DEFAULT_CXX_EXCEPTION_HANDLING}
         )
@@ -112,4 +110,5 @@ elseif (MSVC)
   
 	
 endif()
+
 
